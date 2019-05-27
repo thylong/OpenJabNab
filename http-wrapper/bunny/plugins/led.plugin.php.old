@@ -1,0 +1,58 @@
+<?php 
+$reload = false;
+if(!empty($_POST)) {
+	if(isset($_POST['weather']) && $_POST['weather'] == "on") {
+		Message::AddFromApi($ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/led/setled?type=Weather&status=enabled&".$ojnAPI->getToken()));
+		$reload = true;
+	} else {
+		Message::AddFromApi($ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/led/setled?type=Weather&status=disabled&".$ojnAPI->getToken()));
+		$reload = true;
+	}
+	if(isset($_POST['weather_city']) && $_POST['weather_city'] != "") {
+		Message::AddFromApi($ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/led/setweathercity?city=".urlencode($_POST['weather_city'])."&".$ojnAPI->getToken()));
+		$reload = true;
+	}
+	if(isset($_POST['stock']) && $_POST['stock'] == "on") {
+		Message::AddFromApi($ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/led/setled?type=Stock&status=enabled&".$ojnAPI->getToken()));
+		$reload = true;
+	} else {
+		Message::AddFromApi($ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/led/setled?type=Stock&status=disabled&".$ojnAPI->getToken()));
+		$reload = true;
+	}
+	if(isset($_POST['stock_quote']) && $_POST['stock_quote'] != "") {
+		Message::AddFromApi($ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/led/setstockquote?quote=".urlencode($_POST['stock_quote'])."&".$ojnAPI->getToken()));
+		$reload = true;
+	}
+if($reload) {
+	header("Location: bunny_plugin.php?p=led");
+	exit;
+}
+}
+$weather = $ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/led/getweathercity?".$ojnAPI->getToken());
+$weather = isset($weather['value']) ? (string)($weather['value']) : '';
+$weatherLed =  $ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/led/getled?type=Weather&".$ojnAPI->getToken());
+$weatherLed = isset($weatherLed['value']) && $weatherLed['value'] == "enabled" ? 1 : 0;
+
+$stock = $ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/led/getstockquote?".$ojnAPI->getToken());
+$stock = isset($stock['value']) ? (string)($stock['value']) : '';
+$stockLed =  $ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/led/getled?type=Stock&".$ojnAPI->getToken());
+$stockLed = isset($stockLed['value']) && $stockLed['value'] == "enabled" ? 1 : 0;
+?>
+<form method="post" class="form-horizontal">
+          <div class="control-group">
+            <label for="weather" class="control-label"> <input type="checkbox" name="weather" <?php if($weatherLed == 1) { echo 'checked="checked"'; } ?>/> <?php echo __tr("Weather for") ?></label>
+            <div class="controls">
+<input type="text" name="weather_city" value="<?php echo $weather ?>">
+            </div>
+          </div>
+          <div class="control-group">
+            <label for="stock" class="control-label"> <input type="checkbox" name="stock" <?php if($stockLed == 1) { echo 'checked="checked"'; } ?>/> <?php echo __tr("Stock for") ?></label>
+            <div class="controls">
+<input type="text" name="stock_quote" value="<?php echo $stock ?>">
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-primary" type="submit"><?php echo __tr("Save") ?></button>
+            <button class="btn"><?php echo __tr("Cancel") ?></button>
+          </div>
+</form>

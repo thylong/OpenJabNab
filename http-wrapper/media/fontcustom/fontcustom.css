@@ -1,0 +1,74 @@
+/*
+  Font Custom - icon webfonts made simple
+*/
+
+@font-face {
+  font-family: "fontcustom";
+  src: url("fontcustom-3009aee0d1706f3c49f6ef8314d0b3ea.eot?#iefix") format("embedded-opentype"),
+       url("fontcustom-3009aee0d1706f3c49f6ef8314d0b3ea.woff") format("woff"),
+       url("fontcustom-3009aee0d1706f3c49f6ef8314d0b3ea.ttf") format("truetype"),
+       url("fontcustom-3009aee0d1706f3c49f6ef8314d0b3ea.svg#fontcustom") format("svg");
+  font-weight: normal;
+  font-style: normal;
+}
+
+/*
+  Bootstrap Overrides
+*/
+
+[class^="icon-ojn-"]:before, [class*=" icon-ojn-"]:before {
+  font-family: "fontcustom";
+  font-weight: normal;
+  font-style: normal;
+  display: inline-block;
+  text-decoration: inherit;
+}
+
+a [class^="icon-ojn-"], a [class*=" icon-ojn-"] {
+  display: inline-block;
+  text-decoration: inherit;
+}
+
+/* makes the font 33% larger relative to the icon container */
+.icon-ojn-large:before {
+  vertical-align: top;
+  font-size: 1.333em;
+}
+
+/* keeps button heights with and without icons the same */
+.btn [class^="icon-ojn-"], .btn [class*=" icon-ojn-"] {
+  line-height: 0.9em;
+}
+
+li [class^="icon-ojn-"], li [class*=" icon-ojn-"] {
+  display: inline-block;
+  width: 1.25em;
+  text-align: center;
+}
+
+/* 1.5 increased font size for icon-ojn-large * 1.25 width */
+li .icon-ojn-large[class^="icon-ojn-"], li .icon-ojn-large[class*=" icon-ojn-"] {
+  width: 1.875em;
+}
+
+li[class^="icon-ojn-"], li[class*=" icon-ojn-"] {
+  margin-left: 0;
+  list-style-type: none;
+}
+
+li[class^="icon-ojn-"]:before, li[class*=" icon-ojn-"]:before {
+  text-indent: -2em;
+  text-align: center;
+}
+
+li[class^="icon-ojn-"].icon-ojn-large:before, li[class*=" icon-ojn-"].icon-ojn-large:before {
+  text-indent: -1.333em;
+}
+
+/*
+  Icon Classes
+*/
+
+.icon-ojn-nabaztag:before { content: "\f100"; }
+.icon-ojn-weather:before { content: "\f101"; }
+.icon-ojn-tts:before { content: "\f102"; }

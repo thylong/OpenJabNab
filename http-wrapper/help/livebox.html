@@ -1,0 +1,527 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+ <html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" lang="en-EN">
+ <head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <title>
+Livebox</title>
+   <link href="/styles.css?db764303" rel="stylesheet" type="text/css" />
+   <script type="text/javascript">
+      appUrl = '';      appConfig ='fr';      appUid = 'db764303';     </script>
+ </head>
+ <body class="accessibility-normal">
+  <img src="/images/fr/common/transparent.gif?db764303" style="display: none;"/>
+  <img src="/images/fr/common/header-accessibility-minus.png?db764303" style="display: none;"/>
+  <img src="/images/fr/common/header-accessibility-plus.png?db764303" style="display: none;"/>
+  <script src="/scripts.js?db764303" type="text/javascript">
+</script>
+  <!-- Popup and backlayer from Cytadelle Technology Light framework -->
+  <div id="ct-popup" class="fixed">
+<img id="ct-popup-header" src="/images/fr/common/transparent.gif?db764303" class="png" alt=""/>
+<div id="ct-popup-header-title">
+<h4>
+My PopUp</h4>
+</div>
+<a href="#" onclick="ctl.popup.Close(); return false;">
+<img id="ct-popup-header-close" src="/images/fr/common/transparent.gif?db764303" class="png" alt=""/>
+</a>
+<div id="ct-popup-content">
+<br/>
+</div>
+<img id="ct-popup-footer" src="/images/fr/common/transparent.gif?db764303" class="png" alt=""/>
+</div>
+  <div id="ct-msgbox" class="fixed">
+<img id="ct-popup-header-small" src="/images/fr/common/transparent.gif?db764303" class="png" alt=""/>
+<div id="ct-msgbox-content">
+<img src="/images/fr/common/transparent.gif?db764303" id="ct-msgbox-img" class="png"/>
+<div id="ct-msgbox-msg">
+</div>
+<input type="button" id="ct-msgbox-button1" value="annuler"  class="input-btn input-small-btn-gray translation Translations.general.btn.cancel"/>
+<input type="button" id="ct-msgbox-button2" value="enregistrer" class="input-btn input-small-btn-orange translation Translations.general.btn.save"/>
+<input type="button" id="ct-msgbox-button3" value="enregistrer" class="input-btn input-small-btn-orange translation Translations.general.btn.save"/>
+</div>
+<img id="ct-popup-footer" src="/images/fr/common/transparent.gif?db764303" class="png" alt=""/>
+</div>
+  <div id="ct-tooltip" class="fixed">
+</div>
+  <div id="ct-waiting" class="fixed">
+<img src="/images/fr/common/transparent.gif?db764303"/>
+</div>
+  <div id="ct-backlayer" class="fixed">
+</div>
+      <form name="Login" id="Login">
+      <input name="username" type="hidden" id="Username"/>
+      <input name="password" type="hidden" id="Password"/>
+     </form>
+  <!-- Scrollable document container -->
+  <div id="document-container">
+  <div id="document-background-header">
+  <div id="document-background-footer">
+  <div id="document">
+   <div id="header">
+       <div id="header-logo-livebox">
+<a href="/">
+<img src="/images/fr/common/transparent.gif?db764303" alt="" class="config-fr png"/>
+</a>
+</div>
+       <div id="header-controls">
+     <form name="Admin/UserInterface/Language">
+<div id="header-controls-languages">
+<select id="Language.$Language" name="Language.$Language">
+</select>
+</div>
+</form>
+     <form name="Home/Accessibility">
+<div id="header-controls-accessibility-minus">
+<a href="#" onclick="document.body.className = 'accessibility-normal'; return false;">
+<img src="/images/fr/common/header-accessibility-minus.png?db764303" alt=""/>
+</a>
+</div>
+     <div id="header-controls-accessibility-plus">
+<a href="#" onclick="document.body.className = 'accessibility-big'; return false;">
+<img src="/images/fr/common/header-accessibility-plus.png?db764303" alt=""/>
+</a>
+</div>
+</form>
+     <div class="hr">
+</div>
+                          <div id="header-controls-login" style="display: none;">
+<span id="logged_in_username">
+</span>
+: <a href="#" id="logout_link">
+<span class="translation Translations.general.label.logout">
+</span>
+</a>
+</div>
+        </div>
+         <div id="header-hmenu">
+     <ul class="hmenu">
+                       <li id="hmenu-home" onclick="return Sah.redirect('/');" class="first active">
+<span class="first active translation Translations.general.label.vmenu.home.title">
+</span>
+</li>
+      <li id="hmenu-config" onclick="return Sah.redirect('/configWifi.html');" class="normal auth-required">
+<span class="translation Translations.general.label.vmenu.config.title">
+</span>
+</li>
+      <li id="hmenu-support" onclick="return Sah.redirect('/supportLedsStatus.html');" class="normal auth-required">
+<span class="translation Translations.general.label.vmenu.support.title">
+</span>
+</li>
+      <li id="hmenu-advconfig" onclick="return Sah.redirect('/advConfigWifi.html');" class="last gray auth-required">
+<span class="translation Translations.general.label.vmenu.advconfig.title">
+</span>
+</li>
+     </ul>
+    </div>
+      </div>
+   <div id="content">
+              <div id="content-left">
+  <ul id="content-left-vmenu" class="content-left-vmenu categories">
+  <li class="first-category">
+  <div style="border:none">
+<img src="/images/fr/common/transparent.gif?db764303" alt=""/>
+<span class="translation Translations.general.label.vmenu.config.title">
+</span>
+</div>
+  <ul class="content-left-vmenu subcategories" id="content-left-vmenu-config" style="display:none">
+   <li class="first-subcategory">
+    <div>
+<img src="/images/fr/common/transparent.gif?db764303" alt=""/>
+<span class="translation Translations.general.label.vmenu.config.wireless">
+</span>
+</div>
+   <ul class="content-left-vmenu pages">
+    <li class="first-page auth-required">
+<div onclick="return Sah.redirect('/configWifi.html');">
+<img src="/images/fr/common/transparent.gif?db764303" alt=""/>
+<span class="translation Translations.config.wifi.general.label.title">
+</span>
+</div>
+</li>
+    <li class="last-page auth-required orangeWifi" style="display:none;">
+<div onclick="return Sah.redirect('/configOrangeWifi.html');">
+<img src="/images/fr/common/transparent.gif?db764303" alt=""/>
+<span class="translation Translations.config.wifi.orange.label.title">
+</span>
+</div>
+</li>
+   </ul>
+   </li>
+   <li class="last-subcategory">
+    <div>
+<img src="/images/fr/common/transparent.gif?db764303" alt=""/>
+<span class="translation Translations.general.label.vmenu.config.devices">
+</span>
+</div>
+   <ul class="content-left-vmenu pages">
+    <li class="first-page auth-required">
+<div onclick="return Sah.redirect('/configComputers.html');">
+<img src="/images/fr/common/transparent.gif?db764303" alt=""/>
+<span class="translation Translations.config.computers.label.title">
+</span>
+</div>
+</li>
+    <li class="auth-required" id="configPrinter">
+<div onclick="return Sah.redirect('/configPrinter.html');">
+<img src="/images/fr/common/transparent.gif?db764303" alt=""/>
+<span class="translation Translations.config.printer.label.title">
+</span>
+</div>
+</li>
+    <li class="last-page auth-required">
+<div onclick="return Sah.redirect('/configOthers.html');">
+<img src="/images/fr/common/transparent.gif?db764303" alt=""/>
+<span class="translation Translations.config.others.label.title">
+</span>
+</div>
+</li>
+   </ul>
+   </li>
+  </ul>
+  </li>
+  <li class="">
+   <div>
+<img src="/images/fr/common/transparent.gif?db764303" alt=""/>
+<span class="translation Translations.general.label.vmenu.support.title">
+</span>
+</div>
+  <ul class="content-left-vmenu subcategories" id="content-left-vmenu-support" style="display:none">
+   <li class="first-subcategory">
+    <div>
+<img src="/images/fr/common/transparent.gif?db764303" alt=""/>
+<span class="translation Translations.general.label.vmenu.support.livebox">
+</span>
+</div>
+   <ul class="content-left-vmenu pages">
+    <li class="first-page auth-required">
+<div onclick="return Sah.redirect('/supportLedsStatus.html');">
+<img src="/images/fr/common/transparent.gif?db764303" alt=""/>
+<span class="translation Translations.support.ledsstatus.label.title">
+</span>
+</div>
+</li>
+    <li class="auth-required">
+<div onclick="return Sah.redirect('/supportPhoneRingTest.html');">
+<img src="/images/fr/common/transparent.gif?db764303" alt=""/>
+<span class="translation Translations.support.phoneringtest.label.title">
+</span>
+</div>
+</li>
+    <li class="last-page auth-required">
+<div onclick="return Sah.redirect('/supportRestartReset.html');">
+<img src="/images/fr/common/transparent.gif?db764303" alt=""/>
+<span class="translation Translations.support.restartreset.label.title">
+</span>
+</div>
+</li>
+   </ul>
+   </li>
+   <li class="last-subcategory">
+    <div>
+<img src="/images/fr/common/transparent.gif?db764303" alt=""/>
+<span class="translation Translations.general.label.vmenu.support.hotline">
+</span>
+</div>
+   <ul class="content-left-vmenu pages">
+    <li class="first-page auth-required">
+<div onclick="return Sah.redirect('/supportSystemInformationGeneral.html');">
+<img src="/images/fr/common/transparent.gif?db764303" alt=""/>
+<span class="translation Translations.general.label.vmenu.support.systeminformation">
+</span>
+</div>
+</li>
+    <li class="auth-required">
+<div onclick="return Sah.redirect('/supportFirmwareUpgrade.html');">
+<img src="/images/fr/common/transparent.gif?db764303" alt=""/>
+<span class="translation Translations.support.firmwareupgrade.label.title">
+</span>
+</div>
+</li>
+    <li class="auth-required" id="supportSaveAndRestore">
+<div onclick="return Sah.redirect('/supportSaveAndRestore.html');">
+<img src="/images/fr/common/transparent.gif?db764303" alt=""/>
+<span class="translation Translations.support.saveandrestore.label.title">
+</span>
+</div>
+</li>
+    <li class="auth-required" id="supportRemoteAccess">
+<div onclick="return Sah.redirect('/supportRemoteAccess.html');">
+<img src="/images/fr/common/transparent.gif?db764303" alt=""/>
+<span class="translation Translations.support.remoteaccess.label.title">
+</span>
+</div>
+</li>
+    <li class="last-page auth-required" id="supportHotline">
+<div onclick="return Sah.redirect('/supportHotline.html');">
+<img src="/images/fr/common/transparent.gif?db764303" alt=""/>
+<span class="translation Translations.support.hotline.label.title">
+</span>
+</div>
+</li>
+   </ul>
+   </li>
+  </ul>
+  </li>
+  <li class="last-category">
+  <div style="border-bottom: solid 1px #d5d5d5">
+<img src="/images/fr/common/transparent.gif?db764303" alt=""/>
+<span class="translation Translations.general.label.vmenu.advconfig.title">
+</span>
+</div>
+  <ul class="content-left-vmenu pages" id="content-left-vmenu-advconfig" style="display:none">
+   <li class="first-page auth-required">
+<div onclick="return Sah.redirect('/advConfigWifi.html');">
+<img src="/images/fr/common/transparent.gif?db764303" alt=""/>
+<span class="translation Translations.advconfig.wifi.label.title">
+</span>
+</div>
+</li>
+   <li class="auth-required">
+<div onclick="return Sah.redirect('/advConfigFirewall.html'); ">
+<img src="/images/fr/common/transparent.gif?db764303" alt=""/>
+<span class="translation Translations.advconfig.firewall.label.title">
+</span>
+</div>
+</li>
+   <li class=" auth-required">
+<div onclick="return Sah.redirect('/advConfigNetworkDhcp.html');">
+<img src="/images/fr/common/transparent.gif?db764303" alt=""/>
+<span class="translation Translations.general.label.vmenu.advconfig.network">
+</span>
+</div>
+</li>
+   <li class="auth-required configPorts fr configPorts-fr" style="display:none">
+<div id="advConfigPorts" onclick="return Sah.redirect('/advConfigPorts.html');">
+<img src="/images/fr/common/transparent.gif?db764303" alt=""/>
+<span class="translation Translations.advconfig.ports.label.title">
+</span>
+</div>
+</li>
+                 <li class="auth-required configPorts pl configPorts-pl" style="display:none">
+<div id="advConfigPortsPl" onclick="return Sah.redirect('/advConfigPorts.html');">
+<img src="/images/fr/common/transparent.gif?db764303" alt=""/>
+<span class="translation Translations.advconfig.ports.label.title">
+</span>
+</div>
+</li>
+   <li class="auth-required configPorts mini-fr configPorts-mini-fr" style="display:none">
+<div id="advConfigPortsMini" onclick="return Sah.redirect('/advConfigPortMini.html');">
+<img src="/images/fr/common/transparent.gif?db764303" alt=""/>
+<span class="translation Translations.advconfig.ports.label.title">
+</span>
+</div>
+</li>
+                 <li class="auth-required">
+<div onclick="return Sah.redirect('/advConfigAccessType.html');">
+<img src="/images/fr/common/transparent.gif?db764303" alt=""/>
+<span class="translation Translations.advconfig.accesstype.label.title">
+</span>
+</div>
+</li>
+   <li class="auth-required" id="advConfigAdmin">
+<div onclick="return Sah.redirect('/advConfigAdmin.html');">
+<img src="/images/fr/common/transparent.gif?db764303" alt=""/>
+<span class="translation Translations.advconfig.admin.label.title">
+</span>
+</div>
+</li>
+   <li class="last-page auth-required fr" id="advConfigFxo">
+<div onclick="return Sah.redirect('/advConfigFxo.html');">
+<img src="/images/fr/common/transparent.gif?db764303" alt=""/>
+<span class="translation Translations.advconfig.fxo.label.title">
+</span>
+</div>
+</li>
+  </li>
+ </ul>
+ <script type="text/javascript">
+global_init_menu();</script>
+ </div>
+  <div id="content-center-full">
+   <style type="text/css">
+  #home-refresh-label   {position:absolute; right:5px; top:15px; height:40px; width:300px; text-align:right;} #home-refresh-button   {position:absolute; right:5px; top:55px; height:45px; width:120px; text-align:right;} #home-dashboard   {height:550px; width: 760px; background-image:url('/images/fr/home/dashboard.png?db764303'); font-size: 12px; line-height:12px;}  #home-dashboard-services-label  {position:absolute; right:0px; top: 155px; height: 35px; width: 160px; text-align: center; } #home-dashboard-services-content  {position:absolute; right:5px; top: 193px; height: 80px; width: 148px;} #home-dashboard-services-content li {line-height: 12px; height: 30px;} #home-dashboard-services-content li.icon-internet-fr {line-height: 12px; height: 30px;} #home-dashboard-services-content li.icon-phone-fr {line-height: 12px; height: 30px;} #home-dashboard-services-content li.icon-tv-fr {line-height: 12px; height: 30px;} #home-dashboard-services-content li.icon-internet-pl {line-height: 12px; height: 30px;margin-top: 10px;} #home-dashboard-services-content li.icon-tv-pl {display:none;} #home-dashboard-services-content li.icon-phone-pl {line-height: 12px; height: 30px;margin-top: 10px;} #home-dashboard-services-content div.icons {position:absolute; left:0px; top:1px;} #home-dashboard-services-content div.label {position:relative; left:0px; top:0px; padding-left: 15px; width: 135px;}  #home-dashboard-didyouknow-label  {position:absolute; left:270px; top: 472px; height: 20px; width:480px;} #home-dashboard-didyouknow-content  {position:absolute; left:235px; top: 495px; height: 50px; width:515px; overflow: hidden;}  #home-dashboard-wired-label  {position:absolute; left:370px; top:110px; line-height: 15px; height: 15px; width: 150px; color: black;}   #home-dashboard-wired-nodevices   {position:absolute; z-index:1; left:300px; top:20px; height:40px; width:120px; font-weight: bold;} #home-dashboard-wired-devices  {position:absolute; left:200px; top:20px; height:60px; width:325px;} #home-dashboard-wired-devices ul {left:0px; width: 3000px;} #home-dashboard-wired-devices-scroll-left {position:absolute; left:175px; top:37px; height:25px; width:25px; background-image: url('/images/fr/home/arrows-left.png?db764303'); cursor: pointer;} #home-dashboard-wired-devices-scroll-right {position:absolute; left:525px; top:37px; height:25px; width:25px; background-image: url('/images/fr/home/arrows-right.png?db764303'); cursor: pointer;}  #home-dashboard-wireless-label  {position:absolute; left:355px; top:330px; line-height: 15px; height: 60px; width: 150px; color: black;} #home-dashboard-wireless-label div.icons {position:absolute; left:0px; top:1px;} #home-dashboard-wireless-label div.label {position:relative; left:0px; top:0px; padding-left: 15px; width: 130px;}    #home-dashboard-wireless-nodevices  {position:absolute; z-index:1; left:300px; top:390px; height:40px; width:120px; font-weight: bold;} #home-dashboard-wireless-devices  {position:absolute; left:200px; top:380px; height:60px; width:325px;} #home-dashboard-wireless-devices ul {left:0px; width: 3000px;} #home-dashboard-wireless-devices-scroll-left {position:absolute; left:175px; top:398px; height:25px; width:25px; background-image: url('/images/fr/home/arrows-left.png?db764303'); cursor: pointer;} #home-dashboard-wireless-devices-scroll-right {position:absolute; left:525px; top:398px; height:25px; width:25px; background-image: url('/images/fr/home/arrows-right.png?db764303'); cursor: pointer;}  #home-dashboard-usb-label  {position:absolute; left:165px; top:250px; line-height: 15px; height: 15px; width: 50px; color: black; text-align: center;} #home-dashboard-usb-nodevices    {position:absolute; z-index:1; left:30px; top:210px; height:40px; width:120px; font-weight: bold;}  #home-dashboard-usb-devices  {position:absolute; left:0px; top:155px; height:400px; width:150px; }    </style>
+   <script type="text/javascript">
+  // Remove active tab and active the new one ctl.style.klass.Remove($CYT('#header-hmenu li.active'),"active"); ctl.style.klass.Add($CYT('#hmenu-home'),"active"); </script>
+   <h1>
+<span class="translation Translations.home.label.title">
+</span>
+</h1>
+   <div class="hr">
+   </div>
+   <h2>
+<span class="translation Translations.home.label.subtitle">
+</span>
+</h2>
+   <br/>
+   <div id="home-refresh-label">
+     <span class="translation Translations.home.label.refresh">
+</span>
+   </div>
+   <div id="home-refresh-button">
+     <input type="button" id="bt_refresh" value="rafraichir" class="input-btn input-btn-orange-refresh translation Translations.general.btn.refresh"/>
+   </div>
+   <div id="home-dashboard">
+     <!-- Orange services -->
+     <form name="Home/Abstract/Services">
+       <div id="home-dashboard-services-label">
+         <h3>
+<span class="translation Translations.home.label.services">
+</span>
+</h3>
+       </div>
+       <div id="home-dashboard-services-content">
+         <ul>
+           <li class="icon-internet-fr">
+             <div class="png icons icons-leds-small icons-leds-small-green icon-internet">
+             </div>
+             <div class="label">
+               <span style="color:black; font-weight:bold;" class="translation Translations.general.label.internet">
+</span>
+&nbsp;&nbsp;<span style="color:#3caa0a;" class="translation Translations.general.label.available display" id="Services.InternetConnection" name="Services.InternetConnection">
+</span>
+             </div>
+           </li>
+           <li class="icon-phone-fr">
+             <div class="png icons icons-leds-small icons-leds-small-red icon-phone">
+             </div>
+             <div class="label">
+               <span style="color:black; font-weight:bold;" class="translation Translations.general.label.phone">
+</span>
+&nbsp;&nbsp;<span style="color:red;" class="translation Translations.general.label.unavailable display" id="Services.Phone" name="Services.Phone">
+</span>
+<br/>
+               <span id="Services.PhoneNumber" name="Services.PhoneNumber">
+</span>
+             </div>
+           </li>
+           <li class="icon-tv-fr">
+             <div class="png icons icons-leds-small icons-leds-small-black icon-tv">
+             </div>
+             <div class="label">
+               <span style="color:black; font-weight:bold;" class="translation Translations.general.label.tv">
+</span>
+&nbsp;&nbsp;<span style="color:black;" class="translation Translations.general.label.nonsubscribe display" name="Services.TV" id="Services.TV">
+</span>
+             </div>
+           </li>
+         </ul>
+       </div>
+     </form>
+     <!-- Wired label -->
+     <form name="Home/General">
+       <div id="home-dashboard-wired-label" class="translation Translations.home.label.wired">
+       </div>
+       <!-- Wired devices -->
+       <div id="home-dashboard-wired-devices-scroll-left" class="png scroll-left">
+       </div>
+       <div id="home-dashboard-wired-devices-scroll-right" class="png scroll-right">
+       </div>
+       <div id="home-dashboard-wired-devices">
+         <ul id="ethernetDevices" class="list-devices-horizontal">
+           <li id="ethernetDevice" class="template">
+             <div class="icon png">
+             </div>
+             <div class="title sah:$UserFriendlyName">
+             </div>
+           </li>
+         </ul>
+       </div>
+       <div id="home-dashboard-wired-nodevices" style="display:none;">
+         <img class="png" style="float: left; width: 40px; height: 30px; margin-top: 3px; background-image: url('/images/fr/icons/icons-infos.png?db764303');" src="/images/fr/common/transparent.gif?db764303">
+<span class="translation Translations.general.label.nodevices">
+</span>
+</div>
+       <!-- USB devices -->
+       <div id="home-dashboard-usb-label" class="translation Translations.home.label.usb">
+       </div>
+       <div id="home-dashboard-usb-devices">
+         <ul id="usbDevices" class="list-devices-vertical">
+           <!--  <li id="usbDevice" class="template">
+   <div class="icon png">
+</div>
+   <div class="title sah:$UserFriendlyName">
+</div>
+   </li>
+ -->
+           <li id="usbDevice" class="template">
+             <div class="icon png">
+             </div>
+             <div class="title sah:$UserFriendlyName">
+             </div>
+             <div class="files" style="display:none;">
+               <input type="button" id="bt_files" value="acc&eacute;der Ã  mes fichiers" class="input-btn input-btn-massstorage-normal translation Translations.general.btn.files"/>
+             </div>
+             <div class="eject" style="display:none;">
+               <input type="button" id="bt_files" value="&eacute;jecter" class="input-btn input-btn-massstorage-eject translation Translations.general.btn.eject"/>
+             </div>
+           </li>
+         </ul>
+       </div>
+       <div id="home-dashboard-usb-nodevices">
+         <img class="png" style="float: left; width: 40px; height: 30px; margin-top: 3px; background-image: url('/images/fr/icons/icons-infos.png?db764303');" src="/images/fr/common/transparent.gif?db764303">
+<span class="translation Translations.general.label.nodevices">
+</span>
+       </div>
+       <!-- Wireless label -->
+       <div id="home-dashboard-wireless-label">
+         <div class="png icons icons-leds-small icons-leds-small-green">
+         </div>
+         <div class="label">
+           <span style="color:#3caa0a;" class="translation Translations.general.label.wifienable">
+</span>
+         </div>
+       </div>
+       <!-- Wireless devices -->
+       <div id="home-dashboard-wireless-devices-scroll-left" class="png scroll-left">
+       </div>
+       <div id="home-dashboard-wireless-devices-scroll-right" class="png scroll-right">
+       </div>
+       <div id="home-dashboard-wireless-devices">
+         <ul id="wirelessDevices" class="list-devices-horizontal">
+           <li id="wirelessDevice" class="template">
+             <div class="icon png">
+             </div>
+             <div class="title sah:$UserFriendlyName">
+             </div>
+           </li>
+         </ul>
+       </div>
+       <div id="home-dashboard-wireless-nodevices" style="display:none;">
+         <img class="png" style="float: left; width: 40px; height: 30px; margin-top: 3px; background-image: url('/images/fr/icons/icons-infos.png?db764303');" src="/images/fr/common/transparent.gif?db764303">
+<span class="translation Translations.general.label.nodevices">
+</span>
+       </div>
+ </form>
+       <!-- Did you know -->
+       <form name="Home/Information">
+       <h5>
+<div id="home-dashboard-didyouknow-label">
+</div>
+</h5>
+       <div id="home-dashboard-didyouknow-content">
+      </div>
+</form>
+    </div>
+   <script type="text/javascript">
+   // Event handler ctl.event.Add($CYT('#home-dashboard'),"click",function(oEvent) {  // Get the selected item and looks into ancestors for the LI  var oMouseEvent = ctl.mouse.GetEvent(oEvent);  var oObject = oMouseEvent.Target;   // If scroll  if (/scroll/.test(oObject.className))  {  var szID = oObject.getAttribute("id").replace(/-scroll-([a-z]+)/,"");  var oDiv = $CYT('#' + szID);  var oUL  = oDiv.getElementsByTagName('UL')[0];  var oLIs  = oDiv.getElementsByTagName('LI');  var jDivDim = ctl.style.GetDimensions(oDiv);    var iWidth  = jDivDim.width;  var iWidthMax = (oLIs.length-1) * 80;  var iLeft = parseInt(ctl.style.GetStyle(oUL,"left"),10);    // SCROLL LEFT  if (/scroll-left/.test(oObject.className))  {     $(oObject.id.replace("left","right")).show();   if (iLeft >
+= 0){       oObject.hide();       return;     }   // Display the menu   ctl.animations.Create('default',0,iWidth,undefined,   function(iValue)   {   iValue = parseInt(iValue,10);   if (iLeft + iValue >
+ 0)   {    oUL.style.left = "0px";       oObject.hide();    return false;   }   oUL.style.left = (iLeft + iValue) + 'px';   return true;   },   undefined);   ctl.animations.Start();   }  // SCROLL RIGHT  else if (/scroll-right/.test(oObject.className))  {     $(oObject.id.replace("right","left")).show();   if (- iLeft + iWidth >
+= iWidthMax){       oObject.hide();       return;          }      // Display the menu   ctl.animations.Create('default',0,iWidth,undefined,   function(iValue)   {   iValue = parseInt(iValue,10);   if (iLeft - iValue < - iWidthMax + iWidth)   {    oUL.style.left = (- iWidthMax + iWidth) + 'px';       oObject.hide();    return false;   }   oUL.style.left = (iLeft - iValue) + 'px';   return true;   },   undefined);   ctl.animations.Start();     }  return;  }   // Look for a LI  for(var i=0;i<10;i++)  {  if (oObject.tagName == "LI") break;  oObject = oObject.parentNode;  }  if (i == 10)return;   // Get informations  var oLI = oObject;  var oUL = oLI.parentNode;  if (!/list\-devices/.test(oUL.className)) return;  oULChild = oLI.getElementsByTagName("UL")[0];   // Display popup // ctl.popup.Load(appUrl + '/homeDevicesCustomize.html');  },true);  </script>
+ </div>
+</div>
+   <div id="footer">
+       <div id="footer-menu">
+<a href="#" onclick="window.location = appUrl + '/legal.html'; return false;">
+<span class="translation Translations.general.label.legalinfo">
+</span>
+</a>
+</div>
+   </div>
+  </div>
+  </div>
+  </div>
+  </div>
+  <script type="text/javascript">
+  $$(".configPorts").each(function(obj){  obj.hide(); }); if (Cookie.get('orangeWifiEnable') == "1") {  $$(".orangeWifi").each(function(obj){  obj.show(); }); } else {  $$(".orangeWifi").each(function(obj){  obj.hide();  }); } if ((Cookie.get('wanInterfaceType') == "DSL") || (appConfig === 'pl')) {  $$(".configPorts-"+appConfig+"").each(function(obj){  obj.show(); }); } else {  $$(".configPorts").each(function(obj){  obj.hide();  }); } if(appConfig === 'mini-fr') {   $$(".no-mini-fr").each(function(obj){  obj.hide();  });  $$(".mini-fr").each(function(obj){  obj.show();  });   $("configPrinter").hide(); } if(appConfig === 'fr' || appConfig === 'mini-fr') {  $("advConfigFxo").hide(); } </script>
+ </body>
+ </html>
