@@ -2,6 +2,7 @@
 #define _APIMANAGER_H_
 
 #include <QByteArray>
+#include <QDateTime>
 #include <QList>
 #include <QMap>
 #include <QMapIterator>
@@ -29,8 +30,20 @@ public:
 
 	static ApiManager & Instance();
 	ApiAnswer * ProcessApiCall(QString const&, HTTPRequest &);
+	static int getUptime();
 	
 	// Internal classes
+	class OJN_EXPORT ApiClear : public ApiAnswer
+	{
+		public:
+			QByteArray GetData(); // UTF8
+			ApiClear():string(QString()) {}
+			ApiClear(QString s):string(s) {}
+			QString GetInternalData() { return string; }
+		private:
+			QString string;
+	};
+
 	class OJN_EXPORT ApiError : public ApiAnswer
 	{
 		public:
@@ -106,8 +119,10 @@ private:
 	ApiManager();
 	ApiAnswer * ProcessGlobalApiCall(Account const&, QString const&, HTTPRequest const&);
 	ApiAnswer * ProcessPluginApiCall(Account const&, QString const&, HTTPRequest &);
-	ApiAnswer * ProcessBunnyApiCall(Account const&, QString const&, HTTPRequest const&);
-	ApiAnswer * ProcessZtampApiCall(Account const&, QString const&, HTTPRequest const&);
+	ApiAnswer * ProcessBunnyApiCall(Account const&, QString const&, HTTPRequest &);
+	ApiAnswer * ProcessTimezoneApiCall(Account const&, QString const&, HTTPRequest const&);
+	ApiAnswer * ProcessZtampApiCall(Account const&, QString const&, HTTPRequest &);
 	ApiAnswer * ProcessBunnyVioletApiCall(QString const&, HTTPRequest const&);
+	int startTime;
 };
 #endif

@@ -1,9 +1,13 @@
 #include <QEventLoop>
-#include <QHttp>
-#include <QHttpRequestHeader>
+#include <QNetworkAccessManager>
+#include <QUrl>
+#include <QNetworkRequest>
+#include <QNetworkReply>
+#include <QTime>
 #include <QObject>
 #include <QStringList>
 #include <QUrl>
+#include <QUrlQuery>
 #include "httprequest.h"
 #include "log.h"
 
@@ -23,7 +27,7 @@ HTTPRequest::HTTPRequest(QByteArray const& data):type(INVALID)
 			rawUri = content.mid(rawHeaders.length()+1); // Copy URI
 			type = GET;
 			break;
-			
+
 		case POST:
 		{
 			rawHeaders = content.left(content.indexOf('\0')); // Copy headers, stop at first \x00
@@ -41,7 +45,7 @@ HTTPRequest::HTTPRequest(QByteArray const& data):type(INVALID)
 			type = POST;
 			break;
 		}
-		
+
 		case POSTRAW:
 			rawHeaders = content.left(content.indexOf('\0')); // Copy headers, stop at first \x00
 			content = content.mid(rawHeaders.length()+1);
@@ -49,31 +53,76 @@ HTTPRequest::HTTPRequest(QByteArray const& data):type(INVALID)
 			rawPostData = content.mid(rawUri.length()+1);
 			type = POSTRAW;
 			break;
-	
+
 		default:
 			LogError("HTTP Request : Invalid type");
 			return;
 	}
 	// Parse URI
-	QUrl url(rawUri);
+    QUrl url(rawUri);
+	QUrlQuery urlq(url);
 	uri = url.path();
 	if(url.hasQuery())
 	{
-		QList<QPair<QString, QString> > items = url.queryItems();
+		QList<QPair<QString, QString> > items = urlq.queryItems();
 		typedef QPair<QString, QString> queryItemDef;
 		foreach(queryItemDef item, items)
-			getData[QUrl::fromPercentEncoding(item.first.toAscii())] = QUrl::fromPercentEncoding(item.second.toAscii());
+			getData[QUrl::fromPercentEncoding(item.first.toLatin1())] = QUrl::fromPercentEncoding(item.second.toLatin1());
 	}
+}
+
+bool HTTPRequest::IsValid()
+{
+	if(getData.contains("time"))
+	{
+		if(getData.contains("action"))
+		{
+			if(getData.value("action") == "del")
+			{
+				return true;
+			}
+		}
+		QString t = getData.value("time");
+		t = t.replace("h", ":", Qt::CaseInsensitive);
+		if(QString::number(t.toInt()) == t)
+			t += ":00";
+
+		QTime time = QTime::fromString(t, "hh:mm");
+		if(time.isValid())
+		{
+			getData["time"] = time.toString("hh:mm");
+			return true;
+		}
+		return false;
+	}
+	return true;
+}
+
+QString HTTPRequest::GetIP() const
+{
+	QStringList lst;
+	QString str = rawHeaders;
+	lst = str.split(QLatin1String("\r\n"));
+	lst.removeAll(QString()); // No empties
+	if (!lst.isEmpty())
+
+	for(QStringList::Iterator it = lst.begin(); it != lst.end(); ++it)
+	{
+		int i = it->indexOf(QLatin1Char(':'));
+		if (i != -1)
+			if(it->left(i).trimmed() == "X-FORWARDED-FOR")
+				return it->mid(i + 1).trimmed();
+	}
+	return "";
 }
 
 QByteArray HTTPRequest::ForwardTo(QString const& server)
 {
 	QByteArray answer;
 	QEventLoop loop;
-	QHttp http(server);
-	QObject::connect(&http, SIGNAL(done(bool)), &loop, SLOT(quit()));
+    QNetworkAccessManager http;
+    QNetworkRequest req(QUrl(server+rawUri));
 
-	QHttpRequestHeader header;
 	{
 		QStringList lst;
 		QString str = rawHeaders;
@@ -85,30 +134,35 @@ QByteArray HTTPRequest::ForwardTo(QString const& server)
 		{
 			int i = it->indexOf(QLatin1Char(':'));
 			if (i != -1)
-				header.addValue(it->left(i).trimmed(), it->mid(i + 1).trimmed());
+            {
+                const auto& key(it->left(i).trimmed().toLatin1());
+                const auto& val(it->mid(i + 1).trimmed().toLatin1());
+				req.setRawHeader(key, val);
+            }
 		}
 	}
-	header.removeValue("Connection");
-	header.setValue("Host", server);
+	req.setRawHeader("Connection","");
+    req.setRawHeader("Host", server.toLatin1());
+    QNetworkReply* rep;
 	if (type == GET)
 	{
-		header.setRequest("GET", rawUri);
-		http.request(header);
+        rep = http.get(req);
 	}
 	else
 	{
-		header.setRequest("POST", rawUri);
-		http.request(header, rawPostData);
+        rep = http.post(req,rawPostData);
 	}
-	loop.exec();
-	if(http.error() != QHttp::NoError)
+    QObject::connect(rep, SIGNAL(finished()), &loop, SLOT(quit()));
+    QObject::connect(rep, SIGNAL(error(QNetworkReply::NetworkError)), &loop, SLOT(quit()));
+    loop.exec();
+
+	if(rep->error() != QNetworkReply::NoError)
 	{
-		LogError(http.errorString());
-		http.close();
+		LogError(QString("Network error %1").arg(rep->error()));
 		return QByteArray();
 	}
-	answer = http.readAll();
-	http.close();
+	answer = rep->readAll();
+    delete rep;
 	return answer;
 }
 

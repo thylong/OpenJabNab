@@ -5,10 +5,10 @@
 #include <cstdlib>
 #include "log.h"
 #include "settings.h"
-
-GlobalSettings::GlobalSettings()
+GlobalSettings::GlobalSettings(const QString& cfgDir)
+: _confDir(cfgDir)
 {
-	QString fileName = QDir(QCoreApplication::applicationDirPath()).absoluteFilePath("openjabnab.ini");
+	QString fileName = QDir(cfgDir).absoluteFilePath("openjabnab.ini");
 	if (QFile::exists(fileName))
 		settings = new QSettings(fileName, QSettings::IniFormat);
 	else
@@ -23,6 +23,27 @@ GlobalSettings::~GlobalSettings()
 	delete settings;
 }
 
+
+int GlobalSettings::Set(QString const& key, int i)
+{
+	int old = GetInt(key);
+	instance->settings->setValue(key, i);
+	return old;
+}
+
+QString GlobalSettings::Set(QString const& key, QString s)
+{
+	QString old = GetString(key);
+	instance->settings->setValue(key, s);
+	return old;
+}
+
+QStringList GlobalSettings::Set(QString const& key, QStringList s)
+{
+	QStringList old = GetStringList(key);
+	instance->settings->setValue(key, s);
+	return old;
+}
 
 QVariant GlobalSettings::Get(QString const& key)
 {

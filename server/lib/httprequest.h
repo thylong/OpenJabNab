@@ -30,6 +30,9 @@ public:
 	QString toString() const;
 	
 	QByteArray reply;
+	QString GetIP() const;
+
+	bool IsValid();
 
 private:
 	QByteArray rawUri;

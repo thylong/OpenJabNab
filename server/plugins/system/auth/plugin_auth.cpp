@@ -4,15 +4,36 @@
 #include "account.h"
 #include "bunny.h"
 #include "bunnymanager.h"
+#include "messagepacket.h"
 #include "iq.h"
 #include "log.h"
 #include "settings.h"
 #include "xmpphandler.h"
-
-Q_EXPORT_PLUGIN2(plugin_auth, PluginAuth)
+#include "translator.h"
 
 PluginAuth::PluginAuth():PluginAuthInterface("auth", "Manage Authentication process")
 {
+	minBootcode = GetSettings("Bootcode", 0).toInt();
+	badBootcodes = GetSettings("Bad", QStringList()).toStringList();
+	currentId = 1;
+}
+
+void PluginAuth::OnBunnyConnect(Bunny * b)
+{
+	//LogDebug(QString("%1 just connect, boot is %2 (base %3). Minimum is %4, not compatibles : %5").arg(QString(b->GetID()), b->GetBootcode(), QString::number(b->GetBootcodeBase()), QString::number(minBootcode), badBootcodes.join(", ")));
+	if(b->GetVersion() == 2)
+	{
+		if(b->GetBootcodeBase() < minBootcode)
+		{
+			LogDebug(QString("Rebooting %1 (bootcode %2 < OJN%3)").arg(QString(b->GetID()), b->GetBootcode(), QString::number(minBootcode)));
+			b->SendPacket(MessagePacket("RB\n"), "auth");
+		}
+		else if(badBootcodes.contains(QString::number(b->GetBootcodeBase())))
+		{
+			LogDebug(QString("Rebooting %1 (bootcode %2 is buggy)").arg(QString(b->GetID()), b->GetBootcode()));
+			b->SendPacket(MessagePacket("RB\n"), "auth");
+		}
+	}
 }
 
 // Helpers
@@ -46,13 +67,29 @@ bool PluginAuth::DoAuth(XmppHandler * xmpp, QByteArray const& data, Bunny ** pBu
 			// We should receive <?xml version='1.0' encoding='UTF-8'?><stream:stream to='ojn.soete.org' xmlns='jabber:client' xmlns:stream='http://etherx.jabber.org/streams' version='1.0'>"
 			if(data.startsWith("<?xml version='1.0' encoding='UTF-8'?>"))
 			{
+
+				QRegExp rx("from=\"([^\"]*)\"");
+				if (rx.indexIn(data) != -1)
+				{
+					QByteArray const username = rx.cap(1).toLatin1();
+					Bunny * bunny = BunnyManager::GetBunny(username);
+					*pBunny = bunny; // Auth OK, set current bunny
+				}
 				// Send an auth Request
-				answer.append("<?xml version='1.0'?><stream:stream xmlns='jabber:client' xmlns:stream='http://etherx.jabber.org/streams' id='2173750751' from='"+ xmpp->GetXmppDomain() + "' version='1.0' xml:lang='en'>");
+				answer.append("<?xml version='1.0'?><stream:stream xmlns='jabber:client' xmlns:stream='http://etherx.jabber.org/streams' id='"+QString::number(currentId)+"' from='"+ xmpp->GetXmppDomain() + "' version='1.0' xml:lang='en'>");
 				answer.append("<stream:features><mechanisms xmlns='urn:ietf:params:xml:ns:xmpp-sasl'><mechanism>DIGEST-MD5</mechanism><mechanism>PLAIN</mechanism></mechanisms><register xmlns='http://violet.net/features/violet-register'/></stream:features>");
+				currentId++;
 				xmpp->currentAuthStep = 1;
 				return true;
 			}
-			LogError("Bad Auth Step 0, disconnect");
+			if(data.length())
+			{
+				LogError("Bad Auth Step 0, disconnect ("+QString(data)+")");
+			}
+			else
+			{
+				LogError("Bad Auth Step 0, disconnect");
+			}
 			return false;
 
 		case 1:
@@ -79,6 +116,7 @@ bool PluginAuth::DoAuth(XmppHandler * xmpp, QByteArray const& data, Bunny ** pBu
 					return true;
 				}
 				LogError("Bad Auth Step 1, disconnect");
+				LogError("Received : " + QString(data));
 				return false;
 			}
 
@@ -88,13 +126,13 @@ bool PluginAuth::DoAuth(XmppHandler * xmpp, QByteArray const& data, Bunny ** pBu
 				QRegExp rx("<response[^>]*>(.*)</response>");
 				if (rx.indexIn(data) != -1)
 				{
-					QByteArray authString = QByteArray::fromBase64(rx.cap(1).toAscii()).replace((char)0, "");
+					QByteArray authString = QByteArray::fromBase64(rx.cap(1).toLatin1()).replace((char)0, "");
 					// authString is like : username="",nonce="",cnonce="",nc=,qop=auth,digest-uri="",response=,charset=utf-8
 					// Parse values
 					rx.setPattern("username=\"([^\"]*)\",nonce=\"([^\"]*)\",cnonce=\"([^\"]*)\",nc=([^,]*),qop=auth,digest-uri=\"([^\"]*)\",response=([^,]*),charset=utf-8");
 					if(rx.indexIn(authString) != -1)
 					{
-						QByteArray const username = rx.cap(1).toAscii();
+						QByteArray const username = rx.cap(1).toLatin1();
 						Bunny * bunny = BunnyManager::GetBunny(username);
 
 						// Check if we want to bypass auth
@@ -113,11 +151,11 @@ bool PluginAuth::DoAuth(XmppHandler * xmpp, QByteArray const& data, Bunny ** pBu
 
 
 						QByteArray const password = bunny->GetBunnyPassword();
-						QByteArray const nonce = rx.cap(2).toAscii();
-						QByteArray const cnonce = rx.cap(3).toAscii().append((char)0); // cnonce have a dummy \0 at his end :(
-						QByteArray const nc = rx.cap(4).toAscii();
-						QByteArray const digest_uri = rx.cap(5).toAscii();
-						QByteArray const bunnyResponse = rx.cap(6).toAscii();
+						QByteArray const nonce = rx.cap(2).toLatin1();
+						QByteArray const cnonce = rx.cap(3).toLatin1().append((char)0); // cnonce have a dummy \0 at his end :(
+						QByteArray const nc = rx.cap(4).toLatin1();
+						QByteArray const digest_uri = rx.cap(5).toLatin1();
+						QByteArray const bunnyResponse = rx.cap(6).toLatin1();
 						if(bunnyResponse == ComputeResponse(username, password, nonce, cnonce, nc, digest_uri, "AUTHENTICATE"))
 						{
 							// Send challenge back
@@ -141,6 +179,7 @@ bool PluginAuth::DoAuth(XmppHandler * xmpp, QByteArray const& data, Bunny ** pBu
 					}
 				}
 				LogError("Bad Auth Step 2, disconnect");
+				LogError("Received : " + QString(data));
 				return false;
 			}
 
@@ -154,6 +193,7 @@ bool PluginAuth::DoAuth(XmppHandler * xmpp, QByteArray const& data, Bunny ** pBu
 				return true;
 			}
 			LogError("Bad Auth Step 3, disconnect");
+			LogError("Received : " + QString(data));
 			return false;
 
 		case 4:
@@ -166,10 +206,19 @@ bool PluginAuth::DoAuth(XmppHandler * xmpp, QByteArray const& data, Bunny ** pBu
 				xmpp->currentAuthStep = 0;
 				(*pBunny)->Authenticated();
 				(*pBunny)->SetXmppHandler(xmpp);
+
+				(*pBunny)->SetGlobalSetting("LastIP", xmpp->GetBunnyIp());
+				(*pBunny)->RemoveGlobalSetting("Last PingConnection");
+				if(QString((*pBunny)->GetID()).startsWith("000e")) {
+					(*pBunny)->SetVersion(3);
+				} else {
+					(*pBunny)->SetVersion(2);
+				}
 				// Bunny is now authenticated
 				return true;
 			}
 			LogError("Bad Auth Step 4, disconnect");
+			LogError("Received : " + QString(data));
 			return false;
 
 
@@ -183,11 +232,12 @@ bool PluginAuth::DoAuth(XmppHandler * xmpp, QByteArray const& data, Bunny ** pBu
 					QRegExp rx("<query xmlns=\"violet:iq:register\"><username>([0-9a-f]*)</username><password>([0-9a-f]*)</password></query>");
 					if(rx.indexIn(content) != -1)
 					{
-						QByteArray user = rx.cap(1).toAscii();
-						QByteArray password = rx.cap(2).toAscii();
+						QByteArray user = rx.cap(1).toLatin1();
+						QByteArray password = rx.cap(2).toLatin1();
 						Bunny * bunny = BunnyManager::GetBunny(user);
 						if(bunny->SetBunnyPassword(ComputeXor(user,password)))
 						{
+							LogError(QString("Setting password (%1) for bunny : %2").arg(QString(password), QString(user)));
 							answer.append(iqAuth.Reply(IQ::Iq_Result, "%1 %2 %3 %4", content));
 							xmpp->currentAuthStep = 1;
 							return true;
@@ -212,7 +262,7 @@ bool PluginAuth::HttpRequestHandle(HTTPRequest & request)
 	if (uri.startsWith("/vl/sendMailXMPP.jsp"))
 	{
 		QString mac = request.GetArg("m");
-		Bunny * b = BunnyManager::GetBunny(this, mac.toAscii());
+		Bunny * b = BunnyManager::GetBunny(this, mac.toLatin1());
 		b->ClearBunnyPassword();
 		LogError("Bunny just call sendMailXMPP, password reset");
 		return true;
@@ -227,6 +277,7 @@ void PluginAuth::InitApiCalls()
 {
 	DECLARE_PLUGIN_API_CALL("setAuthMethod(name)", PluginAuth, Api_SelectAuth);
 	DECLARE_PLUGIN_API_CALL("getListOfAuthMethods()", PluginAuth, Api_GetListOfAuths);
+	DECLARE_PLUGIN_API_CALL("config()", PluginAuth, Api_Config);
 }
 
 PLUGIN_API_CALL(PluginAuth::Api_SelectAuth)
@@ -243,6 +294,64 @@ PLUGIN_API_CALL(PluginAuth::Api_GetListOfAuths)
 	Q_UNUSED(account);
 
 	return new ApiManager::ApiError(QString("This API is deprecated"));
+}
+
+PLUGIN_API_CALL(PluginAuth::Api_Config)
+{
+	if(!account.IsAdmin())
+		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+
+	if(!hRequest.HasArg("action"))
+		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
+
+	QString action = hRequest.GetArg("action");
+
+	if(action == "bootcode")
+	{
+		if(hRequest.HasArg("set"))
+		{
+			minBootcode = hRequest.GetArg("set").toInt();
+			SetSettings("Bootcode", minBootcode);
+			return new ApiManager::ApiOk(Translator::tr("Minimum bootcode set to %1", account).arg(hRequest.GetArg("set")));
+		}
+		else
+		{
+			return new ApiManager::ApiString(QString::number(GetSettings("Bootcode", 0).toInt()));
+		}
+	}
+	if(action == "buggy")
+	{
+		if(hRequest.HasArg("add"))
+		{
+			QString bootcode = hRequest.GetArg("add");
+			QStringList badBootcodes = GetSettings("Bad", QStringList()).toStringList();
+			badBootcodes.append(bootcode);
+			badBootcodes.removeDuplicates();
+			SetSettings("Bad", badBootcodes);
+			return new ApiManager::ApiOk(Translator::tr("Bootcode %1 added to buggy list", account).arg(hRequest.GetArg("add")));
+		}
+		else if(hRequest.HasArg("remove"))
+		{
+			QString bootcode = hRequest.GetArg("remove");
+			QStringList badBootcodes = GetSettings("Bad", QStringList()).toStringList();
+			badBootcodes.removeAll(bootcode);
+			badBootcodes.removeDuplicates();
+			SetSettings("Bad", badBootcodes);
+			return new ApiManager::ApiOk(Translator::tr("Bootcode %1 removed from buggy list", account).arg(hRequest.GetArg("remove")));
+		}
+		else if(hRequest.HasArg("list"))
+		{
+			return new ApiManager::ApiList(GetSettings("Bad", QStringList()).toStringList());
+		}
+		else
+		{
+			return new ApiManager::ApiString(QString::number(GetSettings("Bootcode", 0).toInt()));
+		}
+	}
+	else
+	{
+		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
+	}
 }
 
 

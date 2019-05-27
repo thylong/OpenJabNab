@@ -1,5 +1,5 @@
-#ifndef _PLUGININTERFACE_H_
-#define _PLUGININTERFACE_H_
+#ifndef _TTSINTERFACE_H_
+#define _TTSINTERFACE_H_
 
 #include <QByteArray>
 #include <QCoreApplication>
@@ -9,6 +9,7 @@
 #include <QtPlugin>
 #include "log.h"
 #include "settings.h"
+#include "voice.h"
 
 class Account; 
 
@@ -23,7 +24,7 @@ public:
 	// Called to init tts, return false if something is wrong
 	virtual bool Init() { return true; };
 
-	virtual QByteArray CreateNewSound(QString, QString, bool) { return ""; }
+	virtual QString CreateNewSound(QString, QString, bool) { return ""; }
 
 	// Settings
 	QVariant GetSettings(QString const& key, QVariant const& defaultValue = QVariant()) const;
@@ -36,12 +37,21 @@ public:
 	// Plugin enable/disable functions
 	bool GetEnable() const;
 
-	// Plugin type
-	int GetType() const;
+	// Send url toiask to bunny instead of file
+	virtual bool canSendUrl() { return false; }
+	virtual QByteArray SendSoundUrl(QString, QString, bool) { return ""; }
+
+	QStringList GetLanguageList();
+	QStringList GetVoiceList(QString language);
+	QMap<QString, QString> GetVoiceListWithName(QString language);
+	QMap<QString, QMap<QString, QString> > GetAllVoices();
+	Voice GetVoice(QString name);
+	Voice GetBestVoice(QString language);
+	Voice GetBestVoice(QString language, Voice::VoiceGenre genre);
 
 protected:
 	void SetEnable(bool);
-	QStringList voiceList;
+	QMap<QString, Voice> voiceList;
 	QDir ttsFolder;
 	QString ttsHTTPUrl;
 

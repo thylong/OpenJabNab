@@ -1,0 +1,10 @@
+cmake_minimum_required(VERSION 3.7)
+project(plugin_record)
+
+ojnPlugin(NAME ${PROJECT_NAME}
+	  FILES plugin_record.h plugin_record.cpp
+	  INCLUDE_DIRS
+	  LIBRARIES
+	  DEFINITIONS
+	  QTMODULES
+)

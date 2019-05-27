@@ -15,6 +15,13 @@ TTS=acapela
 MaxNumberOfBunnies=64
 MaxBurstNumberOfBunnies=72
 
+[Database]
+Hostname=127.0.0.1
+DBName=ojn
+User=ojn
+Pass=ojn
+Port=3306
+
 [OpenJabNabServers]
 PingServer=my.domain.com
 BroadServer=my.domain.com

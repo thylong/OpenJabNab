@@ -2,11 +2,14 @@
 #define _PLUGINMSGALL_H_
 
 #include "plugininterface.h"
+#include "pluginmessageinterface.h"
 
-class PluginMsgall : public PluginInterface
+class PluginMsgall : public PluginInterface, PluginMessageInterface
 {
 	Q_OBJECT
-	Q_INTERFACES(PluginInterface)
+	Q_INTERFACES(PluginInterface PluginMessageInterface)
+
+    Q_PLUGIN_METADATA(IID "ojn.plugin.system.msgall" FILE "")
 
 public:
 	PluginMsgall();

@@ -21,6 +21,7 @@ public:
 
 	static Bunny * GetBunny(PluginInterface *, QByteArray const&);
 	static Bunny * GetBunny(QByteArray const&);
+	static Bunny * GetKnownBunny(QByteArray const&);
 	static void PluginStateChanged(PluginInterface *);
 	static void Init();
 	static void LoadBunnies();
@@ -31,22 +32,33 @@ public:
 	// API
 	static void InitApiCalls();
 	int GetConnectedBunnyCount();
+	int GetConnectedBunnyCount(int);
 	int GetBunnyCount();
 
 protected:
 	static Bunny * GetConnectedBunny(QByteArray const&);
 	static QVector<Bunny *> GetConnectedBunnies();
+	static QVector<Bunny *> GetConnectedBunnies(int);
 	static void PluginLoaded(PluginInterface *);
 	static void PluginUnloaded(PluginInterface *);
 
 	// API
+	API_CALL(Api_Export);
 	API_CALL(Api_GetListOfConnectedBunnies);
+	API_CALL(Api_GetListOfSleepingBunnies);
 	API_CALL(Api_GetListOfBunnies);
+	API_CALL(Api_GetListOfBunniesByIP);
 	API_CALL(Api_AddBunny);
+	API_CALL(Api_ResetAllPassword);
 	API_CALL(Api_RemoveBunny);
 	API_CALL(Api_GetListOfAllConnectedBunnies);
+	API_CALL(Api_GetListOfAllSleepingBunnies);
 	API_CALL(Api_GetListOfAllBunnies);
 	API_CALL(Api_ResetAllBunniesPassword);
+	API_CALL(Api_GetListOfPluginsForBunnies);
+	API_CALL(Api_SettingsForBunnies);
+	API_CALL(Api_SettingsForBunny);
+	API_CALL(Api_EmailsForBunnies);
 
 private:
 	BunnyManager();

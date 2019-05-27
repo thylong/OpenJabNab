@@ -1,0 +1,13 @@
+cmake_minimum_required(VERSION 3.7)
+
+add_subdirectory(choregraphy/)
+add_subdirectory(clock/)
+add_subdirectory(colorbreathing/)
+add_subdirectory(earinfo/)
+add_subdirectory(ledcustom/)
+add_subdirectory(messages/)
+add_subdirectory(signature/)
+add_subdirectory(sleep/)
+add_subdirectory(surprise/)
+add_subdirectory(taichi/)
+

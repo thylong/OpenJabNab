@@ -4,6 +4,7 @@
 #include <QByteArray>
 #include <QList>
 #include <QObject>
+#include <QTimer>
 #include <QTcpSocket>
 #include "global.h"
 #include "packet.h"
@@ -17,12 +18,16 @@ class OJN_EXPORT XmppHandler : public QObject
 public:
 	XmppHandler(QTcpSocket *);
 	void WriteDataToBunny(QByteArray const& p);
+	void WriteExpertDataToBunny(QByteArray const& p);
 	void WriteToBunnyAndLog(QByteArray const&);
 	QByteArray const& GetXmppDomain() { return OjnXmppDomain; }
 	unsigned int currentAuthStep;
+	QString GetBunnyIp();
 
 public slots:
 	void Disconnect();
+	void Timeout();
+	void Bind();
 
 protected:
 	virtual ~XmppHandler() {};
@@ -43,6 +48,17 @@ private:
 
 	static unsigned short msgNb;
 	static unsigned short msgStreamNb;
+
+	QString tempMessage;
+	QByteArray bindingResource;
+	QByteArray lastQueryResource;
+
+	QTimer * timeoutTimer;
+	QTimer * bindTimer;
+
+	int streamingQueryCount;
+	unsigned long long tempInXmppTraffic;
+	unsigned long long tempOutXmppTraffic;
 };
 
 #endif

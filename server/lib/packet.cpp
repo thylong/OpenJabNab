@@ -1,7 +1,10 @@
 #include "ambientpacket.h"
+#include "chorconfigpacket.h"
+#include "serviceconfigpacket.h"
 #include "messagepacket.h"
 #include "packet.h"
 #include "sleeppacket.h"
+#include "configpacket.h"
 #include "log.h"
 
 QList<Packet*> Packet::Parse(QByteArray const& originalBuffer)
@@ -29,10 +32,22 @@ QList<Packet*> Packet::Parse(QByteArray const& originalBuffer)
 				p = AmbientPacket::Parse(buffer.mid(4, len));
 				break;
 
+			case Packet_Serviceconfig:
+				p = ServiceconfigPacket::Parse(buffer.mid(4, len));
+				break;
+			
+			case Packet_Chorconfig:
+				p = ChorconfigPacket::Parse(buffer.mid(4, len));
+				break;
+			
 			case Packet_Message:
 				p = MessagePacket::Parse(buffer.mid(4, len));
 				break;
 			
+			case Packet_Config:
+				p = ConfigPacket::Parse(buffer.mid(4, len));
+				break;
+
 			case Packet_Sleep:
 				p = SleepPacket::Parse(buffer.mid(4, len));
 				break;

@@ -5,7 +5,9 @@
 #include <QDataStream>
 #include <QFlags>
 #include <QList>
+#include <QDir>
 #include <QString>
+#include <QDateTime>
 #include "apimanager.h"
 #include "apihandler.h"
 #include "global.h"
@@ -13,6 +15,7 @@
 class OJN_EXPORT Account : public ApiHandler<Account>
 {
 	friend class AccountManager;
+	friend class File2Db;
 public:
 	enum SpecialAccount { Guest, DefaultAdmin };
 	enum Right { None = 0x0, Read = 0x1, Write = 0x2, ReadWrite = 0x3};
@@ -23,14 +26,26 @@ public:
 
 	QByteArray const& GetPasswordHash() const;
 	void SetPassword(QByteArray const& p);
+	void SetUsername(QString const& usr);
 	QString const& GetLogin() const;
 	QString const& GetUsername() const;
 	QByteArray const& GetToken() const;
 	QString const& GetLanguage() const;
+	QString const& GetEmail() const;
 	void SetLanguage(QString const& lng);
+	void SetEmail(QString const& email);
 	void SetToken(QByteArray);
 	bool IsAdmin() const;
+	void setAdmin(bool adm);
 	void setAdmin();
+	bool IsPremium() const;
+	void setPremium(bool premium);
+	bool IsVip() const;
+	void setVip(bool vip);
+	QDateTime GetLastLogin();
+	int GetLoginCount();
+	void SetLoginCount(int);
+	void AddLoginCount();
 	bool HasAccess(Access id, Right r) const;
 	void SetAccess(Access id,Right r);
 	bool HasBunnyAccess(QByteArray const& b) const;
@@ -39,6 +54,16 @@ public:
 	QList<QByteArray> const& GetZtampsList() const;
 	static int Version();
 	QByteArray AddZtamp(QByteArray const& z);
+	QDir * GetUserDir();
+
+	bool GetAbuse();
+	int GetAbuseCount();
+	QDateTime GetLastBanStart();
+	QDateTime GetLastBanEnd();
+	void SetAbuse();
+	void SetAbuseCount(int);
+	QByteArray AddBunny(QByteArray const& b);
+	bool RemoveBunny(QByteArray const& b);
 
 private:
 	Account();
@@ -46,11 +71,12 @@ private:
 	Account(QDataStream & in, unsigned int version);
 	Account(QString const& login, QString const& username, QByteArray const& passwordHash);
 	Account(QString const& login, QString const& username, QByteArray const& passwordHash, QString const& language);
+	Account(QString const& login, QString const& username, QByteArray const& passwordHash, QString const& language, QString const& email);
 
 	void SetDefault();
-	QByteArray AddBunny(QByteArray const& b);
-	bool RemoveBunny(QByteArray const& b);
 	bool RemoveZtamp(QByteArray const& z);
+	bool SaveNeeded();
+	void SetSaveNeeded(bool const& s);
 
 	static void InitApiCalls();
 
@@ -59,8 +85,16 @@ private:
 	QByteArray passwordHash;
 	QByteArray token;
 	QString language;
+	QString email;
+	bool needSave;
 
 	bool isAdmin;
+	bool isPremium;
+	bool isVip;
+	int loginCount;
+	QDateTime lastLogin;
+	int abuseCount;
+	QDateTime startBan;
 	QList<Rights> UserAccess;
 
 	QList<QByteArray> listOfBunnies;
@@ -92,6 +126,12 @@ inline QByteArray const& Account::GetPasswordHash() const
 
 inline void Account::SetPassword(QByteArray const& p) {
 	passwordHash = p;
+	needSave = true;
+}
+
+inline void Account::SetUsername(QString const& usr) {
+	username = usr;
+	needSave = true;
 }
 
 inline QString const& Account::GetLogin() const
@@ -111,6 +151,17 @@ inline QString const& Account::GetLanguage() const
 
 inline void Account::SetLanguage(QString const& lng) {
 	language = lng;
+	needSave = true;
+}
+
+inline QString const& Account::GetEmail() const
+{
+	return email;
+}
+
+inline void Account::SetEmail(QString const& m) {
+	email = m;
+	needSave = true;
 }
 
 inline QByteArray const& Account::GetToken() const
@@ -121,6 +172,56 @@ inline QByteArray const& Account::GetToken() const
 inline void Account::SetToken(QByteArray t)
 {
 	token = t;
+	needSave = true;
+}
+
+inline bool Account::IsPremium() const
+{
+	return isPremium;
+}
+
+inline void Account::setPremium(bool premium) {
+	isPremium = premium;
+	needSave = true;
+}
+
+inline int Account::GetLoginCount()
+{
+	if(lastLogin.date().dayOfYear() != QDate::currentDate().dayOfYear())
+	{
+		loginCount = 0;
+	}
+	return loginCount;
+}
+
+inline QDateTime Account::GetLastLogin()
+{
+	return lastLogin;
+}
+
+inline void Account::SetLoginCount(int i) {
+	loginCount = i;
+	needSave = true;
+}
+
+inline void Account::AddLoginCount() {
+	if(lastLogin.date().dayOfYear() != QDate::currentDate().dayOfYear())
+	{
+		loginCount = 0;
+	}
+	loginCount++;
+	lastLogin = QDateTime::currentDateTime();
+	needSave = true;
+}
+
+inline bool Account::IsVip() const
+{
+	return isVip;
+}
+
+inline void Account::setVip(bool vip) {
+	isVip = vip;
+	needSave = true;
 }
 
 inline bool Account::IsAdmin() const
@@ -128,8 +229,13 @@ inline bool Account::IsAdmin() const
 	return isAdmin;
 }
 
+inline void Account::setAdmin(bool adm) {
+	isAdmin = adm;
+	needSave = true;
+}
+
 inline void Account::setAdmin() {
-	isAdmin = true;
+	setAdmin(true);
 }
 
 inline bool Account::HasAccess(Access id,Right r) const
@@ -142,6 +248,7 @@ inline bool Account::HasAccess(Access id,Right r) const
 inline void Account::SetAccess(Access id,Right r)
 {
 	UserAccess[id] = r;
+	needSave = true;
 }
 
 inline bool Account::HasZtampAccess(QByteArray const& b) const
@@ -159,31 +266,89 @@ inline bool Account::HasBunnyAccess(QByteArray const& b) const
 }
 
 inline int Account::Version() {
-	return 1;
+	return 4;
 }
 
 // Inline protected methods
 inline QByteArray Account::AddBunny(QByteArray const& b) {
 	if(!listOfBunnies.contains(b))
+	{
 		listOfBunnies.append(b);
+		needSave = true;
+	}
 	return b;
 }
 
 inline bool Account::RemoveBunny(QByteArray const& b)
 {
-	return (listOfBunnies.removeAll(b) != 0);
+	bool ret = (listOfBunnies.removeAll(b) != 0);
+	if(ret)
+	{
+		needSave = true;
+	}
+	return ret;
 }
 
 inline QByteArray Account::AddZtamp(QByteArray const& z)
 {
 	if(!listOfZtamps.contains(z))
 		listOfZtamps.append(z);
+	needSave = true;
 	return z;
 }
 
 inline bool Account::RemoveZtamp(QByteArray const& z)
 {
+	needSave = true;
 	return (listOfZtamps.removeAll(z) != 0);
+}
+
+inline bool Account::SaveNeeded()
+{
+	return needSave;
+}
+
+inline void Account::SetSaveNeeded(bool const& s)
+{
+	needSave = s;
+}
+
+inline void Account::SetAbuse()
+{
+	startBan = QDateTime::currentDateTime();
+	abuseCount++;
+	needSave = true;
+}
+
+inline void Account::SetAbuseCount(int i)
+{
+	abuseCount = i;
+	needSave = true;
+}
+
+inline int Account::GetAbuseCount()
+{
+	return abuseCount;
+}
+
+inline QDateTime Account::GetLastBanStart()
+{
+	return startBan;
+}
+
+inline QDateTime Account::GetLastBanEnd()
+{
+	return startBan.addDays(2 * abuseCount);
+}
+
+inline bool Account::GetAbuse()
+{
+	QDateTime now = QDateTime::currentDateTime();
+	if(startBan.daysTo(now) > 2 * abuseCount)
+	{
+		return false;
+	}
+	return true;
 }
 
 #endif

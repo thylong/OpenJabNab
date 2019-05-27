@@ -1,37 +1,24 @@
 #include <QCoreApplication>
 #include <QDateTime>
-#include <QDir>
-#include <QFile>
+#include <QtSql/QtSql>
 #include "ambientpacket.h"
 #include "ztamp.h"
 #include "bunny.h"
 #include "log.h"
 #include "httprequest.h"
-#include "netdump.h"
 #include "plugininterface.h"
 #include "pluginmanager.h"
+#include "dbmanager.h"
 #include "sleeppacket.h"
 #include "xmpphandler.h"
+#include "translator.h"
+#include "bunnymanager.h"
 
 Ztamp::Ztamp(QByteArray const& ztampID)
 {
-	// Check ztamps folder
-	QDir ztampsDir = QDir(QCoreApplication::applicationDirPath());
-	if (!ztampsDir.cd("ztamps"))
-	{
-		if (!ztampsDir.mkdir("ztamps"))
-		{
-			LogError("Unable to create ztamps directory !\n");
-			exit(-1);
-		}
-		ztampsDir.cd("ztamps");
-	}
+	needSave = false;
 	id = ztampID;
-	configFileName = ztampsDir.absoluteFilePath(ztampID.toHex()+".dat");
-
-	// Check if config file exists and load it
-	if (QFile::exists(configFileName))
-		LoadConfig();
+	LoadConfig();
 
 	saveTimer = new QTimer(this);
 	connect(saveTimer, SIGNAL(timeout()), this, SLOT(SaveConfig()));
@@ -48,7 +35,7 @@ QString Ztamp::CheckPlugin(PluginInterface * plugin, bool isAssociated)
 	if(!plugin)
 		return QString("Unknown plugin : %1");
 
-	if(plugin->GetType() != PluginInterface::ZtampPlugin && plugin->GetType() != PluginInterface::BunnyZtampPlugin)
+	if(!(plugin->GetType() & PluginInterface::ZtampPlugin))
 		return QString("Bad plugin type : %1");
 
 	if(!plugin->GetEnable())
@@ -60,50 +47,156 @@ QString Ztamp::CheckPlugin(PluginInterface * plugin, bool isAssociated)
 	return QString();
 }
 
-
 void Ztamp::LoadConfig()
 {
-	QFile file(configFileName);
-	if (!file.open(QIODevice::ReadOnly))
+        QSqlDatabase db = DbManager::getDb();
+	bool close = DbManager::openDbIfNeeded();
+	QSqlQuery *query = new QSqlQuery(db);
+	query->prepare("SELECT serial, settings FROM ztamp WHERE serial=:serial");
+	query->bindValue(":serial", GetID());
+	query->exec();
+	if(query->size() == 1)
 	{
-		LogError(QString("Cannot open config file for reading : %1").arg(configFileName));
-		return;
-	}
-
-	QDataStream in(&file);
-	in.setVersion(QDataStream::Qt_4_3);
-	in >> GlobalSettings >> PluginsSettings >> listOfPlugins;
-	if (in.status() != QDataStream::Ok)
-	{
-		LogWarning(QString("Problem when loading config file for ztamp : %1").arg(QString(id.toHex())));
-	}
-
-	// "Load" associated ztamp plugins
-	foreach(QString s, listOfPlugins)
-	{
-		PluginInterface * p = PluginManager::Instance().GetPluginByName(s);
-		if(p)
+		query->first();
+		QDataStream stream(query->value(1).toByteArray());
+		stream.setVersion(QDataStream::Qt_4_3);
+		stream >> GlobalSettings >> PluginsSettings >> listOfPlugins;
+		if (stream.status() != QDataStream::Ok)
 		{
-			listOfPluginsPtr.append(p);
-			if(!p->GetEnable())
-				LogWarning(QString("Ztamp %1 : '%2' is globally disabled !").arg(QString(GetID()), s));
+			LogWarning(QString("Problem when loading settings for ztamp : %1").arg(QString(id.toHex())));
 		}
-		else
-			LogError(QString("Ztamp %1 has invalid plugin (%2)!").arg(QString(GetID()), s));
+
+		foreach(QString s, listOfPlugins)
+		{
+			PluginInterface * p = PluginManager::Instance().GetPluginByName(s);
+			if(p)
+			{
+				listOfPluginsPtr.append(p);
+				if(!p->GetEnable())
+				{
+					//LogWarning(QString("Ztamp %1 : '%2' is globally disabled !").arg(QString(GetID()), s));
+				}
+			}
+			else
+				LogError(QString("Ztamp %1 has invalid plugin (%2)!").arg(QString(GetID()), s));
+		}
 	}
+	query->finish();
+	delete query;
+	if(close)
+		DbManager::releaseDb();
 }
 
 void Ztamp::SaveConfig()
 {
-	QFile file(configFileName);
-	if (!file.open(QIODevice::WriteOnly))
+	if(needSave)
 	{
-		LogError(QString("Cannot open config file for writing : %1").arg(configFileName));
-		return;
+		QByteArray settings;
+		QDataStream out(&settings, QIODevice::WriteOnly);
+		out.setVersion(QDataStream::Qt_4_3);
+		out << GlobalSettings << PluginsSettings << listOfPlugins;// << knownRFIDTags;
+
+	        QSqlDatabase db = DbManager::getDb();
+		bool close = DbManager::openDbIfNeeded();
+		QSqlQuery *query = new QSqlQuery(db);
+
+		QStringList owners = GlobalSettings.contains("OwnerAccounts") ? GlobalSettings.value("OwnerAccounts").toStringList() : QStringList();
+		QStringList ownerList;
+		foreach(QString o, owners)
+		{
+			query->prepare("SELECT id FROM acount WHERE `username`=:username");
+			query->bindValue(":username", o);
+			query->exec();
+			if(query->size() == 1)
+			{
+				query->first();
+				ownerList << query->value(0).toString();
+			}
+			query->finish();
+		}
+
+		query->prepare("INSERT INTO ztamp SET `serial`=:serial, `settings`=:settings, `server_id`=(SELECT `id` FROM server WHERE `hostname`=:host), `accounts`=:accounts ON DUPLICATE KEY UPDATE `settings`=:settings_up, `server_id`=(SELECT `id` FROM server WHERE `hostname`=:host_up), `accounts`=:accounts_up");
+	//	query->bindValue(":user", a->GetLogin());
+		query->bindValue(":serial", GetID());
+		query->bindValue(":accounts", ownerList.join(","));
+		query->bindValue(":accounts_up", ownerList.join(","));
+		query->bindValue(":settings", settings);
+		query->bindValue(":settings_up", settings);
+		query->bindValue(":host", GlobalSettings::GetString("OpenJabNabServers/PingServer"));
+		query->bindValue(":host_up", GlobalSettings::GetString("OpenJabNabServers/PingServer"));
+		bool ret = query->exec();
+		if(!ret)
+		{
+			LogError(QString("Impossible to save ztamp in DB : %1").arg(query->lastError().driverText()));
+		}
+		else
+		{
+			needSave = false;
+		}
+		delete query;
+		if(close)
+			DbManager::releaseDb();
 	}
-	QDataStream out(&file);
-	out.setVersion(QDataStream::Qt_4_3);
-	out << GlobalSettings << PluginsSettings << listOfPlugins;// << knownRFIDTags;
+}
+
+QMap<QString, QVariant> Ztamp::Associations()
+{
+	return GetGlobalSetting("Associations", QMap<QString, QVariant>()).toMap();
+}
+
+QString Ztamp::Association(Bunny * b)
+{
+	QMap<QString, QVariant> list = Associations();
+	if(list.contains(QString(b->GetID())))
+		return list.value(QString(b->GetID())).toString();
+	return "";
+}
+
+bool Ztamp::Associate(Bunny * b, PluginInterface * p)
+{
+	return Associate(QString(b->GetID()), p->GetName());
+}
+
+bool Ztamp::Associate(Bunny * b, QString p)
+{
+	return Associate(QString(b->GetID()), p);
+}
+
+bool Ztamp::Associate(QString b, PluginInterface * p)
+{
+	return Associate(b, p->GetName());
+}
+
+bool Ztamp::Associate(QString b, QString p)
+{
+	QMap<QString, QVariant> list = Associations();
+	if(list.contains(b))
+	{
+		Bunny *bunny = BunnyManager::GetBunny(b.toLatin1());
+		QString plugin = list.value(b).toString();
+		QMap<QString, QVariant> rfid = bunny->GetPluginSetting(plugin, "RFID", QMap<QString, QVariant>()).toMap();
+		if(rfid.contains(QString(GetID())))
+		{
+			rfid.remove(QString(GetID()));
+			bunny->SetPluginSetting(plugin, "RFID", rfid);
+		}
+	}
+	list.insert(b, p);
+	SetGlobalSetting("Associations", list);
+	return true;
+}
+
+bool Ztamp::Dissociate(Bunny * b)
+{
+	return Dissociate(QString(b->GetID()));
+}
+
+bool Ztamp::Dissociate(QString b)
+{
+	QMap<QString, QVariant> list = Associations();
+	list.remove(b);
+	SetGlobalSetting("Associations", list);
+	return true;
 }
 
 QVariant Ztamp::GetGlobalSetting(QString const& key, QVariant const& defaultValue) const
@@ -116,11 +209,13 @@ QVariant Ztamp::GetGlobalSetting(QString const& key, QVariant const& defaultValu
 
 void Ztamp::SetGlobalSetting(QString const& key, QVariant const& value)
 {
+	needSave = true;
 	GlobalSettings.insert(key, value);
 }
 
 void Ztamp::RemoveGlobalSetting(QString const& key)
 {
+	needSave = true;
 	GlobalSettings.remove(key);
 }
 
@@ -134,11 +229,13 @@ QVariant Ztamp::GetPluginSetting(QString const& pluginName, QString const& key, 
 
 void Ztamp::SetPluginSetting(QString const& pluginName, QString const& key, QVariant const& value)
 {
+	needSave = true;
 	PluginsSettings[pluginName].insert(key, value);
 }
 
 void Ztamp::RemovePluginSetting(QString const& pluginName, QString const& key)
 {
+	needSave = true;
 	PluginsSettings[pluginName].remove(key);
 }
 
@@ -149,6 +246,7 @@ void Ztamp::AddPlugin(PluginInterface * p)
 	{
 		listOfPlugins.append(p->GetName());
 		listOfPluginsPtr.append(p);
+		needSave = true;
 		p->OnZtampConnect(this);
 		SaveConfig();
 	}
@@ -161,6 +259,7 @@ void Ztamp::RemovePlugin(PluginInterface * p)
 	{
 		listOfPlugins.removeAll(p->GetName());
 		listOfPluginsPtr.removeAll(p);
+		needSave = true;
 		p->OnZtampDisconnect(this);
 		SaveConfig();
 	}
@@ -259,6 +358,132 @@ void Ztamp::InitApiCalls()
 	DECLARE_API_CALL("setZtampName(name)", &Ztamp::Api_SetZtampName);
 	DECLARE_API_CALL("removeOwner(login)", &Ztamp::Api_RemoveOwner);
 	DECLARE_API_CALL("resetOwner()", &Ztamp::Api_ResetOwner);
+
+	DECLARE_API_CALL("owner()", &Ztamp::Api_Owner);
+	DECLARE_API_CALL("config()", &Ztamp::Api_Config);
+	DECLARE_API_CALL("plugin()", &Ztamp::Api_Plugin);
+}
+
+API_CALL(Ztamp::Api_Config)
+{
+	if(!hRequest.HasArg("action"))
+		return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("action"));
+
+	QString action = hRequest.GetArg("action");
+
+	if(action == "name")
+	{
+		if(hRequest.HasArg("set"))
+		{
+			QString name = hRequest.GetArg("set");
+			SetZtampName( name );
+			return new ApiManager::ApiOk(Translator::tr("Ztamp '%1' is now named '%2'", account).arg(GetID(), name));
+		}
+		else
+		{
+			return new ApiManager::ApiString( GetZtampName() );
+		}
+	}
+	else
+	{
+		return new ApiManager::ApiError(Translator::tr("Bad argument '%1'", account).arg("action"));
+	}
+}
+
+API_CALL(Ztamp::Api_Plugin)
+{
+	if(!hRequest.HasArg("action"))
+		return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("action"));
+
+	QString action = hRequest.GetArg("action");
+
+	if(action == "association")
+	{
+		return new ApiManager::ApiMappedList(GetGlobalSetting("Associations", QMap<QString, QVariant>()).toMap());
+	}
+	else if(action == "register")
+	{
+		if(!hRequest.HasArg("name"))
+			return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("name"));
+
+		QString name = hRequest.GetArg("name");
+
+		PluginInterface * plugin = PluginManager::Instance().GetPluginByName(name);
+
+		QString error = CheckPlugin(plugin);
+		if(!error.isNull())
+			return new ApiManager::ApiError(error.arg(name));
+
+		AddPlugin(plugin);
+		return new ApiManager::ApiOk(Translator::tr("Added '%1' as active plugin", account).arg(plugin->GetVisualName()));
+	}
+	else if(action == "unregister")
+	{
+		if(!hRequest.HasArg("name"))
+			return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("name"));
+
+		QString name = hRequest.GetArg("name");
+
+		PluginInterface * plugin = PluginManager::Instance().GetPluginByName(name);
+		QString error = CheckPlugin(plugin);
+		if(!error.isNull())
+			return new ApiManager::ApiError(error.arg(name));
+
+		RemovePlugin(plugin);
+		return new ApiManager::ApiOk(Translator::tr("Removed '%1' as active plugin", account).arg(plugin->GetVisualName()));
+	}
+	else if(action == "active")
+	{
+		QList<QString> list;
+		foreach (PluginInterface * p, listOfPluginsPtr)
+			list.append(p->GetName());
+
+		return new ApiManager::ApiList(list);
+	}
+	else
+	{
+		return new ApiManager::ApiError(Translator::tr("Bad argument '%1'", account).arg("action"));
+	}
+}
+
+API_CALL(Ztamp::Api_Owner)
+{
+	if(!hRequest.HasArg("action"))
+		return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("action"));
+
+	QString action = hRequest.GetArg("action");
+
+	if(action == "list")
+	{
+		return new ApiManager::ApiList(GetGlobalSetting("OwnerAccounts",QStringList()).toStringList());
+	}
+	else if(action == "del")
+	{
+		if(!hRequest.HasArg("login"))
+			return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("login"));
+
+		QString owner = hRequest.GetArg("login");
+		if(owner == "")
+			return new ApiManager::ApiError(Translator::tr("Bad login", account));
+
+		QStringList owners = GetGlobalSetting("OwnerAccounts",QStringList()).toStringList();
+		if(owners.contains(owner))
+		{
+			owners.removeAll(owner);
+			SetGlobalSetting("OwnerAccounts", owners);
+			return new ApiManager::ApiOk(Translator::tr("Owner '%1' removed", account).arg(owner));
+		}
+		return new ApiManager::ApiError(Translator::tr("'%1' is not an owner", account).arg(owner));
+	}
+	else if(action == "reset")
+	{
+		RemoveGlobalSetting("OwnerAccounts");
+		return new ApiManager::ApiOk(Translator::tr("All owners removed", account));
+	}
+	else
+	{
+		return new ApiManager::ApiError(Translator::tr("Bad argument '%1'", account).arg("action"));
+	}
 }
 
 API_CALL(Ztamp::Api_AddPlugin)
@@ -272,7 +497,7 @@ API_CALL(Ztamp::Api_AddPlugin)
 		return new ApiManager::ApiError(error.arg(hRequest.GetArg("name")));
 
 	AddPlugin(plugin);
-	return new ApiManager::ApiOk(QString("Added '%1' as active plugin").arg(plugin->GetVisualName()));
+	return new ApiManager::ApiOk(Translator::tr("Added '%1' as active plugin", account).arg(plugin->GetVisualName()));
 }
 
 API_CALL(Ztamp::Api_RemovePlugin)
@@ -285,7 +510,7 @@ API_CALL(Ztamp::Api_RemovePlugin)
 		return new ApiManager::ApiError(error.arg(hRequest.GetArg("name")));
 
 	RemovePlugin(plugin);
-	return new ApiManager::ApiOk(QString("Removed '%1' as active plugin").arg(plugin->GetVisualName()));
+	return new ApiManager::ApiOk(Translator::tr("Removed '%1' as active plugin", account).arg(plugin->GetVisualName()));
 }
 
 API_CALL(Ztamp::Api_GetListOfAssociatedPlugins)
@@ -303,32 +528,27 @@ API_CALL(Ztamp::Api_GetListOfAssociatedPlugins)
 
 API_CALL(Ztamp::Api_SetZtampName)
 {
-	Q_UNUSED(account);
-
 	SetZtampName( hRequest.GetArg("name") );
 
-	return new ApiManager::ApiOk(QString("Ztamp '%1' is now named '%2'").arg(GetID(), hRequest.GetArg("name")));
+	return new ApiManager::ApiOk(Translator::tr("Ztamp '%1' is now named '%2'", account).arg(GetID(), hRequest.GetArg("name")));
 }
 
 API_CALL(Ztamp::Api_RemoveOwner)
 {
-	Q_UNUSED(account);
-
 	QString owner = hRequest.GetArg("login");
 	if(owner == "")
-		return new ApiManager::ApiError("Bad login");
+		return new ApiManager::ApiError(Translator::tr("Bad login", account));
 
 	QStringList owners = GetGlobalSetting("OwnerAccounts","").toStringList();
 	owners.removeAll(owner);
 	SetGlobalSetting("OwnerAccounts", owners);
-	return new ApiManager::ApiOk(QString("Owner '%1' removed").arg(owner));
+	return new ApiManager::ApiOk(Translator::tr("Owner '%1' removed", account).arg(owner));
 }
 
 API_CALL(Ztamp::Api_ResetOwner)
 {
-	Q_UNUSED(account);
 	Q_UNUSED(hRequest);
 
 	RemoveGlobalSetting("OwnerAccounts");
-	return new ApiManager::ApiOk("Owner cleared");
+	return new ApiManager::ApiOk(Translator::tr("Owner cleared", account));
 }

@@ -13,7 +13,7 @@
 #include "plugininterface.h"
 
 //class XmppHandler;
-class OJN_EXPORT Ztamp : QObject, public ApiHandler<Ztamp>
+class OJN_EXPORT Ztamp : public QObject, public ApiHandler<Ztamp>
 {
 	friend class ZtampManager;
 	Q_OBJECT
@@ -43,6 +43,15 @@ public:
 	void SetGlobalSetting(QString const&, QVariant const&);
 	void RemoveGlobalSetting(QString const&);
 
+	QMap<QString, QVariant> Associations();
+	QString Association(Bunny *);
+	bool Associate(Bunny *, PluginInterface *);
+	bool Associate(Bunny *, QString);
+	bool Associate(QString, PluginInterface *);
+	bool Associate(QString, QString);
+	bool Dissociate(Bunny *);
+	bool Dissociate(QString);
+
 	// API
 	static void InitApiCalls();
 
@@ -67,6 +76,10 @@ private:
 	API_CALL(Api_RemoveOwner);
 	API_CALL(Api_ResetOwner);
 
+	API_CALL(Api_Owner);
+	API_CALL(Api_Config);
+	API_CALL(Api_Plugin);
+
 	QByteArray id;
 	QString configFileName;
 	QHash<QString, QVariant> GlobalSettings;
@@ -74,6 +87,7 @@ private:
 	QList<QString> listOfPlugins;
 	QList<PluginInterface*> listOfPluginsPtr;
 	QTimer * saveTimer;
+	bool needSave;
 
 	// RFID Tags
 };

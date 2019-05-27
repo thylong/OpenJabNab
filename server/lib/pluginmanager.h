@@ -27,18 +27,25 @@ public:
 	bool HttpRequestHandle(HTTPRequest &);
 	void HttpRequestAfter(HTTPRequest &);
 
-	void XmppBunnyMessage(Bunny *, QByteArray const&);
-
+	bool XmppBunnyMessage(Bunny *, QByteArray const&);
+	void BeforeSendMessage(Bunny *, MessagePacket *, QString);
+	void OnInitPacket(const Bunny *, AmbientPacket &, SleepPacket &);
 	bool OnClick(Bunny *, PluginInterface::ClickType);
 	bool OnEarsMove(Bunny *, int, int);
+	bool OnListen(Bunny *, int);
+	bool OnRecord(Bunny *, QString const&);
+	bool OnRecord(Bunny *, QString const&, bool);
 	bool OnRFID(Bunny *, QByteArray const&);
 	bool OnRFID(Ztamp *, Bunny *);
+	bool OnVoiceCommand(Bunny *, QString const&, QStringList const&);
 
 	void OnBunnyConnect(Bunny *);
 	void OnBunnyDisconnect(Bunny *);
 
 	void OnZtampConnect(Ztamp *);
 	void OnZtampDisconnect(Ztamp *);
+	
+	QStringList const& GetObsoleteList() const;
 
 	QList<PluginInterface *> const& GetListOfPlugins() const;
 	PluginInterface * GetPluginByName(QString const& name) const;
@@ -67,13 +74,22 @@ private:
 	QHash<QString, PluginInterface *> listOfPluginsByName;
 	QHash<QString, PluginInterface *> listOfPluginsByFileName;
 
+	QStringList obsoleteList;
+
 	PluginAuthInterface * authPlugin;
 
 	// API
+	API_CALL(Api_GetPluginsVioletApiCall);
+
+	API_CALL(Api_Plugins);
+	API_CALL(Api_GetPlugins);
+	API_CALL(Api_GetPlugin);
 	API_CALL(Api_GetListOfPlugins);
 	API_CALL(Api_GetListOfEnabledPlugins);
+	API_CALL(Api_GetListOfTTSLogPlugins);
 
-	API_CALL(Api_GetListOfBunnyPlugins);
+	API_CALL(Api_GetListOfBunnyV2Plugins);
+	API_CALL(Api_GetListOfBunnyV1Plugins);
 	API_CALL(Api_GetListOfBunnyEnabledPlugins);
 
 	API_CALL(Api_GetListOfZtampPlugins);
@@ -88,6 +104,8 @@ private:
 	API_CALL(Api_LoadPlugin);
 	API_CALL(Api_UnloadPlugin);
 	API_CALL(Api_ReloadPlugin);
+
+	API_CALL(Api_TTSLogPlugin);
 };
 
 inline void PluginManager::Init()
@@ -99,6 +117,11 @@ inline void PluginManager::Init()
 inline void PluginManager::Close()
 {
 	Instance().UnloadPlugins();
+}
+
+inline QStringList const& PluginManager::GetObsoleteList() const
+{
+	return obsoleteList;
 }
 
 inline QList<PluginInterface *> const& PluginManager::GetListOfPlugins() const

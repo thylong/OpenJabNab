@@ -1,34 +1,86 @@
 #include <QTcpSocket>
 #include <QString>
+#include <QDebug>
+#include <QtSql/QtSql>
+#include <QTimer>
 
+#include "QsLog.h"
 #include "openjabnab.h"
+#include "cron.h"
+#include "sentencemanager.h"
 #include "accountmanager.h"
 #include "bunny.h"
 #include "bunnymanager.h"
+#include "nabaztagmanager.h"
 #include "ztamp.h"
 #include "ztampmanager.h"
 #include "httphandler.h"
 #include "log.h"
-#include "netdump.h"
+//#include "netdump.h"
 #include "pluginmanager.h"
 #include "settings.h"
 #include "ttsmanager.h"
 #include "xmpphandler.h"
+#include "translator.h"
+#include "timezonemanager.h"
+#include "timezone.h"
+#include "browsercache.h"
 
-OpenJabNab::OpenJabNab(int argc, char ** argv):QCoreApplication(argc, argv)
+#include <QDebug>
+#include "dbmanager.h"
+
+#include <QCommandLineParser>
+
+OpenJabNab::OpenJabNab(int argc, char ** argv)
+: QCoreApplication(argc, argv)
 {
-	GlobalSettings::Init();
+  QCommandLineParser cmd;
+  cmd.setApplicationDescription("openJabNab");
+  cmd.addHelpOption();
+  //parser.addVersionOption();
+  cmd.addOptions({
+    { {"c","config-dir"},
+      QCoreApplication::translate("main","Configuration directory where openjabnab.ini is located"),
+      QCoreApplication::translate("main","config-dir"),
+      QCoreApplication::applicationDirPath()
+    },
+  });
+  cmd.process(*this);
+  auto cfgDir = cmd.value("config-dir");
+	GlobalSettings::Init(cfgDir);
+
+  QString logPath = GlobalSettings::GetString("Directories/LogsDir",QCoreApplication::applicationDirPath().append("/logs"));
+	QsLogging::Logger::Init(logPath);
+
 	LogInfo("-- OpenJabNab Start --");
+
+	SentenceManager::Init();
+	DbManager::Init();
+	insertServerInDb();
+
+  TimezoneManager::Init();
+  Timezone::Init();
+  TimezoneManager::LoadTimezones();
+
+	Translator::Init();
 	TTSManager::Init();
+	Cron::Init();
 	BunnyManager::Init();
+	NabaztagManager::Init();
 	Bunny::Init();
 	ZtampManager::Init();
 	Ztamp::Init();
 	AccountManager::Init();
-	NetworkDump::Init();
+	//NetworkDump::Init();
+	BrowserCache::Init(this);
 	PluginManager::Init();
 	BunnyManager::LoadBunnies();
 	ZtampManager::LoadZtamps();
+/*
+	int now = QDateTime::currentDateTime().toTime_t();
+	int next = QDateTime(QDate::currentDate().addDays(1)).toTime_t();
+	QTimer::singleShot(1000 * (next - now), this, SLOT(RotateLog()));
+*/
 
 	if(GlobalSettings::Get("Config/HttpListener", true) == true)
 	{
@@ -54,6 +106,67 @@ OpenJabNab::OpenJabNab(int argc, char ** argv):QCoreApplication(argc, argv)
 	httpApi = GlobalSettings::Get("Config/HttpApi", true).toBool();
 	httpVioletApi = GlobalSettings::Get("Config/HttpVioletApi", true).toBool();
 	LogInfo(QString("Parsing of HTTP Api is ").append((httpApi == true)?"enabled":"disabled"));
+
+	QTimer::singleShot(5 * 60 * 1000, this, SLOT(SaveAccounts()));
+	QTimer::singleShot(60 * 1000, this, SLOT(NabaztagStatus()));
+
+/*
+	if(GlobalSettings::Get("Config/SendToSense", false) == true)
+	{
+		int now = QDateTime::currentDateTime().toTime_t();
+		QTimer::singleShot(1000 * (60 - (now%60)), this, SLOT(SendStatsToSense()));
+	}
+*/
+}
+
+void OpenJabNab::NabaztagStatus()
+{
+	NabaztagManager::Instance().UpdateStatus();
+	QTimer::singleShot(60 * 1000, this, SLOT(NabaztagStatus()));
+}
+
+void OpenJabNab::SaveAccounts()
+{
+	AccountManager::Instance().SaveAccounts();
+	QTimer::singleShot(5 * 60 * 1000, this, SLOT(SaveAccounts()));
+}
+/*
+void OpenJabNab::RotateLog()
+{
+	//NetworkDump::Log("LogRotate", "", true);
+	LogRotate();
+	int now = QDateTime::currentDateTime().toTime_t();
+	int next = QDateTime(QDate::currentDate().addDays(1)).toTime_t();
+	QTimer::singleShot(1000 * (next - now), this, SLOT(RotateLog()));
+}
+*/
+void OpenJabNab::insertServerInDb()
+{
+	QSqlDatabase db = DbManager::getOpenDb();
+	QSqlQuery *query = new QSqlQuery(db);
+	query->prepare("SELECT * from `server` WHERE `hostname` = :host");
+	query->bindValue(":host", GlobalSettings::GetString("OpenJabNabServers/PingServer"));
+	query->exec();
+	int size = query->size();
+	query->finish();
+	if(size < 1)
+	{
+		query->prepare("INSERT INTO `server` SET `hostname`=:host");
+		query->bindValue(":host", GlobalSettings::GetString("OpenJabNabServers/PingServer"));
+		bool ins = query->exec();
+		if(!ins)
+		{
+			LogError(QString("Impossible to insert value in table 'server' : %1").arg(query->lastError().driverText()));
+			Close();
+		}
+		query->prepare("SELECT * from `server` WHERE `hostname` = :host");
+		query->bindValue(":host", GlobalSettings::GetString("OpenJabNabServers/PingServer"));
+		query->exec();
+	}
+	int serverId = query->value(1).toInt();
+	GlobalSettings::Set("Database/ServerId", serverId);
+	delete query;
+	DbManager::releaseDb();
 }
 
 void OpenJabNab::Close()
@@ -63,6 +176,7 @@ void OpenJabNab::Close()
 
 OpenJabNab::~OpenJabNab()
 {
+	SentenceManager::Close();
 	if(xmppListener)
 	{
 		xmppListener->close();
@@ -71,13 +185,18 @@ OpenJabNab::~OpenJabNab()
 	{
 		httpListener->close();
 	}
-	NetworkDump::Close();
+	BrowserCache::Close();
+	//NetworkDump::Close();
 	ZtampManager::Close();
+	NabaztagManager::Close();
 	BunnyManager::Close();
 	TTSManager::Close();
 	PluginManager::Close();
 	AccountManager::Close();
 	GlobalSettings::Close();
+	DbManager::Close();
+	QsLogging::Logger::destroyInstance();
+
 	LogInfo("-- OpenJabNab Close --");
 }
 

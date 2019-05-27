@@ -1,20 +1,13 @@
+#include <QtSql/QtSql>
 #include "account.h"
 #include "ztamp.h"
 #include "ztampmanager.h"
+#include "dbmanager.h"
 #include "httprequest.h"
+#include "translator.h"
 
 ZtampManager::ZtampManager()
 {
-	ztampsDir = QCoreApplication::applicationDirPath();
-	if (!ztampsDir.cd("ztamps"))
-	{
-		if (!ztampsDir.mkdir("ztamps"))
-		{
-			LogError("Unable to create ztamps directory !\n");
-			exit(-1);
-		}
-		ztampsDir.cd("ztamps");
-	}
 }
 
 
@@ -26,14 +19,16 @@ ZtampManager & ZtampManager::Instance()
 
 void ZtampManager::LoadAllZtamps()
 {
-	LogInfo(QString("Finding ztamps in : %1").arg(ztampsDir.path()));
-	QStringList filters;
-	filters << "*.dat";
-	ztampsDir.setNameFilters(filters);
-	foreach (QFileInfo file, ztampsDir.entryInfoList(QDir::Files))
+        QSqlDatabase db = DbManager::getOpenDb();
+	QSqlQuery *query = new QSqlQuery(db);
+	query->prepare("SELECT serial FROM ztamp");
+	query->exec();
+	while(query->next())
 	{
-		GetZtamp(file.baseName().toAscii());
+		GetZtamp(query->value(0).toString().toLatin1());
 	}
+	delete query;
+	DbManager::releaseDb();
 }
 
 void ZtampManager::InitApiCalls()
@@ -63,7 +58,7 @@ Ztamp * ZtampManager::GetZtamp(PluginInterface * p, QByteArray const& ztampHexID
 {
 	Ztamp * z = GetZtamp(ztampHexID);
 
-	if(p->GetType() != PluginInterface::ZtampPlugin)
+	if(!(p->GetType() & PluginInterface::ZtampPlugin))
 		return z;
 	if(z->HasPlugin(p))
 		return z;
@@ -75,6 +70,7 @@ void ZtampManager::Close()
 	foreach(Ztamp * z, listOfZtamps)
 		delete z;
 	listOfZtamps.clear();
+        QSqlDatabase::removeDatabase("sql_ztamp");
 }
 
 QVector<Ztamp *> ZtampManager::GetZtamps()
@@ -103,13 +99,12 @@ void ZtampManager::PluginUnloaded(PluginInterface * p)
 		z->PluginUnloaded(p);
 }
 
-
 API_CALL(ZtampManager::Api_GetListOfZtamps)
 {
 	Q_UNUSED(hRequest);
 
 	if(!account.HasAccess(Account::AcZtamps,Account::Read))
-		return new ApiManager::ApiError("Access denied");
+		return new ApiManager::ApiError(Translator::tr("Access denied", account));
 
 	QMap<QString, QVariant> list;
 	foreach(Ztamp * z, listOfZtamps)
@@ -124,7 +119,7 @@ API_CALL(ZtampManager::Api_GetListOfAllZtamps)
 	Q_UNUSED(hRequest);
 
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError("Access denied");
+		return new ApiManager::ApiError(Translator::tr("Access denied", account));
 
 	QMap<QString, QVariant> list;
 
