@@ -245,7 +245,7 @@ function updateBTable(p)
 	<tr<?php echo $i++ % 2 ? " class='l2'" : "" ?>>
 		<td width="20%"><?php echo $id; ?></td>
 		<td><?php echo $name; ?></td>
-		<td width="20%"><a href='/account/ztamp.php?z=<?php echo $id; ?>'>Configurer</a>
+		<td width="20%"><a href='ztamp.php?z=<?php echo $id; ?>'>Configurer</a>
 	</tr>
 <?php } ?>
 <?php //fclose($fp); ?>

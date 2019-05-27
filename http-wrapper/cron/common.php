@@ -19,4 +19,5 @@ function getSQL()
     if (!$link) {
         die('Connexion impossible : ' . mysqli_error());
     }
+    return $link;
 }
