@@ -8,12 +8,11 @@
 // tempo = 0.5*log2 du nombre d'itérations à durer sur la couleur courante (ex : tempo = 3, durée = 16 itérations)
 var infodata;;
 
-fun infoAnimationsOf typ=infodata.typ;;
 // infosrc : les services courants affichés par ce lapin (envoyé par le serveur et mis à jour par le fonction 'infoUpdate')
 // Un tableau de 16 valeurs, pour les services courants. 2 valeurs par service donc 8 services max.
 // 2 valeurs par service : la première valeur vaut 1+infoType (ex : 1 pour meteo), la deuxième vaut infoVal, la valeur du service (ex : 0 pour soleil)
 var infosrc;;
-//var infosrcperso;;
+var infosrcperso;;
 
 // nombre de messages utilisateur en attente (0, 1, 2 et +)
 var infomessages=0;;
@@ -22,8 +21,15 @@ var infomessages=0;;
 var infotaichi=0;;
 //var infogmail=0;;
 
-
-var chorWeather= // 0
+fun infoInit=
+	set infosrc=tabnew 0 16;
+	set infosrcperso=tabnew 0 16;
+	set infomessages=0;
+	set infotaichi = 0;
+	//set infogmail = 15;
+	
+	set infodata=
+[0 // meteo
 {
 	[25 {3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 0 0 0 0 0 0 0 0 0}] // soleil
 	[125 {0 3 0 4 0 4}] // nuages
@@ -31,8 +37,9 @@ var chorWeather= // 0
 	[20 {0 0 0 0 4 0 4 0 4 0 0 0 0 0 4 4 0 0 0 0 0 0 4 0 0 0 4}] // pluie
 	[40 {4 0 0 0 0 0 0 0 4 0 0 0 0 4 0 0 0 0 0 0 4 0 0 0 0 4 0 0 0 0 4 0 0 0 0 0}] // neige
 	[25 {0 4 3 0 0 0 0 0 0 0 0 0 0 0 0 4 3 0 0 4 3 0 0 0 0 0 0 0 3 4 3 4 0}] // orage
-};;
-var chorChange= // 1
+}
+]::
+[1 // bourse
 {
 	[7 {0 0 11 0 11 0 11 0 0 0 0 0 0 0 0 0 0 0}]
 	[14 {0 0 11 0 11 0 11 0 0 0 0 0}]
@@ -41,8 +48,9 @@ var chorChange= // 1
 	[28 {11 0 0 0 11 0 0 0 11 0 0 0}]
 	[14 {11 0 0 0 11 0 0 0 11 0 0 0}]
 	[7 {11 0 0 0 11 0 0 0 11 0 0 0 0 0 0 0 0 0}]
-};;
-var chorTraffic= // 2
+}
+]::
+[2 // traffic
 {
 	[100 {1 0 1 1 0 1 1 0 1 0 0 0 0 0 0 0 0 0}]
 	[100 {0 1 0 1 0 1 0 0 0 0 0 0 0 0 0}]
@@ -51,15 +59,17 @@ var chorTraffic= // 2
 	[12 {0 1 0 1 0 1 0 0 0 0 0 0 0 0 0}]
 	[8 {0 1 0 1 0 1 0 0 0 0 0 0 0 0 0}]
 	[4 {0 1 0 1 0 1 0 1 0 1 0 1 0 0 0 0 0 0}]
-};;
-var chorMail= // 5
+}
+]::
+[5 // mails
 {
 	[70 {5 0 0 0 5 0 0 0 5 0 5 0}]
 	[56 {0 5 0 0 0 0}]
 	[56 {5 0 5 0 0 0}]
 	[56 {5 5 5 0 0 0}]
-};;
-var chorAir= // 6
+}
+]::
+[6 // pollution
 {
 	[42 {6 6 6 6 6 6 6 6 6 0 0 0}]
 	[42 {6 6 6 6 6 6 6 6 6 0 0 0}]
@@ -72,62 +82,9 @@ var chorAir= // 6
 	[14 {0 6 0 0 6 6 6 6 6 6 0 0 0 0 0 0 6 0 0 6 6 0 0 0 6 6 0 6 6 6 0 0 6 6 0 0 0 6 0 0 0 0 6 0 6 0 6 0}]
 	[14 {0 6 0 0 6 6 6 6 6 6 0 0 0 0 0 0 6 0 0 6 6 0 0 0 6 6 0 6 6 6 0 0 6 6 0 0 0 6 0 0 0 0 6 0 6 0 6 0}]
 	[14 {0 6 0 0 6 6 6 6 6 6 0 0 0 0 0 0 6 0 0 6 6 0 0 0 6 6 0 6 6 6 0 0 6 6 0 0 0 6 0 0 0 0 6 0 6 0 6 0}]
-};;
-var chorPerso=
-{
-	[10 {0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0}]
-	[10 {0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0}]
-	[10 {0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0}]
-	[10 {0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0}]
-	[10 {0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0}]
-	[10 {0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0}]
-	[10 {0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0}]
-	[10 {0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0}]
-	[10 {0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0}]
-	[10 {0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0}]
-};;
-/*
-var chorAlert1=
-{
-	[10 {2 2 2}]
-	[10 {2 2 2 2 2 2 2 2 3}]
-	[10 {2 2 2 2 2 3}]
-	[10 {2 2 3}]
-	[10 {2 3 3}]
-	[10 {2 3 3 2 3 3 2 3 1}]
-	[10 {2 3 3 2 3 1}]
-	[10 {2 3 1}]
-	[10 {2 3 1 2 3 1 2 3 1 2 3 1 1 1 1}]
-	[10 {2 3 1 2 3 1 1 1 1}]
-};;
-var chorAlert2=
-{
-	[32 {2 2 2}]
-	[32 {2 2 3}]
-	[32 {2 3 3}]
-	[32 {2 3 1}]
-	[32 {2 3 1 2 3 1 2 3 1 2 3 0}]
-	[32 {2 3 1 2 3 0}]
-};;
-*/
-
-fun infoInit=
-	set infodata=tabnew nil 16;
-	set infosrc=tabnew 0 32;
-//	set infosrcperso=tabnew 0 32;
-	set infomessages=0;
-	set infotaichi = 0;
-	//set infogmail = 15;
-	
-	set infodata.0 = chorWeather;
-	set infodata.1 = chorChange;
-	set infodata.2 = chorTraffic;
-	set infodata.5 = chorMail;
-	set infodata.6 = chorAir;
-//	set infodata.14 = chorAlert2;
-
-
-0;;
+}
+]::
+nil;;
 
 // v21 : changé couleur jaune clair (11) de 0xffff80 à 0xffcc00 (bug 197)
 const infoPalette={
@@ -162,18 +119,25 @@ var infoAnimColorDur;;
 // durée d'affichage d'un service, en secondes
 const INFO_TIMEOUT=15;;
 
+fun infoAnimationsOf typ=listswitch infodata typ;;
 
 // retourne le prochain index utile (infoType non nul)
 fun _infoNextIndex i=
 	let i+2-> i in
-	if i>=64 then 0 else if infosrc.i then i else _infoNextIndex i;;
-	//if i>=32 then 0 else if i>= 16 then (if infosrcperso.i then i else _infoNextIndex i) else (if infosrc.i then i else _infoNextIndex i);;
+	let i-16-> j in
+	//if i>=16 then 0 else if infosrc.i then i else _infoNextIndex i;;
+	if i>=32 then 0 else if i>= 16 then (if infosrcperso.j then i else _infoNextIndex i) else (if infosrc.i then i else _infoNextIndex i);;
 
 // le service suivant
 fun infoStartOne i=
 	set infoIndex= i;
-	set infoType=(infosrc.(infoIndex))-1;
-	set infoVal=infosrc.(infoIndex+1);
+	if i<16 then (
+		set infoType=(infosrc.(infoIndex))-1;
+		set infoVal=infosrc.(infoIndex+1);
+	) else (
+		set infoType=(infosrcperso.(infoIndex-16))-1;
+		set infoVal=infosrcperso.(infoIndex-16+1);
+	)
 	set infoStartTime=time;
 	set infoAnimColori=0;
 	set infoAnimColorStart=time_ms;
@@ -187,15 +151,20 @@ fun infoNext=
 	0;;
 
 fun _dumpinfosrc i=
-	if (i < 64) then (
+	if (i < 16) then (
 		let infosrc.i -> key in
 		let infosrc.(i+1) -> val in
 		if key == 1 then ( Secho "Meteo="; Iecho val; Secho ",")
 		else if key == 2 then ( Secho "Bourse="; Iecho val; Secho ",")
 		else if key == 3 then ( Secho "Traffic="; Iecho val; Secho ",")
 		else if key == 6 then ( Secho "Mails="; Iecho val; Secho ",")
-		else if key == 7 then ( Secho "Pollution="; Iecho val; Secho ",")
-		else if key >= 9 then ( let i-8 -> j in ( Secho "Perso"; Iecho j; Secho "="; Iecho val; Secho ",") );
+		else if key == 7 then ( Secho "Pollution="; Iecho val; Secho ",");
+		_dumpinfosrc i+2
+	) else if(i < 32) then (
+		let i-16 -> j in
+		let infosrcperso.j -> key in
+		let infosrcperso.(j+1) -> val in
+		Secho "Perso"; Iecho j; Secho "=";Iecho val; Secho ",";
 		_dumpinfosrc i+2
 	);;
 fun dumpinfo=
@@ -214,29 +183,21 @@ fun infoRun=
 	if !earDetecting then
 	(
 		// passage au service suivant ?
-		set infoType=(infosrc.(infoIndex))-1;
-		if infoStartTime==nil || (time-infoStartTime>INFO_TIMEOUT) || infoType<0 then infoNext;
+		if infoIndex < 16 then (
+			set infoType=(infosrc.(infoIndex))-1;
+			if infoStartTime==nil || (time-infoStartTime>INFO_TIMEOUT) || infoType<0 then infoNext;
 
-		// Allumage de la tête en violet si message(s) en attente (infomessages)
-		let (time_ms>>8)&7 -> t in
-			led LED_NOSE if (((infomessages>1) && ((t==1)||(t==3))) || ((infomessages==1) && (t==1))) then RGB_VIOLET else RGB_BLACK;
+			// Allumage de la tête en violet si message(s) en attente (infomessages)
+			let (time_ms>>8)&7 -> t in
+				led LED_NOSE if (((infomessages>1) && ((t==1)||(t==3))) || ((infomessages==1) && (t==1))) then RGB_VIOLET else RGB_BLACK;
 
-		// couleurs des 3 leds du ventre (service courant/animation courante/couleur courante)
-		set infoType=(infosrc.(infoIndex))-1;
-		set infoVal=infosrc.(infoIndex+1);
-		let infoAnimationsOf infoType -> anims in
-		let anims.infoVal ->[dur anime] in
-		if anime!=nil then
-		(
-			if (anime.infoAnimColori == 16 && anime.(1+infoAnimColori) == 16 && anime.(2+infoAnimColori) == 16) then
+			// couleurs des 3 leds du ventre (service courant/animation courante/couleur courante)
+			set infoType=(infosrc.(infoIndex))-1;
+			set infoVal=infosrc.(infoIndex+1);
+			let infoAnimationsOf infoType -> anims in
+			let anims.infoVal ->[dur anime] in
+			if anime!=nil then
 			(
-				infoNext
-			)
-			else
-			(
-#ifdef PIXEL
-Secho "Set leds to :";Iecho infoPalette.(anime.infoAnimColori); Secho ", ";Iecho infoPalette.(anime.(1+infoAnimColori)); Secho ", "; Iecholn infoPalette.(anime.(2+infoAnimColori));
-#endif
 				led LED_BODY_LEFT infoPalette.(anime.infoAnimColori);
 				led LED_BODY_MIDDLE infoPalette.(anime.(1+infoAnimColori));
 				led LED_BODY_RIGHT infoPalette.(anime.(2+infoAnimColori));
@@ -249,13 +210,39 @@ Secho "Set leds to :";Iecho infoPalette.(anime.infoAnimColori); Secho ", ";Iecho
 					if infoAnimColori>=tablen anime then set infoAnimColori=0
 				)
 			)
-		)
-		else
-		(
-			if (infoVal != nil) then (
-#ifdef PIXEL
-Secho "Clear all leds for info : ";Iecholn infoVal;
-#endif
+			else
+			(
+				led LED_BODY_LEFT RGB_BLACK; led LED_BODY_MIDDLE RGB_BLACK; led LED_BODY_RIGHT RGB_BLACK
+			)
+		) else (
+			set infoType=(infosrcperso.(infoIndex-16))-1;
+			if infoStartTime==nil || (time-infoStartTime>INFO_TIMEOUT) || infoType<0 then infoNext;
+
+			// Allumage de la tête en violet si message(s) en attente (infomessages)
+			let (time_ms>>8)&7 -> t in
+				led LED_NOSE if (((infomessages>1) && ((t==1)||(t==3))) || ((infomessages==1) && (t==1))) then RGB_VIOLET else RGB_BLACK;
+
+			// couleurs des 3 leds du ventre (service courant/animation courante/couleur courante)
+			set infoType=(infosrcperso.(infoIndex-16))-1;
+			set infoVal=infosrcperso.(infoIndex-16+1);
+			let infoAnimationsOf infoType -> anims in
+			let anims.infoVal ->[dur anime] in
+			if anime!=nil then
+			(
+				led LED_BODY_LEFT infoPalette.(anime.infoAnimColori);
+				led LED_BODY_MIDDLE infoPalette.(anime.(1+infoAnimColori));
+				led LED_BODY_RIGHT infoPalette.(anime.(2+infoAnimColori));
+				if (time_ms-infoAnimColorStart >= infoAnimColorDur) then
+				(
+					// next colors
+					set infoAnimColori=infoAnimColori+3;
+					set infoAnimColorStart=time_ms;
+					set infoAnimColorDur= dur*10;
+					if infoAnimColori>=tablen anime then set infoAnimColori=0
+				)
+			)
+			else
+			(
 				led LED_BODY_LEFT RGB_BLACK; led LED_BODY_MIDDLE RGB_BLACK; led LED_BODY_RIGHT RGB_BLACK
 			)
 		)
@@ -263,17 +250,30 @@ Secho "Clear all leds for info : ";Iecholn infoVal;
 		
 // met à jour ou rajoute cette source
 fun __infosrc_update key val i=
-	if (i < 64) then
-	if (infosrc.i == 0 || infosrc.i == key) then (
-		// add or update
-		set infosrc.(i+1) = val;
-		if (infosrc.i == 0) then (
-			// add
-			set infosrc.i = key;
-			// set lapin to play this new one now
-			infoStartOne i
-		)
-	) else __infosrc_update key val i+2;; // recurse
+	if (i < 16) then (
+		if (infosrc.i == 0 || infosrc.i == key) then (
+			// add or update
+			set infosrc.(i+1) = val;
+			if (infosrc.i == 0) then (
+				// add
+				set infosrc.i = key;
+				// set lapin to play this new one now
+				infoStartOne i
+			)
+		) else __infosrc_update key val i+2
+	) else (
+		let i-16 -> j in
+		if (infosrcperso.j == 0 || infosrcperso.j == key) then (
+			// add or update
+			set infosrcperso.(j+1) = val;
+			if (infosrcperso.j == 0) then (
+				// add
+				set infosrcperso.j = key;
+				// set lapin to play this new one now
+				infoStartOne i
+			)
+		) else __infosrc_update key val i+2
+	);; // recurse
 fun _infosrc_update key val=
 	// debug : hack special pour envoyer des commandes cachées au lapin... [as]
 	if ((key == 1) && (val == 6)) then ( // meteo 6 (n'existe pas)
@@ -287,33 +287,39 @@ fun _infosrc_update key val=
 
 // util : slide tableau pour effacer case vide
 fun __infoslide i=
-	if (i == 64-2) then (
-		set infosrc.i = 0;
-		set infosrc.(i+1) = 0
+	if (i <= 14) then (
+		if (i == 16-2) then (
+			set infosrc.i = 0;
+			set infosrc.(i+1) = 0
+		) else (
+			set infosrc.i = infosrc.(i+2);
+			set infosrc.(i+1) = infosrc.(i+3);
+			// recurse
+			if (infosrc.i > 0) then __infoslide i+2
+		)
 	) else (
-		set infosrc.i = infosrc.(i+2);
-		set infosrc.(i+1) = infosrc.(i+3);
-		// recurse
-		if (infosrc.i > 0) then __infoslide i+2
+		if (i == 32-2) then (
+			let i-16 -> j in
+			set infosrcperso.j = 0;
+			set infosrcperso.(j+1) = 0
+		) else (
+			let i-16 -> j in
+			set infosrcperso.j = infosrcpersp.(j+2);
+			set infosrcperso.(j+1) = infosrcperso.(j+3);
+			// recurse
+			if (infosrcperso.j > 0) then __infoslide i+2
+		)
 	);;
 
 // enlève cette source de la liste
 fun __infosrc_del key i=
-	if (i < 64) then
+	if (i < 16) then
 	if (infosrc.i == key) then (
 		// delete
 		__infoslide i
 	) else __infosrc_del key i+2;;
 fun _infosrc_del key=
 	__infosrc_del key 0;;
-
-fun __infosrc_get key i=
-	if (i < 64) then
-	if (infosrc.i == key) then (
-		infosrc.(i+1)
-	) else __infosrc_del key i+2;;
-fun _infosrc_get key=
-	__infosrc_get key 0;;
 
 proto controlsound 1;;
 
@@ -343,11 +349,8 @@ fun newInfoUpdate data=
 				if key == 8 then set infomessages = val
 				else if key == 0 then _infosrc_del val
 				else if key == 1 || key == 2 || key == 3 || key == 6 || key == 7 then _infosrc_update key val
-				else if key == 15 then _infosrc_update key val
 				else if key == 4 then set newleft = val
 				else if key == 5 then set newright = val
-				else if key >= 9 && key <= 32 then _infosrc_update key val
-/*
 				else if key == 9 then set bottomColor = bottomLedPalette.(val)
 #ifdef SILENT
 #else
@@ -357,18 +360,7 @@ fun newInfoUpdate data=
 				else if key == 16 then set debugVolume = val
 				else if key == 17 then set debugActivated = val
 				else if key == 18 then set listeningGain = val * 100
-*/
-// NEW INDEXES !
-				else if key == 33 then set bottomColor = bottomLedPalette.(val)
-#ifdef SILENT
-#else
-				else if key == 34 then ( if val!=0 then (set progvol = val; apiforcevol progvol ) else ( apiunforcevol ); 0 )
-#endif
-				else if key == 35 then set infotaichi = val
-				else if key == 36 then set debugVolume = val
-				else if key == 37 then set debugActivated = val
-				else if key == 38 then set listeningGain = val * 100
-				else if key == 39 then set rfidDisabled = val
+				//else if key == 15 then set infogmail = val
 				else (
 					Secho "ERROR newInfoUpdate unknown key="; Iecholn key;0
 				)
@@ -387,7 +379,7 @@ fun newInfoUpdate data=
 			set extright=newright;
 			if ((!gSleepState) && (!earResetting)) then (
 				// remove sound when reconnecting controlsound midi_communion;
-				//if gConnectingState == 0 then controlsound midi_communion;
+				if gConnectingState == 0 then controlsound midi_communion;
 				set gConnectingState=0;
 				earsGoToRefPos
 			)

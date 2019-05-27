@@ -72,12 +72,12 @@ fun parseans s i n=
 			let TTLl + 65536 * TTLh -> ttl in
 			let strcatlist (itoa strget s j+10)::"."::(itoa strget s j+11)::"."::(itoa strget s j+12)::"."::(itoa strget s j+13)::nil -> ip in
 			(
-				Dnsw strcatlist "DNS: parsed an answear. TTLl = " :: (itoa TTLl) :: ", TTLh = " :: (itoa TTLh) :: ", so TTL = " :: (itoa ttl) :: " and ip = " :: ip :: nil;
+				Dnsw strcatlist "DNS: parsed an answer. TTLl = " :: (itoa TTLl) :: ", TTLh = " :: (itoa TTLh) :: ", so TTL = " :: (itoa ttl) :: " and ip = " :: ip :: nil;
 				[ ip ttl ]
 			)
 		)
 		else if typ==33 then ( // ON PARSE LES REQUETES SRV (les réponses)
-			Dnsw "DNS: parsing a SRV answear";
+			Dnsw "DNS: parsing a SRV answer";
 			let strsub s j+2 nil -> SrvAns in
 			let strgetword s j+2 -> Class in
 			let strgetword s j+4 -> TTLh in
@@ -197,7 +197,7 @@ fun dnsreq domain cb=
 	0;;
 
 /**
-	Tells, for a (failed) dns request, if there is another dns server that could possibly answear the request
+	Tells, for a (failed) dns request, if there is another dns server that could possibly answer the request
 */
 fun dnsHasAnotherServer x =
 	(listlen netdnslist) > (x.idxDnsD+1)
@@ -244,7 +244,7 @@ fun cbnetdns msg mac ipfrom=
 
 		set ldnsreq=listrem ldnsreq x;
 
-		// check if the answear is empty. if it is, we should try to ask the next dns server
+		// check if the answer is empty. if it is, we should try to ask the next dns server
 		if (ip == nil && ttl == nil && (dnsHasAnotherServer x)) then
 			( dnsAskNextServer x; nil)
 		else
@@ -268,7 +268,7 @@ fun filterdnsdead l=if l!=nil then let hd l-> d in if d.timeoutD==nil then filte
 /**
 	Checks if any dns request has timeouted and either relays the
 	request to the next dns server available or calls the callback with	
-	a null answear.
+	a null answer.
 */
 fun dnstime=
 	for l=ldnsreq;l!=nil;tl l do let hd l-> d in
@@ -291,7 +291,7 @@ fun dnstime=
 fun startdnsclient=
 
 	// on ajoute les dns "de secours" s'ils ne sont pas déjà dans la liste
-	addnewdns confGetNetdns 0;
+	addnewdns confGetNetdns 1;
 
 	regudp DNSLOCAL #cbnetdns;
 	set ldnsreq=nil;

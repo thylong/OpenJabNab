@@ -277,12 +277,9 @@ fun earWaitRun=
 			//Earsw "bouged";
 			// Pas de mvt autonome.
 			// Veut dire qu'une oreille a été tournée par l'utilisateur :
-			// si interactif : le noter
 			// sinon passer en mode detect
 			set e.lvalE=v;
-			if gItState then
-				(itNoteEarTouched i v dv)
-			else if earsmode==EARSMODE_WAITANDDETECT then
+			if earsmode==EARSMODE_WAITANDDETECT then
 				earStartDetect
 		)
 	);;

@@ -42,8 +42,8 @@ fun StoB64 String =
 			)
 		);		
 		// Si il reste des caractères non écrit, il sont complété avec des 0 et écris dans le résultat
-		if j == 0 then		(strset B64Result k (strget Base64 B64NumL); strset B64Result k+1 61; strset B64Result k+2 61;set k = k+2)
-		else if j == 1 then	(strset B64Result k (strget Base64 B64NumH); strset B64Result k+1 61;set k = k+1);
+		if j == 0 then		(strset B64Result k (strget Base64 B64NumL); strset B64Result k+1 61; strset B64Result k+2 61;set k = k+3)
+		else if j == 1 then	(strset B64Result k (strget Base64 B64NumH); strset B64Result k+1 61;set k = k+2);
 		// remove trailing zeroes [as 26nov2007]
 		let strsub B64Result 0 k -> truncated in
 			 truncated

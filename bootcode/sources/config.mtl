@@ -16,8 +16,9 @@ const CONF_PROXYPORT=161;;	//2
 const CONF_LOGIN=163;;		//6
 const CONF_PWD=169;;			//6
 const CONF_WIFIPMK=175;;		//32
-const CONF_MAGIC=207;;		//1
-const CONF_LENGTH=208;;
+const CONF_LEDS=207;;		//1
+const CONF_MAGIC=208;;		//1
+const CONF_LENGTH=209;;
 
 var conf;;
 
@@ -89,6 +90,8 @@ fun confGetNetdns=confGet CONF_NETDNS 4;;
 fun confGetServerUrl=confGetstr CONF_SERVERURL 40;;
 fun confGetLogin=confGet CONF_LOGIN 6;;
 fun confGetPwd=confGet CONF_PWD 6;;
+
+fun confGetLeds=strget confGet CONF_LEDS 1 0;;
 
 fun confGetProxy=strget confGet CONF_PROXYENABLE 1 0;;
 fun confGetProxyip=confGet CONF_PROXYIP 4;;

@@ -53,7 +53,7 @@ fun recstart =
 	Secholn "record";
 	set recording=1;
 	set lrec=nil;
-	recStart 8000 0 #cbrec;;
+	recStart 8000 recGain #cbrec;;
 
 fun recstop =
 	set recording=0;

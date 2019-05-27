@@ -37,7 +37,7 @@ fun scanserialize l=
 	(itoh4 listlen l)::_scanserialize l;;
 
 fun dumpscan l0=
-	Secholn "## DUMPSCAN >>>>";
+	Secholn "## DUMPSCAN bootcode >>>>";
 	for l=l0;l!=nil;tl l do
 	let hd l->[ssid mac bssid rssi channel rateset encryption] in
 	(
@@ -90,7 +90,7 @@ fun wifiInit rescan=
 	let envget -> env in
 	if env==nil then
 	(
-		setleds RGB_VIOLET;
+		if confGetLeds then setleds RGB_VIOLET;
 		set wifi=initW;
 		if rescan then set wifiscans=nil;
 		if master then
@@ -116,7 +116,7 @@ fun wifiInit rescan=
 	)
 	else
 	(
-		setleds RGB_GREEN;
+		if confGetLeds then setleds RGB_GREEN;
 		set mymac=netMac;
 		set wifi=stationW;
 		envrestore env;
@@ -149,11 +149,12 @@ fun wificrypttype crypt key=
 	else IEEE80211_CRYPT_NONE;;
 
 fun wifiAuth=
-	setleds RGB_AMBER;
+	if confGetLeds then setleds RGB_AMBER;
 	if wifiscans==nil then 0
 	else
 		let Iecholn confGetWificrypt -> crypt in
-		let confGetWifiauth -> auth in
+		//let confGetWifiauth -> auth in
+		let if crypt==1 then confGetWifiauth else 0-> auth in
 		let if crypt==1 then wifiwepkey confGetWifikey0
 			else if crypt==2 then confGetWifipmk -> key in
 		(
@@ -172,7 +173,7 @@ fun wifiRun=
 		|(initW -> if state==RT2501_S_IDLE then
 				(
 					set mymac=MACecho netMac 0 1;
-					setleds RGB_AMBER;
+					if confGetLeds then setleds RGB_AMBER;
 					if master then
 					(
 						dumpscan set wifiscans=sort netScan nil #scancmpssid;

@@ -8,7 +8,7 @@ const WAV_EOF=2;;
 const WAV_BUFFER_STARTSIZE=80000;;
 const WAV_BUFFER_MAXSIZE=400000;;
 
-const WAV_END_TIMEOUT=800;;
+const WAV_END_TIMEOUT=500;;
 const WAV_NET_TIMEOUT=15000;;
 
 var wav_end_timeout;;
@@ -27,67 +27,29 @@ var wav_curplayedbytes=0;;
 
 var lastvol;;
 var forcedvol=0;;
-var apiforcedvol=0;;
-var progvol=0;;
 fun volfrombutton v=let 255-v -> v in 255-((v*v)>>8);;
 
 // debug
 fun Audiowln str = nil;; // Secholn strcatlist "[audio] " :: str :: nil ;;
 fun Audiow str = nil;; // Secho str ;;
 
-// ( if val!=0 then (set progvol = val; apiforcevol progvol ) else ( apiunforcevol ); 0 )
+
 fun updatevol=
 	let button3 -> v in
-	if(debugVolume) then
+	if !forcedvol && v!=lastvol && (!recording) && (lastvol!=255 || v<250) then
 	(
-		if !forcedvol && v!=lastvol && (!recording) && (lastvol!=255 || v<250) then
-		(
-			set lastvol=v;
-			set currentvol = volfrombutton v;
-			sndVol volfrombutton v
-		)
-	)
-	else
-	(
-		if !apiforcedvol && !forcedvol && v!=lastvol && (!recording) && (lastvol!=255 || v<250) then
-		(
-			set lastvol=v;
-			set currentvol = volfrombutton v;
-			sndVol volfrombutton v
-		)
+		set lastvol=v;
+		sndVol volfrombutton v
 	);;
-
-fun apiforcevol v=
-	if( v != 0) then
-	(
-		sndVol v;
-		set currentvol = v;
-		set apiforcedvol=1;
-		set progvol = v
-	)
-	else
-	(
-		set apiforcedvol=0;
-		updatevol
-	);;
-fun apiunforcevol=
-	set apiforcedvol=0;
-	0;;
 
 fun forcevol v=
-	set currentvol = volfrombutton (button3*v)>>8;
 	sndVol volfrombutton (button3*v)>>8;
 	set forcedvol=1;
 	0;;
 fun unforcevol=
 	set forcedvol=0;
 	set lastvol=nil;
-	if( !debugVolume && apiforcedvol ) then
-	(
-		set currentvol = progvol;
-		sndVol progvol
-	);;
-
+	0;;
 
 fun wavgetzeros=
 	if wav_zeros==nil then

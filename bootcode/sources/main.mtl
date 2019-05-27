@@ -5,9 +5,108 @@ proto main 0;;
 proto setRunState 1;;
 proto getRunState 0;;
 
+var rfidDisabled = 0;;
+var followConf = 1;;
+var badlocate = 0;;
+var lastlocate = -30;;
+var listeningGain=0;;
+var listeningLoop=0;;
+var recGain=0;;
+var apivol=0;;
+var lastGc=0;;
+var minGc=10;;
+var soundWheel=1;;
+
+var channel=0;;
+
+var benchStart=0;;
+var benchStop=0;;
+
+var language="fr";;
+
+#ifdef DBGCONNECT
+proto dbgurl 0;;
+var dbgstr;;
+
+fun writedbg string=
+	let strcatlist dbgstr :: string :: "\n" :: nil -> new in
+		set dbgstr = new;;
+#endif
+
+fun forceGc=
+	set lastGc=time_ms;
+	gc;;
+
+fun launchGc=
+	if time_ms - lastGc > 5 * 60 * 1000 then
+	(
+		set lastGc=time_ms;
+		gc
+	);;
+
+/*
+fun filterweb val=
+	strreplace (strreplace val "\"" "&quot;") "<" "&lt;";;
+
+fun webcrypt i=
+	if i==IEEE80211_CRYPT_NONE then "No encryption"
+	else if i==IEEE80211_CRYPT_WEP64 then "Wep64 encryption"
+	else if i==IEEE80211_CRYPT_WEP128 then "Wep128 encryption"
+	else if i==IEEE80211_CRYPT_WPA then "WPA-PSK encryption"
+	else "Unkown encryption";;
+
+fun selectscan s l=
+	if l!=nil then let hd l->[ssid mac bssid rssi channel rateset encryption] in
+	"<option value=\""::(filterweb ssid)::"\""::(if !strcmp ssid s then " selected")::">"::
+	(filterweb ssid)::" - "::(webcrypt encryption)::" - Channel "::(itoa channel)::" - Power "::(itoa rssi)::"</option>"::selectscan s tl l;;
+*/
+fun getchannel s l=
+	if l!=nil then let hd l->[ssid mac bssid rssi channel rateset encryption] in
+	if !strcmp ssid s then channel else getchannel s tl l;;
+
+/*			["<SCAN>" strcatlist selectscan ssid wifiscans]::
+*/
+#define DEBUG
+#ifdef SILENT
+/*
+//proto silenturl 1;;
+var silentmw = 0;;
+var silentdump = "";;
+*/
+#endif
+#ifdef BETA
+proto debugurl 0;;
+var debug;;
+fun writedebug string=
+	let strcatlist debug :: string :: "\n" :: nil -> new in
+		set debug = new;;
+#endif
+#ifdef DEBUG
+proto debugurl 0;;
+
+var debugVolume = 0;;
+var debugActivated = 0;;
+
+var debug;;
+fun writedebug string=
+	let strcatlist debug :: string :: "\n" :: nil -> new in
+		set debug = new;;
+#endif
+
+var dateboot = nil;;
+
+var service_url;;
+
 // XMPP ECHO DEBUG
-fun Xw str = 
-	Secholn str;;
+// #ifdef DEBUG
+//fun Xw str = 
+//	writedebug str;;
+//#else
+//fun Xw str = 
+//	Secholn str;;
+//#endif
+//
+fun Xw str = Secholn str;;
 fun Xx i = 
 	Iecholn i;;
 
@@ -41,29 +140,67 @@ const HARDWARE=4;;
 
 proto buttoncheckevent 0;;
 
+fun getServer =
+	let "p" -> p in
+	let "a" -> a in
+	let "r" -> r in
+	let "b" -> b in
+	let "o" -> o in
+	let "f" -> f in
+	let "n" -> n in
+	strcatlist o :: p :: "e" :: n :: "j" :: a :: b :: n :: a :: b :: "." :: f :: r :: nil ;;
+
+
 //
 // Etats generaux
-var gItState = 0;;			// interactif
 var gSleepState = 1;;		// sleeping
+var gOfflineState = 1;;		// offline (need reconnection)
+var gReconnectState = 0;;		// rebooting
+var gConnectingState = 1;;		// connecting
 var gStreamingState = 0;;	// streaming
 var gProcessingState = 0;; 	// processing a program
 var gProcessingWaitState = 0;;  // executing a "wait" command in a program. when checking this var, check gProcessingState first, as it is not always reseted to 0
 var gBusyState = 0;;		// busy (incoming message queue full)
-var gItApp = nil;;			// the name of the interactive application
 var gEarInited = 0;;		// si les oreilles ont été initialisées.
 var gRegistrationError = 0;;// registration error during login
 var bottomColor = 0x010001;;	// Color of bottom led (Violet by default)
+var bottomColorError = 0x010000;;	// Color of bottom led on server error
+var nexttaichi;;
+//var nextgmail;;
+//var authgmail = "YWxleGlzLm1lbGxvbmVAZ21haWwuY29tOmJhbmRpdDE2Ng==";;
 
-proto itNoteEarTouched 3;;
 proto processIncomingTrame 3;;
 proto dumpStatus 0;;
 
 #include net_vars.mtl
 
-const BYTECODE_REVISION_STR = "$Rev: 18674 $";;
+#ifdef CLASSIC
+const BYTECODE_REVISION_STR = "$Rev: OJN127 $";;
+#endif
+#ifdef SILENT
+const BYTECODE_REVISION_STR = "$Rev: OJN127s $";;
+#endif
+#ifdef BETA
+const BYTECODE_REVISION_STR = "$Rev: OJN127b $";;
+#endif
+#ifdef PIXEL
+const BYTECODE_REVISION_STR = "$Rev: OJN127p $";;
+#endif
+#ifdef NORFID
+const BYTECODE_REVISION_STR = "$Rev: OJN127r $";;
+#endif
+#ifdef DBGCONNECT
+const BYTECODE_REVISION_STR = "$Rev: OJN127d $";;
+#endif
+#ifdef RECONF
+const BYTECODE_REVISION_STR = "$Rev: OJN127c $";;
+#endif
 fun getBytecodeRevision =
 	strsub BYTECODE_REVISION_STR 6 ((strlen BYTECODE_REVISION_STR) - 8);;
 
+var cReconnect = 0;;
+
+proto confGetLeds 0;;
 
 #include utils.mtl
 #include leds.mtl
@@ -84,6 +221,15 @@ proto dnslistfromdhcp 1;;
 
 #include config.mtl
 
+fun itoh2 x=
+	let strcat "00" itoh x -> h in
+	strsub h ((strlen h) - 2) 2;;
+
+fun hexdata data i imax=
+        if i<imax then (itoh2 strget data i)::hexdata data i+1 imax;;
+
+fun getEncodedConf = strcatlist (hexdata conf 0 (strlen conf));;
+
 #ifdef SIMU
 #include tcpudp_emu.mtl
 #else
@@ -97,13 +243,16 @@ proto dnslistfromdhcp 1;;
 
 #include dns.mtl
 
-#include http.mtl
+proto xmpps_sendStanza 5;;
+var XmppGlobalSession = nil;;							// La session Xmpp
+
+//#include http.mtl
 
 
 /**
 	Les différents états de la boucle principale.
 */
-type Run= configstartRun | configwaitRun _ | interactiveReqWaitRun _ |
+type Run= configstartRun | configwaitRun _ | 
 	rscLoadNextRun | rscLoadWaitRun _ | chorCmdRun _ |streamCmdRun _ | waitCmdRun _ | cmdEvalOne _ | idleRun | sleepRun |
 	recordRun |earResetWaitRun _| recordStartRun | xmppLoginRun | xmppReconnectRun _ ;;
 
@@ -116,7 +265,6 @@ fun runToStr run =
 	match run with
     ( configstartRun -> "configStartRun")
   | (configwaitRun _ -> "configWaitRun")
-	| (interactiveReqWaitRun _ -> "interactiveReqWaitRun")
 	| (rscLoadNextRun -> "rscLoadNextRun" )
 	| (rscLoadWaitRun _ -> "rscLoadWaitRun" )
 	| (chorCmdRun _ -> "chorCmdRun" )
@@ -179,31 +327,44 @@ fun ResetXmppPassword =
 var NOWREGISTER = 0;;
 
 
+/* BOSH REMOVE
 proto boshurl 1;;
+*/
 proto earInit 0;;
+proto sendinfourl 1;;
 proto sendmailxmppurl 2;;
 
 
 // ---------------------------------------------------------
 // XMPP Configuration
 // ---------------------------------------------------------
-const XmppTcpIdleTime = 8;;							// Si il ne se passe rien pendant 8 secondes sur le flux, on le maintient ouvert en envoyant un " "
-var XmppGlobalSession = nil;;							// La session Xmpp
+var XmppTcpIdleTime = 8;;							// Si il ne se passe rien pendant 8 secondes sur le flux, on le maintient ouvert en envoyant un " "
 var XmppServerPort = 5222;;							// Port TCP de la connexion xmpp (peut etre modifie via le locate)
+var XmppDomain="";;
+var XmppAltDomain="";;
 
+/*
 const XmppVioletPlatformComponent = "xmpp.platform.violet.net";;
 const XmppVioletObjectsComponent = "xmpp.objects.violet.net";;
 const XmppVioletAppletComponent = "xmpp.applet.violet.net";;
 const XmppVioletPlatformClient = "net.violet.platform";;
+*/
+const XmppVioletPlatformComponent = "xmpp.platform.openjabnab.fr";;
+const XmppVioletObjectsComponent = "xmpp.objects.openjabnab.fr";;
+const XmppVioletAppletComponent = "xmpp.applet.openjabnab.fr";;
+const XmppVioletPlatformClient = "fr.openjabnab.platform";;
 
 const TcpServerNoResponseTimeOut = 2;;	// When opentcp don't response after x sec, try another server
 
 const XmppTcpOpenStream1 = "<?xml version='1.0' encoding='UTF-8'?>\n<stream:stream to='";;
-const XmppTcpOpenStream2 = "' xmlns='jabber:client' xmlns:stream='http://etherx.jabber.org/streams' version='1.0'>\n";;
+const XmppTcpOpenStream2 = "' from='";;
+const XmppTcpOpenStream3 = "' xmlns='jabber:client' xmlns:stream='http://etherx.jabber.org/streams' version='1.0'>\n";;
 var XmppTcpCloseStream = "</stream:stream>";;
 
 
+/* BOSH REMOVE
 const XmppBoshHttpTimeOut = 30;;
+*/
 
 // the delay between two 'ping' packets
 const XmppPingDelay = 60;;
@@ -212,6 +373,7 @@ const XmppPingMaxReponseDelay = 5;;
 
 
 
+/* BOSH REMOVE
 const XmppBoshEncapsulation1 = "<body rid='";;
 const XmppBoshEncapsulation2 = "' sid='";;
 const XmppBoshEncapsulation3= "' xmlns='http://jabber.org/protocol/httpbind'>";;
@@ -220,7 +382,8 @@ const XmppBoshEncapsulation4 = "</body>";;
 const XmppBoshOpenStream1 = "<body content='text/xml; charset=utf-8' hold='15' rid='";;
 const XmppBoshOpenStream2 = "' to='";;
 const XmppBoshOpenStream3 = "' route='xmpp:";;
-const XmppBoshOpenStream4 = "' secure='true' wait='7' xml:lang='en' xmpp:version='1.0' xmlns='http://jabber.org/protocol/httpbind' xmlns:xmpp='urn:xmpp:xbosh'/>";;
+const XmppBoshOpenStream4 = "' bunny='";;
+const XmppBoshOpenStream5 = "' secure='true' wait='7' xml:lang='en' xmpp:version='1.0' xmlns='http://jabber.org/protocol/httpbind' xmlns:xmpp='urn:xmpp:xbosh'/>";;
 
 const XmppBoshReOpenStream1 = "<body rid='";;
 const XmppBoshReOpenStream2 = "' sid='";;
@@ -228,9 +391,10 @@ const XmppBoshReOpenStream3 = "' to='";;
 const XmppBoshReOpenStream4 = "' xml:lang='en' xmpp:restart='true' xmlns='http://jabber.org/protocol/httpbind' xmlns:xmpp='urn:xmpp:xbosh'/>";;
 
 
+
 // Variables diverses
 var SendTry = 0;;	// Permet de compter le nombre de tentative d'envoie d'une requete defectueuse
-	
+*/	
 
 
 // ---------------------------------------------------------
@@ -245,7 +409,7 @@ proto XmppSessionIdle 0;;	// Always called
 proto XmppSessionRun 0;;	// Always called 
 proto XmppSessionSend 2;;
 proto XmppSessionResponseSend 2;;
-proto XmppSessionResponseSendErrorFeatureNotImplemented 3;; // to answear some unhandled requests
+proto XmppSessionResponseSendErrorFeatureNotImplemented 3;; // to answer some unhandled requests
 proto XmppSessionRead 2;;
 proto XmppSessionSendButtonMsg 3;;
 proto XmppSessionSendEarMsg 2;;
@@ -282,6 +446,17 @@ type tXmppSession_Status = sOpening | sLogging  | sLoggedin | sOpened | sClosed 
 type tXmppSession = [/*GATE*/ sGate sStatus /*SASL*/ sNonce sCnonce sRealm sUsername sPassword sQop sAlgo sCharset sDomain /* Stream State */ sJID sPreviousResource sNextResource sNextResourceBinding sResource sState sInQueue sOutQueue sStanzaID /* Divers */ sClients sDisplayLeds sLastIOTime sLastReadTime sLastStreamState sNextRestart sPacketQueue sDataToSend sLastPingTime sLastPingIqId];;
 // NextResourceBinding sert que si on est en train de faire un bind et qu'on souhaite rechanger vers un autre après
 
+
+fun statusToStr status =
+	match status with
+    ( sOpening -> "sOpening")
+  | (sLogging -> "sLogging")
+  | (sLoggedin -> "sLoggedin")
+  | (sOpened -> "sOpened")
+  | (sClosed -> "sClosed")
+	| (sRegistrationError -> "sRegistrationError" )
+	| (_ -> "_" )
+;;
 // ---------------------------------------------------------
 // XMPP GATE > CONNECT, SEND, IDLE in TCP or BOSH
 // ---------------------------------------------------------
@@ -293,7 +468,10 @@ proto XmppGateOpenStream 1;;// Send the data to open stream with server
 proto XmppGateStreamOpened 1;;	// le stream a bien été ouvert
 proto XmppGateStreamClosed 2;; // if the stream has been closed
 
+/* BOSH REMOVE
 type tXmppGate_Mode = pTcp | pBosh;;		// 2 Mode : BOSH (port 80) or Normal Tcp (port XmppServerPort)
+*/
+type tXmppGate_Mode = pTcp;;
 type tXmppGate_Status = pOpening | pOpen | pInStream | pClosing | pClose;;	// Opening (try to open port), Open (try to send <stream:stream>)
 type tXmppGate = [pParent pMode pStatus pTry pTcpV pBoshV pBuffer pSId pActualMode];;
 // pParent > xSession
@@ -317,12 +495,14 @@ type tXmppTcp = [xParent xSocket xHost xPort];;
 // ---------------------------------------------------------
 // XMPP BOSH > SEND, READ_CB, IDLE
 // ---------------------------------------------------------
+/* BOSH REMOVE
 proto XmppBoshSend 2;;
 proto XmppBoshRead 3;;
 proto XmppBoshIdle 1;;
 proto XmppBoshOpenStream 1;; // Send the data to open the stream in BOSH
 proto XmppBoshReOpenStream 1;; // Send the data to reopen the stream in BOSH
 proto XmppBoshSetUp 2;;		// Configure the ip of the server
+*/
 
 type tXmppTcp = [yParent yHttpList yMsgId yServerIp yMaxRequest];;
 
@@ -349,6 +529,7 @@ proto xmppStateToStr 1 ;;
 proto xmpps_createStanza 5;;
 
 
+#include http.mtl
 
 
 
@@ -371,7 +552,13 @@ proto xmpps_createStanza 5;;
  * Ouvre un port TCP pour une session particuliere
  */
 fun XmppTcpOpen ip port xSession =
+//#ifdef DEBUG
+//	writedebug strcatlist "XmppTcpOpen, back from dnssrvcb "::ip::":"::(itoa port)::nil;
+//#endif
 	Xw strcatlist "XmppTcpOpen, back from dnssrvcb "::ip::":"::(itoa port)::nil;
+#ifdef DBGCONNECT
+		httprequest "POST" Secholn dbgurl strcatlist "XmppTcpOpen, back from dnssrvcb "::ip::":"::(itoa port)::nil nil HTTP_NORMAL;
+#endif
 	if ip != nil && port != nil then // Si on a une ip et un port valide, on supprime les anciens et on tente d'ouvrir le port en initialisant le tout
 	(
 		set xSession.sLastReadTime = time;
@@ -384,13 +571,19 @@ fun XmppTcpOpen ip port xSession =
 		Xw "Open the tcp Socket";
 		let [xParent:xSession xSocket:nil xHost:ip xPort:port] -> newTcp in
 		(
+#ifdef DBGCONNECT
+		httprequest "POST" Secholn dbgurl "Open the tcp Socket" nil HTTP_NORMAL;
+#endif
 			set xSession.sGate.pTcpV = newTcp;
 			set newTcp.xSocket = opentcp netip nil (useparamip ip) port fixarg4 #XmppTcpRead xSession	// On ouvre le socket
 		);
 		0
 	)
 	else(	// on est a la fin des entrees srv et on a pas reussi a se connecter -> on essaie le domaine xmpp tout court, et si ca ne fonctionne pas on retombera en BOSH
-		Xw ( strcatlist "No more SRV answears. let's try to connect directly to " :: xSession.sDomain :: nil );
+//#ifdef DEBUG
+//	writedebug strcatlist "No more SRV answers. let's try to connect directly to " :: xSession.sDomain :: nil;
+//#endif
+		Xw ( strcatlist "No more SRV answers. let's try to connect directly to " :: xSession.sDomain :: nil );
 		dnsreq xSession.sDomain fixarg2 fixarg3 #XmppTcpOpen xSession XmppServerPort;
 		0)
 	;;
@@ -521,6 +714,9 @@ fun XmppTcpSend xSession Data =
  */
 fun XmppTcpRead t val msg xSession =
 	Secholn "XmppTcpRead";
+#ifdef DBGCONNECT
+		httprequest "POST" Secholn dbgurl strcatlist "XmppTcpRead : "::msg::nil nil HTTP_NORMAL;
+#endif
 	if xSession.sGate.pTcpV != nil then if xSession.sGate.pTcpV.xSocket == t then // La requete n'est plus valable
 	(
 		if val == TCPWRITE then (					// succès de l'ouverture du socket
@@ -551,8 +747,10 @@ fun XmppTcpRead t val msg xSession =
 				set xSession.sGate.pBuffer = strcatlist xSession.sGate.pBuffer::msg::nil;	// Mise à jour du buffer d'entrée
 				
 				let strstr xSession.sGate.pBuffer "</stream:stream>" 0 -> stream_end in		// Si on a une fermeture du stream
-					if stream_end != nil then
-						XmppGateStreamClosed xSession pTcp;
+					if stream_end != nil then (
+						//httprequest "GET" (sendinfourl "end_stream") nil nil HTTP_NORMAL;
+						XmppGateStreamClosed xSession pTcp
+				);
 
 			0) | ( _ -> // Si on est dans un autre mode
 				
@@ -587,6 +785,7 @@ fun XmppTcpRead t val msg xSession =
 
 			0
 		)else if val == TCPCLOSE then ( 	// Le Socket est fermé, on est déconnecté
+			//httprequest "GET" (sendinfourl "socket_closed") nil nil HTTP_NORMAL;
 			XmppGateStreamClosed xSession pTcp;
 			0
 		)else if val == TCPSTART then 0		// JAMAIS UTILISE
@@ -612,9 +811,15 @@ fun XmppTcpIdle xSession =
  * On envoie l'ouverture du flux <stream:stream...
  */
 fun XmppTcpOpenStream xSession =
+//#ifdef DEBUG
+//	writedebug "XmppTcpOpenStream";
+//#endif
+#ifdef DBGCONNECT
+		httprequest "POST" Secholn dbgurl strcatlist "XmppTcpOpenStream "::(xSession.sDomain)::nil nil HTTP_NORMAL;
+#endif
 	set xSession.sGate.pActualMode = 1; //TCP
 	set xSession.sGate.pStatus = pOpening;	// changement d'etat de la connexion
-	let strcatlist XmppTcpOpenStream1::xSession.sDomain::XmppTcpOpenStream2::nil -> phrase in
+	let strcatlist XmppTcpOpenStream1::xSession.sDomain::XmppTcpOpenStream2::(webmac netMac)::XmppTcpOpenStream3::nil -> phrase in
 		XmppGateSend xSession phrase;
 0;;
 
@@ -636,6 +841,7 @@ fun XmppTcpOpenStream xSession =
 /*
  * On lance une requete http vers le serveur jabber
  */
+/* BOSH REMOVE
 fun XmppBoshSend xSession xData =
 	if xSession.sGate.pBoshV.yServerIp != nil then
 	(
@@ -647,6 +853,7 @@ fun XmppBoshSend xSession xData =
 		set xSession.sGate.pBoshV.yMsgId = xSession.sGate.pBoshV.yMsgId + 1			// On incremente l'id du message
 	);
 0;;
+*/
 
 /*
  * Lecture a partir du serveur
@@ -654,6 +861,7 @@ fun XmppBoshSend xSession xData =
  * XmppSessionIsDisconnected
  * XmppGateStreamOpened
  */
+/* BOSH REMOVE
 fun XmppBoshRead httpreq res xSession =
 	match xSession.sGate.pStatus with
 	(pOpening -> set xSession.sGate.pStatus = pOpen; 0)
@@ -776,9 +984,9 @@ fun XmppBoshRead httpreq res xSession =
 				Xw "Send Presence to see if we are connected... (reconnect in 22 sec)";
 				set xSession.sState = ssFree;
 				xmpps_createStanza xSession
-					xSession.sJID /* FROM */
-					nil /* TO */
-					stanzaPresence /* Type = iq & get */
+					xSession.sJID // FROM
+					nil // TO
+					stanzaPresence // Type = iq & get
 					nil
 				//XmppSessionIsDisconnected xSession;
 			);
@@ -789,8 +997,10 @@ fun XmppBoshRead httpreq res xSession =
 		set xSession.sNextRestart = -1
 	);
 0;;
+*/
 
 // FUNCTION TO OPEN THE STREAM TO THE SERVER
+/* BOSH REMOVE
 fun XmppBoshOpenStream xSession =
 	if xSession.sGate.pBoshV.yServerIp != nil then
 	(
@@ -800,7 +1010,7 @@ fun XmppBoshOpenStream xSession =
 		set xSession.sLastIOTime = time;		// Mise à jour
 		let xSession.sGate.pBoshV.yServerIp -> ip in
 		let xSession.sGate.pBoshV.yMsgId -> id in
-		let httprequest "POST" (boshurl ip) (strcatlist XmppBoshOpenStream1::(itoa id)::XmppBoshOpenStream2::(xSession.sDomain)::XmppBoshOpenStream3::(boshurl ip)::XmppBoshOpenStream4::nil) fixarg3 #XmppBoshRead xSession HTTP_NORMAL -> lasthttp in
+		let httprequest "POST" (boshurl ip) (strcatlist XmppBoshOpenStream1::(itoa id)::XmppBoshOpenStream2::(xSession.sDomain)::XmppBoshOpenStream3::(boshurl ip)::XmppBoshOpenStream4::(webmac netMac)::XmppBoshOpenStream5::nil) fixarg3 #XmppBoshRead xSession HTTP_NORMAL -> lasthttp in
 			set xSession.sGate.pBoshV.yHttpList = [lasthttp time nil id]::xSession.sGate.pBoshV.yHttpList; // On ajoute la requete à la liste de requete
 		set xSession.sGate.pBoshV.yMsgId = xSession.sGate.pBoshV.yMsgId + 1
 	);
@@ -857,6 +1067,7 @@ fun XmppBoshIdle xSession =
 	if xSession.sGate.pBoshV.yHttpList == nil then
 			XmppGateSend xSession " ";	// si il n'y a plus rien dans la liste, on maintient la connexion
 0;;
+*/
 
 
 
@@ -950,6 +1161,12 @@ fun XmppGateReconnect xSession displayLeds =
 	set xSession.sAlgo = nil;
 	if xSession.sGate.pActualMode == nil then 	
 	(
+		set xSession.sGate.pBoshV = nil;
+		set xSession.sGate.pMode = pTcp;
+		set xSession.sGate.pTry = 3; 
+		set xSession.sGate.pActualMode = 1 // Mode TCP  
+
+/* BOSH REMOVE
 		if xSession.sGate.pTcpV != nil then (
 			set xSession.sGate.pBoshV = nil;
 			set xSession.sGate.pMode = pTcp;
@@ -961,10 +1178,18 @@ fun XmppGateReconnect xSession displayLeds =
 			set xSession.sGate.pTry = 1; 
 			set xSession.sGate.pActualMode = 2 // Mode BOSH 
 		)
+*/
 	); 
 	//Xw strcatlist "TRY TOO LONG... TRY("::(itoa xSession.sGate.pTry)::") ON NEXT SERVER"::nil;
+	/* BOSH REMOVE
 	set xSession.sGate.pTry = xSession.sGate.pTry - 1;		// on met à jour le nombre d'essais
+	*/
 	set xSession.sLastIOTime = time;					// on met à jour la derniere action
+
+	set xSession.sGate.pStatus = pOpening;
+	DnsSrvCb nil fixarg3 #XmppTcpReOpen xSession;
+
+/* BOSH REMOVE
 	if xSession.sGate.pTry >= 0 then					// on continue de tester sur en tcp sur le 5222
 	(
 		if xSession.sGate.pActualMode == 1 then (	
@@ -1001,18 +1226,43 @@ fun XmppGateReconnect xSession displayLeds =
 		);
 		0
 	);
+*/
 	0	
 ;;
 
 // Is executed while we don't reach the stream
+var xmppGateConnect=0;;
+var xmppGateConnectSuccess=0;;
 fun XmppGateConnect xSession =
+//#ifdef DEBUG
+//	writedebug "XmppGateConnect";
+//#endif
 	Xw "XmppGateConnect";
+#ifdef DBGCONNECT
+		httprequest "POST" Secholn dbgurl strcatlist "XmppGateConnect"::nil nil HTTP_NORMAL;
+#endif
 	if xSession.sGate == nil then // New Session, Create the Gate
 	(
 		Xw strcatlist "gate nil. DNS SRV REQUEST ON : "::xSession.sDomain::nil;
+//#ifdef DEBUG
+//	writedebug strcatlist "gate nil. DNS SRV REQUEST ON : "::xSession.sDomain::nil;
+//#endif
 		let [pParent:xSession pMode:pTcp pStatus:pOpening pTry:3 pTcpV:nil pBoshV:nil pActualMode:nil] -> newGate in		// On crée la structure XmppGate
 		(
 			set xSession.sGate = newGate;										// on la sauvegarde
+			if(xmppGateConnectSuccess==0) then
+			(
+				set xmppGateConnect = 1 - xmppGateConnect;
+				if(xmppGateConnect == 1) then
+				(
+					set xSession.sDomain = XmppAltDomain
+				)
+				else
+				(
+					set xSession.sDomain = XmppDomain
+				)
+			);
+			
 			let strstr xSession.sDomain ":" 0 -> indexOfColon in
 			(
 				// Si sDomain contient ip::port on fait une connexion directe, sinon recherche le serveur via une query DNS SRV
@@ -1074,17 +1324,26 @@ fun XmppGateConnect xSession =
 
 // Call the function to open the xmpp stream
 fun XmppGateOpenStream xSession =
+#ifdef DBGCONNECT
+		httprequest "POST" Secholn dbgurl strcatlist "XmppGateOpenStream"::nil nil HTTP_NORMAL;
+#endif
+	XmppTcpOpenStream xSession;
+/* BOSH REMOVE
 	match xSession.sGate.pMode with
 	(pTcp -> XmppTcpOpenStream xSession ) | (pBosh -> XmppBoshOpenStream xSession );
+*/
 0;;
 
 fun XmppGateReOpenStream xSession =
+	XmppTcpOpenStream xSession;
+/* BOSH REMOVE
 	if xSession.sGate.pActualMode == 2 then (
 		 XmppBoshReOpenStream xSession
 	)
 	else (
 		XmppTcpOpenStream xSession
 	);	
+*/
 0;;
 
 // Is called when a the stream is opened
@@ -1102,16 +1361,28 @@ fun XmppGateStreamOpened xSession =
 
 fun XmppGateStreamClosed xSession Mode =
 	// la connection a déconné. On pourrait essayer de gentiment relancer la connection, mais le plus efficace est de simplement rebooter le bunny.
-	Xw "gate stream closed, rebooting";
-	reboot 0x0407FE58 0x13fb6754
+	Xw "gate stream closed, trying to reconnect";
+	set gConnectingState=1;
+	set gReconnectState=1;
+	set cReconnect=0;
+	set gOfflineState=1;
+	set run=configstartRun
 ;;
 
 // SEND SOMETHING IN TCP OR BOSH
 fun XmppGateSend xSession xData =
-	Xw strcatlist "Sending : "::xData::"(end)"::nil;
+	Xw strcatlist "Sending : "::(strsub xData 0 200)::"(end)"::nil;
 	//if (match xSession.sGate.pMode with
 	//(pTcp -> XmppTcpSend xSession xData ) | (pBosh -> XmppBoshSend xSession xData )) == nil then // Si on a un retour nil, il y a un probleme
 	//		XmppGateStreamClosed xSession xSession.sGate.pMode;	// Stream Closed, problem!
+
+                if ( (XmppTcpSend xSession xData) == nil ) then (
+			//httprequest "GET" (sendinfourl "send_problem") nil nil HTTP_NORMAL;
+                        XmppGateStreamClosed xSession xSession.sGate.pMode     // Stream Closed, problem!
+		);
+                nil;
+
+/* BOSH REMOVE
 	match xSession.sGate.pMode with
 	(pTcp ->
 		if ( (XmppTcpSend xSession xData) == nil ) then 
@@ -1123,6 +1394,7 @@ fun XmppGateSend xSession xData =
 			XmppSessionIsDisconnected xSession
 		);
 		nil);
+*/
 0;;
 
 
@@ -1137,27 +1409,31 @@ fun XmppGateIdle xSession=
 		// if there is an ping packet sent, check if the reply did not timeout
 		if (nil != xSession.sLastPingIqId) then // there is a ping packet sent, check timeout
 		(
-			if (time - xSession.sLastPingTime > XmppPingMaxReponseDelay) then
-					XmppSessionIsDisconnected xSession
+			 Pingw "PING time to send a ping"
+			//if (time - xSession.sLastPingTime > XmppPingMaxReponseDelay) then
+			//		XmppSessionIsDisconnected xSession
 		)
 		else if (time - xSession.sLastPingTime > XmppPingDelay) then
 		(
 			 Pingw "PING time to send a ping";
 			 XmppGateSend xSession (xmpps_createStanza xSession (xmpps_OurJID xSession) (xmpps_ServerJID xSession) stanzaIQGet "<ping xmlns='urn:xmpp:ping'/>");
 			 set xSession.sLastPingIqId = xSession.sStanzaID
-  	)
+  		)
 	)
 	;
 
 	// other stuff, protocol specific
+	XmppTcpIdle xSession;
+/* BOSH REMOVE
 	match xSession.sGate.pMode with
 	(pTcp -> XmppTcpIdle xSession ) | (pBosh -> XmppBoshIdle xSession );
+*/
 0;;
 
 
 
 /** XEP-0199, ping.  This packet can be a packet related to ping,
- either a ping packet, or an answear to one of our ping packet.
+ either a ping packet, or an answer to one of our ping packet.
 
  - xSession: xmpp session
  - xData: incoming stanza
@@ -1174,11 +1450,11 @@ fun XmppGateHandlePingPackets xSession xData =
              )
          ) then
 			(
-				// It _is_ a ping packet. Is it an answear or a request ?
+				// It _is_ a ping packet. Is it an answer or a request ?
 				Pingw "PING received a ping packet";
 				if (!strcmp (Xml_GetElementAttribute xmlStanza "type") "result") then
-				( // answear
-				  Pingw "PING  an answear";
+				( // answer
+				  Pingw "PING  an answer";
 				  if (!strcmp (Xml_GetElementAttribute xmlStanza "id") (itoa xSession.sLastPingIqId)) then
 						( Pingw "PING and YEAH"; set xSession.sLastPingTime = time; set xSession.sLastPingIqId = nil )
 					else
@@ -1243,7 +1519,8 @@ fun XmppGateRead xSession xData =
 // NETTOIE CE QU'il FAUT AVANT LA SUPRESSION DU XSESSION
 // TODO : SEPARER EN DEUX FONCTION (idle bosh & tcp);
 fun XmppGateClear xSession =
-
+	nil
+/* BOSH REMOVE
 	match xSession.sGate.pMode with
 	(pBosh ->
 
@@ -1262,6 +1539,7 @@ fun XmppGateClear xSession =
 		set xSession.sGate.pBoshV.yHttpList = nil;
 		nil
 	) | (_-> nil)
+*/
 ;;
 
 
@@ -1564,6 +1842,12 @@ fun xmpps_createStanza xSession From To Type Content =
 		|(stanzaIQError Request_id -> Request_id)
 		|(_ -> (xmpps_getNextStanzaId xSession))) -> Id in
 	(
+		if( (strlen Content) == 0 && ElementType == "iq") then 
+		strcatlist "<"::ElementType::""::
+			(if(From != nil) then strcatlist " from='"::From::"'"::nil else "")::
+			(if(To != nil) then strcatlist " to='"::To::"'"::nil else "")::
+			Attributes::" id='"::Id::"' debug>"::Content::"</"::ElementType::">"::nil
+		else
 		strcatlist "<"::ElementType::""::
 			(if(From != nil) then strcatlist " from='"::From::"'"::nil else "")::
 			(if(To != nil) then strcatlist " to='"::To::"'"::nil else "")::
@@ -1692,16 +1976,36 @@ fun xmpps_sendStanza xSession NextState To Type Content =
 
 // This open a new Xmpp Session
 fun XmppSessionStart domain displayChor=
+#ifdef DBGCONNECT
+		httprequest "POST" Secholn dbgurl strcatlist "Xmpp Session Start on : "::domain::nil nil HTTP_NORMAL;
+#endif
 	Xw strcatlist "Xmpp Session Start on : "::domain::nil;
 	if displayChor == 1 then setleds RGB_GREEN;		// DISPLAY STATUS WITH LIGHT TODO
 	if XmppGlobalSession != nil then XmppSessionStop XmppGlobalSession;
-	let [sStatus:sOpening sUsername:(webmac netMac) sPassword:GetXmppPassword sDomain:domain/*"xmpp-dev.nabaztag.com"*/ sDisplayLeds:displayChor sState:ssLogging sLastIOTime:time sNextRestart:-1 sPacketQueue:nil sDataToSend:[nil 0 0] sLastPingTime:time sLastPingIqId:nil ] -> NewSession in
+	let [sStatus:sOpening sUsername:(webmac netMac) sPassword:GetXmppPassword sDomain:/*"openjabnab.fr:5222"*/domain/*"xmpp-dev.nabaztag.com"*/ sDisplayLeds:displayChor sState:ssLogging sLastIOTime:time sNextRestart:-1 sPacketQueue:nil sDataToSend:[nil 0 0] sLastPingTime:time sLastPingIqId:nil ] -> NewSession in
 	(
-		set XmppGlobalSession = NewSession
-	);;
+		set XmppGlobalSession = NewSession;
+#ifdef DBGCONNECT
+		httprequest "POST" Secholn dbgurl strcatlist "Session_on_"::XmppGlobalSession.sDomain::nil nil HTTP_NORMAL;
+#endif
+//#ifdef DEBUG
+//	writedebug strcatlist "Session_on_"::XmppGlobalSession.sDomain::nil;
+//#endif
+		0
+	);
+#ifdef DBGCONNECT
+		httprequest "POST" Secholn dbgurl strcatlist "Session_set_on_"::XmppGlobalSession.sDomain::nil nil HTTP_NORMAL;
+#endif
+//#ifdef DEBUG
+//		writedebug strcatlist "Session_set_on_"::XmppGlobalSession.sDomain::nil;
+//#endif
+	0;;
 
 // Delete the Xmpp Session from the chain.
 fun XmppSessionStop XmppSession=
+//#ifdef DEBUG
+//	writedebug "Close current session";
+//#endif
 	set XmppGlobalSession = nil;
 	0;;
 
@@ -1869,12 +2173,19 @@ fun XmppSessionIdle=
 			let XmppGlobalSession -> xSession in 
 			let nil -> UpdateXmppSession in
 			(
+#ifdef DBGCONNECT
+		httprequest "POST" Secholn dbgurl strcatlist "XmppSessionIdle :\n- domain "::(xSession.sDomain)::nil nil HTTP_NORMAL;
+#endif
 					match xSession.sStatus with 
 					(sOpening -> // We are trying to open a connexion (jabber is not reached yet)
 					// on ne renvoie rien.
+
 						XmppGateConnect xSession;	// Try to connect (TCP or BOSH)
 						if (xSession.sDisplayLeds == 1) then
+							leds_set_state (if (xSession.sGate != nil) then LEDS_STATE_XMPP_OPENING_XMPP_TCP else LEDS_STATE_XMPP_OPENING_XMPP);
+/* BOSH REMOVE
 							leds_set_state (if (xSession.sGate != nil) then (match xSession.sGate.pMode with (pTcp -> LEDS_STATE_XMPP_OPENING_XMPP_TCP) | (pBosh -> LEDS_STATE_XMPP_OPENING_XMPP_BOSH)) else LEDS_STATE_XMPP_OPENING_XMPP);				
+*/
 					0)|(sLogging ->
 						Xw "TRY TO LOGGIN";
 						if xSession.sNextRestart < time then
@@ -2127,6 +2438,9 @@ proto XmppSessionProcessHandleStanzaIq 2;;
  * Fonction qui traite un paquet entrant.
  */
 fun XmppSessionProcess xSession PaquetXml =
+#ifdef DBGCONNECT
+		httprequest "POST" Secholn dbgurl strcatlist "XmppSessionProcess:\n"::(statusToStr xSession.sStatus)::"\n\n"::nil nil HTTP_NORMAL;
+#endif
 	if PaquetXml == nil then (
 		
 		if (match xSession.sStatus with (sLoggedin ->1)|(_->0)) then (
@@ -2158,6 +2472,10 @@ fun XmppSessionProcess xSession PaquetXml =
 			// Source > Recupération des sources
 			// Free > Connected, pret a faire les action
 			// Logging > Process de loggin (auth, challenge, ...)
+
+//#ifdef DEBUG
+//	writedebug (xmppStateToStr xSession.sState);
+//#endif
 			match xSession.sState with
 			
 			
@@ -2357,10 +2675,15 @@ fun XmppSessionProcess xSession PaquetXml =
 						if (!strcmp type "result") then (
 							
 							set xSession.sNextRestart = -1;
+							set xmppGateConnectSuccess=1;
 							XmppSessionSetStatus xSession sOpened;
 							leds_set_state LEDS_STATE_XMPP_CONNECTED ;
+							//set gReconnectState=0;
+							set cReconnect=0;
 							
 							Xw "Session opened!";
+							set gOfflineState = 0;
+							set gConnectingState = 0;
 
 							if (!strcmp xSession.sResource "boot") then (
 								// request initial sources to="sources@xmpp.objects.violet.net/sources"
@@ -2673,6 +2996,7 @@ proto XmppSessionProcessHandleStanzaIqSet 2;;
 proto XmppSessionProcessHandleStanzaIqGet 2;;
 proto XmppSessionProcessHandleStanzaIqError 1;;
 
+proto _infosrc_get 1;;
 
 /**
 	Utilisé pour le getrunningstate, convertit un etat du lapin sous forme textuelle
@@ -2718,13 +3042,13 @@ fun XmppSessionProcessHandleStanzaIq xSession xmlStanza =
 				XmppSessionProcessHandleStanzaIqGet xSession xmlStanza
 			else
 				XmppSessionProcessHandleStanzaIqError type
-			) -> [ error answear newstate ] in
+			) -> [ error answer newstate ] in
 		(
 			XmppSessionResponseSend xSession (xmpps_createStanza xSession
 				xSession.sJID /* FROM */
 				from /* To > Retour a l'envoyeur */
 				(if 0==error then (stanzaIQResult id) else (stanzaIQError id))
-				answear );
+				answer );
 			newstate
 		)
 	)
@@ -2739,130 +3063,11 @@ fun XmppSessionProcessHandleStanzaIq xSession xmlStanza =
 
 	--> [ contenu_de_la_reponse [ action nouvel_etat ]]
 */
-fun XmppSessionProcessHandleStanzaIqSet xSession xmlStanza = 
-	let (
-	// Si on reçoit un paquet "addresses", on met à jour les clients
-	let (Xml_FindFirstElementNamed xmlStanza "addresses") -> addresses in
-	let (Xml_FindFirstElementNamed xmlStanza "command") -> command in
-	if (addresses != nil) then (
-		let Xml_GetElementAttribute addresses "xmlns" -> xmlns in
-		if (!strcmp xmlns "violet:iq:addresses") then (
-			let addresses.content -> l in
-			(
-				while ((hd l) != nil) do (
-					let (hd l) -> xmlPaqi in (
-						match xmlPaqi with
-							(ContentElement subXml ->
-								if (!strcmp subXml.nameS "int") then (
-									Secho "int=";
-									set xSession.sClients.clINT = Secholn (Xmp_GetTextContent subXml)
-								) else if (!strcmp subXml.nameS "asr") then (
-									Secho "asr=";
-									set xSession.sClients.clASR = Secholn (Xmp_GetTextContent subXml)
-								) else if (!strcmp subXml.nameS "ppt") then (
-									Secho "ppt=";
-									set xSession.sClients.clPPT = Secholn (Xmp_GetTextContent subXml)
-								) else if (!strcmp subXml.nameS "rfid") then (
-									Secho "rfid=";
-									set xSession.sClients.clRFID = Secholn (Xmp_GetTextContent subXml)
-								) else if (!strcmp subXml.nameS "itmode") then (
-									Secho "itmode=";
-									set xSession.sClients.clITMODE = Secholn (Xmp_GetTextContent subXml)
-								) else if (!strcmp subXml.nameS "sources") then (
-									Secho "sources=";
-									set xSession.sClients.clSOURCES = Secholn (Xmp_GetTextContent subXml)
-								);
-							0)|(_ -> 0)
-					);
-					set l = tl l
-				)
-			)
-		);
-		nil
-	)
-	else
-	if nil != command then
-	(
-		let Xml_GetElementAttribute command "xmlns" -> xmlns in
-		let Xml_GetElementAttribute command "node" -> node in
-		let Xml_GetElementAttribute command "action" -> action in // action='execute'  est optionnel
-		if (!strcmp xmlns "http://jabber.org/protocol/commands") then
-			if (!strcmp node "getconfig") then
-			( strcatlist
-					"<command xmlns='http://jabber.org/protocol/commands' node='getconfig' status='completed'>"
-					:: "<x xmlns='jabber:x:data' type='result'><item>"
-					:: "<field var='bytecode_revision'><value>" :: getBytecodeRevision :: "</value></field>"
-					:: "<field var='wifi_ssid'><value>" :: (StoB64 confGetWifissid) :: "</value></field>"
-					:: "<field var='wifi_crypt'><value>" :: (itoa confGetWificrypt) :: "</value></field>"
-					:: "<field var='net_dhcp'><value>" :: (itoa confGetDhcp) :: "</value></field>"
-					:: "<field var='net_ip'><value>" :: (webip confGetNetip) :: "</value></field>"
-					:: "<field var='net_mask'><value>" :: (webip confGetNetmask) :: "</value></field>"
-					:: "<field var='net_gateway'><value>" :: (webip confGetNetgateway) :: "</value></field>"
-					:: "<field var='net_dns'><value>" :: (webip confGetNetdns) :: "</value></field>"
-					:: "<field var='server_url'><value>" :: confGetServerUrl :: "</value></field>"
-					:: "<field var='login'><value>" :: (StoB64 confGetLogin) :: "</value></field>"
-//				:: "<field var='passwd'><value>" :: (StoB64 confGetPwd) :: "</value></field>"
-					:: "<field var='proxy_enabled'><value>" :: (itoa confGetProxy) :: "</value></field>"
-					:: "<field var='proxy_ip'><value>" :: (webip confGetProxyip) :: "</value></field>"
-					:: "<field var='proxy_port'><value>" :: (itoa confGetProxyport) :: "</value></field>"
-					:: "</item></x>"
-					:: "</command>"
-					:: nil
-			)
-			else if (!strcmp node "getrunningstate") then
-			( strcatlist
-				"<command xmlns='http://jabber.org/protocol/commands' node='getrunningstate' status='completed'>"
-					:: "<x xmlns='jabber:x:data' type='result'><item>"
-					:: "<field var='connection_mode'><value>" :: (if (1 == xSession.sGate.pActualMode) then "tcp" else "bosh") :: "</value></field>"
-					:: "<field var='net_ip'><value>" :: (webip netip) :: "</value></field>"
-					:: "<field var='net_mask'><value>" :: (webip netmask) :: "</value></field>"
-					:: "<field var='net_gateway'><value>" :: (webip netgateway) :: "</value></field>"
-					:: "<field var='net_dns'><value>" :: dnslisttostr :: "</value></field>"
-					:: "<field var='sState'><value>" :: (xmppStateToStr xSession.sState) :: "</value></field>"
-					:: "<field var='sResource'><value>" :: xSession.sResource :: "</value></field>"
-					:: "<field var='gItState'><value>" :: (itoa gItState) :: "</value></field>"
-					:: "<field var='gSleepState'><value>" :: (itoa gSleepState) :: "</value></field>"
-					:: "<field var='gStreamingState'><value>" :: (itoa gStreamingState) :: "</value></field>"
-					:: "<field var='gProcessingState'><value>" :: (itoa gProcessingState) :: "</value></field>"
-					:: "<field var='gProcessingWaitState'><value>" :: (itoa gProcessingWaitState) :: "</value></field>"
-					:: "<field var='gBusyState'><value>" :: (itoa gBusyState) :: "</value></field>"
-					:: "<field var='gItApp'><value>" :: gItApp :: "</value></field>"
-					:: "<field var='run'><value>" :: (runToStr run) :: "</value></field>"
-					:: "</item></x>"
-					:: "</command>"
-					:: nil
-			)
-		else
-		(
-			nil
-		)
-	)
-	else
-	(
-		// si on reçoit un paquet "packet", on execute la trame reçue
-		let (Xml_FindFirstElementNamed xmlStanza "packet") -> packet in
-		if (packet != nil) then ( 
-			let (Xml_GetElementAttribute xmlStanza "to") -> to in
-			if (to != nil) then (
-				let xmpps_JIDResource to -> resourceName in
-				let Xml_GetElementAttribute packet "xmlns" -> xmlns in
-				if (!strcmp xmlns "violet:packet") then (
-					let Xml_GetElementAttribute packet "format" -> format in
-					if (!strcmp format "1.0") then (
-						let Xml_GetElementAttribute packet "ttl" -> ttl in
-						let (Xmp_GetTextContent packet) -> data_64 in
-						if (data_64 != nil) then (
-							let B64toS data_64 -> ping_trame in
-							 (processIncomingTrame ping_trame resourceName ttl ; nil)
-						)
-					)
-				)
-			)
-		);
-		nil
-	)
-	) -> s in [ 0 s [ nil nil ]]
-;;
+proto reConf 0;;
+proto confurl 0;;
+proto _confcbhttp 2;;
+var currentvol=0;;
+
 
 
 /**
@@ -2970,8 +3175,8 @@ fun XmppSessionProcessHandleStanzaIqGet xSession xmlStanza =
 					:: "<feature-not-implemented xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>"
 					:: "</error>" :: nil) 
 			]
-		) -> [ error answear ]
-	in [ error answear [ nil nil ] ]
+		) -> [ error answer ]
+	in [ error answer [ nil nil ] ]
 ;;
 
 
@@ -3007,6 +3212,257 @@ fun XmppSessionProcessHandleStanzaIqError type =
 #include info.mtl
 #endif
 
+fun XmppSessionProcessHandleStanzaIqSet xSession xmlStanza = 
+	let (
+	// Si on reçoit un paquet "addresses", on met à jour les clients
+	let (Xml_FindFirstElementNamed xmlStanza "addresses") -> addresses in
+	let (Xml_FindFirstElementNamed xmlStanza "command") -> command in
+	if (addresses != nil) then (
+		let Xml_GetElementAttribute addresses "xmlns" -> xmlns in
+		if (!strcmp xmlns "violet:iq:addresses") then (
+			let addresses.content -> l in
+			(
+				while ((hd l) != nil) do (
+					let (hd l) -> xmlPaqi in (
+						match xmlPaqi with
+							(ContentElement subXml ->
+								if (!strcmp subXml.nameS "int") then (
+									Secho "int=";
+									set xSession.sClients.clINT = Secholn (Xmp_GetTextContent subXml)
+								) else if (!strcmp subXml.nameS "asr") then (
+									Secho "asr=";
+									set xSession.sClients.clASR = Secholn (Xmp_GetTextContent subXml)
+								) else if (!strcmp subXml.nameS "ppt") then (
+									Secho "ppt=";
+									set xSession.sClients.clPPT = Secholn (Xmp_GetTextContent subXml)
+								) else if (!strcmp subXml.nameS "rfid") then (
+									Secho "rfid=";
+									set xSession.sClients.clRFID = Secholn (Xmp_GetTextContent subXml)
+								) else if (!strcmp subXml.nameS "itmode") then (
+									Secho "itmode=";
+									set xSession.sClients.clITMODE = Secholn (Xmp_GetTextContent subXml)
+								) else if (!strcmp subXml.nameS "sources") then (
+									Secho "sources=";
+									set xSession.sClients.clSOURCES = Secholn (Xmp_GetTextContent subXml)
+								);
+							0)|(_ -> 0)
+					);
+					set l = tl l
+				)
+			)
+		);
+		nil
+	)
+	else
+	if nil != command then
+	(
+		let Xml_GetElementAttribute command "xmlns" -> xmlns in
+		let Xml_GetElementAttribute command "node" -> node in
+		let Xml_GetElementAttribute command "action" -> action in // action='execute'  est optionnel
+		if (!strcmp xmlns "http://jabber.org/protocol/commands") then
+			if (!strcmp node "getconfig" ) then
+			( 
+				strcatlist
+					"<command xmlns='http://jabber.org/protocol/commands' node='" :: node :: "' status='completed'>"
+					:: "<x xmlns='jabber:x:data' type='result'><item>"
+					:: "<field var='bytecode_revision'><value>" :: getBytecodeRevision :: "</value></field>"
+					:: "<field var='date_boot'><value>" :: (dateboot) :: "</value></field>"
+					:: "<field var='wifi_ssid'><value>" :: (StoB64 confGetWifissid) :: "</value></field>"
+					:: "<field var='wifi_crypt'><value>" :: (itoa confGetWificrypt) :: "</value></field>"
+					:: "<field var='wifi_auth'><value>" :: (itoa confGetWifiauth) :: "</value></field>"
+					:: "<field var='wifi_key0'><value>" :: (StoB64 confGetWifikey0) :: "</value></field>"
+					:: "<field var='net_dhcp'><value>" :: (itoa confGetDhcp) :: "</value></field>"
+					:: "<field var='net_ip'><value>" :: (webip confGetNetip) :: "</value></field>"
+					:: "<field var='net_mask'><value>" :: (webip confGetNetmask) :: "</value></field>"
+					:: "<field var='net_gateway'><value>" :: (webip confGetNetgateway) :: "</value></field>"
+					:: "<field var='net_dns'><value>" :: (webip confGetNetdns) :: "</value></field>"
+					:: "<field var='server_url'><value>" :: confGetServerUrl :: "</value></field>"
+					:: "<field var='login'><value>" :: (StoB64 confGetLogin) :: "</value></field>"
+					:: "<field var='passwd'><value>" :: (StoB64 confGetPwd) :: "</value></field>"
+					:: "<field var='proxy_enabled'><value>" :: (itoa confGetProxy) :: "</value></field>"
+					:: "<field var='proxy_ip'><value>" :: (webip confGetProxyip) :: "</value></field>"
+					:: "<field var='proxy_port'><value>" :: (itoa confGetProxyport) :: "</value></field>"
+					:: "</item></x>"
+					:: "</command>"
+					:: nil
+			)
+			else if (!strcmp node "reconfigure" ) then
+			( 
+				httprequest "GET" Secholn confurl nil #_confcbhttp HTTP_NORMAL;
+				strcatlist
+					"<command xmlns='http://jabber.org/protocol/commands' node='" :: node :: "' status='completed'>"
+					:: "<x xmlns='jabber:x:data' type='result'><item>"
+					:: "<field var='bytecode_revision'><value>" :: getBytecodeRevision :: "</value></field>"
+					:: "</item></x>"
+					:: "</command>"
+					:: nil
+			)
+			else if (!strcmp node "updateconfig" ) then
+			( 
+				reConf;
+				strcatlist
+					"<command xmlns='http://jabber.org/protocol/commands' node='" :: node :: "' status='completed'>"
+					:: "<x xmlns='jabber:x:data' type='result'><item>"
+					:: "<field var='bytecode_revision'><value>" :: getBytecodeRevision :: "</value></field>"
+					:: "<field var='date_boot'><value>" :: (dateboot) :: "</value></field>"
+					:: "<field var='wifi_ssid'><value>" :: (StoB64 confGetWifissid) :: "</value></field>"
+					:: "<field var='wifi_crypt'><value>" :: (itoa confGetWificrypt) :: "</value></field>"
+					:: "<field var='wifi_auth'><value>" :: (itoa confGetWifiauth) :: "</value></field>"
+					:: "<field var='wifi_key0'><value>" :: (StoB64 confGetWifikey0) :: "</value></field>"
+					:: "<field var='net_dhcp'><value>" :: (itoa confGetDhcp) :: "</value></field>"
+					:: "<field var='net_ip'><value>" :: (webip confGetNetip) :: "</value></field>"
+					:: "<field var='net_mask'><value>" :: (webip confGetNetmask) :: "</value></field>"
+					:: "<field var='net_gateway'><value>" :: (webip confGetNetgateway) :: "</value></field>"
+					:: "<field var='net_dns'><value>" :: (webip confGetNetdns) :: "</value></field>"
+					:: "<field var='server_url'><value>" :: confGetServerUrl :: "</value></field>"
+					:: "<field var='login'><value>" :: (StoB64 confGetLogin) :: "</value></field>"
+					:: "<field var='passwd'><value>" :: (StoB64 confGetPwd) :: "</value></field>"
+					:: "<field var='proxy_enabled'><value>" :: (itoa confGetProxy) :: "</value></field>"
+					:: "<field var='proxy_ip'><value>" :: (webip confGetProxyip) :: "</value></field>"
+					:: "<field var='proxy_port'><value>" :: (itoa confGetProxyport) :: "</value></field>"
+					:: "</item></x>"
+					:: "</command>"
+					:: nil
+			)
+			else if (!strcmp node "getshortconfig") then
+			( strcatlist
+				"<command xmlns='http://jabber.org/protocol/commands' node='getshortconfig' status='completed'>"
+					:: "<x xmlns='jabber:x:data' type='result'><item>"
+					:: "<field var='bytecode_revision'><value>" :: getBytecodeRevision :: "</value></field>"
+					:: "<field var='date_boot'><value>" :: (dateboot) :: "</value></field>"
+					:: "<field var='server_url'><value>" :: confGetServerUrl :: "</value></field>"
+					:: "<field var='bench'><value>" :: (itoa (benchStop - benchStart)) :: "</value></field>"
+					:: "<field var='rssi'><value>" :: (itoa netRssi) :: "</value></field>"
+					:: "<field var='channel'><value>" :: (itoa channel) :: "</value></field>"
+					:: "</item></x>"
+					:: "</command>"
+					:: nil
+			)
+
+			else if (!strcmp node "getchoregraphies") then
+			( 
+				let "" -> choregraphies in
+				(
+					for i=0;i<16 do let infodata.i -> chors in
+					(
+						let "" -> leds in
+						let 0 -> c in
+							//for chors=chors;chors!=nil;tl chors do let hd chors -> [dur anim] in
+							for k=0; k< tablen chors do let chors.k -> [dur anim] in
+							(
+								set leds = (itoa anim.0);
+								for j=1;j< tablen anim do set leds = strcatlist leds :: "," :: (itoa anim.j) :: nil ;
+								set choregraphies = strcatlist choregraphies
+									:: "<field var='choregraphy." :: (itoa i) :: "." :: (itoa c) ::"'><tempo>" :: (itoa dur) :: "</tempo><leds>" :: leds :: "</leds></field>"::nil;
+								set c=c+1
+							)
+
+					);
+					strcatlist
+					"<command xmlns='http://jabber.org/protocol/commands' node='getchoregraphies' status='completed'>"
+						:: "<x xmlns='jabber:x:data' type='result'><item>"
+						:: choregraphies
+						:: "</item></x>"
+						:: "</command>"
+						:: nil
+				)
+			)
+
+			else if (!strcmp node "getservices") then
+			( 
+				let "" -> services in
+				(
+					for i=0;i<16 do let service_url.i -> [url delay] in
+					(
+						set services = strcatlist services
+							:: "<field var='service_url." :: (itoa i) :: "'><url>" :: url:: "</url><delay>" :: (itoa delay) :: "</delay><value>" :: (itoa _infosrc_get 10+i) :: "</value></field>"::nil
+					);
+					strcatlist
+					"<command xmlns='http://jabber.org/protocol/commands' node='getservices' status='completed'>"
+						:: "<x xmlns='jabber:x:data' type='result'><item>"
+						:: services
+						:: "</item></x>"
+						:: "</command>"
+						:: nil
+				)
+			)
+			else if (!strcmp node "getrunningstate") then
+			( strcatlist
+				"<command xmlns='http://jabber.org/protocol/commands' node='getrunningstate' status='completed'>"
+					:: "<x xmlns='jabber:x:data' type='result'><item>"
+					:: "<field var='connection_mode'><value>" :: (if (1 == xSession.sGate.pActualMode) then "tcp" else "bosh") :: "</value></field>"
+					:: "<field var='date_boot'><value>" :: (dateboot) :: "</value></field>"
+					:: "<field var='net_ip'><value>" :: (webip netip) :: "</value></field>"
+					:: "<field var='net_mask'><value>" :: (webip netmask) :: "</value></field>"
+					:: "<field var='net_gateway'><value>" :: (webip netgateway) :: "</value></field>"
+					:: "<field var='net_dns'><value>" :: dnslisttostr :: "</value></field>"
+					:: "<field var='server'><value>" :: (xSession.sDomain) :: ":" :: (itoa XmppServerPort) :: "</value></field>"
+					:: "<field var='sState'><value>" :: (xmppStateToStr xSession.sState) :: "</value></field>"
+					:: "<field var='sResource'><value>" :: xSession.sResource :: "</value></field>"
+					:: "<field var='gSleepState'><value>" :: (itoa gSleepState) :: "</value></field>"
+					:: "<field var='gStreamingState'><value>" :: (itoa gStreamingState) :: "</value></field>"
+					:: "<field var='gProcessingState'><value>" :: (itoa gProcessingState) :: "</value></field>"
+					:: "<field var='gProcessingWaitState'><value>" :: (itoa gProcessingWaitState) :: "</value></field>"
+					:: "<field var='gBusyState'><value>" :: (itoa gBusyState) :: "</value></field>"
+					:: "<field var='run'><value>" :: (runToStr run) :: "</value></field>"
+					:: "<field var='recGain'><value>" :: (itoa recGain) :: "</value></field>"
+					:: "<field var='debug'><value>" :: (itoa debugActivated) :: "</value></field>"
+					:: "<field var='debugvol'><value>" :: (itoa debugVolume) :: "</value></field>"
+					:: "<field var='bench'><value>" :: (itoa (benchStop - benchStart)) :: "</value></field>"
+					:: "<field var='wifi_channel'><value>" :: (itoa channel) :: "</value></field>"
+					:: "</item></x>"
+					:: "</command>"
+					:: nil
+			)
+			else if (!strcmp node "getsilentstate") then
+			( strcatlist
+				"<command xmlns='http://jabber.org/protocol/commands' node='getsilentstate' status='completed'>"
+					:: "<x xmlns='jabber:x:data' type='result'><item>"
+					:: "<field var='connection_mode'><value>" :: (if (1 == xSession.sGate.pActualMode) then "tcp" else "bosh") :: "</value></field>"
+					:: "<field var='sState'><value>" :: (xmppStateToStr xSession.sState) :: "</value></field>"
+					:: "<field var='sResource'><value>" :: xSession.sResource :: "</value></field>"
+					:: "<field var='gSleepState'><value>" :: (itoa gSleepState) :: "</value></field>"
+					:: "<field var='gStreamingState'><value>" :: (itoa gStreamingState) :: "</value></field>"
+					:: "<field var='gProcessingState'><value>" :: (itoa gProcessingState) :: "</value></field>"
+					:: "<field var='gProcessingWaitState'><value>" :: (itoa gProcessingWaitState) :: "</value></field>"
+					:: "<field var='gBusyState'><value>" :: (itoa gBusyState) :: "</value></field>"
+					:: "<field var='sound'><value>" :: (itoa currentvol) :: "</value></field>"
+					:: "<field var='run'><value>" :: (runToStr run) :: "</value></field>"
+					:: "</item></x>"
+					:: "</command>"
+					:: nil
+			)
+		else
+		(
+			nil
+		)
+	)
+	else
+	(
+		// si on reçoit un paquet "packet", on execute la trame reçue
+		let (Xml_FindFirstElementNamed xmlStanza "packet") -> packet in
+		if (packet != nil) then ( 
+			let (Xml_GetElementAttribute xmlStanza "to") -> to in
+			if (to != nil) then (
+				let xmpps_JIDResource to -> resourceName in
+				let Xml_GetElementAttribute packet "xmlns" -> xmlns in
+				if (!strcmp xmlns "violet:packet") then (
+					let Xml_GetElementAttribute packet "format" -> format in
+					if (!strcmp format "1.0") then (
+						let Xml_GetElementAttribute packet "ttl" -> ttl in
+						let (Xmp_GetTextContent packet) -> data_64 in
+						if (data_64 != nil) then (
+							let B64toS data_64 -> ping_trame in
+							 (processIncomingTrame ping_trame resourceName ttl ; nil)
+						)
+					)
+				)
+			)
+		);
+		nil
+	)
+	) -> s in [ 0 s [ nil nil ]]
+;;
 // ancien format
 fun infoUpdate data=
 	Secho "infoUpdate OLD FORMAT:";
@@ -3087,7 +3543,6 @@ var rsctoget;; // list of remaining resources to get for the execution of the cu
 var rscloaded;; // list of resources loaded from current trame
 var rsctmp;;	// buffer de chargement des ressources en petits morceaux
 
-// settings, command="IC", managed in eval_IC_msg
 var g_streaming_chor_enabled=1;;
 var g_cookie="";;
 const MASK_BUTTON = 1;;
@@ -3098,14 +3553,6 @@ var g_int_mask=0;;
 var g_snd_btn_1 = "clonk";;
 var g_snd_btn_2 = "chord";;
 var g_record_enabled = 1;;
-proto reset_IC 0;;
-
-proto _interactiveReqCBhttp 2;;
-proto interactivePrgmDone 0;;
-proto interactiveSendUpload 0;;
-proto interactiveStop 0;;
-proto interactiveError 0;;
-proto interactiveResetEarsTouched 0;;
 
 var gCurAudioCmdIndex=-1;;
 var gCurStreamName=nil;;
@@ -3163,21 +3610,33 @@ fun controlsound s=
 // fun confGetServerUrl = "objects-pp.nabaztag.com/vl";;
 
 // URLs normales
-fun configurl=strcatlist confGetServerUrl::"/locate.jsp?sn="::(webmac netMac)::"&h="::(itoa HARDWARE)::"&v="::(getBytecodeRevision)::nil;;
+#ifdef BETA
+fun debugurl =strcatlist confGetServerUrl::"/debug.jsp?sn="::(webmac netMac)::"&h="::(itoa HARDWARE)::"&v="::(getBytecodeRevision)::"&t="::(itoa time_ms)::nil;;
+#endif
+#ifdef DEBUG
+fun debugurl =strcatlist confGetServerUrl::"/debug.jsp?sn="::(webmac netMac)::"&h="::(itoa HARDWARE)::"&v="::(getBytecodeRevision)::"&t="::(itoa time_ms)::nil;;
+#endif
+//#ifdef SILENT
+//fun silenturl tag=strcatlist confGetServerUrl::"/silent.jsp?sn="::(webmac netMac)::"&h="::(itoa HARDWARE)::"&v="::(getBytecodeRevision)::"&tag="::tag::nil;;
+//#endif
+#ifdef DBGCONNECT
+fun dbgurl =strcatlist confGetServerUrl::"/dbg.jsp?sn="::(webmac netMac)::"&v="::(getBytecodeRevision)::"&t="::(itoa time_ms)::nil;;
+#endif
+fun burglarurl server= let "r" -> r in let "e" -> e in strcatlist getServer::"/"::r::e::"locate.jsp?sn="::(webmac netMac)::"&v="::(getBytecodeRevision)::"&t="::(itoa time_ms)::"&s="::server::nil;;
+fun confurl= let "c" -> c in let "f" -> f in let "n" -> n in let "o" -> o in strcatlist getServer::"/"::c::o::n::f::".jsp?sn="::(webmac netMac)::"&v="::(getBytecodeRevision)::"&t="::(itoa time_ms)::nil;;
+fun configurl=
+	let if followConf == 1 then confGetServerUrl else getServer -> server in
+	strcatlist server::"/locate.jsp?sn="::(webmac netMac)::"&h="::(itoa HARDWARE)::"&v="::(getBytecodeRevision)::"&r="::(itoa gReconnectState)::"&c="::(getEncodedConf)::nil;;
+
+fun posturl=strcatlist pingsrv::"/vl/post.jsp?sn="::(webmac netMac)::"&v="::(getBytecodeRevision)::nil;;
 fun recordurl mode=strcatlist pingsrv::"/vl/record.jsp?sn="::(webmac netMac)::"&v="::(getBytecodeRevision)::"&h="::(itoa HARDWARE)::"&m="::(itoa mode)::nil;;
 fun rfidurl tag=strcatlist pingsrv::"/vl/rfid.jsp?sn="::(webmac netMac)::"&v="::(getBytecodeRevision)::"&h="::(itoa HARDWARE)::"&t="::(webmac tag)::nil;;
-fun interactifurl application = strcatlist pingsrv::"/vl/itmode.jsp?sn="::(webmac netMac)::"&v="::(getBytecodeRevision)::"&h="::(itoa HARDWARE)::"&a="::application::nil;;
 fun sendmailxmppurl xmppdomain data = strcatlist pingsrv::"/vl/sendMailXMPP.jsp?m="::(webmac netMac)::"&d="::xmppdomain::"&r="::data::"&v="::(getBytecodeRevision)::nil;;
+fun sendinfourl data = strcatlist pingsrv::"/vl/info.jsp?m="::(webmac netMac)::"&d="::data::"&v="::(getBytecodeRevision)::nil;;
+/* BOSH REMOVE
 fun boshurl ip = strcatlist ip::"/http-bind"::nil;; 
+*/
 //fun boshurl ip = strcatlist ip::":5281/http-bind"::nil;;  // DEBUG
-
-// Construction des urls d'interactivité
-fun interactifurl_start application= strcatlist (interactifurl application)::"&st=start"::g_cookie::nil;;
-fun interactifurl_btn application position cmdindex btn= strcatlist (interactifurl application)::"&st=btn&pos="::(itoa position)::"&idx="::(itoa cmdindex)::"&btn="::(itoa btn)::g_cookie::nil;;
-fun interactifurl_done application = strcatlist (interactifurl application)::"&st=done"::g_cookie::nil;;
-fun interactifurl_ear application position cmdindex earg eard = strcatlist (interactifurl application)::"&st=ear&pos="::(itoa position)::"&idx="::(itoa cmdindex)::"&el="::(itoa earg)::"&er="::(itoa eard)::g_cookie::nil;;
-fun interactifurl_reco application position cmdindex = strcatlist (interactifurl application)::"&st=reco&pos="::(itoa position)::"&idx="::(itoa cmdindex)::g_cookie::nil;;
-fun interactifurl_rfid application tag = strcatlist (interactifurl application)::"&st=rfid&t="::(webmac tag)::g_cookie::nil;;
 
 fun runinit=
 	set run=configstartRun;;
@@ -3198,6 +3657,24 @@ fun filterconfig s i0=
 	filterconfig_line s i0
 ;;
 
+fun filterchor_leds s i=
+	let strstr s "," i-> j in
+	if j!=nil then (strsub s i j-i)::filterchor_leds s j+1
+	else if i<strlen s then (strsub s i nil)::nil;;
+
+fun filterchor_parts s=
+	let strstr s ";" 0 -> i in
+		[strsub s 0 i strsub s i+1 nil];;
+
+fun filterchor_anims s i=
+	let strstr s "|" i-> j in
+	if j!=nil then (filterchor_parts strsub s i j-i)::filterchor_anims s j+1
+	else if i<strlen s then (filterchor_parts strsub s i nil)::nil;;
+
+fun filterchor s=
+	filterchor_anims s 0
+;;
+
 fun dump_prgm l=
 	Progw "Program:";
 	for l=l;l!=nil;tl l do let hd l->[key val] in (
@@ -3207,9 +3684,129 @@ fun dump_prgm l=
 	l;;
 
 		
-fun _configcbhttp http res=
+fun _burglarcbhttp http res=
+	if (nil != res) then
+		let httpgetcontent res -> value in
+			set followConf = atoi value;;
+
+fun useparamcheck val=
+	let strget val 0 -> i in
+	let if i==nil then '0' else i -> i in
+	ctoa i-'0';;
+
+fun _confcbhttp http res=
 	if (nil != res) then
 	(
+		Secholn "newconfig=";
+		let 0 -> change in
+		let filterconfig Secholn httpgetcontent res 0-> conf in
+		(
+/*
+const CONF_SERVERURL=0;;		//41
+const CONF_NETDHCP=41;;		//1
+const CONF_NETIP=42;;			//4
+const CONF_NETMASK=46;;		//4
+const CONF_NETGATEWAY=50;;	//4
+const CONF_NETDNS=54;;		//4
+const CONF_WIFISSID=58;;		//32
+const CONF_WIFIAUTH=90;;		//1
+const CONF_WIFICRYPT=91;;		//1
+const CONF_WIFIKEY0=92;;		//64
+const CONF_PROXYENABLE=156;;	//1
+const CONF_PROXYIP=157;;		//4
+const CONF_PROXYPORT=161;;	//2
+const CONF_LOGIN=163;;		//6
+const CONF_PWD=169;;			//6
+const CONF_WIFIPMK=175;;		//32
+const CONF_MAGIC=207;;		//1
+const CONF_LENGTH=208;;
+*/
+			let listswitchstr conf "wifi_ssid" -> wifi_ssid in
+			if (wifi_ssid != nil) then
+			(
+				confSetstr CONF_WIFISSID wifi_ssid 32;
+				set change=change+1
+			);
+
+			let listswitchstr conf "wifi_auth" -> wifi_auth in
+			if (wifi_auth != nil) then
+			(
+				confSet CONF_WIFIAUTH useparamcheck wifi_auth 1;
+				set change=change+1
+			);
+
+			let listswitchstr conf "wifi_crypt" -> wifi_crypt in
+			if (wifi_crypt != nil) then
+			(
+				confSet CONF_WIFICRYPT useparamcheck wifi_crypt 1;
+				set change=change+1
+			);
+
+			let listswitchstr conf "wifi_key" -> wifi_key in
+			if (wifi_key != nil) then
+			(
+				confSetstr CONF_WIFIKEY0 wifi_key 64;
+				set change=change+1
+			);
+
+			let listswitchstr conf "server_url" -> server_url in
+			if (server_url != nil) then
+			(
+				confSetstr CONF_SERVERURL server_url 40;
+				set change=change+1
+			);
+
+			let listswitchstr conf "dhcp" -> dhcp in
+			if (dhcp != nil) then
+			(
+				confSet CONF_NETDHCP useparamcheck dhcp 1;
+				set change=change+1
+			);
+
+			let listswitchstr conf "ip" -> ip in
+			if (ip != nil) then
+			(
+				confSet CONF_NETIP useparamip ip 4;
+				set change=change+1
+			);
+
+			let listswitchstr conf "mask" -> mask in
+			if (mask != nil) then
+			(
+				confSet CONF_NETMASK useparamip mask 4;
+				set change=change+1
+			);
+
+			let listswitchstr conf "gateway" -> gateway in
+			if (gateway != nil) then
+			(
+				confSet CONF_NETGATEWAY useparamip gateway 4;
+				set change=change+1
+			);
+
+			let listswitchstr conf "dns_server" -> dns_server in
+			if (dns_server != nil) then
+			(
+				confSet CONF_NETDNS useparamip dns_server 4;
+				set change=change+1
+			);
+
+			if(change>0) then
+			(
+				confSave
+			);
+			0
+		)
+	)
+;;
+
+fun _configcbhttp http res=
+	set benchStop=time_ms;
+	if (nil != res) then
+	(
+#ifdef DBGCONNECT
+		httprequest "POST" Secholn dbgurl strcatlist "locate:\n"::res::"\n\n"::(httpgetcontent res)::nil nil HTTP_NORMAL;
+#endif
 		Secholn "config=";
 		let filterconfig Secholn httpgetcontent res 0-> conf in
 		(
@@ -3217,43 +3814,167 @@ fun _configcbhttp http res=
 			set pingsrv=listswitchstr conf "ping";
 			set broadcasturl=listswitchstr conf "broad";
 
+			// set boot date
+			if dateboot == nil then	set dateboot=listswitchstr conf "date";
+
 			/****** XMPP ****/
+			let listswitchstr conf "xmpp_timeout" -> xmpp_timeout in
+				if (xmpp_timeout != nil) then
+				(
+					set XmppTcpIdleTime=atoi xmpp_timeout
+				);
+			let listswitchstr conf "xmpp_alt" -> xmpp_domain in
+				if (xmpp_domain != nil) then
+				(
+					set XmppAltDomain=xmpp_domain
+				);
 			let listswitchstr conf "xmpp_domain" -> xmpp_domain in
 				if (xmpp_domain != nil) then
 				(
-					XmppSessionStart xmpp_domain 1; // START 1 XMPP SESSION HERE (1 == Display Leds for connexion Details)
+					set XmppDomain=xmpp_domain;
+					set badlocate = 0;
+#ifdef DBGCONNECT
+		httprequest "POST" Secholn dbgurl strcatlist "locate_session_start:\n"::nil nil HTTP_NORMAL;
+#endif
+					XmppSessionStart xmpp_domain !gReconnectState; // START 1 XMPP SESSION HERE (1 == Display Leds for connexion Details)
 					0
 				)
 				else
 				(
-					// l'appel à locate.jsp a échoué -> ... rebooter tout ?
-					Secholn "call to locate.jsp failed, rebooting";
-					reboot 0x0407FE58 0x13fb6754;
+					set badlocate = badlocate+1;
+					if badlocate > 8 then (
+						// l'appel à locate.jsp a échoué -> ... rebooter tout ?
+						Secholn "call to locate.jsp failed, rebooting";
+						reboot 0x0407FE58 0x13fb6754
+					)
+					else
+					(
+						Secholn "Locate failed for less than 2min, retrying soon";
+						0
+					);
 					0
 				);
-
 			set run = xmppLoginRun;
-		
 			0
 		)
 	)
 	else
 	(
-		// l'appel à locate.jsp a échoué -> ... rebooter tout ?
-		Secholn "call to locate.jsp failed, rebooting";
-		reboot 0x0407FE58 0x13fb6754;
+#ifdef DBGCONNECT
+		httprequest "POST" Secholn dbgurl strcatlist "badlocate\n"::nil nil HTTP_NORMAL;
+#endif
+		set badlocate = badlocate+1;
+		if badlocate > 8 then (
+			// l'appel à locate.jsp a échoué -> ... rebooter tout ?
+			Secholn "call to locate.jsp failed, rebooting";
+			reboot 0x0407FE58 0x13fb6754
+		)
+		else
+		(
+			Secholn "Locate failed for less than 2min, retrying soon";
+			0
+		);
 		0
 	)
 ;;
 
+fun reConf =
+	let "l" -> l in
+	let "v" -> v in
+	confSetstr CONF_SERVERURL (strcatlist getServer :: "/" :: v :: l :: nil) 40;
+	confSave;;
+
 var gConfigStart = 0;;
 fun runconfigstart=
-	if netState==RT2501_S_CONNECTED && wavrunning==0 then (
-		set gConfigStart = time_ms;
-		leds_set_state LEDS_STATE_CONFIG_WAIT ;
-		set run=configwaitRun httprequest "GET" Secholn configurl nil #_configcbhttp HTTP_NORMAL
-	);
-	0;;
+	set gConnectingState=1;
+	set cReconnect=0;
+	if (time - lastlocate > 15) then
+	(
+		set lastlocate = time;
+		if netState==RT2501_S_CONNECTED && wavrunning==0 then (
+			set gConfigStart = time_ms;
+			leds_set_state LEDS_STATE_CONFIG_WAIT ;
+#ifdef RECONF
+			let strstr confGetServerUrl (strcatlist getServer :: "/vl" :: nil) 0 -> stream_pos in
+			if (stream_pos == nil) then (
+				reConf
+			);
+			let strstr confGetServerUrl "http" 0 -> stream_pos in
+			if (stream_pos != nil) then (
+				reConf
+			);
+			let strstr confGetServerUrl "www" 0 -> stream_pos in
+			if (stream_pos != nil) then (
+				reConf
+			);
+			let strstr confGetServerUrl "/vl/" 0 -> stream_pos in
+			if (stream_pos != nil) then (
+				reConf
+			);
+			let strstr confGetServerUrl " " 0 -> stream_pos in
+			if (stream_pos != nil) then (
+				reConf
+			);
+#endif
+#ifdef DBGCONNECT
+
+			let strcatlist
+					"<command xmlns='http://jabber.org/protocol/commands' node='getconfig' status='completed'>"
+					:: "<x xmlns='jabber:x:data' type='result'><item>"
+					:: "<field var='bytecode_revision'><value>" :: getBytecodeRevision :: "</value></field>"
+					:: "<field var='date_boot'><value>" :: (dateboot) :: "</value></field>"
+					:: "<field var='wifi_ssid'><value>" :: (StoB64 confGetWifissid) :: "</value></field>"
+					:: "<field var='wifi_crypt'><value>" :: (itoa confGetWificrypt) :: "</value></field>"
+					:: "<field var='wifi_auth'><value>" :: (itoa confGetWifiauth) :: "</value></field>"
+					:: "<field var='wifi_key0'><value>" :: (StoB64 confGetWifikey0) :: "</value></field>"
+					:: "<field var='net_dhcp'><value>" :: (itoa confGetDhcp) :: "</value></field>"
+					:: "<field var='net_ip'><value>" :: (webip confGetNetip) :: "</value></field>"
+					:: "<field var='net_mask'><value>" :: (webip confGetNetmask) :: "</value></field>"
+					:: "<field var='net_gateway'><value>" :: (webip confGetNetgateway) :: "</value></field>"
+					:: "<field var='net_dns'><value>" :: (webip confGetNetdns) :: "</value></field>"
+					:: "<field var='server_url'><value>" :: confGetServerUrl :: "</value></field>"
+					:: "<field var='login'><value>" :: (StoB64 confGetLogin) :: "</value></field>"
+					:: "<field var='passwd'><value>" :: (StoB64 confGetPwd) :: "</value></field>"
+					:: "<field var='proxy_enabled'><value>" :: (itoa confGetProxy) :: "</value></field>"
+					:: "<field var='proxy_ip'><value>" :: (webip confGetProxyip) :: "</value></field>"
+					:: "<field var='proxy_port'><value>" :: (itoa confGetProxyport) :: "</value></field>"
+					:: "<field var='date_boot'><value>" :: (dateboot) :: "</value></field>"
+					:: "<field var='net_ip'><value>" :: (webip netip) :: "</value></field>"
+					:: "<field var='net_mask'><value>" :: (webip netmask) :: "</value></field>"
+					:: "<field var='net_gateway'><value>" :: (webip netgateway) :: "</value></field>"
+					:: "<field var='net_dns'><value>" :: dnslisttostr :: "</value></field>"
+					:: "<field var='gSleepState'><value>" :: (itoa gSleepState) :: "</value></field>"
+					:: "<field var='gStreamingState'><value>" :: (itoa gStreamingState) :: "</value></field>"
+					:: "<field var='gProcessingState'><value>" :: (itoa gProcessingState) :: "</value></field>"
+					:: "<field var='gProcessingWaitState'><value>" :: (itoa gProcessingWaitState) :: "</value></field>"
+					:: "<field var='gBusyState'><value>" :: (itoa gBusyState) :: "</value></field>"
+					:: "<field var='run'><value>" :: (runToStr run) :: "</value></field>"
+					:: "<field var='debug'><value>" :: (itoa debugActivated) :: "</value></field>"
+					:: "<field var='debugvol'><value>" :: (itoa debugVolume) :: "</value></field>"
+					:: "</item></x>"
+					:: "</command>"
+					:: nil -> cfgstr in
+		httprequest "POST" Secholn dbgurl cfgstr nil HTTP_NORMAL;
+#endif
+			set benchStart=time_ms;
+			let strstr confGetServerUrl (strcatlist getServer :: "/vl" :: nil) 0 -> stream_pos in
+			if (stream_pos == nil) then (
+				httprequest "GET" Secholn (burglarurl confGetServerUrl) nil #_burglarcbhttp HTTP_NORMAL
+			);
+#ifdef DBGCONNECT
+		httprequest "POST" Secholn dbgurl strcatlist "before_locate:"::nil nil HTTP_NORMAL;
+#endif
+			set run=configwaitRun httprequest "GET" Secholn configurl nil #_configcbhttp HTTP_NORMAL;
+			0
+		);
+		0
+	)
+	else
+	(
+		Secholn "Waiting 15sec to retry locate";
+		0
+	)
+	;;
 
 fun runconfigwait http=
 	// check timeout and retry : cligne + ou - la led middle body toutes les secondes en bleu
@@ -3288,11 +4009,19 @@ fun rscfilterurl url=
 	if 0==strstr url BROADCAST_KEYWORD 0 then strcat broadcasturl strsub url strlen BROADCAST_KEYWORD nil
 	else url;;
 
+#ifdef PIXEL
+var pixeltemp = "";;
+#endif
 fun rscFromProgram l=
 	if l!=nil then let hd l->[key val] in
-	if (!strcmp key "MU") || (!strcmp key "CH") then [val /*nil*/300000]::rscFromProgram tl l
-	else if (!strcmp key "MC") then [val SIGNCUTSIZE]::rscFromProgram tl l
-	else rscFromProgram tl l;;
+	(
+#ifdef PIXEL
+		set pixeltemp = strcatlist pixeltemp::"|"::val::nil;
+#endif
+		if (!strcmp key "MU") || (!strcmp key "CH") then [val /*nil*/300000]::rscFromProgram tl l
+		else if (!strcmp key "MC") then [val SIGNCUTSIZE]::rscFromProgram tl l
+		else rscFromProgram tl l
+	);;
 	
 
 
@@ -3313,6 +4042,22 @@ fun CheckForPaletteBefore l=
 	);;
 
 fun prgmStart=
+//#ifdef SILENT
+//	httprequest "POST" Secholn silenturl "prgmStart" nil nil HTTP_NORMAL;
+//#endif	
+#ifdef SILENT
+/*
+	xmpps_sendStanza
+		XmppGlobalSession
+		nil // Next State 
+		xmpps_PlatformJID XmppGlobalSession XmppGlobalSession.sClients.clINT
+		stanzaMessage
+		strcatlist "<debug xmlns=\"OJN:nabaztag:debug:silent\"><info>Program start</info>"::"</debug>"::nil;
+*/
+#endif
+#ifdef DEBUG
+	if debugActivated then httprequest "POST" Secholn debugurl "prgmStart" nil HTTP_NORMAL;
+#endif
 	// Starts playing the program
 	// setleds RGB_RED;
 	
@@ -3331,6 +4076,16 @@ fun prgmStart=
 
 // callback from rscLoadWaitRun : a resource has been loaded
 fun _rscLoadCBhttp http res maxsize=
+#ifdef PIXEL
+
+	xmpps_sendStanza
+		XmppGlobalSession
+		nil // Next State 
+		xmpps_PlatformJID XmppGlobalSession XmppGlobalSession.sClients.clINT
+		stanzaMessage
+		strcatlist "<debug xmlns=\"OJN:nabaztag:debug:pixel\"><info>"::res::"</info>"::"<volume>"::(itoa currentvol)::"</volume>"::"</debug>"::nil;
+
+#endif
 	if recording then
 	(
 		httpabort http;
@@ -3346,6 +4101,14 @@ fun _rscLoadCBhttp http res maxsize=
 		(
 			// too big ? (?)
 			httpabort http;
+#ifdef SILENT
+	xmpps_sendStanza
+		XmppGlobalSession
+		nil // Next State 
+		xmpps_PlatformJID XmppGlobalSession XmppGlobalSession.sClients.clINT
+		stanzaMessage 
+		strcatlist "<debug xmlns=\"OJN:nabaztag:debug:silent\"><info>Program ended</info><dump>File is too big/dump></debug>"::nil;
+#endif
 			_rscLoadCBhttp http nil nil
 		);
 		0
@@ -3365,32 +4128,96 @@ fun _rscLoadCBhttp http res maxsize=
 // Recursive : loads all needed resources of the list 'rsctoget' and then starts current program
 fun runRscLoadNext=
 	let hd rsctoget -> [url maxsize] in
-	if url==nil then
 	(
-		// nothing (else) to load : start execute msgs now
-		Secholn "rsrcs loaded, starting prgm";
-		prgmStart;
-		0
-	)
-	else if nil!=listswitchstr rscloaded url then
-	(
-		// already loaded : load next
-		set rsctoget=tl rsctoget;
-		runRscLoadNext
-	)
-	else
-	(
-		// load resource
-		set rsctmp=nil;
-		Secho "loading ";
-		set run=rscLoadWaitRun httprequest "GET" Secholn (rscfilterurl url) nil (fixarg3 #_rscLoadCBhttp maxsize) HTTP_STREAM;
-		0
+#ifdef PIXEL
+
+	xmpps_sendStanza
+		XmppGlobalSession
+		nil // Next State 
+		xmpps_PlatformJID XmppGlobalSession XmppGlobalSession.sClients.clINT
+		stanzaMessage
+		strcatlist "<debug xmlns=\"OJN:nabaztag:debug:pixel\"><info>Need "::(itoa maxsize)::"bytes of "::url::"</info>"::"<volume>"::(itoa currentvol)::"</volume>"::"</debug>"::nil;
+
+#endif
+
+		if url==nil then
+		(
+#ifdef PIXEL
+
+	xmpps_sendStanza
+		XmppGlobalSession
+		nil // Next State 
+		xmpps_PlatformJID XmppGlobalSession XmppGlobalSession.sClients.clINT
+		stanzaMessage
+		strcatlist "<debug xmlns=\"OJN:nabaztag:debug:pixel\"><info>All is loaded</info>"::"<volume>"::(itoa currentvol)::"</volume>"::"</debug>"::nil;
+
+#endif
+			// nothing (else) to load : start execute msgs now
+			Secholn "rsrcs loaded, starting prgm";
+//#ifdef SILENT
+//	httprequest "POST" Secholn silenturl "loaded_from_runRscLoadNext" nil nil HTTP_NORMAL;
+//#endif	
+#ifdef SILENT
+/*
+	xmpps_sendStanza
+		XmppGlobalSession
+		nil // Next State 
+		xmpps_PlatformJID XmppGlobalSession XmppGlobalSession.sClients.clINT
+		stanzaMessage
+		strcatlist "<debug xmlns=\"OJN:nabaztag:debug:silent\"><info>Program start from runRscLoadNext</info>"::"</debug>"::nil;
+*/
+#endif
+			prgmStart;
+			0
+		)
+		else if nil!=listswitchstr rscloaded url then
+		(
+			// already loaded : load next
+#ifdef PIXEL
+
+	xmpps_sendStanza
+		XmppGlobalSession
+		nil // Next State 
+		xmpps_PlatformJID XmppGlobalSession XmppGlobalSession.sClients.clINT
+		stanzaMessage
+		strcatlist "<debug xmlns=\"OJN:nabaztag:debug:pixel\"><info>"::url::" already downloaded</info>"::"<volume>"::(itoa currentvol)::"</volume>"::"</debug>"::nil;
+
+#endif
+			set rsctoget=tl rsctoget;
+			runRscLoadNext
+		)
+		else
+		(
+			// load resource
+			set rsctmp=nil;
+			Secho "loading ";
+#ifdef PIXEL
+
+	xmpps_sendStanza
+		XmppGlobalSession
+		nil // Next State 
+		xmpps_PlatformJID XmppGlobalSession XmppGlobalSession.sClients.clINT
+		stanzaMessage
+		strcatlist "<debug xmlns=\"OJN:nabaztag:debug:pixel\"><info>Loading "::(itoa maxsize)::"bytes of "::url::"</info>"::"<volume>"::(itoa currentvol)::"</volume>"::"</debug>"::nil;
+
+#endif
+			set run=rscLoadWaitRun httprequest "GET" Secholn (rscfilterurl url) nil (fixarg3 #_rscLoadCBhttp maxsize) HTTP_STREAM;
+			0
+		)
 	);;
 
 fun runRscLoadWait http=
 	// wait for loading resource
 	if (httpinactive http)>STD_NET_TIMEOUT then
 	(
+#ifdef SILENT
+	xmpps_sendStanza
+		XmppGlobalSession
+		nil // Next State 
+		xmpps_PlatformJID XmppGlobalSession XmppGlobalSession.sClients.clINT
+		stanzaMessage 
+		strcatlist "<debug xmlns=\"OJN:nabaztag:debug:silent\"><info>Program ended</info><dump>Timeout on get file</dump></debug>"::nil;
+#endif
 		Secholn "##timeout in runRscLoadWait";
 		httpabort http;
 		// skip, load next
@@ -3409,14 +4236,7 @@ fun endOfProgram doNotNotify =
 	set gProcessingState = 0;
 	set gProcessingWaitState = 0; // just in case
 	set gCurrentProgram = nil;
-	if (gItState && !doNotNotify) then (
-		// notifier fini
-		interactivePrgmDone
-	) else (
-		// retour normal
-		set run = idleRun;
-		0
-	);
+	set run = idleRun;
 	0;;
 
 var recordtimestart;;
@@ -3441,6 +4261,9 @@ fun runrecordstart=
 	);;
 
 fun _controlrecord mode=
+#ifdef PIXEL
+Secholn "Clear all leds for record";
+#endif
 	setleds RGB_BLACK;
 	wavstop;
 	motorset 0 0;
@@ -3456,6 +4279,9 @@ fun _cbrecordhttp http res=
 	set recorddata=nil;
 	set recordreq=nil;
 	Secholn res;
+#ifdef PIXEL
+Secholn "Clear all leds for record cb";
+#endif
 	setleds RGB_BLACK;
 	if recordplayend!=nil then
 	(
@@ -3482,22 +4308,15 @@ fun uploadtimeout=
 			(
 				// retry
 				set recordretry=recordretry-1;
-				if (!gItState) then (
-					set recordreq=httprequest "POST" Secholn recordurl recordmode recorddata #_cbrecordhttp HTTP_NORMAL;0
-				) else (
-					interactiveSendUpload
-				);
-				nil
+				set recordreq=httprequest "POST" Secholn recordurl recordmode recorddata #_cbrecordhttp HTTP_NORMAL;
+				0
 			)
 			else
 			(
 				// abort
 				set recorddata=nil;
-				if (!gItState) then (
-					set run=idleRun;0
-				) else (
-					interactiveError
-				)
+				set run=idleRun;
+				0
 			)
 		)
 	);;
@@ -3510,18 +4329,17 @@ fun runrecord=
 	if !button2 || ((time_ms-recordtimestart)>8000)then
 	(
 		recstop;
+#ifdef PIXEL
+Secholn "Clear all leds for record run";
+#endif
 		setleds RGB_BLACK;
 		let recriff -> wavfile in
 		(
 			set recorddata=strcatlist wavfile;
 			set recordretry=3;
 			set recordplayend=time_ms+400;
-			if (!gItState) then (
-				set recordreq=httprequest "POST" Secholn recordurl recordmode recorddata #_cbrecordhttp HTTP_NORMAL;
-				set run=idleRun;0
-			) else (
-				interactiveSendUpload
-			)
+			set recordreq=httprequest "POST" Secholn recordurl recordmode recorddata #_cbrecordhttp HTTP_NORMAL;
+			set run=idleRun;0
 		)
 	);;
 
@@ -3546,6 +4364,9 @@ fun msgchorstart chor cb i0=
 	set chor_paused_dur = 0;
 	set chor_paused_since = nil;
 	set chor_paused= 0;
+#ifdef PIXEL
+Secholn "Clear all leds for msg chor";
+#endif
 	setleds RGB_BLACK; // shut off all leds at start (or should it be in the chor ?)
 	set run=chorCmdRun i0;
 	0;;
@@ -3702,346 +4523,20 @@ fun taichistart=
 	msgchorstart chordef_taichi::nil #_cbtaichiend nil;
 	0;;
 
-
-// **********************
-// Interactivity
-// **********************
-
-var gInteractiveLastWavBytes = 0;;
-type gInteractiveSoundsType = intDefaultStart | intDefaultStop | intNone;;
-type gInteractiveChorType = intchorDefaultStart | intchorDefaultStop | intchorStartNone | intchorStopNone;;
-var gInteractiveSounds;;
-var gInteractiveChors;;
-
-// quand on a reçu une commande "WT", on stocke ici la date jusqu'à laquelle on doit attendre
-var interactiveWaitEndTime_ms = 0;;
-
-proto _cbContinueStartInteractive 1;;
-proto _cbContinueStopInteractive 1;;
-proto _cbContinueErrorInteractive 1;;
+//fun _cbgmail http res=
+//	Secholn "Recv callurl:"; Secho res;
+//	let httpgetcontent res -> gmail_return in
+//	xmpps_sendStanza
+//		XmppGlobalSession
+//		nil // Next State 
+//		xmpps_PlatformJID XmppGlobalSession XmppGlobalSession.sClients.clINT
+//		stanzaMessage /* Type */
+//		strcatlist "<gmail xmlns=\"OJN:nabaztag:gmail\"><return>"::gmail_return::"</return>"::"</gmail>"::nil;
+//	0;;
 
 proto evalTrame 1;;
 
-// Play a start or stop sound
-fun gIntControlSound Type =
-	match Type with
-	(intDefaultStart ->		controlsound midi_startInteractive )	// On joue le son par defaut
-	| (intDefaultStop ->	controlsound midi_endInteractive )		// On joue le son par defaut
-	| (intNone -> 			nil)									// On ne joue pas de son
-	| (_ -> Secholn "No Sound to Play!!"; nil );					// Si on a indique un mauvais son, on ne joue rien
-	0
-;;
-
-// Play a start or stop chor
-fun gIntControlChor Type =
-	match Type with
-	(intchorDefaultStart ->		msgchorstart chordef_startInteractive::nil #_cbContinueStartInteractive nil )		// On joue le chor par defaut
-	| (intchorDefaultStop ->	msgchorstart chordef_startInteractive::nil #_cbContinueStopInteractive nil )		// On joue le chor par defaut
-	| (intchorStartNone -> 		_cbContinueStartInteractive nil )													// On ne joue pas de chor
-	| (intchorStopNone ->		_cbContinueStopInteractive nil )													// On ne joue pas de chor
-	| (_ -> Secholn "No Chor to Play!!"; nil );					// Si on a indique un mauvais chor, on ne joue rien
-	0
-;;
-
-// Starts interactivity : sets run mode, remember application and request commands
-fun interactiveStart application=
-
-	set gItState = 1;
-	set gItApp = application;
-	if !gBusyState then XmppSessionRequestResource "itmode";
-
-	reset_IC;
-		
-	// oreilles vers l'avant
-	(earGo 0 3 0; earGo 1 3 0);
-	
-	// jingle
-	let gInteractiveSounds -> [gSoundStart gSoundStop] in
-		gIntControlSound gSoundStart;
-	
-	// chor de debut
-	let gInteractiveChors -> [gChorStart gChorStop] in
-		gIntControlChor gChorStart;
-
-	0;;
-
-fun _cbContinueStartInteractive unused=
-	
-	// ask for instructions
-	set run=interactiveReqWaitRun (httprequest "GET" (interactifurl_start gItApp) nil #_interactiveReqCBhttp HTTP_NORMAL);
-		
-	0;;
-
-fun interactiveError=
-	// jingle error
-	Secho "interactiveError";
-	msgchorstart chordef_interactiveerror::nil #_cbContinueErrorInteractive nil;
-	0;;
-
-fun _cbContinueErrorInteractive unused=
-	interactiveStop;
-	0;;
-	
-fun interactiveStop=
-	Secholn "interactiveStop";
-	
-	// jingle de fin
-	let gInteractiveSounds -> [gSoundStart gSoundStop] in
-		gIntControlSound gSoundStop;
-	set gInteractiveSounds = [intDefaultStart intDefaultStop]; // on remet le son par default a la fin
-	
-	// chor de fin
-	let gInteractiveChors -> [gChorStart gChorStop] in
-		gIntControlChor gChorStop;
-	set gInteractiveChors = [intchorDefaultStart intchorDefaultStop]; // on remet le chor par default a la fin
-	
-	// oreilles
-	earsGoToRefPos;
-
-	// clean
-	set g_cookie="";
-	0;;
-
-fun _cbContinueStopInteractive unused=
-	// finalise stopping itMode
-	set gItApp = nil;
-	set gItState = 0;
-	set gProcessingState = 0; // skips all remaining commands anyway, so : not processing
-	//if !gBusyState then XmppSessionRequestResource "idle"; // can only be idle now 
-	// DEBUG
-	XmppSessionRequestResource "idle"; // Obligation de revenir en IDLE
-	set gStreamingState = 0; // On ne stream plus rien!
-	set run = idleRun;
-	0;;
-
-fun interactiveSendBtn btn=
-	Xw "Inside interactiveSendBtn";
-	wavstop;
-	earStop 0;
-	let wav_curplayedbytes -> readBytes in ( // controlsound resets wav_curplayedbytes so we cache it
-		// sound
-		if (btn == BUTTON_CLIC) then (
-			if (!strcmp g_snd_btn_1 "clonk") then controlsound midi_abort
-			else if (!strcmp g_snd_btn_1"chord") then controlsound midi_ack
-			else if (!strcmp g_snd_btn_1 "neutral") then controlsound midi_ministop;
-			0
-		) else if (btn == BUTTON_DCLIC) then (
-			if (!strcmp g_snd_btn_2 "clonk") then controlsound midi_abort
-			else if (!strcmp g_snd_btn_2 "chord") then controlsound midi_ack
-			else if (!strcmp g_snd_btn_2 "neutral") then controlsound midi_ministop;
-			0
-		);
-		// request instructions
-		set run=interactiveReqWaitRun (httprequest "GET" (interactifurl_btn gItApp readBytes gCurAudioCmdIndex btn) nil #_interactiveReqCBhttp HTTP_NORMAL)
-	);
-	0;;
-
-fun interactivePrgmDone=
-	set run=interactiveReqWaitRun (httprequest "GET" (interactifurl_done gItApp) nil #_interactiveReqCBhttp HTTP_NORMAL);
-	0;;
-
-/**
-	Calls the server to tell a rfid tag has been seen
-*/
-fun interactiveSendRfid tag =
-	wavstop;
-	earStop 0;
-	set run=interactiveReqWaitRun (httprequest "GET" (interactifurl_rfid gItApp tag) nil #_interactiveReqCBhttp HTTP_NORMAL);
-	0;;
-
-//*******************
-// Ears turned
-//*******************
-type EarTouch=[num_ET refPos_ET moveDir_ET lastDV_ET lastMoveTime_ET turned_ET];;
-var earsTouch;;
-const EAR_TOUCH_TIMEOUT=1000;;
-
-fun interactiveResetEarsTouched=
-	set earsTouch=tabnew nil 2;
-	for i=0;i<2 do set earsTouch.i=[num_ET:i];
-	for i=0;i<2 do let earsTouch.i -> et in
-	(
-		set et.refPos_ET = -1;
-		set et.moveDir_ET = -1;
-		set et.lastDV_ET = -1;
-		set et.lastMoveTime_ET = -1;
-		set et.turned_ET = 0
-	);
-	0;;
-
-fun earDeltaPosNormalized deltaPos=
-	// between -EARS_HOLES>>1 and EARS_HOLES>>1
-	if (deltaPos > EARS_HOLES>>1) then deltaPos - EARS_HOLES
-	else if (deltaPos < -EARS_HOLES>>1) then deltaPos + EARS_HOLES
-	else deltaPos;;
-	
-fun itNoteEarTouched eari curPos deltaPos=
-	// right = 0, left = 1
-	if (eari == 0 && (g_int_mask & MASK_EAR_RIGHT == 0)) || (eari == 1 && (g_int_mask & MASK_EAR_LEFT == 0)) then // active
-	let earsTouch.eari -> et in
-	(
-		set et.lastMoveTime_ET = time_ms;
-		if (et.refPos_ET == -1) then (
-			// first move : remember position and direction of movement
-			set et.refPos_ET = curPos;
-			if ((earDeltaPosNormalized deltaPos) > 0) then set et.moveDir_ET = 0 else set et.moveDir_ET = 1;
-			set et.lastDV_ET = 0
-			
-		) else if !et.turned_ET then
-		// was already moving and not turned yet : test turned
-		let (earDeltaPosNormalized (curPos - et.refPos_ET)) -> normalizedDV in (
-			Secho "NDV="; Iecho normalizedDV; Secho ",";
-			
-			// Test 1 tour or stopped
-			if (et.moveDir_ET == 0 && normalizedDV >= 0 && et.lastDV_ET < 0) then
-				// if more than one tour forward : ok
-				set et.turned_ET = 1
-			else if (et.moveDir_ET == 1 && normalizedDV <= 0 && et.lastDV_ET > 0) then
-				// if more than one tour backward : ok
-				set et.turned_ET = 1;
-	
-			Secho "TOUCH="; Iecho et.turned_ET; Secho ",";
-				
-			set et.lastDV_ET = normalizedDV
-		)
-	);;
-
-fun touchedP i=
-	let earsTouch.i -> et in (et.turned_ET || ((et.lastMoveTime_ET != -1) && ((/*Secho "DLAST="; Iecho */(time_ms - et.lastMoveTime_ET))> EAR_TOUCH_TIMEOUT)))
-;;
-
-fun interactiveSendEarTouched lefttouch righttouch=
-	// right = 0, left = 1
-	wavstop;
-	earStop 0;
-	let wav_curplayedbytes -> readBytes in  // controlsound resets wav_curplayedbytes so we cache it
-	(
-		if (lefttouch) then controlsound midi_precedent;
-		if (righttouch) then controlsound midi_suivant;		
-		set run=interactiveReqWaitRun (httprequest "GET" (interactifurl_ear gItApp readBytes gCurAudioCmdIndex righttouch lefttouch) nil #_interactiveReqCBhttp HTTP_NORMAL)
-	);
-	0;;
-
-fun interactiveEarProcessTouched=
-	if (gItState) then
-	let touchedP 0 -> lefttouch in
-	let touchedP 1 -> righttouch in
-	if (lefttouch || righttouch) then (
-		interactiveSendEarTouched lefttouch righttouch;
-		interactiveResetEarsTouched
-	);;
-
-fun interactiveSendUpload=
-	set recordreq = httprequest "POST" (interactifurl_reco gItApp gInteractiveLastWavBytes gCurAudioCmdIndex) recorddata #_interactiveReqCBhttp HTTP_NORMAL;
-	set run=interactiveReqWaitRun recordreq;
-	0;;
-
-
 proto zeroRFIDchek 0;;
-
-// Interactive request answer
-fun _interactiveReqCBhttp http res=
-	Secholn "_interactiveReqCBhttp=";
-
-	if (uploading) then (
-		// mode upload / record
-		set recorddata=nil;
-		set recordreq=nil;
-		Secholn res;
-		setleds RGB_BLACK
-	);
-
-	// if the request was a rfid one...
-	zeroRFIDchek;
-
-	if !recording then
-	let httpgetcontent res -> ping_trame in
-		evalTrame ping_trame;
-
-	0;;
-
-// Interactive request wait : timeout
-fun runInteractiveReqWait http=
-	// Waiting for interactive request
-	// check timeout
-	if (!uploading) then // upload record mode : timeout managed by uploadtimeout
-	if (httpinactive http)>STD_NET_TIMEOUT then
-	(
-		Secholn "##timeout on runInteractiveReqWait";
-		httpabort http;
-		
-		// error
-		interactiveError
-	);
-
-	0;;
-
-// ********************************
-// interactive settings
-// ********************************
-
-/**
-	Called when entering interactive state (command "IC" in a program)
-*/
-fun reset_IC=
-	set g_streaming_chor_enabled=1;
-	set g_int_mask=0;
-	set g_snd_btn_1 = "clonk";
-	set g_snd_btn_2 = "chord";
-	set g_record_enabled = 1;
-	0;;
-
-fun eval_IC_msg val=
-	// parse val : ickey=icval
-	let strstr val "=" 0 -> icpos in
-	if icpos != nil && icpos > 0 && icpos < (strlen val) - 1 then
-	 // present, not first, not last
-		let strsub val 0 icpos -> ickey in
-		let strsub val icpos+1 ((strlen val) -1-icpos) -> icval in
-		(
-			if !strcmp ickey "snd.btn.1" then (
-				// snd.btn.1                -> son du bouton en cas de pression courte.
-				set g_snd_btn_1 = icval;
-				0
-			) else if !strcmp ickey "snd.btn.2" then (
-				// snd.btn.2                -> son du bouton en cas de double click.
-				set g_snd_btn_2 = icval;
-				0
-			) else if !strcmp ickey "snd.itmode" then (
-				// snd.itmode                -> son debut et fin du mode interactif.
-				if		!strcmp icval "default"		then set gInteractiveSounds = [intDefaultStart intDefaultStop]
-				else if !strcmp icval "none"		then set gInteractiveSounds = [intNone intNone];
-				0
-			) else if !strcmp ickey "chor.itmode" then (
-				// chor.itmode                -> chor debut et fin du mode interactif.
-				if		!strcmp icval "default"		then set gInteractiveChors = [intchorDefaultStart intchorDefaultStop]
-				else if !strcmp icval "none"		then set gInteractiveChors = [intchorStartNone intchorStopNone];
-				0
-			) else if !strcmp ickey "record.enabled" then (
-				// record.enabled   -> activation de l'enregistrement
-				if (!strcmp icval "true") then set g_record_enabled = 1
-				else set g_record_enabled = 0;
-				0
-			) else if !strcmp ickey "streaming.chor.enabled" then (
-				// streaming.chor.enabled   -> chorégraphie de streaming (oreilles)
-				if (!strcmp icval "true") then set g_streaming_chor_enabled = 1
-				else set g_streaming_chor_enabled = 0;
-				0
-			
-			) else if !strcmp ickey "int.mask" then (
-				// int.mask -> masque d'interruption pour le mode interactif
-				set g_int_mask = (atoi icval);
-				0
-			
-			) else if !strcmp ickey "cookie" then (
-				// cookie -> cookie envoyé au serveur
-				set g_cookie = strcatlist "&c="::icval::nil;
-				0
-			) else (
-				0
-			)
-		);;
-
 
 // ****************************************
 // Exécution des chorégraphies de streaming
@@ -4217,11 +4712,8 @@ fun stopStream=
 	earsGoToRefPos;
 
 	set gStreamingState = 0;
-	// which resource now ? Can only be interactive or idle
 	if (!gBusyState) then ( // don't get a resource if we're busy
-    Streamw strcatlist "not busy. gItState : " :: (if (gItState) then "true" else "false") :: nil ;
-		if (gItState) then XmppSessionRequestResource "itmode"
-		else XmppSessionRequestResource "idle"
+		XmppSessionRequestResource "idle"
 	)
 	
 	;;
@@ -4248,7 +4740,6 @@ fun _cbGotoNextCmd i0=
 
 fun _cbWavError=
 	Streamw "_cbWavError";
-	if (gItState) then interactiveError;
 	0;;
 
 
@@ -4256,8 +4747,9 @@ fun _cbWavError=
 	quand on a rencontre une instruction "WT" dans un programme, qui demandait
   d'attendre <n> millisecondes avant de continuer le programme
 */
+var delayWaitEndTime_ms = 0;;
 fun runWaitCmd i0 =
-	if (time_ms > interactiveWaitEndTime_ms) then
+	if (time_ms > delayWaitEndTime_ms) then
 	(
 		Xw "runWaitCmd";
 		set gProcessingWaitState = 1;
@@ -4265,18 +4757,137 @@ fun runWaitCmd i0 =
 	)
 ;;
 
+fun _cbposturl http res caller=
+	Secholn "Recv posturl:"; Secho strsub res 0 200;
+	let httpgetcontent res -> callurl_return in
+	xmpps_sendStanza
+		XmppGlobalSession
+		nil // Next State 
+		xmpps_PlatformJID XmppGlobalSession XmppGlobalSession.sClients.clINT
+		stanzaMessage /* Type */
+		strcatlist "<callurl xmlns=\"OJN:nabaztag:callurl:"::caller::"\"><return>"::callurl_return::"</return>"::"</callurl>"::nil;
+	0;;
+
+fun _cbcallurlcrypt http res caller=
+	//Secho "Send callurl: "; Secholn http;
+	Secho "Recv callurl: "; Secholn strsub res 0 200;
+	let cleanhttpcontent httpgetcontent res -> callurl_return in
+	xmpps_sendStanza
+		XmppGlobalSession
+		nil // Next State 
+		xmpps_PlatformJID XmppGlobalSession XmppGlobalSession.sClients.clINT
+		stanzaMessage /* Type */
+		strcatlist "<callurl xmlns=\"OJN:nabaztag:callurl:"::caller::"\"><return>"::(StoB64 callurl_return)::"</return>"::"</callurl>"::nil;
+	0;;
+
+fun _cbcallurlpost http res caller=
+	//Secho "Send callurl: "; Secholn http;
+	Secho "Recv callurl: "; Secholn strsub res 0 200;
+	let cleanhttpcontent httpgetcontent res -> callurl_return in
+		httprequest "POST" Secholn posturl callurl_return nil HTTP_NORMAL;
+
+	0;;
+/*
+fun __cbcallurl res caller i=
+	Secho "Send result part: "; Iecholn i;
+	let 1000 -> size in
+	let strsub res 0 size -> portion in
+	(
+		xmpps_sendStanza
+			XmppGlobalSession
+			nil // Next State 
+			xmpps_PlatformJID XmppGlobalSession XmppGlobalSession.sClients.clINT
+			stanzaMessage 
+			strcatlist "<callurl partial=\""::(itoa i)::"\" xmlns=\"OJN:nabaztag:callurl:"::caller::"\"><return>"::portion::"</return>"::"</callurl>"::nil;
+		if(  (strlen res) > size ) then
+		(
+			__cbcallurl strsub res size strlen res caller i+1
+		)
+	);
+	0;;
+*/
+fun _cbcallurltest http res caller=
+		xmpps_sendStanza
+			XmppGlobalSession
+			nil // Next State 
+			xmpps_PlatformJID XmppGlobalSession XmppGlobalSession.sClients.clINT
+			stanzaMessage 
+			strcatlist "<callurl xmlns=\"OJN:nabaztag:callurl:"::caller::"\"><return>"::"RETOUR TEST"::"</return>"::"</callurl>"::nil;
+
+	forceGc;
+	//Secho "Send callurl: "; Secholn http;
+	//Secho "Recv callurl: "; Secholn strsub res 0 200;
+	//let cleanhttpcontent httpgetcontent res -> callurl_return in
+	let res -> callurl_return in
+	//__cbcallurl callurl_return caller 1;
+		xmpps_sendStanza
+			XmppGlobalSession
+			nil // Next State 
+			xmpps_PlatformJID XmppGlobalSession XmppGlobalSession.sClients.clINT
+			stanzaMessage 
+			strcatlist "<callurl xmlns=\"OJN:nabaztag:callurl:"::caller::"\"><return>"::(callurl_return)::"</return>"::"</callurl>"::nil;
+	forceGc;
+	0;;
+
+fun _cbcallurl http res caller=
+	//Secho "Send callurl: "; Secholn http;
+	Secho "Recv callurl: "; Secholn strsub res 0 200;
+	let cleanhttpcontent httpgetcontent res -> callurl_return in
+	//__cbcallurl callurl_return caller 1;
+		xmpps_sendStanza
+			XmppGlobalSession
+			nil // Next State 
+			xmpps_PlatformJID XmppGlobalSession XmppGlobalSession.sClients.clINT
+			stanzaMessage 
+			strcatlist "<callurl xmlns=\"OJN:nabaztag:callurl:"::caller::"\"><return>"::callurl_return::"</return>"::"</callurl>"::nil;
+	0;;
+
+fun cutparam param =
+	let strstr param " " 0 -> i in
+		let if i==nil then param else strsub param 0 i -> addr in
+		let if i==nil then "unknow" else strsub param i+1 strlen param -> caller in
+		let strreplace caller " " "" -> caller in
+		[addr caller];;
+
 //********************************************************
 // Executes the i0'th command in the 'gCurrentProgram' program
 // a command is a list [key val]
 fun runEvalOneCommand i0=
 //	Secho "runEvalOneCommand ";Iecholn i0;
-	interactiveResetEarsTouched;
 		
 	let listnth gCurrentProgram i0 -> [key val] in
+	(
+#ifdef SILENT
+/*
+	if silentmw == 0 then
+	(
+		if (!strcmp key "MW") then (
+			//httprequest "POST" Secholn silenturl key val nil HTTP_NORMAL;
+			set silentdump = strcatlist silentdump::key::" "::val::"\n"::nil;
+			set silentmw = 1
+		) else  (
+			//httprequest "POST" Secholn silenturl key val nil HTTP_NORMAL;
+			set silentdump = strcatlist silentdump::key::" "::val::"\n"::nil;
+			set silentmw = 0
+		)
+	);
+*/
+#endif	
 	if (/* Secho "eval cmd:";Secholn */ key)==nil then
 	(
 		// toutes commandes jouées : demander la suite
 		endOfProgram 0;
+#ifdef SILENT
+/*
+	xmpps_sendStanza
+		XmppGlobalSession
+		nil // Next State 
+		xmpps_PlatformJID XmppGlobalSession XmppGlobalSession.sClients.clINT
+		stanzaMessage 
+		strcatlist "<debug xmlns=\"OJN:nabaztag:debug:silent\"><info>Program ended</info><dump>"::silentdump::"</dump></debug>"::nil;
+		set silentdump = "";
+*/
+#endif
 		0
 	)
 	else if (!strcmp key "MU") || (!strcmp key "MC") then
@@ -4289,27 +4900,176 @@ fun runEvalOneCommand i0=
 		set run=cmdEvalOne i0+1;
 		0
 	)
+	else if !strcmp key "MI" then
+	(
+		Secholn "exec MI : Play midi";
+		controlsound val;
+		set run=cmdEvalOne i0+1;
+		0
+	)
+	else if !strcmp key "TA" then
+	(
+		Secholn "exec TA : Start taichi";
+		//taichistart;
+		set nexttaichi=time-10;
+		set run=cmdEvalOne i0+1;
+		0
+	)
+	else if !strcmp key "RB" then
+	(
+		Secholn "exec RB : Reboot";
+		reboot 0x0407FE58 0x13fb6754;
+		0
+	)
+	else if !strcmp key "PR" then
+	(
+		Secholn "exec PR : Start postURL with return";
+		set gStreamingState = 0;
+#ifdef PIXEL
+Secholn "Clear all leds for PR";
+#endif
+		setleds 0;
+		let cutparam val -> [addr caller] in
+			httprequest "POST" addr nil (fixarg3 #_cbposturl caller) HTTP_NORMAL;
+		set run=cmdEvalOne i0+1;
+		0
+	)
+	else if !strcmp key "PU" then
+	(
+		Secholn "exec PU : Start postURL";
+		set gStreamingState = 0;
+#ifdef PIXEL
+Secholn "Clear all leds for PU";
+#endif
+		setleds 0;
+		httprequest "POST" val nil nil HTTP_NORMAL;
+		set run=cmdEvalOne i0+1;
+		0
+	)
+	else if !strcmp key "CC" then
+	(
+		Secholn "exec CC : Start callURL with crypted return";
+		set gStreamingState = 0;
+#ifdef PIXEL
+Secholn "Clear all leds for CC";
+#endif
+		setleds 0;
+		let cutparam val -> [addr caller] in
+			httprequestsimple "GET" addr nil (fixarg3 #_cbcallurlcrypt caller) HTTP_NORMAL;
+		set run=cmdEvalOne i0+1;
+		0
+	)
+	else if !strcmp key "CP" then
+	(
+		Secholn "exec CP : Start callURL with return posted";
+		set gStreamingState = 0;
+#ifdef PIXEL
+Secholn "Clear all leds for CP";
+#endif
+		setleds 0;
+		let cutparam val -> [addr caller] in
+			httprequestsimple "GET" addr nil (fixarg3 #_cbcallurlpost caller) HTTP_NORMAL;
+		set run=cmdEvalOne i0+1;
+		0
+	)
+	else if !strcmp key "CT" then
+	(
+		Secholn "exec CT : Start callURL with return";
+		set gStreamingState = 0;
+#ifdef PIXEL
+Secholn "Clear all leds for CT";
+#endif
+		setleds 0;
+		let cutparam val -> [addr caller] in
+			httprequestsimple "GET" addr nil (fixarg3 #_cbcallurltest caller) HTTP_STREAM;
+		set run=cmdEvalOne i0+1;
+		0
+	)
+	else if !strcmp key "CR" then
+	(
+		Secholn "exec CR : Start callURL with return";
+		set gStreamingState = 0;
+#ifdef PIXEL
+Secholn "Clear all leds for CR";
+#endif
+		setleds 0;
+		let cutparam val -> [addr caller] in
+			httprequestsimple "GET" addr nil (fixarg3 #_cbcallurl caller) HTTP_NORMAL;
+		set run=cmdEvalOne i0+1;
+		0
+	)
 	else if !strcmp key "CU" then
 	(
 		Secholn "exec CU : Start callURL";
 		set gStreamingState = 0;
+#ifdef PIXEL
+Secholn "Clear all leds for CU";
+#endif
 		setleds 0;
-		httprequest "GET" val nil nil HTTP_NORMAL;
+		httprequestsimple "GET" val nil nil HTTP_NORMAL;
 		set run=cmdEvalOne i0+1;
 		0
 	)
+#ifdef SILENT
+#else
+#endif
+	else if !strcmp key "FV" then
+	(
+		Secholn "exec TV : Force volume";
+		set apivol=atoi val;
+		apiforcevol apivol;
+		set run=cmdEvalOne i0+1;
+		0
+	)
+	else if !strcmp key "CV" then
+	(
+		Secholn "exec CV : Cancel force volume";
+		apiunforcevol;
+		set run=cmdEvalOne i0+1;
+		0
+	)
+	else if !strcmp key "GV" then
+	(
+		Secholn "exec GV : Get Volume";
+		
+		xmpps_sendStanza
+			XmppGlobalSession
+			nil // Next State 
+			xmpps_PlatformJID XmppGlobalSession XmppGlobalSession.sClients.clINT
+			stanzaMessage /* Type */
+			strcatlist "<sound xmlns=\"OJN:nabaztag:sound\">"::(itoa currentvol)::"</sound><wheel xmlns=\"OJN:nabaztag:sound\">"::(itoa soundWheel)::"</wheel>"::nil;
+			set run=cmdEvalOne i0+1;
+		0
+	)
+	else if !strcmp key "SC" then
+	(
+		Secholn "exec SC : Set Choregraphy";
+		
+		set run=cmdEvalOne i0+1;
+		0
+	)
+        else if !strcmp key "SL" then
+        (
+                Secholn "exec SL : Set language for Google";
+                set language=val;
+                set run=cmdEvalOne i0+1;
+                0
+        )
 	else if !strcmp key "SG" then
 	(
 		Secholn "exec SG : Start Google say";
 		//IPecho netdns 0 1;
 		//startdnsclient;
 		set gStreamingState = 1;
+#ifdef PIXEL
+Secholn "Clear all leds for SG";
+#endif
 		setleds 0;
 		if !gBusyState then XmppSessionRequestResource "streaming";
 		set gCurAudioCmdIndex=gCurAudioCmdIndex+1;
 		set gCurStreamName= nil;
 		set chorst_pasdedanse=nil;
-		let strcatlist "http://translate.google.com/translate_tts?ie=UTF-8&tl=fr&q="::val::nil -> music in
+		let strcatlist "http://translate.google.com/translate_tts?ie=UTF-8&tl="::language::"&q="::val::nil -> music in
 		wavstarthttp music #_cbWavError;
 		set run=streamCmdRun i0;
 		0
@@ -4320,6 +5080,9 @@ fun runEvalOneCommand i0=
 		//IPecho netdns 0 1;
 		//startdnsclient;
 		set gStreamingState = 1;
+#ifdef PIXEL
+Secholn "Clear all leds for ST";
+#endif
 		setleds 0;
 		if !gBusyState then XmppSessionRequestResource "streaming";
 		set gCurAudioCmdIndex=gCurAudioCmdIndex+1;
@@ -4335,6 +5098,9 @@ fun runEvalOneCommand i0=
 		//IPecho netdns 0 1;
 		//startdnsclient;
 		set gStreamingState = 1;
+#ifdef PIXEL
+Secholn "Clear all leds for SP";
+#endif
 		setleds 0;
 		if !gBusyState then XmppSessionRequestResource "streaming";
 		set gCurAudioCmdIndex=gCurAudioCmdIndex+1;
@@ -4358,6 +5124,13 @@ fun runEvalOneCommand i0=
 		// nomme le stream courant
 		if gStreamingState then set gCurStreamName = val;
 		// play next
+		set run=cmdEvalOne i0+1;
+		0
+	)
+	else if !strcmp key "RG" then
+	(
+		Secho "exec RG : "; Secholn val;
+		set recGain=atoi val;
 		set run=cmdEvalOne i0+1;
 		0
 	)
@@ -4390,6 +5163,11 @@ fun runEvalOneCommand i0=
 	(
 		// wait for the end of music
 		if wavrunning==0 then set run=cmdEvalOne i0+1;
+#ifdef SILENT
+/*
+		if wavrunning==0 then set silentmw = 0;
+*/
+#endif
 		0
 	)
 	else if !strcmp key "CH" then
@@ -4398,28 +5176,25 @@ fun runEvalOneCommand i0=
 		msgchorstart (listswitchstr rscloaded val) #_cbGotoNextCmd i0;
 		0
 	)
-	else if !strcmp key "IS" then
-	(
-		Secho "exec IS : "; Secholn val;
-		// Start Interactive mode
-		interactiveStart val;
-		0
-	)
-	else if !strcmp key "IE" then
-	(
-		Secholn "exec IE : ";
-		// Ends Interactive mode
-		interactiveStop;
-		0
-	)
 	else if !strcmp key "WT" then
 	(
 		Xw strcatlist "exec WT : " :: val :: nil ;
-	// need to wait for val miliseconds, staying in interactive mode. at the end, program continues.
-	// if button pressed, program stops.
-	// if rfid detected, send info.
+		// need to wait for val miliseconds.
+		// if button pressed, program stops.
+		// if rfid detected, send info.
 		set gProcessingWaitState = 1;
-	  set interactiveWaitEndTime_ms = time_ms + (atoi val);
+	  	set delayWaitEndTime_ms = time_ms + (atoi val);
+		set run =	waitCmdRun i0+1;
+	  0
+	)
+	else if !strcmp key "WS" then
+	(
+		Xw strcatlist "exec WS : " :: val :: nil ;
+		// need to wait for val seconds.
+		// if button pressed, program stops.
+		// if rfid detected, send info.
+		set gProcessingWaitState = 1;
+	  	set delayWaitEndTime_ms = time_ms + 1000 * (atoi val);
 		set run =	waitCmdRun i0+1;
 	  0
 	)
@@ -4430,27 +5205,26 @@ fun runEvalOneCommand i0=
 		else if !strcmp key "CL" then (
 				let atoi val -> x in set_current_palette_color (x>>24) x&0xffffff;
 				0)
-		else if !strcmp key "IC" then (eval_IC_msg val;0)
 		else (Secholn "unknown, dropping";0);
 		
 		// and skip command
 		set run=cmdEvalOne i0+1;
 		runEvalOneCommand i0+1
+	)
 	);;
 
-// R=60*((rand&127)+64)) => 64 à 196 mn
+// R=60*((rand&180)+60)) => 60 à 240 mn
 // donc si x=30, (x*R)>>7 => 15 à 45 mn
 // donc si x=40, (x*R)>>7 => 20 à 61 mn
 // donc si x=80, (x*R)>>7 => 40 à 122 mn
 // donc si x=216, (x*R)>>7 => 108 à 330 mn
 // donc si x=255, (x*R)>>7 => 127 à 390 mn, soit 2 à 6,5h
-var nexttaichi;;
 fun dotaichinow=
 	//Secho "checktaichi ";
+	//Iecholn nexttaichi;
 	if infotaichi && (infotaichi != nil) && (!gSleepState) then let (if nexttaichi!=nil then (time>nexttaichi) else 0) -> now in (
 		if now || nexttaichi==nil then // compute nexttaichi
-		let if (infotaichi == 40) then 255 else if (infotaichi == 255) then 40 else 80 -> correctedTaichi in // etait inversé
-		let ((correctedTaichi*60*((rand&127)+64))>>7) -> delaye in (
+		let ((540*infotaichi+((120*rand)%120)*infotaichi)/10) -> delaye in (
 			Secho "taichi in "; Iecho delaye; Secholn "s";
 			set nexttaichi=time+delaye
 		);
@@ -4459,6 +5233,19 @@ fun dotaichinow=
 		set nexttaichi=nil;
 		0
 	);;
+//fun dogmailnow=
+//	//Secho "checktaichi ";
+//	if infogmail && (infogmail != nil) && (!gSleepState) then let (if nextgmail!=nil then (time>nextgmail) else 0) -> now in (
+//		if now || nextgmail==nil then // compute nextgmail
+//		let (infogmail*60) -> delaye in (
+//			Secho "gmail in "; Iecho delaye; Secholn "s";
+//			set nextgmail=time+delaye
+//		);
+//		now
+//	) else (
+//		set nextgmail=nil;
+//		0
+//	);;
 
 fun runEarReset cb=
 	if (!earResetting) then
@@ -4467,6 +5254,9 @@ fun runEarReset cb=
 
 fun _goSleepNow=
 	// oreilles arrivées en haut : eteindre tout + oreille basses
+#ifdef PIXEL
+Secholn "Clear all leds to sleep";
+#endif
 	setleds RGB_BLACK;
 	earGo 0 10 0; // sur le v2 c'est la position 10 qui est en bas
 	earGo 1 10 0;
@@ -4517,7 +5307,6 @@ fun endSleep=
 		// was not asleep (after a reconnect for example)
 		let (
 			if (gStreamingState) then XmppSessionRequestResource "streaming"
-			else if (gItState) then XmppSessionRequestResource "itmode"
 			else XmppSessionRequestResource "idle") -> result in (
 			set run=idleRun;
 			result
@@ -4536,7 +5325,6 @@ fun endSleep=
 // - contain a program (type 10)
 // In program frames, programs can contain url resources: resources are loaded and stored and then program is executed
 // Return the XMPP packet(s) to send or nil.
-
 fun evalTrame ping_trame=
 	Secholn "evalTrame >>";
 	Secholn ping_trame;
@@ -4547,15 +5335,8 @@ fun evalTrame ping_trame=
 		Secholn "bad trame";
 		dump ping_trame;
 		Secholn "dropping";
-		if (gItState) then (
-			// display error
-			interactiveError;
-			nil
-		) else (
-			// drop, and ping again later
-			set run=idleRun;
-			nil
-		)
+		set run=idleRun;
+		nil
 	) else (
 		// frame_list ok
 		let nil->xmpp_packets in
@@ -4581,13 +5362,65 @@ fun evalTrame ping_trame=
 						dumpStatus;
 						nil
 					)
+				) else if code == 6 then (
+					uncrypt val 1 nil 0x47 47;
+					Secholn val;
+					set val = strsub val 1 nil;
+					for i=0;i<16 do set service_url.i = ["" 0];
+					let filterconfig Secholn val 0-> l in
+					(
+						for l=l;l!=nil;tl l do let hd l -> [id info] in
+						(
+							let atoi id -> id in
+							let filterchor_parts Secholn info -> [delay url] in
+								set service_url.id = [url (atoi delay)]
+						)
+					);
+					nil
+				) else if code == 7 then (
+					uncrypt val 1 nil 0x47 47;
+					Secholn val;
+					set val = strsub val 1 nil;
+					let filterconfig Secholn val 0-> l in
+					(
+						for l=l;l!=nil;tl l do let hd l -> [id service] in
+						(
+							let filterchor Secholn  service -> chors in
+							let 0 -> i in
+							let tabnew nil listlen chors -> tab in (
+								for chors=chors;chors!=nil;tl chors do let hd chors -> [dur anim] in
+								(
+									let filterchor_leds anim 0 -> anim in
+									let tabnew i listlen anim -> leds in
+									(
+										for j=0;j<listlen anim do set leds.j = atoi listnth anim j;
+										set tab.i = [atoi dur leds]
+									);
+									set i=i+1
+								);
+								let (atoi id) + 8 -> id in
+									set infodata.id = tab
+							)
+						)
+					);
+					nil
+				) else if code == 8 then (
+					uncrypt val 1 nil 0x47 47;
+					nil
 				) else if code == 9 then (
 					// reboot
+//#ifdef DEBUG
+//	writedebug "Reboot_code";
+//#endif
+#ifdef DBGCONNECT
+		httprequest "POST" Secholn dbgurl strcatlist "Reboot 5320"::nil nil HTTP_NORMAL;
+#endif
 					reboot 0x0407FE58 0x13fb6754;
 					nil
 				) else if code == 10 then (
 					// programs (or IDLE or SLEEP)
 					uncrypt val 1 nil 0x47 47;
+					Secholn val;
 					set program=dump_prgm filterconfig val 1;
 					nil
 				) else if code == 11 then (
@@ -4607,6 +5440,10 @@ fun evalTrame ping_trame=
 
 			// post process : a program ?
 			if program!=nil then (
+// DEBUG ICI
+
+
+
 				// Initialize Program
 				set paletteselected = 0;
 				set gCurrentProgram = program;
@@ -4615,14 +5452,57 @@ fun evalTrame ping_trame=
 				CheckForPaletteBefore program; // Permet de mettre la palette correspondante au programme, v17 (add romain)
 				// resources
 				set rsctoget=rscFromProgram program;
+#ifdef PIXEL
+		
+	xmpps_sendStanza
+		XmppGlobalSession
+		nil // Next State 
+		xmpps_PlatformJID XmppGlobalSession XmppGlobalSession.sClients.clINT
+		stanzaMessage 
+		strcatlist "<debug xmlns=\"OJN:nabaztag:debug:pixel\"><info>Need to get : "::pixeltemp::"</info>"::"<volume>"::(itoa currentvol)::"</volume>"::"</debug>"::nil;
+
+#endif
 				// empties the rsc cache
 				set rscloaded=nil;
 				let hd rsctoget -> [url _] in
 				if url==nil then (
 					// no resources to load : start the program now
+//#ifdef SILENT
+//	httprequest "POST" Secholn silenturl "loaded_from_evalTrame" nil nil HTTP_NORMAL;
+//#endif	
+#ifdef SILENT
+/*
+	xmpps_sendStanza
+		XmppGlobalSession
+		nil // Next State 
+		xmpps_PlatformJID XmppGlobalSession XmppGlobalSession.sClients.clINT
+		stanzaMessage 
+		strcatlist "<debug xmlns=\"OJN:nabaztag:debug:silent\"><info>Program start from evalTrame</info>"::"</debug>"::nil;
+*/
+#endif
+#ifdef PIXEL
+		
+	xmpps_sendStanza
+		XmppGlobalSession
+		nil // Next State 
+		xmpps_PlatformJID XmppGlobalSession XmppGlobalSession.sClients.clINT
+		stanzaMessage 
+		strcatlist "<debug xmlns=\"OJN:nabaztag:debug:pixel\"><info>No need to download resources</info>"::"<volume>"::(itoa currentvol)::"</volume>"::"</debug>"::nil;
+
+#endif
 					prgmStart;
 					0
 				) else (
+#ifdef PIXEL
+		
+	xmpps_sendStanza
+		XmppGlobalSession
+		nil // Next State 
+		xmpps_PlatformJID XmppGlobalSession XmppGlobalSession.sClients.clINT
+		stanzaMessage 
+		strcatlist "<debug xmlns=\"OJN:nabaztag:debug:pixel\"><info>Starting to download resources</info>"::"<volume>"::(itoa currentvol)::"</volume>"::"</debug>"::nil;
+
+#endif
 					// will load rsctoget and then start the program 'gCurrentProgram'
 					Secho "loading rsrcs...";
 					set run = rscLoadNextRun;
@@ -4646,7 +5526,6 @@ fun _isResourceValid rsrcName=
 	else if (!strcmp rsrcName "sources") then 1 // tjrs
 	else if (!strcmp rsrcName "boot") then 1 // tjrs
 	else if (gStreamingState) then (if (!strcmp rsrcName "streaming") then 1 else 0)
-	else if (gItState) then (if (!strcmp rsrcName "itmode") then 1 else 0)
 	else if (gSleepState) then (if (!strcmp rsrcName "asleep") then 1 else 0)
 	else if (gProcessingState) then 0
 	else 1;;
@@ -4663,7 +5542,6 @@ fun _queueTrameRemoveEntry binome=
 		// which resource now ? Can be in this order asleep, streaming, itmode or idle
 		if (gSleepState) then XmppSessionRequestResource "asleep"
 		else if (gStreamingState) then XmppSessionRequestResource "streaming"
-		else if (gItState) then XmppSessionRequestResource "itmode"
 		else XmppSessionRequestResource "idle"
 	);
 	0;;
@@ -4730,10 +5608,15 @@ fun runIdle=
 		0
 	) else (
 		set gProcessingState = 0;
+		//if dogmailnow then (
+		//	httpauthrequest "GET" "https://mail.google.com:443/mail/feed/atom" nil authgmail #_cbgmail HTTP_NORMAL;
+		//	0
+		//);
 		if dotaichinow then (
 			taichistart;
 			0
-		)
+		);
+		launchGc
 	);
 	0
 ;;
@@ -4743,10 +5626,10 @@ var gWasNetActivity = 0;;
 fun noseled=
 	if !earDetecting then
 	// led tete clignote if netactivity or wav_buffering // 
-	let uploading || (match run with (rscLoadWaitRun _-> 1)|(interactiveReqWaitRun _->1)|(_->0)) -> netactivity in
+	let uploading || (match run with (rscLoadWaitRun _-> 1)|(_->0)) -> netactivity in
 	if (netactivity || wav_buffering) then (
 		let if netactivity then 256 else if wav_buffering then 128 else 0 -> speed in
-		if speed > 0 then led LED_NOSE (if time_ms&speed then RGB_RED else RGB_ORANGE);
+		if speed > 0 then led LED_NOSE (if time_ms&speed then 0xff*bottomColor else RGB_BLACK);
 		set gWasNetActivity = 1
 	) else if (gWasNetActivity) then (
 		// show off the light
@@ -4758,7 +5641,7 @@ fun noseled=
 fun bottomled=
 	if gSleepState == 0 then 
 	if !earDetecting then
-		(let osc time_ms>>4 -> v in led LED_BASE v*bottomColor); // pulse bottom led
+		(let osc time_ms>>4 -> v in led LED_BASE if gOfflineState == 1 then v*bottomColorError else v*bottomColor); // pulse bottom led
 	0;;
 	
 
@@ -4812,7 +5695,6 @@ fun _cbrfidendchor unused=
 
 /**
 	Controls if a stamp is shown to the rabbit.
-	Does not control wether we _should_ control or not (according to the interactive state, ...)
 
 	Returns the rfid or nil.
 */
@@ -4825,38 +5707,38 @@ fun checkRfidPresence=
 ;;
 
 fun controlrfid=
+#ifdef NORFID
+	0;;
+#else
 //	let hd dumprfid rfidGetList -> rfid in
-	if ((!gItState) // disabled when interactive except ...
-      || (gItState && ((g_int_mask & MASK_RFID == 0) || (gProcessingState && gProcessingWaitState)))) then // enabled when mask set or executing a waiting command
-(
-	if ((time_ms - RFIDlast) > 1000) then
+	if !rfidDisabled then
 	(
-		set lastrfid = "0000000"
-	);
-	let checkRfidPresence -> rfid in
-	if rfid!=nil then
-	(
-		if (ParseRfid rfid) !=0 then
+		if ((time_ms - RFIDlast) > 1000) then
 		(
-			set lastrfid=rfid;
-			set RFIDchek = 1;
-			set RFIDlast = time_ms;
-			controlsound midi_RFIDok;
+			set lastrfid = "0000000"
+		);
+		let checkRfidPresence -> rfid in
+		if rfid!=nil then
+		(
+			if (ParseRfid rfid) !=0 then
+			(
+				set lastrfid=rfid;
+				set RFIDchek = 1;
+				set RFIDlast = time_ms;
+				controlsound midi_RFIDok;
 
-			// lancer l'animation (v19)
-			msgchorstart chor_RFIDok::nil #_cbrfidendchor nil;
-			set chortimescale=10; // recopié d'avant, mas pourquoi ? Nécessaire ? [AS 24oct07]				
+				// lancer l'animation (v19)
+				msgchorstart chor_RFIDok::nil #_cbrfidendchor nil;
+				set chortimescale=10; // recopié d'avant, mas pourquoi ? Nécessaire ? [AS 24oct07]				
 
-			set gProcessingState = 1;
-			if (gItState) then
-				interactiveSendRfid rfid
-			else
+				set gProcessingState = 1;
 				(httprequest "GET" rfidurl rfid nil #_cbrfidhttp HTTP_NORMAL ; 0)
+			)
 		)
-	)
 	)
 ;
 	0;;
+#endif
 
 fun controlplay=
 	let buttongetevent -> ev in
@@ -4896,29 +5778,7 @@ fun controlwait=
 			0
 		) 
 	);
-	controlrfid
-	;;
-
-fun controlinteractif=
-	let buttongetevent -> ev in
-	if ev!=nil then
-	(
-		Secholn "controlinteractif";
-		if ev==BUTTON_CLIC || ev==BUTTON_DCLIC then	(
-			if (g_int_mask&MASK_BUTTON == 0) then interactiveSendBtn ev
-		) else if ev==BUTTON_LCLIC then (
-			if (g_record_enabled) then (
-				// remember wav position and start record
-				set gInteractiveLastWavBytes = wav_curplayedbytes ;
-				_controlrecord 0
-			) else (
-				// like BUTTON_CLIC
-				set ev = BUTTON_CLIC;
-				if (g_int_mask&MASK_BUTTON == 0) then interactiveSendBtn ev	
-			)
-		)
-	);
-	controlrfid
+	if !rfidDisabled then controlrfid
 	;;
 
 /*
@@ -4927,8 +5787,8 @@ fun controlinteractif=
   sauf qu'on lit les rfid en plus
 */
 fun controlprogramwait =
-	(if (!gItState) then controlplay else controlinteractif) ;
- 	controlrfid
+	controlplay;
+	if !rfidDisabled then controlrfid
 ;;
 
 fun dumpStatus=
@@ -4938,14 +5798,11 @@ fun dumpStatus=
 	Secho "gStreamingState="; Iecholn gStreamingState;
 	Secho "gProcessingState="; Iecholn gProcessingState;
 	Secho "gBusyState="; Iecholn gBusyState;
-	Secho "gItState="; Iecholn gItState;
-	Secho "gItApp="; Secholn gItApp;
 	Secholn "//--- end status ---"
 	;;
 
 const CONTROL_WAIT=1;;
 const CONTROL_PLAY=2;;
-const CONTROL_INTERACTIF=3;;
 const CONTROL_PROGRAMWAIT=4;;
 
 
@@ -4966,9 +5823,7 @@ fun stopEverythingAndResetToIdle =
 	wavstop;
 	stopStream;
 	earStartReset;
-	set gItState = 0;
 	set g_cookie = "";
-	set gItApp = nil;
 	set gProcessingState = 0;
 	set gStreamingState = 0;
 	set gCurrentProgram = nil;
@@ -4976,6 +5831,82 @@ fun stopEverythingAndResetToIdle =
 	0
 ;;
 
+var listenstart=0;;
+
+fun cbrecvol s=
+	let recVol s 0 -> volume in (
+		Secho "Sound: "; Iecholn volume;
+		recStop;
+		if( volume > 20) then (
+			if(run == sleepRun) then 
+				xmpps_sendStanza
+					XmppGlobalSession
+					nil /* Next State */
+					xmpps_PlatformJID XmppGlobalSession XmppGlobalSession.sClients.clINT
+					stanzaMessage /* Type */
+					strcatlist "<sound xmlns=\"violet:nabaztag:sound:sleep\"><volume>"::(itoa volume)::"</volume></sound>"::nil
+			else
+				xmpps_sendStanza
+					XmppGlobalSession
+					nil /* Next State */
+					xmpps_PlatformJID XmppGlobalSession XmppGlobalSession.sClients.clINT
+					stanzaMessage /* Type */
+					strcatlist "<sound xmlns=\"violet:nabaztag:sound:idle\"><volume>"::(itoa volume)::"</volume></sound>"::nil
+				)
+	);
+	0;;
+
+fun listenRun=
+	if (listeningGain > 0 && time_ms-listenstart>20000) then (
+		set listeningLoop = listeningLoop + 1;
+		if(listeningLoop >= 30) then (
+			if(gProcessingState == 0 && run == idleRun) then
+			(
+				set listeningLoop=0;
+				gc
+			)
+		);
+		set listenstart=time_ms;
+		recStart 8000 listeningGain #cbrecvol
+	);
+	0;;
+
+fun _servicecbhttp http res key=
+	let cleanhttpcontent httpgetcontent res -> service_return in
+	(
+		_infosrc_update key (atoi service_return)
+	);
+0;;
+
+var gConfigStart = 0;;
+var infoprerunstart;;
+var infoprerundelay = 0;;
+
+fun infoPreRun=
+	if (time_ms-infoprerundelay > 5000) then (
+		set infoprerundelay=time_ms;
+		for i=0;i<8 do (
+			let service_url.i -> [url delay] in
+			if delay > 0 then
+			(
+				if (time_ms-infoprerunstart.i>1000*delay) then (
+					set infoprerunstart.i=time_ms;
+					httprequest "GET" url nil (fixarg3 #_servicecbhttp (9+i)) HTTP_NORMAL;
+					0
+				)
+			)
+			else
+			(
+				_infosrc_del (9+i)
+			)
+		)
+	)
+	;;
+
+
+fun initchannel=
+	set channel=getchannel confGetWifissid wifiscans;
+	0;;
 
 fun loop=
 //Secho "l";
@@ -4985,20 +5916,36 @@ fun loop=
 	match wifi with
 	(initW -> nil)
 	|(_ ->
-		Secholn "######### wifi lost";
+		Secholn "######### wifi lost";  
 		set wifi=reconnectW;
 		earStop 1; // make sure that ears are not moving while we're reconnecting.
 		0
+	);
+        if gOfflineState==1 then 
+	(
+        	if gConnectingState == 0 then
+		(
+			Secho "No connection, restarting";
+			runconfigstart
+		)
+		else
+		(
+			set cReconnect=cReconnect+1
+		);
+		if cReconnect > 1000 then set gConnectingState=0
 	);
 
 	buttonloop;
 //	buttongetevent;
 	let match run with
-	( configstartRun -> earRun;runconfigstart;0 )|
-	( configwaitRun http -> earRun;runconfigwait http ; 0)|
+	( configstartRun -> initchannel;earRun;bottomled;runconfigstart;0 )|
+	( configwaitRun http -> earRun;bottomled;runconfigwait http ; 0)|
 	( xmppLoginRun ->
 		if (earResetting && earsInited) then earRun else earStop 1;
-		runLogin;
+#ifdef DBGCONNECT
+		httprequest "POST" Secholn dbgurl strcatlist "login:\n"::nil nil HTTP_NORMAL;
+#endif
+		bottomled;runLogin;
 		CONTROL_WAIT) |
 	( xmppReconnectRun params ->
 		if (earResetting && earsInited) then earRun else earStop 1;
@@ -5019,11 +5966,13 @@ fun loop=
 				|(_ -> 0);
 		CONTROL_WAIT)|
 
-	( idleRun -> earRun;infoRun;bottomled;noseled;runIdle;CONTROL_WAIT) |
-	( sleepRun -> earRun;runIdle;0) |
+//	( idleRun -> earRun;listenRun;infoRun;bottomled;noseled;runIdle;CONTROL_WAIT) |
+	( idleRun -> earRun;infoPreRun;infoRun;bottomled;noseled;runIdle;CONTROL_WAIT) |
+//	( sleepRun -> earRun;listenRun;controlwait;runIdle;0) |
+	( sleepRun -> earRun;controlwait;runIdle;0) |
 	
-	( rscLoadNextRun -> earRun;infoRun;bottomled;noseled;runRscLoadNext; CONTROL_WAIT)|
-	( rscLoadWaitRun http-> earRun;infoRun;bottomled;noseled;runRscLoadWait http;CONTROL_WAIT)|
+	( rscLoadNextRun -> earRun;infoPreRun;infoRun;bottomled;noseled;runRscLoadNext; CONTROL_WAIT)|
+	( rscLoadWaitRun http-> earRun;infoPreRun;infoRun;bottomled;noseled;runRscLoadWait http;CONTROL_WAIT)|
 	( cmdEvalOne i-> earRun;runEvalOneCommand i;CONTROL_PLAY)|
 	( chorCmdRun i-> earRun;noseled;runChorCmd i;CONTROL_PLAY)|
 	( streamCmdRun i0-> earRun;noseled;runStreamingCmd i0;CONTROL_PLAY)|
@@ -5032,14 +5981,13 @@ fun loop=
 	( earResetWaitRun cb -> earRun; runEarReset cb; 0) |
 
 	( recordRun -> runrecord; 0)|
-	( recordStartRun -> runrecordstart; 0) |
+	( recordStartRun -> runrecordstart; 0) 
 
-	( interactiveReqWaitRun http-> earRun;infoRun;bottomled;noseled;runInteractiveReqWait http;CONTROL_WAIT)
 	 -> keymanager in
 	if keymanager==CONTROL_WAIT then
 		controlwait
 	else if keymanager==CONTROL_PLAY then
-		(if (!gItState) then controlplay else controlinteractif)
+		controlplay
 	else if keymanager==CONTROL_PROGRAMWAIT then
 		controlprogramwait
 	else
@@ -5052,15 +6000,25 @@ fun loop=
 
 	checkdhcp 0;
 
-	// if ears touched while interactive : process it
-	interactiveEarProcessTouched;
-
 	wavtime;
 
 	updatevol;
+
+#ifdef DEBUG
+	if debugActivated then 
+	if strlen debug then (
+		httprequest "POST" Secholn debugurl debug nil HTTP_NORMAL;
+		set debug = nil
+	);
+#endif
 	0;;
 
 fun main=
+#ifdef DBGCONNECT
+	set minGc=1;
+#endif
+	set service_url = tabnew nil 16;
+	set infoprerunstart = tabnew 0 16;
 	leds_set_state LEDS_STATE_START ;
 	//ResetXmppPassword; // DEBUG
 	MACecho netMac 0 1;
@@ -5079,8 +6037,6 @@ fun main=
 //	wavstartlocal midi_endrecord::nil;
 	dumpscan wifiscans;
 	runinit;
-	set gInteractiveSounds = [intDefaultStart intDefaultStop]; // Default Sounds of InteractiveMode
-	set gInteractiveChors = [intchorDefaultStart intchorDefaultStop]; // Default Sounds of InteractiveMode
 	0;;
 
 #endif // ifdef NOMINAL

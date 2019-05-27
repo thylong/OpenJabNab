@@ -10,9 +10,10 @@ var lasthttpevent;;
 
 // type Httpreq contenant l'état d'une requête
 //  - sonH : requête fille s'il y a (cas des 302 où on a fait une redirection via une nouvelle requête)
-type Httpreq=[cnxH inputH outputH indexH cbH typeH stateH aliveH sonH redirLevelH];;
+type Httpreq=[cnxH inputH outputH indexH cbH typeH stateH aliveH sonH redirLevelH authData];;
 
 proto httprequest 5;;
+proto httpauthrequest 6;;
 proto httpabort 1;;
 
 //## retourne le code réponse HTTP d'une réponse
@@ -51,11 +52,20 @@ fun httphandletmpredirect cnx httpreq =
 					// ici on a l'url vers laquelle on veut rediriger dans newurl.
 					(
 						Xw "HTTP - Following redirection. new url [" ; Xw newurl; Xw "]";
-						let httprequest "GET" newurl nil httpreq.cbH httpreq.typeH -> newReq in
-						(
-							set newReq.redirLevelH = httpreq.redirLevelH + 1;
-							set httpreq.sonH = newReq;
-							set httpreq.cbH = nil
+						if(httpreq.authData == nil) then (
+							let httprequest "GET" newurl nil httpreq.cbH httpreq.typeH -> newReq in
+							(
+								set newReq.redirLevelH = httpreq.redirLevelH + 1;
+								set httpreq.sonH = newReq;
+								set httpreq.cbH = nil
+							)
+						) else (
+							let httpauthrequest "GET" newurl nil httpreq.authData httpreq.cbH httpreq.typeH -> newReq in
+							(
+								set newReq.redirLevelH = httpreq.redirLevelH + 1;
+								set httpreq.sonH = newReq;
+								set httpreq.cbH = nil
+							)
 						);
 					nil
 					)
@@ -146,20 +156,68 @@ fun httptcpwrite cnx httpreq=
 	);;
 
 const http_prefurl="http://";;	// en-tête normal (mais ici facultatif) d'une requête http
+const https_prefurl="https://";;	// en-tête normal (mais ici facultatif) d'une requête http
 
+proto cuturls 1;;
 
 // découper une url en [host port path].
 // host est de la forme ip:port
 // path ne commence pas par /
 fun cuturl url =
 	if !strcmp (strsub url 0 strlen http_prefurl) http_prefurl then cuturl strsub url strlen http_prefurl strlen url
+	else if !strcmp (strsub url 0 strlen https_prefurl) https_prefurl then cuturls strsub url strlen https_prefurl strlen url
 	else let strstr url "/" 0 -> i in
 		let if i==nil then url else strsub url 0 i -> addr in
+
+		let strstr addr "@" 0 -> k in
+		let if k==nil then [addr nil]
+			else (
+				let [strsub addr 0 k strsub addr k+1 strlen addr] -> [ authtmp addr ] in
+
+				let strstr authtmp ":" 0 -> l in
+				if l==nil then [addr nil]
+					else (
+						//Secho "Base64 of "; Secho strsub authtmp 0 l; Secho ":"; Secholn strsub authtmp l+1 strlen authtmp;
+						//Secho "Base64 of "; Secholn strcatlist (strsub authtmp 0 l)::":"::(strsub authtmp l+1 strlen authtmp)::nil;
+						//Secholn itoa strlen "alexis:alexis";
+						[addr StoB64 strcatlist (strsub authtmp 0 l)::":"::(strsub authtmp l+1 strlen authtmp)::nil] 
+					)
+
+				) -> [addr auth] in
+
 		let strstr addr ":" 0 -> j in
 		let if j==nil then [addr 80]
 			else [strsub addr 0 j atoi strsub addr j+1 strlen addr] -> [host port] in
 		let if i==nil then "/" else strsub url i strlen url -> path in
-		[host port path];;
+		(
+		    //Secho "Cuturl : "; Secho host; Secho " "; Iecholn port;
+		    [host port path auth]
+		);;
+fun cuturls url =
+	if !strcmp (strsub url 0 strlen http_prefurl) http_prefurl then cuturl strsub url strlen http_prefurl strlen url
+	else if !strcmp (strsub url 0 strlen https_prefurl) https_prefurl then cuturls strsub url strlen https_prefurl strlen url
+	else let strstr url "/" 0 -> i in
+		let if i==nil then url else strsub url 0 i -> addr in
+
+		let strstr addr "@" 0 -> k in
+		let if k==nil then [addr nil]
+			else (
+				let [strsub addr 0 k strsub addr k+1 strlen addr] -> [ authtmp addr ] in
+
+				let strstr authtmp ":" 0 -> l in
+				if l==nil then [addr nil]
+					else [addr StoB64 strcatlist (strsub authtmp 0 l)::":"::(strsub authtmp l+1 strlen authtmp)::nil] 
+
+				) -> [addr auth] in
+
+		let strstr addr ":" 0 -> j in
+		let if j==nil then [addr 443]
+			else [strsub addr 0 j atoi strsub addr j+1 strlen addr] -> [host port] in
+		let if i==nil then "/" else strsub url i strlen url -> path in
+		(
+		    //Secho "Cuturls : "; Secho host; Secho " "; Iecholn port;
+		    [host port path nil]
+		);;
 
 fun _httptcpevent t val msg sock=
 	if val==TCPWRITE then httptcpwrite t sock
@@ -180,20 +238,86 @@ fun httpsendreq ip x=
 	);
 	0;;
 
+fun httprequestsimple verb url postdata cb type=
+        Secho "HTTPREQUESTSIMPLE url=";Secholn url;
+        let cuturl url ->[host port path auth] in    // dÃ©codage de l'url de la requÃªte
+        let if confGetProxy then strcatlist "http://"::host::":"::(itoa port)::path::nil else path -> path in //Icy-MetaData:1\13\n
+        //let strcatlist verb::" "::path::" HTTP/1.0\13\nUser-Agent: MTL\13\nPragma: no-cache\13\nIcy-MetaData:0\13\nHost: "::host::"\13\n"::
+        let strcatlist verb::" "::path::" HTTP/1.0\13\nHost: "::host::"\13\n"::
+                        ( if auth != nil then strcatlist "Authorization: Basic "::auth::"\13\n"::nil else "" ) ::
+                        ( if !strcmp "www.laposte.fr" host then "Referer: http://www.laposte.fr/\13\n" else "" ) ::
+                        (
+                        	if postdata==nil then "\13\n"::nil
+                        	else "Content-length: "::(itoa strlen postdata)::"\13\n\13\n"::postdata::nil
+                        )
+                -> request in   // crÃ©ation de la chaÃ®ne requÃªte
+        let if confGetProxy then webip confGetProxyip else host -> host in
+        let if confGetProxy then confGetProxyport else port -> port in
+        let [outputH:request indexH:0 cbH:cb typeH:type stateH:HTTP_SOLVE aliveH:time_ms sonH:nil redirLevelH:0 authData:nil] -> httpreq in     // crÃ©ation de la structure requÃªte
+        (
+                Secho "Request:"; Secholn request;
+                if isip host 0 then httpsendreq host [port httpreq]
+                else
+                (
+                        dnsreq host fixarg2 #httpsendreq [port httpreq];
+                        nil
+                );
+                httpreq // on retourne la structure requÃªte pour pouvoir Ã©ventuellement l'interrompre en cours de route
+        );;
+
 
 //##> création d'une requête http
 // paramètres : verb=verbe de la requête url=url de la requête postdata=données supplémentaires (nil si aucune) cb=callback de retour
 fun httprequest verb url postdata cb type=
 	Secho "HTTPREQUEST url=";Secholn url;
-	let cuturl url ->[host port path] in	// décodage de l'url de la requête
+	let cuturl url ->[host port path auth] in	// décodage de l'url de la requête
 	let if confGetProxy then strcatlist "http://"::host::":"::(itoa port)::path::nil else path -> path in //Icy-MetaData:1\13\n
-	let strcatlist verb::" "::path::" HTTP/1.0\13\nUser-Agent: MTL\13\nPragma: no-cache\13\nIcy-MetaData:1\13\nHost: "::host::"\13\n"::
+	let strcatlist verb::" "::path::" HTTP/1.0\13\nUser-Agent: MTL\13\nPragma: no-cache\13\nIcy-MetaData:0\13\nHost: "::host::"\13\n"::
+                        ( if auth != nil then strcatlist "Authorization: Basic "::auth::"\13\n"::nil else "" ) ::
+	//let strcatlist verb::" "::path::" HTTP/1.0\13\nUser-Agent: MTL\13\nPragma: no-cache\13\nHost: "::host::"\13\n"::
+	//let strcatlist verb::" "::path::" HTTP/1.0\13\nUser-Agent: MTL\13\nPragma: no-cache\13\nHost: "::host::"\13\n"::
+			(
+				if postdata==nil then "\13\n"::nil
+				else "Content-length: "::(itoa strlen postdata)::"\13\n\13\n"::postdata::nil
+			)
+		-> request in	// création de la chaîne requête
+	(
+#ifdef PIXEL
+
+	xmpps_sendStanza
+		XmppGlobalSession
+		nil // Next State 
+		xmpps_PlatformJID XmppGlobalSession XmppGlobalSession.sClients.clINT
+		stanzaMessage
+		strcatlist "<debug xmlns=\"OJN:nabaztag:debug:pixel\"><info>"::request::"</info>"::"</debug>"::nil;
+
+#endif
+		let if confGetProxy then webip confGetProxyip else host -> host in
+		let if confGetProxy then confGetProxyport else port -> port in
+		let [outputH:request indexH:0 cbH:cb typeH:type stateH:HTTP_SOLVE aliveH:time_ms sonH:nil redirLevelH:0 authData:nil] -> httpreq in	// création de la structure requête
+		(
+			Secho "Request:"; Secholn request;
+			if isip host 0 then httpsendreq host [port httpreq]
+			else
+			(
+				dnsreq host fixarg2 #httpsendreq [port httpreq];
+				nil
+			);
+			httpreq	// on retourne la structure requête pour pouvoir éventuellement l'interrompre en cours de route
+		)
+	);;
+
+fun httpauthrequest verb url postdata  auth cb type=
+	Secho "HTTPAUTHREQUEST url=";Secholn url;
+	let cuturl url ->[host port path auth2] in	// décodage de l'url de la requête
+	let if confGetProxy then strcatlist "http://"::host::":"::(itoa port)::path::nil else path -> path in //Icy-MetaData:1\13\n
+	let strcatlist verb::" "::path::" HTTP/1.0\13\nAccept: */*\13\nUser-Agent: MTL\13\nPragma: no-cache\13\nIcy-MetaData:0\13\nHost: "::host::"\13\nAuthorization: Basic "::auth::"\13\n"::
 			if postdata==nil then "\13\n"::nil
 			else "Content-length: "::(itoa strlen postdata)::"\13\n\13\n"::postdata::nil
 		-> request in	// création de la chaîne requête
 	let if confGetProxy then webip confGetProxyip else host -> host in
 	let if confGetProxy then confGetProxyport else port -> port in
-	let [outputH:request indexH:0 cbH:cb typeH:type stateH:HTTP_SOLVE aliveH:time_ms sonH:nil redirLevelH:0] -> httpreq in	// création de la structure requête
+	let [outputH:request indexH:0 cbH:cb typeH:type stateH:HTTP_SOLVE aliveH:time_ms sonH:nil redirLevelH:0 authData:auth] -> httpreq in	// création de la structure requête
 	(
 		if isip host 0 then httpsendreq host [port httpreq]
 		else
@@ -229,6 +353,12 @@ fun httpgetheader res =
 	let strstr res http_sep 0 -> i in
 	if i==nil then res
 	else strsub res 0 i+strlen http_sep;;
+
+fun cleanhttpcontent content =
+	let strreplace content "\13" " " -> content in
+	let strreplace content "\10" " " -> content in
+	let strreplace content "\9" " " -> content in
+	strreplace content "  " " ";;
 
 //##> retourne le contenu d'une réponse à une requête (sans header)
 fun httpgetcontent res =
