@@ -120,7 +120,7 @@ if(count($_POST))
 	{
 		Message::AddWarning(__tr("No username specified"), 0);
 	}
-	header('Location: help.php');
+	header('Location: /help/index.php');
 	exit();
 }
 require('../include/message.php');

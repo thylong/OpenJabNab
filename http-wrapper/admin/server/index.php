@@ -199,7 +199,7 @@ function updateBTable(p)
 	if(p <0)
 	p = 0;
      $(".btablerow").remove();
-	var url = "json.php?";
+	var url = "/admin/json.php?";
 	url += "bpage=" + p;
 	if($("#bsearch").val())
 		url += "&bsearch=" + $("#bsearch").val();
