@@ -1,7 +1,18 @@
 <?php
 require_once 'common.php';
+if(0):
+  $cities = array('Grenoble, FR','Paris, FR');
+else:
+  $cities = array();
+  $ojnAPI = getAPI();
+  $list = $ojnAPI->getApiList('plugin/weather/getCitiesList?'.$ojnAPI->getToken());
+  foreach($list as $l)
+  {
+    if(!empty($l->key) && !empty($l->value))
+      $cities[] = array('woeid'=>(int)$l->key,'location'=>(string)$l->value);
+  }
+endif;
 
-$cities = array('Grenoble, FR','Paris, FR');
 $weather = array();
 
 function buildBaseString($baseURI, $method, $params) {
@@ -29,13 +40,22 @@ function fetchData($city)
   $app_id = YWEATHER_APPID;
   $consumer_key = YWEATHER_KEY;
   $consumer_secret = YWEATHER_SECRET;
-
-  $query = array(
-    'location' => $city,
-    'format' => 'json',
-    'u' => 'c',
-  );
-
+  if(is_array($city))
+  {
+    $query = array(
+      'woeid' => $city['woeid'],
+      'format' => 'json',
+      'u' => 'c',
+    );
+  }
+  else
+  {
+    $query = array(
+      'location' => $city,
+      'format' => 'json',
+      'u' => 'c',
+    );
+  }
   $oauth = array(
     'oauth_consumer_key' => $consumer_key,
     'oauth_nonce' => uniqid(mt_rand(1, 1000)),
@@ -125,6 +145,6 @@ foreach($cities as $c)
         'forecast' => array_shift($forecasts),
     );
 }
-var_dump($weather);
-file_put_contents("weather.json",json_encode($weather));
+//var_dump($weather);
+file_put_contents(ROOT_LOCAL."/plugins/weather/weather.json",json_encode($weather));
 ?>
