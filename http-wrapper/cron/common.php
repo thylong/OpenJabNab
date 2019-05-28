@@ -6,7 +6,7 @@ if(!empty($_SERVER['DOCUMENT_ROOT']))
 
 function getAPI()
 {
-    require_once(ROOT_SITE.'class/api.class.php');
+    require_once(ROOT_SITE.'include/class/api.class.php');
     $ojnAPI = new ojnApi();
     $r = $ojnAPI->loginAccount(CRON_API_USER, CRON_API_PWD, false);
     $ojnAPI->setToken($r);

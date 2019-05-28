@@ -40,53 +40,53 @@ else
 	exit();
 }
 include('account_expert.decode.php');
-require('include/message.php');
+require('../include/message.php');
 
 ?>
 	      <div class="row">
-	      	<div class="span5">      		
+	      	<div class="span5">
 	      		<div class="widget ">
 	      			<div class="widget-header">
 	      				<i class="icon-user"></i>
 	      				<h3><?php echo __tr('Account %1, cleaned data', $account['username']) ?></h3>
 	  				</div> <!-- /widget-header -->
 					<div class="widget-content">
-						
+
 								<form id="edit-profile" class="form-horizontal" method="post">
 									<fieldset>
-										<div class="control-group">											
+										<div class="control-group">
 											<label class="control-label" for="npwd2"><?php echo __tr('ID') ?></label>
 											<div class="controls">
 												<input type="text" class="input-medium disabled" id="username" value="<?php echo $account['id'] ?>" disabled>
-											</div> <!-- /controls -->				
+											</div> <!-- /controls -->
 										</div> <!-- /control-group -->
 
-										<div class="control-group">	
+										<div class="control-group">
 											<label class="control-label" for="username"><?php echo __tr('Login') ?></label>
 											<div class="controls">
 												<input type="text" class="input-medium disabled" id="username" value="<?php echo $login ?>" disabled>
-											</div> <!-- /controls -->				
+											</div> <!-- /controls -->
 										</div> <!-- /control-group -->
-										
-										<div class="control-group">											
+
+										<div class="control-group">
 											<label class="control-label" for="firstname"><?php echo __tr('Display name') ?></label>
 											<div class="controls">
 												<input disabled type="text" class="input-medium" name="displayname" value="<?php echo $username ?>">
-											</div> <!-- /controls -->				
+											</div> <!-- /controls -->
 										</div> <!-- /control-group -->
-										<div class="control-group">											
+										<div class="control-group">
 											<label class="control-label" for="firstname"><?php echo __tr('Language') ?></label>
 											<div class="controls">
 												<input disabled type="text" class="input-medium" name="language" value="<?php echo $language ?>">
-											</div> <!-- /controls -->				
+											</div> <!-- /controls -->
 										</div> <!-- /control-group -->
-										
-										
+
+
 										<div class="control-group">
 											<label class="control-label" for="email"><?php echo __tr('Email address') ?></label>
 											<div class="controls">
 												<input disabled type="text" class="input-large" name="email" value="<?php echo $email ?>">
-											</div> <!-- /controls -->				
+											</div> <!-- /controls -->
 										</div> <!-- /control-group -->
 		  <div class="control-group">
 		    <label for="optionsCheckbox" class="control-label"><?php echo __tr("Status") ?></label>
@@ -121,54 +121,54 @@ require('include/message.php');
 		      </label>
 		    </div>
 		  </div>
-										<div class="control-group">											
+										<div class="control-group">
 											<label class="control-label" for="npwd"><?php echo __tr('Number of login') ?></label>
 											<div class="controls">
 												<input type="text" disabled class="input-medium" name="" value="<?php echo $logincount ?>">
-											</div> <!-- /controls -->				
+											</div> <!-- /controls -->
 										</div> <!-- /control-group -->
-										<div class="control-group">											
+										<div class="control-group">
 											<label class="control-label" for="npwd"><?php echo __tr('Last login') ?></label>
 											<div class="controls">
 												<input type="text" disabled class="input-medium" name="" value="<?php echo date("d/m/Y H:i:s", $lastlogin) ?>">
-											</div> <!-- /controls -->				
+											</div> <!-- /controls -->
 										</div> <!-- /control-group -->
-										<div class="control-group">											
+										<div class="control-group">
 											<label class="control-label" for="npwd"><?php echo __tr('Number of abuses') ?></label>
 											<div class="controls">
 												<input type="text" disabled class="input-medium" name="" value="<?php echo $abusecount ?>">
-											</div> <!-- /controls -->				
+											</div> <!-- /controls -->
 										</div> <!-- /control-group -->
-										<div class="control-group">											
+										<div class="control-group">
 											<label class="control-label" for="npwd"><?php echo __tr('Last ban') ?></label>
 											<div class="controls">
 												<input type="text" disabled class="input-medium" name="" value="<?php echo date("d/m/Y H:i:s", $ban) ?>">
-											</div> <!-- /controls -->				
+											</div> <!-- /controls -->
 										</div> <!-- /control-group -->
-										
-										<div class="control-group">					
+
+										<div class="control-group">
 											<label class="control-label" for="npwd"><?php echo __tr('Password') ?></label>
 											<div class="controls">
 												<input type="text" disabled class="input-medium" name="npwd" value="">
-											</div> <!-- /controls -->				
+											</div> <!-- /controls -->
 										</div> <!-- /control-group -->
-										<div class="control-group">											
+										<div class="control-group">
 											<label class="control-label" for="npwd"><?php echo __tr('Status') ?></label>
 											<div class="controls">
 												<input type="text" disabled class="input-medium" name="" value="<?php echo __tr($account['status']) ?>">
-											</div> <!-- /controls -->				
+											</div> <!-- /controls -->
 										</div> <!-- /control-group -->
-										<div class="control-group">											
+										<div class="control-group">
 											<label class="control-label" for="npwd"><?php echo __tr('IP address') ?></label>
 											<div class="controls">
 												<input type="text" disabled class="input-medium" name="" value="<?php echo $account['lastip'] ?>">
-											</div> <!-- /controls -->				
+											</div> <!-- /controls -->
 										</div> <!-- /control-group -->
-										<div class="control-group">											
+										<div class="control-group">
 											<label class="control-label" for="npwd"><?php echo __tr('Donation') ?></label>
 											<div class="controls">
 												<input type="text" disabled class="input-medium" name="" value="<?php echo 0+$account['don'] ?> &euro;">
-											</div> <!-- /controls -->				
+											</div> <!-- /controls -->
 										</div> <!-- /control-group -->
 <table class="table table-bordered table-striped">
 <tr>
@@ -196,11 +196,11 @@ require('include/message.php');
 <tr><td><?php echo __tr('No ztamp in this account') ?></td></tr>
 <?php endif; ?>
 	</table>
-										
-										
+
+
 										<div class="form-actions">
 											<input type="hidden" name="update" value="go">
-											<button type="submit" class="btn btn-primary"><?php echo __tr('Update and reload') ?></button> 
+											<button type="submit" class="btn btn-primary"><?php echo __tr('Update and reload') ?></button>
 											<a target="_blank" class="btn btn-small btn-danger" href="server.php?removeA=<?php echo urlencode($account['username']) ?>"><?php echo __tr('Remove account') ?></a>
 										</div> <!-- /form-actions -->
 									</fieldset>
@@ -257,7 +257,7 @@ if(count($_POST))
 	  				</div> <!-- /widget-header -->
 					<div class="widget-content">
 <pre>
-<?php 
+<?php
 $lines = str_split($settings, 16);
 $add = 0;
 $pattern = "|[\w@\"'_\-,;.:!\?]|";
@@ -293,9 +293,9 @@ foreach($lines as $i => $line)
 }
 ?>
 </pre>
-							
 
-						
+
+
 					</div> <!-- /widget-content -->
 				</div> <!-- /widget-box -->
 
@@ -305,7 +305,7 @@ foreach($lines as $i => $line)
 	  				</div> <!-- /widget-header -->
 					<div class="widget-content">
 <pre>
-<?php 
+<?php
 $add = 0;
 foreach(str_split($account['settings'], 16) as $i => $line)
 {
@@ -323,9 +323,9 @@ foreach(str_split($account['settings'], 16) as $i => $line)
 }
 ?>
 </pre>
-							
 
-						
+
+
 					</div> <!-- /widget-content -->
 				</div> <!-- /widget-box -->
 		      </div> <!-- /span4 -->

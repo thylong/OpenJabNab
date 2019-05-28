@@ -80,8 +80,8 @@ class ojnApi {
 
 	public function getStats($reload = false) {
 		$r = true;
-		$cache = apcu_fetch(APC_PREFIX.'ojn_stats',$cache);
-		if(!$cache || $reload)
+		$cache = apcu_fetch(APC_PREFIX.'ojn_stats',$r);
+		if(!$r || $reload)
 		{
 			$cache = $this->getApiString('global/stats');
 			apcu_store(APC_PREFIX.'ojn_stats', $cache, 30);
@@ -91,13 +91,13 @@ class ojnApi {
 
 	public function getListOfZtamps($reload = false) {
 		$r = true;
-		$cache = apcu_fetch(APC_PREFIX.'ojn_ztamps_'.$this->getToken(),$r);
+		//$cache = apcu_fetch(APC_PREFIX.'ojn_ztamps_'.$this->getToken(),$r);
 
-		if(!$r || $reload)
-		{
+		//if(!$r || $reload)
+		//{
 			$cache = $this->getApiMapped("ztamps/getListOfZtamps?".$this->getToken());
-			apcu_store(APC_PREFIX.'ojn_ztamps_'.$this->getToken(),$cache,15);
-		}
+			//apcu_store(APC_PREFIX.'ojn_ztamps_'.$this->getToken(),$cache,15);
+		//}
 		return $cache;
 	}
 
@@ -140,7 +140,7 @@ class ojnApi {
 		if(!$r || $reload)
 		{
 			$cache = $this->getApiMapped("ztamps/getListOfAllZtamps?".$this->getToken());
-			$r = apcu_store(APC_PREFIX.'ojn_all_ztamps', $cache, 300);
+			$r = apcu_store(APC_PREFIX.'ojn_all_ztamps', $cache, 60);
 		}
 		return $cache;
 	}
