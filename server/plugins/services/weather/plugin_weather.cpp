@@ -106,7 +106,7 @@ void PluginWeather::getWeatherForCity(Bunny * b, QString ville)
     return;
   }
 
-  QFile jsonFile("weather.json");
+  QFile jsonFile(GetLocalHTTPFolder()->absoluteFilePath("weather.json"));
   if(!jsonFile.open(QIODevice::ReadOnly))
   {
     LogDebug("No Weather data file");
@@ -258,7 +258,20 @@ void PluginWeather::InitApiCalls()
 PLUGIN_API_CALL(PluginWeather::Api_GetAllCitiesList) {
   if(!account.IsAdmin())
 		return new ApiManager::ApiError(Translator::tr("Access denied", account));
-	QMap<QString, QVariant> list;
+
+  QMap<QString, QVariant> list;
+  const auto& bunnies = BunnyManager::GetAllBunnies();
+
+    QHashIterator<QByteArray, Bunny*> bunny(bunnies);
+    while(bunny.hasNext())
+    {
+      bunny.next();
+      foreach(QString city, bunny.value()->GetPluginSetting(GetName(), "Cities", QStringList()).toStringList())
+    	{
+        list.insert(city, GetSettings("Cities/" + city, QString()));
+      }
+    }
+
 
 	return new ApiManager::ApiMappedList(list);
 }
