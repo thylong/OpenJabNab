@@ -29,6 +29,8 @@ public:
 
 	static QList<QByteArray> GetConnectedBunniesList(void);
 
+  static const QHash<QByteArray, Bunny *>& GetAllBunnies(void);
+
 	// API
 	static void InitApiCalls();
 	int GetConnectedBunnyCount();

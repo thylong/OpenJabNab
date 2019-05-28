@@ -354,6 +354,11 @@ int BunnyManager::GetBunnyCount()
 	return listOfBunnies.count();
 }
 
+const QHash<QByteArray, Bunny *>& BunnyManager::GetAllBunnies(void)
+{
+  return listOfBunnies;
+}
+
 Bunny * BunnyManager::GetBunny(QByteArray const& bunnyHexID)
 {
 	if(bunnyHexID.length() == 12)
