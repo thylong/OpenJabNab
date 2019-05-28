@@ -12,7 +12,6 @@ else:
       $cities[] = array('woeid'=>(int)$l->key,'location'=>(string)$l->value);
   }
 endif;
-
 $weather = array();
 
 function buildBaseString($baseURI, $method, $params) {
@@ -98,17 +97,21 @@ foreach($cities as $c)
     //var_dump($json);
     if(!isset($json->location) || !isset($json->current_observation))
     {
-        echo 'Skipping city: '.$c.'. API Anwser was'.$json;
+        echo 'Skipping city: '.(is_array($c) ? $c['woeid'].'/'.$c['location'] : $c).'. API Anwser was'.$json;
         continue;
     }
 
-    $current = array('date' => $json->current_observation->pubDate,
+    $current = array('forecast' => NULL,'code'=>3200);
+    if(isset($json->current_observation->pubDate))
+      $current['date'] = $json->current_observation->pubDate;
                                 //date("d/m/Y h:i:s",$json->current_observation->pubDate),
-                      'code' => $json->current_observation->condition->code,
-                      'temp' => $json->current_observation->condition->temperature,
-                      'forecast' => NULL,
-                      'wind' => $json->current_observation->wind->speed,
-                     );
+    if(isset($json->current_observation->condition))
+    {
+      $current['code'] = $json->current_observation->condition->code;
+      $current['temp'] = $json->current_observation->condition->temperature;
+    }
+    if(isset($json->current_observation->wind))
+      $current['wind'] = $json->current_observation->wind->speed;
     //echo 'Current date:'.date("d/m/Y h:i:s",$json->current_observation->pubDate)."\n";
     $forecasts = array();
     foreach($json->forecasts as $f)
@@ -144,6 +147,7 @@ foreach($cities as $c)
         'current'  => $current,
         'forecast' => array_shift($forecasts),
     );
+    echo '.';
 }
 //var_dump($weather);
 file_put_contents(ROOT_LOCAL."/plugins/weather/weather.json",json_encode($weather));
