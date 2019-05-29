@@ -7,7 +7,7 @@ class PluginSurprise : public PluginInterface
 {
 	Q_OBJECT
 	Q_INTERFACES(PluginInterface)
-    Q_PLUGIN_METADATA(IID "ojn.plugin.bunny.surprise" FILE "")
+    Q_PLUGIN_METADATA(IID "ojn.plugin.bunny.surprise" )
 
 private slots:
 	QString OnApiSpeak(Bunny *, QVariant);

@@ -8,7 +8,7 @@ class PluginNab2nab : public PluginInterface, PluginMessageInterface
 {
 	Q_OBJECT
 	Q_INTERFACES(PluginInterface PluginMessageInterface)
-    Q_PLUGIN_METADATA(IID "ojn.plugin.user.nab2nab" FILE "")
+    Q_PLUGIN_METADATA(IID "ojn.plugin.user.nab2nab" )
 
 public:
 	PluginNab2nab();

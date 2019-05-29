@@ -8,7 +8,7 @@ class PluginWebradio : public PluginInterface
 {
 	Q_OBJECT
 	Q_INTERFACES(PluginInterface)
-    Q_PLUGIN_METADATA(IID "ojn.plugin.user.webradio" FILE "")
+    Q_PLUGIN_METADATA(IID "ojn.plugin.user.webradio" )
 
 public:
 	PluginWebradio();

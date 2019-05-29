@@ -8,7 +8,7 @@ class PluginColorbreathing : public PluginInterface
 {
 	Q_OBJECT
 	Q_INTERFACES(PluginInterface)
-    Q_PLUGIN_METADATA(IID "ojn.plugin.bunny.colorbreathing" FILE "")
+    Q_PLUGIN_METADATA(IID "ojn.plugin.bunny.colorbreathing" )
 
 private slots:
 	QString OnApiColor(Bunny *, QVariant);

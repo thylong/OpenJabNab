@@ -8,7 +8,7 @@ class PluginRFID : public PluginInterface
 {
 	Q_OBJECT
 	Q_INTERFACES(PluginInterface)
-    Q_PLUGIN_METADATA(IID "ojn.plugin.system.rfid" FILE "")
+    Q_PLUGIN_METADATA(IID "ojn.plugin.system.rfid" )
 
 public:
 	PluginRFID();

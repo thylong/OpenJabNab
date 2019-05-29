@@ -53,12 +53,12 @@ class PluginWeather : public PluginInterface
 	friend class PluginWeather_Worker;
 	Q_OBJECT
 	Q_INTERFACES(PluginInterface)
-  Q_PLUGIN_METADATA(IID "ojn.plugin.services.weather" FILE "")
+  Q_PLUGIN_METADATA(IID "ojn.plugin.services.weather" )
 
 private slots:
 	QString OnApiGet(Bunny *, QVariant);
-	void analyseXml(QNetworkReply*);
-	void analyseDone(bool, Bunny*, QByteArray);
+	//void analyseXml(QNetworkReply*);
+	//void analyseDone(bool, Bunny*, QByteArray);
 
 public:
 	PluginWeather();

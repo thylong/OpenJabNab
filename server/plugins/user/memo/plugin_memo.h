@@ -8,7 +8,7 @@ class PluginMemo : public PluginInterface
 {
 	Q_OBJECT
 	Q_INTERFACES(PluginInterface)
-    Q_PLUGIN_METADATA(IID "ojn.plugin.user.memo" FILE "")
+    Q_PLUGIN_METADATA(IID "ojn.plugin.user.memo" )
 
 public:
 	PluginMemo();

@@ -10,7 +10,7 @@ class PluginAuth : public PluginAuthInterface
 {
 	Q_OBJECT
 	Q_INTERFACES(PluginInterface)
-  Q_PLUGIN_METADATA(IID "ojn.plugin.system.auth" FILE "")
+  Q_PLUGIN_METADATA(IID "ojn.plugin.system.auth" )
 
 public:
 	PluginAuth();

@@ -9,7 +9,8 @@
 #include "settings.h"
 // Cache-Control: max-age=3600
 
-BrowserClient::BrowserClient ( QObject * parent) : QNetworkAccessManager(parent)
+BrowserClient::BrowserClient ( QObject * parent)
+: QNetworkAccessManager(parent)
 {
 	//QNetworkDiskCache * diskCache = BrowserCache::GetCache();
 	diskCache = new QNetworkDiskCache(this);

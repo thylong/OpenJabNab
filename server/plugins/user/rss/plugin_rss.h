@@ -15,7 +15,7 @@ class PluginRss : public PluginInterface, PluginMessageInterface
 	friend class PluginRss_Player;
 	Q_OBJECT
 	Q_INTERFACES(PluginInterface PluginMessageInterface)
-    Q_PLUGIN_METADATA(IID "ojn.plugin.user.rss" FILE "")
+    Q_PLUGIN_METADATA(IID "ojn.plugin.user.rss" )
 
 private slots:
 	void analyseXml(QNetworkReply*);

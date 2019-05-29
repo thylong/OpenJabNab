@@ -21,7 +21,8 @@
 
 #define RANDOMIZEDRATIO 20
 
-PluginNeedtoknow::PluginNeedtoknow():PluginInterface("needtoknow", "Need to know", BunnyV2Plugin | SingleClickPlugin | DoubleClickPlugin | CronPlugin | RfidPlugin | MessagePlugin | ApiPlugin)
+PluginNeedtoknow::PluginNeedtoknow()
+: PluginInterface("needtoknow", "Need to know", BunnyV2Plugin | SingleClickPlugin | DoubleClickPlugin | CronPlugin | RfidPlugin | MessagePlugin | ApiPlugin)
 {
 }
 

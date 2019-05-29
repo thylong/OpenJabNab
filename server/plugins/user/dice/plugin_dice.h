@@ -7,7 +7,7 @@ class PluginDice : public PluginInterface
 {
 	Q_OBJECT
 	Q_INTERFACES(PluginInterface)
-    Q_PLUGIN_METADATA(IID "ojn.plugin.user.dice" FILE "")
+    Q_PLUGIN_METADATA(IID "ojn.plugin.user.dice" )
 
 public:
 	PluginDice();

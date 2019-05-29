@@ -10,7 +10,7 @@ class PluginMusic : public PluginInterface
 {
 	Q_OBJECT
 	Q_INTERFACES(PluginInterface)
-    Q_PLUGIN_METADATA(IID "ojn.plugin.user.music" FILE "")
+    Q_PLUGIN_METADATA(IID "ojn.plugin.user.music" )
 
 public:
 	enum LibraryMode { NoLibrary, MixedLibrary = 0b1, OwnLibrary = 0b10, SharedLibrary = 0b100, PrivateLibrary = 0b1000 };

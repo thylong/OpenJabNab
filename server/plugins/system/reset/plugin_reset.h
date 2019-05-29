@@ -13,7 +13,7 @@ class PluginReset : public PluginInterface
 {
 	Q_OBJECT
 	Q_INTERFACES(PluginInterface)
-    Q_PLUGIN_METADATA(IID "ojn.plugin.system.reset" FILE "")
+    Q_PLUGIN_METADATA(IID "ojn.plugin.system.reset" )
 private slots:
 	void RemoveReset();
 public:

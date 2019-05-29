@@ -10,7 +10,7 @@ class PluginClock : public PluginInterface
 {
 	Q_OBJECT
 	Q_INTERFACES(PluginInterface)
-    Q_PLUGIN_METADATA(IID "ojn.plugin.bunny.clock" FILE "")
+    Q_PLUGIN_METADATA(IID "ojn.plugin.bunny.clock" )
 
 private slots:
 	QString OnApiGet(Bunny *, QVariant);

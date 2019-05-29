@@ -10,7 +10,7 @@ class PluginNabcast : public PluginInterface
 {
 	Q_OBJECT
 	Q_INTERFACES(PluginInterface)
-	Q_PLUGIN_METADATA(IID "ojn.plugin.user.nabcast" FILE "")
+	Q_PLUGIN_METADATA(IID "ojn.plugin.user.nabcast" )
 
 public:
 	PluginNabcast();

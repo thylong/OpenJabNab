@@ -9,7 +9,7 @@ class PluginMsgall : public PluginInterface, PluginMessageInterface
 	Q_OBJECT
 	Q_INTERFACES(PluginInterface PluginMessageInterface)
 
-    Q_PLUGIN_METADATA(IID "ojn.plugin.system.msgall" FILE "")
+    Q_PLUGIN_METADATA(IID "ojn.plugin.system.msgall")
 
 public:
 	PluginMsgall();

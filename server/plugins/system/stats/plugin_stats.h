@@ -7,7 +7,7 @@ class PluginStats : public PluginInterface
 {
 	Q_OBJECT
 	Q_INTERFACES(PluginInterface)
-    Q_PLUGIN_METADATA(IID "ojn.plugin.system.stats" FILE "")
+    Q_PLUGIN_METADATA(IID "ojn.plugin.system.stats" )
 
 private slots:
 	void AddApiCount();

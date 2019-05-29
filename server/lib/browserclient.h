@@ -3,8 +3,10 @@
 
 #include <QNetworkDiskCache>
 #include <QNetworkAccessManager>
+#include "global.h"
 
-class BrowserClient : public QNetworkAccessManager
+class OJN_EXPORT BrowserClient:
+ public QNetworkAccessManager
 {
     Q_OBJECT
 public:

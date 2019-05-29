@@ -26,7 +26,7 @@ class PluginLedcustom : public PluginInterface
 {
 	Q_OBJECT
 	Q_INTERFACES(PluginInterface)
-    Q_PLUGIN_METADATA(IID "ojn.plugin.bunny.ledcustom" FILE "")
+    Q_PLUGIN_METADATA(IID "ojn.plugin.bunny.ledcustom" )
 
 signals:
 	// weather

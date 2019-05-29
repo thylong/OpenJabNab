@@ -13,7 +13,7 @@ class PluginNeedtoknow : public PluginInterface, PluginMessageInterface
 {
 	Q_OBJECT
 	Q_INTERFACES(PluginInterface PluginMessageInterface)
-  Q_PLUGIN_METADATA(IID "ojn.plugin.services.needtoknow" FILE "")
+  Q_PLUGIN_METADATA(IID "ojn.plugin.services.needtoknow" )
 
 private slots:
 	QString OnApiGet(Bunny *, QVariant);

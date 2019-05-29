@@ -14,7 +14,7 @@ class PluginSleep : public PluginInterface
 {
 	Q_OBJECT
 	Q_INTERFACES(PluginInterface)
-    Q_PLUGIN_METADATA(IID "ojn.plugin.bunny.sleep" FILE "")
+    Q_PLUGIN_METADATA(IID "ojn.plugin.bunny.sleep" )
 
 public slots:
 	void OnCronSleep(Bunny *, QVariant, unsigned int);

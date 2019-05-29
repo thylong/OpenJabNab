@@ -8,7 +8,7 @@ class PluginTTS : public PluginInterface
 {
 	Q_OBJECT
 	Q_INTERFACES(PluginInterface)
-    Q_PLUGIN_METADATA(IID "ojn.plugin.bunny.tts" FILE "")
+    Q_PLUGIN_METADATA(IID "ojn.plugin.bunny.tts" )
 
 public:
 	PluginTTS();

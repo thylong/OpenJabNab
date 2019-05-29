@@ -13,7 +13,7 @@ class PluginStatus : public PluginInterface
 {
 	Q_OBJECT
 	Q_INTERFACES(PluginInterface)
-    Q_PLUGIN_METADATA(IID "ojn.plugin.system.status" FILE "")
+    Q_PLUGIN_METADATA(IID "ojn.plugin.system.status" )
 
 public:
 	PluginStatus();

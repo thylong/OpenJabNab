@@ -7,7 +7,7 @@ class PluginChoregraphy : public PluginInterface
 {
 	Q_OBJECT
 	Q_INTERFACES(PluginInterface)
-    Q_PLUGIN_METADATA(IID "ojn.plugin.bunny.choregraphy" FILE "")
+    Q_PLUGIN_METADATA(IID "ojn.plugin.bunny.choregraphy" )
 
 public:
 	PluginChoregraphy();

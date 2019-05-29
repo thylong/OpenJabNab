@@ -8,7 +8,7 @@ class PluginRecord : public PluginInterface
 {
 	Q_OBJECT
 	Q_INTERFACES(PluginInterface)
-    Q_PLUGIN_METADATA(IID "ojn.plugin.system.record" FILE "")
+    Q_PLUGIN_METADATA(IID "ojn.plugin.system.record" )
 
 public slots:
 	QStringList GetRecordList(Bunny *, int, int);
