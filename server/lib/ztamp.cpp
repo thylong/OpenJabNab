@@ -78,7 +78,9 @@ void Ztamp::LoadConfig()
 				}
 			}
 			else
-				LogError(QString("Ztamp %1 has invalid plugin (%2)!").arg(QString(GetID()), s));
+      {
+//				LogError(QString("Ztamp %1 has invalid plugin (%2)!").arg(QString(GetID()), s));
+      }
 		}
 	}
 	query->finish();

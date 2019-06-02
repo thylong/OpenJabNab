@@ -747,7 +747,7 @@ void Bunny::LoadConfig()
 				}
 				else
 				{
-					LogError(QString("Bunny %1 has invalid plugin (%2)").arg(QString(GetID()), s));
+					//LogError(QString("Bunny %1 has invalid plugin (%2)").arg(QString(GetID()), s));
 				}
 			}
 		}
@@ -934,7 +934,7 @@ QByteArray Bunny::GetInitPacket() const
 	a.SetEarsPosition(0,0);
 
 	SleepPacket s(SleepPacket::Wake_Up);
-	
+
 	// Pass to system plugins
 	PluginManager::Instance().OnInitPacket(this,a,s);
 
