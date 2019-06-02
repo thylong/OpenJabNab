@@ -86,7 +86,7 @@ QString TTSManager::GetBestVoice(QString voice, QString language)
 	if(V.size() == 2)
 	{
 		TTSInterface * tts = Instance().GetTTSByName(V.at(0));
-		if(tts->GetEnable())
+		if(tts && tts->GetEnable())
 		{
 			if(V.size() >=2)
 			{
@@ -364,7 +364,7 @@ TTSAnswer TTSManager::CreateSound(QString text, QString voice, QString language,
 		if(order.contains(V.at(0)))
 		{
 			TTSInterface * tts = Instance().GetTTSByName(V.at(0));
-			if(tts->GetEnable())
+			if(tts && tts->GetEnable())
 			{
 				if(V.size() >=2)
 				{
@@ -385,7 +385,7 @@ TTSAnswer TTSManager::CreateSound(QString text, QString voice, QString language,
 	foreach(QString ttsname, order)
 	{
 		TTSInterface * tts = Instance().GetTTSByName(ttsname);
-		if(tts->GetEnable())
+		if(tts && tts->GetEnable())
 		{
 			Voice v = tts->GetBestVoice(language);
 			if(v.language == language)
@@ -402,7 +402,7 @@ TTSAnswer TTSManager::CreateSound(QString text, QString voice, QString language,
 	foreach(QString ttsname, order)
 	{
 		TTSInterface * tts = Instance().GetTTSByName(ttsname);
-		if(tts->GetEnable())
+		if(tts && tts->GetEnable())
 		{
 			Voice v = tts->GetBestVoice(language);
 			if(ApproxLanguage(v.language, language))
@@ -416,7 +416,7 @@ TTSAnswer TTSManager::CreateSound(QString text, QString voice, QString language,
 		}
 	}
 
-	TTSInterface * tts = Instance().GetTTSByName("google");
+	TTSInterface * tts = Instance().GetTTSByName("pico");
 	a.returnedLanguage = "fr";
 	return TTSManager::createSound(tts, a, text, "fr", output, forceOverwrite);
 }
