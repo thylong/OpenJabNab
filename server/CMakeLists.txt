@@ -27,7 +27,20 @@ find_package(Qt5 ${QT_VERSION}
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/lib)
 
+if(BUILD_TESTS)
+  include(tests/CodeCoverage.cmake)
+  APPEND_COVERAGE_COMPILER_FLAGS()
+  set(COVERAGE_EXCLUDES '/usr/*'
+                          '${PROJECT_SOURCE_DIR}/tests/catch.hpp')
+
+  enable_testing()
+endif()
+
 add_subdirectory(lib/)
 add_subdirectory(main/)
 add_subdirectory(tts/)
 add_subdirectory(plugins/)
+
+if(BUILD_TESTS)
+  add_subdirectory(tests/)
+endif()
