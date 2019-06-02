@@ -1,6 +1,6 @@
 <?php
 require_once 'common.php';
-if(0):
+if(1):
   $cities = array('Grenoble, FR','Paris, FR');
 else:
   $cities = array();

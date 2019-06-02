@@ -36,7 +36,7 @@ else
 	exit();
 }
 include('bunny_expert.decode.php');
-require('include/message.php');
+require('../include/message.php');
 
 ?>
 	      <div class="row">

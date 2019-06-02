@@ -2,7 +2,7 @@
 require_once "../include/common.php";
 $ojnTemplate->setTitle(__tr('Bunnies'));
 if(!isset($_SESSION['token']))
-header('Location: index.php');
+header('Location: /index.php');
 if(isset($_SESSION['bunny']))
 	define("BUNNY_API", "bunny/" . $_SESSION['bunny']);
 

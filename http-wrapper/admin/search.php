@@ -35,7 +35,7 @@ function macLike($mac, $j = 2)
 		if(isset($correspondances[$mac[$i]])) {
 			$m[$i] = $correspondances[$mac[$i]];
 			$array = array_merge($array, macLike($m, $i+1));
-			
+
 		}
 	}
 	return array_unique($array);
@@ -67,13 +67,13 @@ if(preg_match("/\d+\.\d+\.\d+\.\d+/", $search)) {
 	if(preg_match('/like:([0-9a-fA-F]{12})/', $search, $match)) {
 		$search = $match[1];
 	} else {
-		$sql = 'SELECT * FROM bunny WHERE LOWER(mac) LIKE "%'.$search.'%" ORDER BY mac ASC;';
+		$sql = 'SELECT mac FROM bunny WHERE LOWER(mac) LIKE "%'.$search.'%" ORDER BY mac ASC;';
 		$res = mysqli_query($link, $sql);
 		while($row = mysqli_fetch_assoc($res))
 		{
 			$bunnies[] = $row;
 		}
-		$sql = 'SELECT * FROM bunny WHERE LOWER(replace(settings, "\0", "")) LIKE "%OwnerAccount%'.strtolower($search).'%" ORDER BY mac ASC;';
+		$sql = 'SELECT mac FROM bunny WHERE LOWER(replace(settings, "\0", "")) LIKE "%OwnerAccount%'.strtolower($search).'%" ORDER BY mac ASC;';
 		$res = mysqli_query($link, $sql);
 		while($row = mysqli_fetch_assoc($res))
 		{
@@ -116,7 +116,7 @@ mysqli_close($link);
 ?>
 
 	      <div class="row">
-	      	<div class="span12">      		
+	      	<div class="span12">
 	      		<div class="widget ">
 	      			<div class="widget-header">
 	      				<i class="icon-cog"></i> <h3><?php echo $title ?></h3>
@@ -181,7 +181,7 @@ if(count($bunnies)) {
 	<tr>
 		<td colspan="3"><?php echo __tr('No bunnies') ?></td>
 	</tr>
-<?php	 } 
+<?php	 }
 } ?>
 </tbody>
 </table>
