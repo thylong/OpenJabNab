@@ -1464,6 +1464,8 @@ void Bunny::InitApiCalls()
 
 	DECLARE_API_CALL("setService(service,value)", &Bunny::Api_SetService);
 
+  DECLARE_API_CALL("deletePluginSettings(plugin)", &Bunny::Api_DeletePluginSettings);
+
 	DECLARE_API_CALL("resetPassword()", &Bunny::Api_ResetPassword);
 	DECLARE_API_CALL("resetOwner()", &Bunny::Api_ResetOwner);
 	DECLARE_API_CALL("getOwner()", &Bunny::Api_GetOwner);
@@ -1498,6 +1500,17 @@ void Bunny::InitApiCalls()
 
 	DECLARE_API_CALL("resource()", &Bunny::Api_Resource);
 	DECLARE_API_CALL("traffic()", &Bunny::Api_Traffic);
+}
+
+API_CALL(Bunny::Api_DeletePluginSettings)
+{
+if(!hRequest.HasArg("plugin"))
+		return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("plugin"));
+
+	QString plugin = hRequest.GetArg("plugin");
+	needSave = true;
+	PluginsSettings.remove(plugin);
+  return new ApiManager::ApiOk(Translator::tr("Deleted all settings for plugin '%1'").arg(plugin));
 }
 
 API_CALL(Bunny::Api_Resource)
