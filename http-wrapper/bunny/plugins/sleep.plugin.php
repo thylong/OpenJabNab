@@ -1,4 +1,4 @@
-<?php 
+<?php
 $days = array(
 	1 => __tr('Monday'),
 	2 => __tr('Tuesday'),
@@ -148,7 +148,7 @@ function toMinute($s) {
 }
 function toSize($m) {
 	global $size;
-	return $m * (24*$size) / 1440; 
+	return $m * (24*$size) / 1440;
 }
 foreach($lists as $s) {
 	if(preg_match('/\|/', $s))
@@ -156,11 +156,11 @@ foreach($lists as $s) {
 		list($s1, $s2, $w1, $w2) = preg_split('/\|/', $s);
 		$s1 = toMinute($s1);
 		$w1 = toMinute($w1);
-		
+
 		if($w2 < $s2 || ($w2 == $s2 && $w1 < $s1)) {
 			$w2 += 7;
 		}
-		
+
 		if($w2 > $s2)
 		{
 			$sleeps[$s2][] = array(toSize($s1), toSize(1440) - toSize($s1));
@@ -227,7 +227,9 @@ context.closePath();
 </tr>
 <?php
 foreach($lists as $i => $s) {
-	list($s1, $s2, $w1, $w2) = preg_split('/\|/', $s);
+  if(empty($s))
+    continue;
+  list($s1, $s2, $w1, $w2) = preg_split('/\|/', $s);
 ?>
 <tr>
 <td><?php echo $s1 ?>, <?php echo $days[$s2] ?></td>
