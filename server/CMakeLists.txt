@@ -4,8 +4,9 @@ project(OpenJabNab)
 set(QT_VERSION 5.7.1)
 
 if(WIN32)
-    list(APPEND CMAKE_PREFIX_PATH "C:/Tools/Qt/${QT_VERSION}/mingw53_32/lib/cmake")
-    list(APPEND CMAKE_MODULE_PATH "C:/Tools/Qt/${QT_VERSION}/mingw53_32/lib/cmake")
+    set(QT_VERSION 5.12.3)
+    list(APPEND CMAKE_PREFIX_PATH "C:/_data/tools/Qt/${QT_VERSION}/mingw73_64/lib/cmake")
+    list(APPEND CMAKE_MODULE_PATH "C:/_data/tools/Qt/${QT_VERSION}/mingw73_64/lib/cmake")
     set(WIN_LIB Ws2_32)
 endif()
 
