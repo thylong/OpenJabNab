@@ -55,6 +55,12 @@ bool PluginLocate::HttpRequestHandle(HTTPRequest & request)
 			waitingBunnies.removeDuplicates();
 		}
 		Bunny * bunny = BunnyManager::GetBunny(this, serialnumber.toLatin1());
+		if(!bunny)
+		{
+			LogError(QString("Can't load bunny %1. Abort").arg(serialnumber));
+			return false;
+		}
+
 		bunny->SetBootcode(request.GetArg("v"));
 		if(request.HasArg("c"))
 		{
