@@ -178,54 +178,57 @@ QString TTSNotevibes::CreateNewSound(QString text, QString voice, bool forceOver
 		return "FROM_CACHE" + ttsHTTPUrl.arg(voice, fileName);
 
 	// Fetch MP3
-    QNetworkAccessManager http;
-    QNetworkRequest req(QUrl("http://notevibes.com/"));
-    req.setRawHeader("Content-type","application/x-www-form-urlencoded");
-    QByteArray ContentData;
-	ContentData += "content=" + QUrl::toPercentEncoding(text) + "&voice=" + voice;
+  QNetworkAccessManager http;
+  QNetworkRequest req(QUrl("http://notevibes.com/"));
+  req.setRawHeader("Content-type","application/x-www-form-urlencoded");
+  QByteArray ContentData;
+  ContentData += "content=" + QUrl::toPercentEncoding(text) + "&voice=" + voice;
 
-    QNetworkReply* rep = http.post(req,ContentData);
+  QNetworkReply* rep = http.post(req,ContentData);
+  QObject::connect(rep, SIGNAL(finished()), &loop, SLOT(quit()));
+  QObject::connect(rep, SIGNAL(error(QNetworkReply::NetworkError)), &loop, SLOT(quit()));
+  loop.exec();
+
+  const auto& answer = rep->readAll();
+  QString traceCtx = rep->rawHeader("X-Cloud-Trace-Context");
+  //LogDebug(QString("Got: %1, %2").arg(rep->error()).arg(traceCtx));//.arg(QStrinanswer));
+  QRegExp rx("<a href='([^']+)'> Download MP3");
+  rx.setMinimal(true);
+  if(rx.indexIn(answer) != -1 )
+  {
+    //LogDebug(QString("URL %1").arg(rx.cap(1)));
+    delete rep;
+    // Get MP3
+    QNetworkRequest req2(QUrl(rx.cap(1)));
+    req2.setRawHeader("X-Cloud-Trace-Context", traceCtx.toLatin1());
+    rep = http.get(req2);
     QObject::connect(rep, SIGNAL(finished()), &loop, SLOT(quit()));
     QObject::connect(rep, SIGNAL(error(QNetworkReply::NetworkError)), &loop, SLOT(quit()));
     loop.exec();
-
-    const auto& answer = rep->readAll();
-    QString traceCtx = rep->rawHeader("X-Cloud-Trace-Context");
-    //LogDebug(QString("Got: %1, %2").arg(rep->error()).arg(traceCtx));//.arg(QStrinanswer));
-    QRegExp rx("<a href='([^']+)'> Download MP3");
-	rx.setMinimal(true);
-	if(rx.indexIn(answer) != -1 )
-	{
-        //LogDebug(QString("URL %1").arg(rx.cap(1)));
+    const auto& mp3 = rep->readAll();
+    if( rep->error() != QNetworkReply::NoError ||
+        rep->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() != 200 ||
+        mp3.size() == 0
+      )
+    {
+        LogError("TTS Notevibes: Network error or Empty file =(");
         delete rep;
-        // Get MP3
-        QNetworkRequest req2(QUrl(rx.cap(1)));
-        req2.setRawHeader("X-Cloud-Trace-Context", traceCtx.toLatin1());
-        rep = http.get(req2);
-        QObject::connect(rep, SIGNAL(finished()), &loop, SLOT(quit()));
-        QObject::connect(rep, SIGNAL(error(QNetworkReply::NetworkError)), &loop, SLOT(quit()));
-        loop.exec();
-        const auto& mp3 = rep->readAll();
-        if(mp3.size() == 0)
-        {
-            LogError("TTS Notevibes: Empty file =(");
-            delete rep;
-            return QString();
-        }
-        // Save to File !
-        QFile file(filePath);
-		if (!file.open(QIODevice::WriteOnly))
-		{
-			LogError("Cannot open sound file for writing");
-			return QString();
-		}
-        file.write(mp3);
-		file.close();
-		return ttsHTTPUrl.arg(voice, fileName);
+        return QString();
     }
-	LogError("Notevibes demo did not return a sound file");
-	LogDebug(QString("Notevibes answer %1: %1").arg(rep->error()).arg(QString(answer)));
-    delete rep;
-	return QString();
+    // Save to File !
+    QFile file(filePath);
+    if (!file.open(QIODevice::WriteOnly))
+    {
+      LogError("Cannot open sound file for writing");
+      return QString();
+    }
+        file.write(mp3);
+    file.close();
+    return ttsHTTPUrl.arg(voice, fileName);
+  }
+LogError("Notevibes demo did not return a sound file");
+LogDebug(QString("Notevibes answer %1: %1").arg(rep->error()).arg(QString(answer)));
+  delete rep;
+return QString();
 }
 
