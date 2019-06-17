@@ -164,9 +164,9 @@ if(isset($_GET['voice']) && $_GET['voice'] != "") {
 	$reload = true;
 }
 if(isset($_GET['timezone'])) {
-	list($timezone, $alias) = preg_split("/;/", $_GET['timezone']);
+	$timezone = $_GET['timezone'];
 	$_SESSION['tab'] = 'bunny_language';
-	Message::AddFromApi($ojnAPI->getApiString(BUNNY_API."/setTimezone?name=".$timezone."&alias=".(strlen($alias) ? $alias : $timezone)."&".$ojnAPI->getToken()));
+	Message::AddFromApi($ojnAPI->getApiString(BUNNY_API."/setTimezone?name=".$timezone."&".$ojnAPI->getToken()));
 	$reload = true;
 }
 if(!empty($_GET['aInsomniac'])) {
@@ -526,7 +526,7 @@ foreach($actifs as $actif) {
 }
 $clicks = $ojnAPI->getApiList(BUNNY_API."/getClickPlugins?".$ojnAPI->getToken());
 $t = $ojnAPI->getApiValue(BUNNY_API."/getTimezone?".$ojnAPI->getToken());
-$tzs = $ojnAPI->getApiMapped("timezones/getListOfTimezones?".$ojnAPI->getToken());
+$tzs = $ojnAPI->getApiMapped("translate/listTimezones?".$ojnAPI->getToken());
 ?>
       <form class="form-horizontal">
         <fieldset>
@@ -611,24 +611,14 @@ $tzs = $ojnAPI->getApiMapped("timezones/getListOfTimezones?".$ojnAPI->getToken()
 
             </div>
           </div>
-<?php
-$myzone = $t;
-$myalias = $t;
-if(preg_match("/;/", $t)) {
-	list($myzone, $myalias) = preg_split("/;/", $t);
-}
-
-?>
           <div class="control-group">
             <label for="select01" class="control-label"><?php echo __tr("Timezone") ?></label>
             <div class="controls">
-	      <select name="timezone">
-	      <?php foreach($tzs as $tz => $name) { ?>
-		<?php list($zone,$alias) = preg_split("/;/", $tz) ?>
-	      <option value="<?php echo $tz; ?>" <?php echo ($t == $tz ? ' selected="selected"' : '') ?>><?php echo $alias; ?></option>
-	      <?php } ?>
-	      </select>
-		<p class="help-block"><?php echo __tr('If your timezone is not in openJabNab') ?>, <a href="/help/index.php?pb=4"><?php echo __tr('fill the contact form with necessary information') ?></a>.</p>
+              <select name="timezone">
+                <?php foreach($tzs as $tz=>$time) { ?>
+                <option value="<?php echo $tz; ?>" <?php echo ($t == $tz ? ' selected="selected"' : '') ?>><?php echo $tz.' ('.$time.')'; ?></option>
+                <?php } ?>
+              </select>
             </div>
           </div>
 <?php
@@ -1010,6 +1000,7 @@ if(bunnyVersion($_SESSION['bunny']) == 1 && isset($lasts['Last PingConnection'])
 		<textarea disabled class="input-xlarge span8 disabled" style="height: <?php echo max(60, 19 * count($crons->crons->cron)) ?>px;">
 <?php foreach($crons->crons->cron as $cron): ?>
 <?php echo $cron->plugin ?>-&gt;<?php echo strlen($cron->callback) ? $cron->callback : 'OnCron' ?>(<?php echo strlen($cron->data_string) ? '"' . $cron->data_string . '"' : ( strlen($cron->data_int) ? $cron->data_int : '') ?>) @ <?php echo date('H:i d/m/Y', $cron->next_run + 0) ?>
+
 <?php endforeach; ?>
 		</textarea>
 	    </div>

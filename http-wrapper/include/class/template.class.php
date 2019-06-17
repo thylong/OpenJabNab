@@ -133,7 +133,6 @@ class ojnTemplate {
 				$menu .= '<li><a href="/admin/translation.php">'.__tr("Translations").'</a></li>'."\n";
 				$menu .= '<li><a href="/admin/sentences.php">'.__tr("Sentences").'</a></li>'."\n";
 				$menu .= '<li><a href="/admin/language.php">'.__tr("Languages").'</a></li>'."\n";
-				$menu .= '<li><a href="/admin/timezone.php">'.__tr("Timezones").'</a></li>'."\n";
 				$menu .= ' <li class="divider"></li>'."\n";
 				$menu .= '<li><a href="/admin/logins.php">'.__tr("Logins").'</a></li>'."\n";
 				$menu .= '<li><a href="/admin/quota.php">'.__tr("Quotas").'</a></li>'."\n";
