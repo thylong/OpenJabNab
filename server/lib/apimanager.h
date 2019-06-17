@@ -31,7 +31,7 @@ public:
 	static ApiManager & Instance();
 	ApiAnswer * ProcessApiCall(QString const&, HTTPRequest &);
 	static int getUptime();
-	
+
 	// Internal classes
 	class OJN_EXPORT ApiClear : public ApiAnswer
 	{
@@ -120,7 +120,6 @@ private:
 	ApiAnswer * ProcessGlobalApiCall(Account const&, QString const&, HTTPRequest const&);
 	ApiAnswer * ProcessPluginApiCall(Account const&, QString const&, HTTPRequest &);
 	ApiAnswer * ProcessBunnyApiCall(Account const&, QString const&, HTTPRequest &);
-	ApiAnswer * ProcessTimezoneApiCall(Account const&, QString const&, HTTPRequest const&);
 	ApiAnswer * ProcessZtampApiCall(Account const&, QString const&, HTTPRequest &);
 	ApiAnswer * ProcessBunnyVioletApiCall(QString const&, HTTPRequest const&);
 	int startTime;

@@ -9,7 +9,6 @@
 #include "plugininterface.h"
 #include "translator.h"
 #include "sentencemanager.h"
-#include "timezone.h"
 #include "httprequest.h"
 #include "pluginmanager.h"
 #include "ttsmanager.h"
@@ -84,12 +83,6 @@ ApiManager::ApiAnswer * ApiManager::ProcessApiCall(QString const& request, HTTPR
 
 		if(request.startsWith("bunny/"))
 			return ProcessBunnyApiCall(account, request.mid(6), hRequest);
-
-                if(request.startsWith("timezones/"))
-                        return TimezoneManager::Instance().ProcessApiCall(account, request.mid(10), hRequest);
-
-                if(request.startsWith("timezone/"))
-                        return ProcessTimezoneApiCall(account, request.mid(9), hRequest);
 
 		if(request.startsWith("ztamps/"))
 			return ZtampManager::Instance().ProcessApiCall(account, request.mid(7), hRequest);
@@ -249,23 +242,6 @@ ApiManager::ApiAnswer * ApiManager::ProcessBunnyApiCall(Account const& account, 
 	{
 		return new ApiManager::ApiError(Translator::tr("Unknow bunny : %1").arg(QString(bunnyID)));
 	}
-}
-
-ApiManager::ApiAnswer * ApiManager::ProcessTimezoneApiCall(Account const& account, QString const& request, HTTPRequest const& hRequest)
-{
-        QStringList list = QString(request).split('/', QString::SkipEmptyParts);
-
-        if(list.size() != 3)
-                return new ApiManager::ApiError(Translator::tr("Malformed Timezone Api Call : %1", account).arg(hRequest.toString()));
-
-        QString const& area = list.at(0).toLatin1();
-        QString const& location = list.at(1).toLatin1();
-        Timezone * t = TimezoneManager::GetTimezone(area, location);
-	if(!t)
-		return new ApiManager::ApiError(Translator::tr("Unknown Timezone : %1/%2", account).arg(area, location));
-
-        QByteArray const& functionName = list.at(2).toLatin1();
-        return t->ProcessApiCall(account, functionName, hRequest);
 }
 
 ApiManager::ApiAnswer * ApiManager::ProcessBunnyVioletApiCall(QString const& request, HTTPRequest const& hRequest)

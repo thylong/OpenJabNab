@@ -8,8 +8,6 @@
 #include "apihandler.h"
 #include "apimanager.h"
 #include "global.h"
-#include "timezonemanager.h"
-#include "timezone.h"
 #include "bunny.h"
 #include "account.h"
 
@@ -35,7 +33,7 @@ public:
 	static int MakeServerDayDiff(QString, QTime);
 	static QDateTime decodeDstDate(QString);
 	static bool isFixedDstDate(QString);
-	
+
 	// Time
 	static QString getDay(int);
 	static QString getMonth(int);
@@ -87,7 +85,6 @@ public:
 protected:
 	// API
 	API_CALL(Api_GetListOfTimezones);
-//	API_CALL(Api_ReloadTimezones);
 	API_CALL(Api_getTime);
 	API_CALL(Api_Translation);
 
@@ -95,14 +92,6 @@ protected:
 private:
 	void loadTranslations();
 
-//	QDateTime getDstStart(Timezone);
-//	QDateTime getDstEnd(Timezone);
-//	int getCurrentOffset(Timezone);
-//	bool isDstActivated(Timezone);
-//	QDateTime getDstStart(QString);
-//	QDateTime getDstEnd(QString);
-//	int getCurrentOffset(QString);
-//	bool isDstActivated(QString);
 	static int getLastDayOfMonth(int, int);
 	static int getLast(int, int, int);
 	static int getFirst(int, int, int);
@@ -110,14 +99,12 @@ private:
 	QMap< QString, QTranslator * > translators;
 	QStringList days;
 	QStringList months;
-//	void LoadTimeZones();
 	Translator();
 };
 
 inline void Translator::Init()
 {
 	InitApiCalls();
-//	Instance().LoadTimeZones();
 	Instance().loadTranslations();
 }
 
@@ -126,13 +113,20 @@ inline void Translator::loadTranslations()
 	QStringList languages;
 	languages << "fr" << "it" << "de" << "es";
 	translators.clear();
+
 	foreach(QString lng, languages)
 	{
 		LogInfo(QString("Loading %1 language").arg(lng));
 		QTranslator *t = new QTranslator();
-		t->load("openjabnab_" + lng + ".qm", "/home/prod/OpenJabNab/server/");
-		translators.insert(lng, t);
-		LogInfo(Translator::tr("Language %1 loaded", lng).arg(lng));
+		if(t->load("openjabnab_" + lng + ".qm", GlobalSettings::GetConfigDir().append("translations/")))
+    {
+      translators.insert(lng, t);
+      LogInfo(Translator::tr("Language %1 loaded", lng).arg(lng));
+    }
+    else
+    {
+      LogInfo(Translator::tr("Couldn't load Language %1", lng).arg(lng));
+    }
 	}
 
 	days.append("");
@@ -162,7 +156,5 @@ inline void Translator::loadTranslations()
 inline void Translator::Close()
 {
 }
-
-//#include "translator_inline.h"
 
 #endif

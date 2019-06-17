@@ -22,8 +22,6 @@
 #include "ttsmanager.h"
 #include "xmpphandler.h"
 #include "translator.h"
-#include "timezonemanager.h"
-#include "timezone.h"
 #include "browsercache.h"
 
 #include <QDebug>
@@ -57,10 +55,6 @@ OpenJabNab::OpenJabNab(int argc, char ** argv)
 	SentenceManager::Init();
 	DbManager::Init();
 	insertServerInDb();
-
-  TimezoneManager::Init();
-  Timezone::Init();
-  TimezoneManager::LoadTimezones();
 
 	Translator::Init();
 	TTSManager::Init();

@@ -16,6 +16,7 @@
 #include "settings.h"
 #include "translator.h"
 #include <cstdlib>
+#include <QTimeZone>
 
 Translator::Translator()
 {
@@ -385,27 +386,7 @@ QDateTime Translator::decodeDstDate(QString str)
 	LogError("Can't decode timezone DST data : " + str);
 	return QDateTime::currentDateTime ();
 }
-/*
-QDateTime Translator::getDstStart(Timezone t)
-{
-	return decodeDstDate(t.dstStart);
-}
 
-QDateTime Translator::getDstEnd(Timezone t)
-{
-	return decodeDstDate(t.dstEnd);
-}
-
-QDateTime Translator::getDstStart(QString tz)
-{
-	return getDstStart(Instance().timezones.value(tz));
-}
-
-QDateTime Translator::getDstEnd(QString tz)
-{
-	return getDstEnd(Instance().timezones.value(tz));
-}
-*/
 int Translator::getLastDayOfMonth(int m, int y)
 {
 	int d = 31;
@@ -436,86 +417,35 @@ int Translator::getFirst(int d, int m, int y)
 	return (d - dd) + (dd > d ? 8 : 1);
 }
 
-/*
-int Translator::getCurrentOffset(Timezone t)
-{
-	if(t.dst == false)
-		return t.stdOffset;
-	if(isDstActivated(t))
-		return t.dstOffset;
-	return t.stdOffset;
-}
-*/
-/*
-bool Translator::isDstActivated(Timezone t)
-{
-	QDateTime start = getDstStart(t);
-	QDateTime end = getDstEnd(t);
-	QDateTime current = QDateTime::currentDateTime();
-	if(current.secsTo(start) < 0 && current.secsTo(end) > 0)
-		return true;
-	return false;
-}
-*/
-/*
-int Translator::getCurrentOffset(QString tz)
-{
-	return getCurrentOffset(Instance().timezones.value(tz));
-}
-*/
-/*
-bool Translator::isDstActivated(QString tz)
-{
-	QDateTime start = getDstStart(tz);
-	QDateTime end = getDstEnd(tz);
-	QDateTime current = QDateTime::currentDateTime();
-	if(current.secsTo(start) < 0 && current.secsTo(end) > 0)
-		return true;
-	return false;
-}
-*/
 QDateTime Translator::MakeServerTime(QString tz, QDateTime date)
 {
-	Timezone * t = TimezoneManager::GetTimezone(tz);
-	float offset = TimezoneManager::GetServerTimezone()->getOffsetAt(date) - t->getOffsetAt(date);
-	//delete t;
-	return date.addSecs(3600 * offset);
+	QTimeZone fromTz(tz.toLatin1()),
+            srvTz(GlobalSettings::GetString("Config/TimeZone","UTC").toLatin1());
+  date.setTimeZone(fromTz);
+ // LogInfo(QString("Convert date %1 from %2 to %3: %4").arg(date.toString("yyyy-MM-dd hh:mm:ss")).arg(tz).arg(GlobalSettings::GetString("Config/TimeZone","UTC")).arg(date.toTimeZone(srvTz).toString("yyyy-MM-dd hh:mm:ss")));
+  return date.toTimeZone(srvTz);
 }
 
 QTime Translator::MakeServerTime(QString tz, QTime time)
 {
-	Timezone * t = TimezoneManager::GetTimezone(tz);
-	float offset = TimezoneManager::GetServerTimezone()->getCurrentOffset() - t->getCurrentOffset();
-	QDateTime date(QDate(1979, 10, 25), time);
-	//delete t;
-	return date.addSecs(3600 * offset).time();
+  QDateTime date = QDateTime::currentDateTime(); date.setTime(time);
+  return MakeServerTime(tz,date).time();
 }
 
 int Translator::MakeServerDayDiff(QString tz, QTime time)
 {
-	Timezone * t = TimezoneManager::GetTimezone(tz);
-	float offset = TimezoneManager::GetServerTimezone()->getCurrentOffset() - t->getCurrentOffset();
-	QDateTime date(QDate(1979, 10, 25), time);
-	//delete t;
-	return date.addSecs(3600 * offset).toString("dd").toInt() - 25;
+  QDateTime date = QDateTime::currentDateTime(); date.setTime(time);
+  return date.daysTo(MakeServerTime(tz,date));
 }
 
-	//static QTime MakeServerTime(QString, QTime);
-	//static int MakeServerDayDiff(QString, QTime);
 QDateTime Translator::GetCurrentTime(QString tz)
 {
-	Timezone * t = TimezoneManager::GetTimezone(tz);
-	float offset = t->getCurrentOffset() - TimezoneManager::GetServerTimezone()->getCurrentOffset();
-	//delete t;
-	return QDateTime::currentDateTime ().addSecs(3600 * offset);
+	return QDateTime::currentDateTime().toTimeZone(QTimeZone(tz.toLatin1()));
 }
 
 QDateTime Translator::GetTimezoneTime(QString tz, QDateTime date)
 {
-	Timezone * t = TimezoneManager::GetTimezone(tz);
-	float offset = t->getOffsetAt(date) - TimezoneManager::GetServerTimezone()->getOffsetAt(date);
-	//delete t;
-	return date.addSecs(3600 * offset);
+	return date.toTimeZone(QTimeZone(tz.toLatin1()));
 }
 
 void Translator::InitApiCalls()
@@ -536,7 +466,7 @@ API_CALL(Translator::Api_getTime)
 	{
 		time = QDateTime::fromString(hRequest.GetArg("time"), "yyyy-MM-dd hh:mm:ss");
 	}
-	list.insert("UTC", GetTimezoneTime("UTC/", time).toString( "yyyy-MM-dd hh:mm:ss" ));
+	list.insert("UTC", GetTimezoneTime("UTC", time).toString( "yyyy-MM-dd hh:mm:ss" ));
 	list.insert("server", time.toString( "yyyy-MM-dd hh:mm:ss" ));
 	if(hRequest.HasArg("tz"))
 	{
@@ -549,17 +479,15 @@ API_CALL(Translator::Api_GetListOfTimezones)
 {
 	Q_UNUSED(hRequest);
 	Q_UNUSED(account);
+  QMap<QString, QVariant> outList;
 
-	QMap<QString, QVariant> list;
-	QHash<QString, Timezone *> timezones = TimezoneManager::GetTimezonesList();
+  const auto& tzList = QTimeZone::availableTimeZoneIds();
+  foreach(const QByteArray& tz, tzList)
+  {
+    outList.insert(QString(tz), GetCurrentTime(QString(tz)).toString( "yyyy-MM-dd hh:mm:ss" ));
+  }
 
-	QHashIterator<QString, Timezone *> i(timezones);
-	while (i.hasNext())
-	{
-		i.next();
-		list.insert(i.key(), GetTimezoneTime(i.key(), QDateTime::currentDateTime()).toString( "yyyy-MM-dd hh:mm:ss" ));
-	}
-	return new ApiManager::ApiMappedList(list);
+	return new ApiManager::ApiMappedList(outList);
 }
 
 API_CALL(Translator::Api_Translation)

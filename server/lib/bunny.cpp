@@ -1472,11 +1472,11 @@ void Bunny::InitApiCalls()
 
 	DECLARE_API_CALL("disconnect()", &Bunny::Api_Disconnect);
 
-        DECLARE_API_CALL("setInsomniac(insomniac)", &Bunny::Api_setInsomniac);
-        DECLARE_API_CALL("getInsomniac()", &Bunny::Api_getInsomniac);
+  DECLARE_API_CALL("setInsomniac(insomniac)", &Bunny::Api_setInsomniac);
+  DECLARE_API_CALL("getInsomniac()", &Bunny::Api_getInsomniac);
 
-        DECLARE_API_CALL("setPublicVAPI(public)", &Bunny::Api_setPublicVApi);
-        DECLARE_API_CALL("getPublicVAPI()", &Bunny::Api_getPublicVApi);
+  DECLARE_API_CALL("setPublicVAPI(public)", &Bunny::Api_setPublicVApi);
+  DECLARE_API_CALL("getPublicVAPI()", &Bunny::Api_getPublicVApi);
 	DECLARE_API_CALL("enableVAPI()", &Bunny::Api_enableVApi);
 	DECLARE_API_CALL("disableVAPI()", &Bunny::Api_disableVApi);
 	DECLARE_API_CALL("getVAPIStatus()", &Bunny::Api_getVApiStatus);
@@ -1813,22 +1813,19 @@ API_CALL(Bunny::Api_Disconnect)
 
 API_CALL(Bunny::Api_SetTimeZone)
 {
-        QString tzN = hRequest.GetArg("name");
-        QString tz = hRequest.GetArg("alias");
-        SetGlobalSetting("TimeZone", tzN);
-        SetGlobalSetting("TimeZoneAlias", tz);
-	OnDisconnect();
-	OnConnect();
-        return new ApiManager::ApiOk(Translator::tr("Bunny is now in %1 timezone", account).arg(tzN));
+  Q_UNUSED(account);
+  QString tzN = hRequest.GetArg("name");
+  SetGlobalSetting("TimeZone", tzN);
+  OnDisconnect();
+  OnConnect();
+  return new ApiManager::ApiOk(Translator::tr("Bunny is now in %1 timezone", account).arg(tzN));
 }
 
 API_CALL(Bunny::Api_GetTimeZone)
 {
-        Q_UNUSED(account);
-        Q_UNUSED(hRequest);
-        QString tz = GetGlobalSetting("TimeZone","UTC").toString();
-        QString tzN = GetGlobalSetting("TimeZoneAlias",tz).toString();
-        return new ApiManager::ApiString(tz + ";" + tzN);
+  Q_UNUSED(account);
+  Q_UNUSED(hRequest);
+  return new ApiManager::ApiString(GetGlobalSetting("TimeZone","UTC").toString());
 }
 
 API_CALL(Bunny::Api_setInsomniac)

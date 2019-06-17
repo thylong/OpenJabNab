@@ -104,7 +104,7 @@ QLinkedList<CronElement> Cron::ListAllBunnyCron(Bunny * b)
 	{
 		if((*i).bunny == NULL || b->GetID() != (*i).bunny->GetID())
 		{
-			
+
 			list.insert(&(*i));
 		}
 	}
@@ -168,7 +168,7 @@ void Cron::LogDebugCron(CronElement const& e)
 		{
 			time += " (" + QString::number(e.interval) + "s)";
 		}
-		
+
 		QsLogging::Logger::DebugLog(QString("Bunny %1 - Schedule %2 on %3").arg(bunny, caller, time), "Cron");
 	}
 }
@@ -351,7 +351,9 @@ unsigned int Cron::RegisterWeekly(PluginInterface * p, Qt::DayOfWeek day, QTime 
 	if(b != NULL)
 	{
 		nextTime.setTime(Translator::MakeServerTime(b->GetGlobalSetting("TimeZone","UTC").toString(), time));
-		nextTime = nextTime.addDays(( day + Translator::MakeServerDayDiff(b->GetGlobalSetting("TimeZone","UTC").toString(), time) ) % 7 - now.date().dayOfWeek());
+    int dayDiff = Translator::MakeServerDayDiff(b->GetGlobalSetting("TimeZone","UTC").toString(), time);
+    //LogInfo(QString("dayDiff: %1, addDays %2, now %3, next %4/%5").arg(dayDiff).arg(day + dayDiff - now.date().dayOfWeek()).arg(now.toString()).arg(nextTime.toString()).arg(nextTime.addDays(day + dayDiff - now.date().dayOfWeek()).toString()));
+		nextTime = nextTime.addDays(day + dayDiff - now.date().dayOfWeek());
 		if(nextTime < now)
 			nextTime = nextTime.addDays(7); // Next week
 	}

@@ -10,8 +10,6 @@ QsLogDest.h
 QsLogDestFile.h
 QsLogDestConsole.h
 sentencemanager.h
-timezonemanager.h
-timezone.h
 translator.h
 httphandler.h
 nabaztagmanager.h
@@ -59,8 +57,6 @@ QsLogDest.cpp
 QsLogDestFile.cpp
 QsLogDestConsole.cpp
 sentencemanager.cpp
-timezonemanager.cpp
-timezone.cpp
 translator.cpp
 httphandler.cpp
 nabaztagmanager.cpp
