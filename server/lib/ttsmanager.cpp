@@ -526,7 +526,7 @@ TTSAnswer TTSManager::CreateSoundWithGenre(QString text, QString voice, QString 
 			}
 		}
 	}
-	TTSInterface * tts = Instance().GetTTSByName("google");
+	TTSInterface * tts = Instance().GetTTSByName("pico");
 	a.returnedLanguage = "fr";
 	return TTSManager::createSound(tts, a, text, "fr", output, forceOverwrite);
 }
