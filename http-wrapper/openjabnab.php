@@ -17,7 +17,8 @@ else
 	// 1 = GET
 	// 2 = Normal POST
 	// 3 = Raw POST
-	if(isset($GLOBALS['HTTP_RAW_POST_DATA']))
+  $raw=file_get_contents('php://input');
+	if(strlen($raw))
 		$type = 3;
 	else if (count($_POST))
 		$type = 2;
@@ -52,25 +53,29 @@ else
 		case 3: // Raw Post
 			if(isset($_SERVER["CONTENT_LENGTH"]))
 				$headers .= "Content-Length: " . $_SERVER["CONTENT_LENGTH"] . "\r\n";
-			$requestdata = $headers . "\x00" . $url . "\x00" . $GLOBALS['HTTP_RAW_POST_DATA'];
+			$requestdata = $headers . "\x00" . $url . "\x00" . $raw;
 			break;
 	}
-	//var_dump($requestdata);
+  if(LOG_OJNAPI)
+  {
+    //fwrite($file,"|Type: $type|Data:".$requestdata);
+  }
+   // var_dump($requestdata);
 	$requestlen = 5 + strlen($requestdata);
 	$request = pack("LCa*", $requestlen, $type, $requestdata);
 	fwrite($socket, $request);
-	while (!feof($socket)) 
+	while (!feof($socket))
 	{
 		//echo fgets($socket, 128);
 		$rep .= fgets($socket, 128);
-		
+
 	}
 	fclose($socket);
 }
 echo $rep;
 if(LOG_OJNAPI)
 {
-	fwrite($file, $rep."\n");
+	fwrite($file, "|Rep: ".	$rep."\n");
 	fclose($file);
 }
 ?>
