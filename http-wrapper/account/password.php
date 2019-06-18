@@ -1,5 +1,5 @@
 <?php
-require_once "include/common.php";
+require_once "../include/common.php";
 
 
 if(count($_POST))
@@ -89,10 +89,10 @@ if(count($_POST))
 			}
 		}
 	}
-	header('Location: password.php');
+	header('Location: /account/password.php');
 	exit();
 }
-require('include/message.php');
+require('../include/message.php');
 ?>
 <div class="row">
     <div class="span12">
@@ -127,5 +127,5 @@ require('include/message.php');
         </div>
         </div>
 <?php
-require_once "include/append.php";
+require_once "../include/append.php";
 ?>
