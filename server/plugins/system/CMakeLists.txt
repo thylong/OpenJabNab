@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.7)
 
+add_subdirectory(annuaire/)
 add_subdirectory(auth/)
 add_subdirectory(debug/)
 add_subdirectory(listen/)
@@ -10,4 +11,4 @@ add_subdirectory(reset/)
 add_subdirectory(rfid/)
 add_subdirectory(stats/)
 add_subdirectory(status/)
-
+add_subdirectory(voicecommand/)

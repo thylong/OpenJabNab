@@ -5,8 +5,14 @@ if (!$link) {
     die('Connexion impossible : ' . mysqli_error());
 }
 
-$sql = 'SELECT bunny.mac, account.username, account.status FROM bunny LEFT JOIN account ON bunny.account_id=account.id WHERE account.status != "User" AND account.status != "Demo";';
-$res = mysqli_query($link, $sql);
+$sql = 'SELECT bunny.mac, account.username, account.status 
+        FROM bunny 
+        LEFT JOIN account 
+          ON bunny.account_id=account.id 
+        WHERE account.username != ""
+          AND account.status != "User" 
+          AND account.status != "Demo";';
+$res = mysqli_query($link, $sql) or die('SQL Error'.mysqli_error($link));
 while($row = mysqli_fetch_assoc($res))
 {
 	$bunnies[$row['mac']] = array_merge($row, array('voice' => 'needed'));
@@ -18,9 +24,9 @@ foreach($bunniesList as $mac)
 {
 	if(isset($bunnies[$mac]))
 		$bunnies[$mac]['voice'] = 'ok';
-	if(!isset($bunnies[$mac]))
-	{
-		$data = array('voice' => 'remove', 'mac' => $mac);
+  else
+  {
+		$data = array('voice' => 'remove', 'mac' => $mac, 'username'=>'NO_USER','status'=>'');
 		$bunnies[$mac] = $data;
 	}
 }
