@@ -126,33 +126,17 @@ void PluginNeedtoknow::getNTKPage(Bunny * b, QString language)
 
 void PluginNeedtoknow::getNTKPage(Bunny * b, QString language, bool save)
 {
-	QUrl url("http://www.savoir-inutile.com/");
+	QUrl url("https://www.savoir-inutile.com/");
 	QsLogging::Logger::DebugLog(QString("GET %1").arg(url.toString()), GetName());
 	BrowserClient *manager = new BrowserClient(this);
-	manager->setProperty("BunnyID", b->GetID());
-	manager->setProperty("language", language);
-	manager->setProperty("save", save);
-	connect(manager, SIGNAL(finished(QNetworkReply*)),this, SLOT(analyseHtml(QNetworkReply*)));
+  PluginNTK_WORKER *p = new PluginNTK_WORKER(this, b, language, save);
+  QObject::connect(p, &PluginNTK_WORKER::done, this, &PluginNeedtoknow::analyseDone);
+  QObject::connect(manager, &BrowserClient::finished, p, &PluginNTK_WORKER::requestFinished);
+  p->start();
+
 	manager->get(QNetworkRequest(url));
 }
 
-void PluginNeedtoknow::analyseHtml(QNetworkReply* networkReply)
-{
-	if (!networkReply->error()) {
-		Bunny * bunny = BunnyManager::GetBunny(this, networkReply->parent()->property("BunnyID").toByteArray());
-		QString language = networkReply->parent()->property("language").toString();
-		bool save = networkReply->parent()->property("save").toBool();
-		if(bunny) {
-			QsLogging::Logger::DebugLog(QString("%1 for %2, %3").arg(QString("Worker"), QString(bunny->GetID()), language), GetName());
-			PluginNTK_WORKER * p = new PluginNTK_WORKER(this, bunny, language, networkReply->readAll(), save);
-			connect(p, SIGNAL(done(bool,Bunny*,QStringList,bool)), this, SLOT(analyseDone(bool,Bunny*,QStringList,bool)));
-			connect(p, SIGNAL(finished()), p, SLOT(deleteLater()));
-			p->start();
-		}
-	}
-	networkReply->deleteLater();
-	networkReply->parent()->deleteLater();
-}
 
 void PluginNeedtoknow::analyseDone(bool ret, Bunny * b, QStringList files, bool save)
 {
@@ -393,36 +377,48 @@ PLUGIN_API_CALL(PluginNeedtoknow::Api_Language)
 }
 
 /* WORKER THREAD */
-PluginNTK_WORKER::PluginNTK_WORKER(PluginNeedtoknow * p, Bunny * bu, QString lng, QString b, bool s):plugin(p),bunny(bu),language(lng),buffer(b),save(s)
+PluginNTK_WORKER::PluginNTK_WORKER(PluginNeedtoknow * p, Bunny * bu, QString lng, bool s)
+  : plugin(p)
+  , bunny(bu)
+  , language(lng)
+  , save(s)
 {
 }
 
-void PluginNTK_WORKER::run()
+void PluginNTK_WORKER::requestFinished(QNetworkReply* rep)
 {
-	QStringList files;
+  //QsLogging::Logger::DebugLog(QString("%1 for %2, %3").arg(QString("NTKWorker"), QString(bunny->GetID()), language), plugin->GetName());
+  if (!rep->error())
+  {
+    QStringList files;
 
-	if(language != "")
-	{
-		QRegExp rx("<h2[^>]*>([^<]+)</h2>");
-		rx.setMinimal(true);
-		int pos = 0;
-		if((pos = rx.indexIn(buffer, pos)) != -1 )
-		{
-			QRegExp rx2("\\([^\\)]+\\)");
-			QString text = QString::fromUtf8(rx.cap(1).trimmed().toLatin1()).replace(rx2, "").replace("  ", " ");
+    if(language != "")
+    {
+      QString buf = rep->readAll();
+      QRegExp rx("<h2 id=\"phrase\"[^>]*>([^<]+)</h2>");
+      rx.setMinimal(true);
+      int pos = 0;
+      if((pos = rx.indexIn(buf, pos)) != -1 )
+      {
+//        QRegExp rx2("\\([^\\)]+\\)");
+        QString text = rx.cap(1).trimmed();//.replace(rx2, "").replace("  ", " ");
 
-			TTSAnswer q = TTSManager::CreateSound(text, bunny->GetVoice(), bunny->GetLanguage());
-			plugin->TTSLog(bunny->GetID(), plugin->GetName(), q);
-			files.append(q.file);
-			emit done(true, bunny, files, save);
-		}
-		else
-		{
-			emit done(false, bunny, QStringList(), save);
-		}
+        TTSAnswer q = TTSManager::CreateSound(text, bunny->GetVoice(), bunny->GetLanguage());
+        plugin->TTSLog(bunny->GetID(), plugin->GetName(), q);
+        files.append(q.file);
+        emit done(true, bunny, files, save);
+      }
+      else
+      {
+        emit done(false, bunny, QStringList(), save);
+      }
+    }
+    else
+    {
+      emit done(false, bunny, QStringList(), save);
+    }
 	}
-	else
-	{
-		emit done(false, bunny, QStringList(), save);
-	}
+	rep->deleteLater();
+	rep->parent()->deleteLater();
+  this->quit();
 }

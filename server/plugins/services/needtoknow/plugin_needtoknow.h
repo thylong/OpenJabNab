@@ -9,6 +9,8 @@
 #include "plugininterface.h"
 #include "pluginmessageinterface.h"
 
+class QNetworkReply;
+
 class PluginNeedtoknow : public PluginInterface, PluginMessageInterface
 {
 	Q_OBJECT
@@ -17,7 +19,6 @@ class PluginNeedtoknow : public PluginInterface, PluginMessageInterface
 
 private slots:
 	QString OnApiGet(Bunny *, QVariant);
-	void analyseHtml(QNetworkReply*);
 	void analyseDone(bool, Bunny*, QStringList, bool);
 
 public:
@@ -61,23 +62,23 @@ private:
 	void getNTKPage(Bunny *);
 };
 
-class PluginNTK_WORKER : public QThread
+class PluginNTK_WORKER: public QThread
 {
 	Q_OBJECT
 
 signals:
 	void done(bool, Bunny*, QStringList, bool);
+public slots:
+  void requestFinished(QNetworkReply* rep);
 
 public:
-	PluginNTK_WORKER(PluginNeedtoknow * ,Bunny * ,QString ,QString , bool);
-	virtual ~PluginNTK_WORKER() {}
-	void run();
+	PluginNTK_WORKER(PluginNeedtoknow * ,Bunny * ,QString , bool);
+	virtual ~PluginNTK_WORKER() = default;
 
 private:
 	PluginNeedtoknow * plugin;
 	Bunny * bunny;
 	QString language;
-	QString buffer;
 	bool save;
 };
 #endif
