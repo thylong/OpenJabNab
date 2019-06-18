@@ -19,8 +19,11 @@
 //#include "voicelog.h"
 #include "QsLog.h"
 
-PluginVoiceCommand::PluginVoiceCommand():PluginInterface("voicecommand", "Voice recognition", SystemPlugin | SystemAfterPlugin)
+PluginVoiceCommand::PluginVoiceCommand()
+  : PluginInterface("voicecommand", "Voice recognition", SystemPlugin | SystemAfterPlugin)
+  , http(this)
 {
+  QObject::connect(&http, &QNetworkAccessManager::finished, this, &PluginVoiceCommand::recognitionFinished);
 }
 
 bool PluginVoiceCommand::OnRecord(Bunny * b, QString const& filename)
@@ -76,6 +79,8 @@ bool PluginVoiceCommand::OnRecord(Bunny * b, QString const& filename)
 							QByteArray flac = file.readAll();
 							QString lng = makeLanguage(b->GetLanguage());
 							file.close();
+              if(flac.size() == 0)
+                return false;
 
 							QString key = "AIzaSyAWY47hzyclccmabVobulOyH48U4Xo4LnE";
 							QStringList keys = b->GetPluginSetting(GetName(), "GoogleKeys", QStringList()).toStringList();
@@ -112,18 +117,15 @@ bool PluginVoiceCommand::OnRecord(Bunny * b, QString const& filename)
 
 							QUrl url = "http://www.google.com/speech-api/v2/recognize?lang=" + lng + "&key=" + key + "&output=json";
 							QsLogging::Logger::DebugLog(QString("POST %1").arg(url.toString()), GetName());
-              QNetworkAccessManager http(this);
-							http.setProperty("BunnyID", b->GetID());
 
               QNetworkRequest req(url);
+							req.setAttribute(QNetworkRequest::User, b->GetID());
 							req.setRawHeader("Host", "www.google.com");
 							req.setRawHeader("Content-Type", "audio/x-flac; rate=16000");
 							req.setRawHeader("Keep-Alive", "300");
 							req.setRawHeader("Connection", "keep-alive");
 							//req.setRawHeader("User-Agent", "speech2text");
-
-							auto* rep = http.post(req, flac);
-              QObject::connect(&http, &QNetworkAccessManager::finished, this, &PluginVoiceCommand::recognitionFinished);
+							http.post(req, flac);
 							return true;
 						}
 						else
@@ -228,11 +230,12 @@ QString PluginVoiceCommand::cleanString(QString str)
 
 void PluginVoiceCommand::recognitionFinished(QNetworkReply* rep)
 {
+  LogDebug("recognitionFinished");
   QString result = rep->readAll();
   LogDebug(result);
 
   QString content = cleanString(QString::fromUtf8(result.toLatin1()));
-  Bunny * b = BunnyManager::GetBunny(this, rep->property("BunnyID").toByteArray());
+  Bunny * b = BunnyManager::GetBunny(this, rep->request().attribute(QNetworkRequest::User,QByteArray()).toByteArray());
   delete rep;
   if(!b)
     return;

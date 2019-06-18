@@ -4,6 +4,7 @@
 #include "plugininterface.h"
 
 class QNetworkReply;
+#include <QNetworkAccessManager>
 
 class PluginVoiceCommand : public PluginInterface
 {
@@ -43,6 +44,7 @@ public:
 	PLUGIN_API_CALL(Api_Sentences);
 protected:
 private:
+  QNetworkAccessManager http;
 	QString cleanString(QString);
 	QString makeLanguage(QString);
 	bool saveWords(Bunny *, QString);

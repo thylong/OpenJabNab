@@ -17,30 +17,23 @@ PluginAnnuaire::~PluginAnnuaire() {}
 
 void PluginAnnuaire::OnBunnyConnect(Bunny * b)
 {
-	QString server = GetSettings("global/URL", "").toString();
-	if(server != "") 
-  {
-    QEventLoop loop;
-		QString api = b->GetGlobalSetting("VApiEnable", false).toBool() ? "1" : "0";
-		QString pub = b->GetGlobalSetting("VApiPublic", false).toBool() ? "1" : "0";
-    auto url = "http://" + server + "/nabconnection.php?m=" + b->GetID() + "&n="+ b->GetBunnyName() + "&s=" + GlobalSettings::GetString("OpenJabNabServers/PingServer") + "&ip=" + b->GetGlobalSetting("LastIP", QString("")).toString() + "&api=" + api + "&public=" + pub;
-    
-    BrowserClient http(this);
-    http.setAge(0);
-    QNetworkRequest req(QUrl(url));
-		//QsLogging::Logger::DebugLog(QString("GET %1").arg(url);
-    auto* rep = http.get(QNetworkRequest(QUrl(url)));
-	  QObject::connect(rep, &QNetworkReply::finished, &loop, &QEventLoop::quit);
-    loop.exec();
-    if(rep)
-      delete rep;
-	}
+  QEventLoop loop;
+	QString api = b->GetGlobalSetting("VApiEnable", false).toBool() ? "1" : "0";
+	QString pub = b->GetGlobalSetting("VApiPublic", false).toBool() ? "1" : "0";
+  auto url = GetSettings("global/URL", "").toString() + "/nabconnection.php?m=" + b->GetID() + "&n="+ b->GetBunnyName() + "&s=" + GlobalSettings::GetString("OpenJabNabServers/PingServer") + "&ip=" + b->GetGlobalSetting("LastIP", QString("")).toString() + "&api=" + api + "&public=" + pub;
+
+  QNetworkAccessManager http;
+  auto* rep = http.get(QNetworkRequest(QUrl(url)));
+	QObject::connect(rep, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+  loop.exec();
+  if(rep)
+    delete rep;
 }
 
 QList<BunnyInfos> PluginAnnuaire::SearchBunnyByName(QString name)
 {
 	QEventLoop loop;
-  auto url = "http://" + GetSettings("global/URL", "").toString() + "/whois.php?n=" + QUrl::toPercentEncoding(name);
+  auto url = GetSettings("global/URL", "").toString() + "/whois.php?n=" + QUrl::toPercentEncoding(name);
   QNetworkAccessManager http;
   auto* rep = http.get(QNetworkRequest(QUrl(url)));
 	QObject::connect(rep, &QNetworkReply::finished, &loop, &QEventLoop::quit);
@@ -89,12 +82,12 @@ QList<BunnyInfos> PluginAnnuaire::SearchBunnyByMac(QByteArray ID)
 	QEventLoop loop;
 
 	BrowserClient http(this);
-  auto url = "http://"+GetSettings("global/URL", "").toString() + "/whois.php?nm" + QUrl::toPercentEncoding(QString(ID));
+  auto url = GetSettings("global/URL", "").toString() + "/whois.php?nm" + QUrl::toPercentEncoding(QString(ID));
   http.setAge(0);
   auto* rep = http.get(QNetworkRequest(QUrl(url)));
 	QObject::connect(rep, &QNetworkReply::finished, &loop, &QEventLoop::quit);
 	loop.exec();
-  
+
 	QXmlStreamReader xml;
 	xml.clear();
 	xml.addData(rep->readAll());
