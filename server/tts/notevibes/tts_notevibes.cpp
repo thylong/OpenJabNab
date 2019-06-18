@@ -124,12 +124,16 @@ TTSNotevibes::TTSNotevibes():TTSInterface("notevibes", "Notevibes")
 	voiceList.insert("de-DE-Wavenet-D", fr);
 
 		// it-IT
+  fr.language = "it";
+
 	fr.name = "it-IT-Wavenet-A";
 	fr.label = "Sofia";
 	fr.genre = Voice::Woman;
 	voiceList.insert("it-IT-Wavenet-A", fr);
 
 		// ru-RU
+  fr.language = "ru";
+
 	fr.name = "ru-RU-Wavenet-A";
 	fr.label = "Yana";
 	fr.genre = Voice::Woman;
