@@ -71,7 +71,9 @@ if(isset($_POST['login']) && isset($_POST['password'])) {
 	apcu_delete(APC_PREFIX.'ojn_user_'.$_POST['login']);
 	if(preg_match("|[0-9a-f]{32}|", $r)) {
 		$_SESSION['login'] = $_POST['login'];
-		$real_client_ip = '-';
+    $real_client_ip = '-';
+    if(isset($_SERVER['REMOTE_ADDR']) && $_SERVER['REMOTE_ADDR'] != '127.0.0.1')
+      $real_client_ip = $_SERVER['REMOTE_ADDR'];
 		if(isset($_SERVER["HTTP_X_FORWARDED_FOR"])) {
 			$real_client_ip = $_SERVER["HTTP_X_FORWARDED_FOR"];
 		} else {
