@@ -183,29 +183,18 @@ $link = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
 if (!$link) {
     die('Connexion impossible : ' . mysqli_error());
 }
-$Silent = 2;
-$Conf = array();
-$Run = array();
+$silent =2;
+$asks = array('config','shortconfig','running','silent');
+$StDbg = array();
 if(isset($_SESSION['bunny']))
 {
-	$sql = "SELECT * FROM silent WHERE mac='".$_SESSION['bunny']."'";
-	$res = mysqli_query($link, $sql);
-	if($row = mysqli_fetch_assoc($res))
-	{
-		$Silent = $row['active'];
-	}
-	$sql = "SELECT * FROM status_config WHERE mac='".$_SESSION['bunny']."'";
-	$res = mysqli_query($link, $sql);
-	if($row = mysqli_fetch_assoc($res))
-	{
-		$Conf = $row;
-	}
-	$sql = "SELECT * FROM status_running WHERE mac='".$_SESSION['bunny']."'";
-	$res = mysqli_query($link, $sql);
-	if($row = mysqli_fetch_assoc($res))
-	{
-		$Run = $row;
-	}
+  foreach($asks as $ask)
+  {
+    $sql = 'SELECT * FROM status_'.$ask.' WHERE mac=\''.$_SESSION['bunny'].'\'';
+  	$res = mysqli_query($link, $sql);
+  	if($row = mysqli_fetch_assoc($res))
+	    $StDbg[$ask] = $row;
+  }
 }
 if(isset($_GET['aSilent'])) {
 	$_SESSION['tab'] = 'bunny_base';
@@ -276,16 +265,14 @@ if(isset($_GET['removeB'])) {
 }
 
 // Debug
-
-if(isset($_GET['askrun'])) {
-	$_SESSION['tab'] = 'bunny_debug';
-	Message::AddFromApi($ojnAPI->getApiString(BUNNY_API."/status/status?action=running&".$ojnAPI->getToken()));
-	$reload = true;
-}
-if(isset($_GET['askconf'])) {
-	$_SESSION['tab'] = 'bunny_debug';
-	Message::AddFromApi($ojnAPI->getApiString(BUNNY_API."/status/status?action=config&".$ojnAPI->getToken()));
-	$reload = true;
+foreach($asks as $ask)
+{
+  if(isset($_GET['ask'.$ask])) 
+  {
+	  $_SESSION['tab'] = 'bunny_debug';
+  	Message::AddFromApi($ojnAPI->getApiString(BUNNY_API.'/status/status?action='.$ask.'&'.$ojnAPI->getToken()));
+  	$reload = true;
+  }
 }
 if(isset($_GET['resetpwd'])) {
 	$_SESSION['tab'] = 'bunny_debug';
@@ -1084,34 +1071,36 @@ if(strlen($str)) {
           </div>
 </form>
 <form class="form-horizontal" method="get">
-<?php if(count($Conf)): ?>
-          <div class="control-group">
-<table class="table table-bordered table-striped span10">
-<?php foreach($Conf as $key => $value): ?>
+<?php 
+$StTitles = array(
+  'config' => 'Configuration',
+  'shortconfig' => 'ShortConfiguration',
+  'running' => 'Running',
+  'silent' => 'Silent'
+);
+foreach($asks as $ask): ?>
+<?php if(isset($StDbg[$ask])): ?>
+  <div class="control-group">
+    <table class="table table-bordered table-striped span10">
+      <tr>
+        <th colspan="2"><?php echo __tr($StTitles[$ask]); ?></th>
+      </tr>
+      <?php foreach($StDbg[$ask] as $key => $value): ?>
 			<tr>
 				<th class="span3"><?php echo $key ?></th>
 				<td><?php echo $value ?></td>
 			</tr>
-<?php endforeach; ?>
+      <?php endforeach; ?>
 		</table>
-          </div>
+  </div>
 <?php endif; ?>
-<?php if(count($Run)): ?>
-          <div class="control-group">
-<table class="table table-bordered table-striped span10">
-<?php foreach($Run as $key => $value): ?>
-			<tr>
-				<th class="span3"><?php echo $key ?></th>
-				<td><?php echo $value ?></td>
-			</tr>
 <?php endforeach; ?>
-		</table>
-          </div>
-<?php endif; ?>
-          <div class="form-actions">
-		<input class="btn btn-primary" name="askconf" type="submit" value="<?php echo __tr('Ask configuration') ?>">
-		<input class="btn btn-primary" name="askrun" type="submit" value="<?php echo __tr('Ask current') ?>">
-          </div>
+  <div class="form-actions">
+		<input class="btn btn-primary" name="askconfig" type="submit" value="<?php echo __tr('Ask for config') ?>">
+		<input class="btn btn-primary" name="askshortconfig" type="submit" value="<?php echo __tr('Ask for shortconfig') ?>">
+		<input class="btn btn-primary" name="askrunning" type="submit" value="<?php echo __tr('Ask for running') ?>">
+		<input class="btn btn-primary" name="asksilent" type="submit" value="<?php echo __tr('Ask for silent') ?>">
+  </div>
 </form>
 								</div>
 								<div class="tab-pane<?php echo $_SESSION['tab'] == 'bunny_admin' ? ' active' : '' ?>" id="admin">
