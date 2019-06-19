@@ -8,6 +8,7 @@
 #include "log.h"
 #include "settings.h"
 #include "translator.h"
+#include "dbmanager.h"
 
 PluginLocate::PluginLocate():PluginInterface("locate", "Manage Locate requests", RequiredPlugin)
 {
@@ -36,6 +37,13 @@ void PluginLocate::OnBunnyConnect(Bunny * b)
 	waitingBunnies.removeAll(QString(b->GetID()));
 	failingBunnies.removeAll(QString(b->GetID()));
 	//bunny->SetGlobalSetting("ConnectTime", QDateTime::currentDateTime());
+  QSqlDatabase db = DbManager::getOpenDb();
+  QSqlQuery *query = new QSqlQuery(db);
+  query->prepare("UPDATE bunny SET lastlocate=NOW() WHERE mac=:mac");
+  query->bindValue(":mac",b->GetID());
+  query->exec();
+  delete query;
+  DbManager::releaseDb();
 }
 
 bool PluginLocate::HttpRequestHandle(HTTPRequest & request)
