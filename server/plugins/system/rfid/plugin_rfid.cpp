@@ -10,8 +10,8 @@
 #include "ztampmanager.h"
 #include "log.h"
 #include "settings.h"
-#include "translator.cpp"
-
+#include "translator.cpp" // meh ?
+#include "dbmanager.h"
 
 PluginRFID::PluginRFID():PluginInterface("rfid", "Manage RFID requests", SystemPlugin) {}
 
@@ -29,6 +29,15 @@ bool PluginRFID::HttpRequestHandle(HTTPRequest & request)
 				SetSettings("global/LastTag", tagId);
 
 				Ztamp * z = ZtampManager::GetZtamp(this, tagId.toLatin1());
+        // Update lastshow for Ztamp
+        QSqlDatabase db = DbManager::getOpenDb();
+        QSqlQuery *query = new QSqlQuery(db);
+        query->prepare("UPDATE ztamp set lasthow=NOW() WHERE serial=:serial");
+        query->bindValue(":serial", tagId);
+        query->exec();
+        delete query;
+        DbManager::releaseDb();
+
 				Bunny * b = BunnyManager::GetBunny(this, serialnumber.toLatin1());
 				b->SetPluginSetting(GetName(), "LastTag", tagId);
 				/* Get Owner of the bunny */
