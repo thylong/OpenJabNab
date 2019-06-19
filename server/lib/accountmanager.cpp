@@ -377,6 +377,13 @@ API_CALL(AccountManager::Api_Auth)
 		return new ApiManager::ApiError(Translator::tr("Access denied"));
 
 	LogInfo(QString("User login : %1").arg(login));
+  QSqlDatabase db = DbManager::getOpenDb();
+	QSqlQuery *query = new QSqlQuery(db);
+	query->prepare("UPDATE account SET lastlogin=NOW() WHERE username=:username;");
+	query->bindValue(":username", ac->GetLogin());
+	query->exec();
+	delete query;
+	DbManager::releaseDb();
 
 	if(!hRequest.HasArg("notcount"))
 		ac->AddLoginCount();
