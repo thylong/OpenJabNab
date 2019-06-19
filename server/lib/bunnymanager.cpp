@@ -294,6 +294,41 @@ API_CALL(BunnyManager::Api_SettingsForBunnies)
 		}
 		return new ApiManager::ApiMappedList(list);
 	}
+  else if(action == "set")
+  {
+		if(!hRequest.HasArg("key"))
+			return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("key"));
+		if(!hRequest.HasArg("value"))
+			return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("value"));
+
+
+		QString key = hRequest.GetArg("key");
+		QString value = hRequest.GetArg("value");
+    QString replace = hRequest.GetArg("replace");
+
+		if(hRequest.HasArg("group") && hRequest.GetArg("group") != "")
+			key = hRequest.GetArg("group") + "/" + key;
+
+		foreach(Bunny * b, listOfBunnies)
+		{
+			if(hRequest.HasArg("plugin"))
+			{
+				QString plugin = hRequest.GetArg("plugin");
+        if(hRequest.HasArg("replace") && b->GetPluginSetting(plugin, key, QString("nc")) != replace)
+          continue;
+				b->SetPluginSetting(plugin, key, value);
+			}
+			else
+			{
+        if(hRequest.HasArg("replace") && b->GetGlobalSetting(key, QString("nc")) != replace)
+          continue;
+				b->SetGlobalSetting(key, value);
+			}
+
+		}
+		return new ApiManager::ApiOk(Translator::tr("Great success", account));
+    
+  }
 	else
 	{
 		return new ApiManager::ApiError(Translator::tr("Bad argument '%1'", account).arg("action"));
