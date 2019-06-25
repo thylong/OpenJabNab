@@ -16,7 +16,6 @@ signals:
 	void deleteHttp();
 
 private slots:
-	void conversionFinished(bool);
 	void recognitionFinished(QNetworkReply* rep);
 
 public:
