@@ -266,10 +266,12 @@ PLUGIN_API_CALL(PluginWeather::Api_GetAllCitiesList) {
     while(bunny.hasNext())
     {
       bunny.next();
-      foreach(QString city, bunny.value()->GetPluginSetting(GetName(), "Cities", QStringList()).toStringList())
-    	{
-        list.insert(city, GetSettings("Cities/" + city, QString()));
-      }
+      auto* b = bunny.value();
+      if(b->HasPlugin(this) && b->IsConnected())
+        foreach(QString city, b->GetPluginSetting(GetName(), "Cities", QStringList()).toStringList())
+        {
+          list.insert(city, GetSettings("Cities/" + city, QString()));
+        }
     }
 
 
