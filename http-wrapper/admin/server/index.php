@@ -278,7 +278,7 @@ function updateBTable(p)
 		<td width="20%" <?php echo in_array($l,$Admins) ? 'style="font-weight:bold;"' :''; ?>><?php echo $l; ?></td>
 		<td><?php echo $name; ?></td>
 		<td width="20%"><?php echo in_array($l,$Online) ? "C":"D&eacute;c"; ?>onnect&eacute;</td>
-		<td><a href="server.php?removeA=<?php echo urlencode($l); ?>"><?php echo __tr('Remove') ?></a> &nbsp;<a href="server.php?reloadA=<?php echo urlencode($l); ?>"><?php echo __tr('Reload') ?></a>&nbsp;<a href="/admin/account_expert.php?acc=<?php echo urlencode($l); ?>"><?php echo __tr('Expert') ?></a></td>
+		<td><a href="?removeA=<?php echo urlencode($l); ?>"><?php echo __tr('Remove') ?></a> &nbsp;<a href="?reloadA=<?php echo urlencode($l); ?>"><?php echo __tr('Reload') ?></a>&nbsp;<a href="account_expert.php?acc=<?php echo urlencode($l); ?>"><?php echo __tr('Expert') ?></a></td>
 	</tr>
 <?php } ?>
 </table>
