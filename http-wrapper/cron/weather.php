@@ -1,6 +1,6 @@
 <?php
 require_once 'common.php';
-if(1):
+if(0):
   $cities = array('Grenoble, FR','Paris, FR');
 else:
   $cities = array();
@@ -9,8 +9,14 @@ else:
   foreach($list as $l)
   {
     if(!empty($l->key) && !empty($l->value))
-      $cities[] = array('woeid'=>(int)$l->key,'location'=>(string)$l->value);
+    {
+      $woeid = (int)$l->key;
+      if(!isset($cities[$woeid]))
+        $cities[$woeid] = array('woeid'=>$woeid,'location'=>(string)$l->value);
+    }
   }
+  var_dump(count($cities));
+  //die();
 endif;
 $weather = array();
 
@@ -97,7 +103,7 @@ foreach($cities as $c)
     //var_dump($json);
     if(!isset($json->location) || !isset($json->current_observation))
     {
-        echo 'Skipping city: '.(is_array($c) ? $c['woeid'].'/'.$c['location'] : $c).'. API Anwser was'.$json;
+        echo 'Skipping city: '.(is_array($c) ? $c['woeid'].'/'.$c['location'] : $c).'. API Anwser was'.$json."\n";
         continue;
     }
 
