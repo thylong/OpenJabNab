@@ -5,7 +5,7 @@
 #include <QTextStream>
 #include <QThread>
 #include "plugininterface.h"
-
+enum LibraryMode { NoLibrary, MixedLibrary = 0b1, OwnLibrary = 0b10, SharedLibrary = 0b100, PrivateLibrary = 0b1000 };
 class PluginNabcast : public PluginInterface
 {
 	Q_OBJECT
