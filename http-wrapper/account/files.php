@@ -101,7 +101,7 @@ if(isset($_GET['c'])) {
 	$_SESSION['tab'] = 'files_file';
 	if(file_exists($user_dir.$_GET['c'])) {
 		//exec("mv ".$user_dir.$_GET['c']." ".$user_dir.$_GET['c'].".tmp && ffmpeg -ar 44100 -ac 1 -y -i ".$user_dir.$_GET['c'].".tmp -ab 96k ".$user_dir.$_GET['c']." && rm ".$user_dir.$_GET['c'].".tmp", $a, $ret);
-		exec("sox ".$user_dir.$_GET['c']." ".$user_dir.$_GET['c'].".wav remix 1,2 && ffmpeg -ar 44100 -ac 1 -y -i ".$user_dir.$_GET['c'].".wav -ab 64k ".$user_dir.$_GET['c']." && rm ".$user_dir.$_GET['c'].".wav", $a, $ret);
+		exec("sox ".$user_dir.$_GET['c']." ".$user_dir.$_GET['c'].".wav remix 1,2 && ffmpeg -ac 1 -y -i ".$user_dir.$_GET['c'].".wav -ab 64k -ar 44100 ".$user_dir.$_GET['c']." && rm ".$user_dir.$_GET['c'].".wav", $a, $ret);
 		if($ret == 0) {
 			Message::AddSuccess(__tr("File successfuly converted"));
 		} else {
