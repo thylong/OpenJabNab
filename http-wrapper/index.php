@@ -12,7 +12,7 @@ if(!$uptime && !Message::IsSet())
 	exit();	
 }
 
-if(isset($_GET['logid']) && $_SESSION['login'] == 'Pixel') {
+if(isset($_GET['logid']) && isset($Infos['isAdmin'])) {
 	$link = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
 	if (!$link) {
 	    die('Connexion impossible : ' . mysqli_error());
@@ -45,7 +45,7 @@ if(isset($_GET['logid']) && $_SESSION['login'] == 'Pixel') {
 	} else {
 		Message::AddError(__tr('Can\'t find user with id : %1', $_GET['logid']));
 	}
-	header("Location: index.php");
+	header("Location: /index.php");
 	exit;
 }
 if(isset($_GET['logout'])) {
@@ -64,7 +64,7 @@ if(isset($_POST['login']) && isset($_POST['password'])) {
 	if($r === NULL)
 	{
 		Message::AddError(__tr('OpenJabNab seems down... Please try again later.'));;
-		header('Location: index.php');
+		header('Location: /index.php');
 		exit();
 	}
 // 0977d6dd0648fec2acbf1cec4f432d4a
@@ -109,7 +109,7 @@ if(isset($_POST['login']) && isset($_POST['password'])) {
 			Message::AddError(__tr('Password can\'t be empty'));;
 		}
 	}
-	header("Location: index.php");
+	header("Location: /index.php");
 	exit;
 }
 
