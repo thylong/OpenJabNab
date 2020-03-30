@@ -49,7 +49,7 @@ XmppHandler::XmppHandler(QTcpSocket * s)
 
 QString XmppHandler::GetBunnyIp()
 {
-	return incomingXmppSocket->peerAddress().toString();
+	return bunny_real_ip != "" ? bunny_real_ip : incomingXmppSocket->peerAddress().toString();
 }
 
 void XmppHandler::Bind()
@@ -111,6 +111,16 @@ void XmppHandler::HandleBunnyXmppMessage()
 	if (!bunny || !bunny->IsAuthenticated())
 	{
 		tempInXmppTraffic += data.size();
+
+		if(data.startsWith("PROXY"))
+		{
+			// PROXY TCP4 82.64.31.115 51.77.223.100 1531 5223
+			auto split = data.split(' ');
+			if(split.size() != 6)
+				return;
+			bunny_real_ip = split[2];
+			return;
+		}
 
 		QByteArray ret;
 		// Authentication error, disconnect

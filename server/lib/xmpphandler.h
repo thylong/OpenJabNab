@@ -23,6 +23,7 @@ public:
 	QByteArray const& GetXmppDomain() { return OjnXmppDomain; }
 	unsigned int currentAuthStep;
 	QString GetBunnyIp();
+	QString bunny_real_ip;
 
 public slots:
 	void Disconnect();
