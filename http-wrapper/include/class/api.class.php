@@ -370,7 +370,7 @@ class ojnApi {
 			foreach($mapped as $item) {
 				$item = (array)$item;
 				if(is_string($item['key'])) {
-					$temp[$item['key']] = count($item['value']) == 0 ? "" : $item['value'];
+					$temp[$item['key']] = is_array($item['value']) && count($item['value']) == 0 ? "" : $item['value'];
 				}
 			}
 		} else
