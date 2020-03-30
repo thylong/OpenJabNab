@@ -182,7 +182,7 @@ QString TTSresponsivevoice::CreateNewSound(QString text, QString voice, bool for
 
     // Fetch MP3
     QNetworkAccessManager http;
-    QNetworkRequest req(QUrl("http://code.responsivevoice.org/getvoice.php?tl="+voice2+"&gender="+gender+"&t="+QUrl::toPercentEncoding(text)));
+    QNetworkRequest req(QUrl("http://code.responsivevoice.org/getvoice.php?tl="+voice2+"&gender="+gender+"&key=WGciAW2s&t="+QUrl::toPercentEncoding(text)));
 
     QNetworkReply* rep = http.get(req);
     QObject::connect(rep, SIGNAL(finished()), &loop, SLOT(quit()));
