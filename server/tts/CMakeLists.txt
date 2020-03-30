@@ -33,4 +33,4 @@ endfunction()
 add_subdirectory(notevibes/)
 add_subdirectory(pico/)
 add_subdirectory(responsivevoice/)
-
+add_subdirectory(bluemix/)
