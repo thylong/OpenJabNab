@@ -2,7 +2,7 @@
 require_once 'config.php';
 
 
-$imap = imap_open("{192.168.0.111:143}", "webmaster@openjabnab.fr", "alexism166")
+$imap = imap_open(IMAP_SERVER, IMAP_USER, IMAP_PASS)
       or die("Connexion impossible : " . imap_last_error());
 
 function generate()
