@@ -1,8 +1,8 @@
 <?php
 require_once realpath(dirname(__FILE__)).'/../../include/common.php';
 
-if(!isset($_SESSION['token']) || !$Infos['isAdmin'] || 
-   (strpos($_SERVER['DOCUMENT_URI'],'translation') !== false)
+if(empty($_SESSION['token']) || (!$Infos['isAdmin'] &&
+   (strpos($_SERVER['DOCUMENT_URI'],'translation') === false))
   )
     header('Location: /index.php');
 ?>
