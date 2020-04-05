@@ -1,7 +1,7 @@
 <?php
 $ojnTemplate->setTitle(__tr('Dashboard'));
 if(!($user_storage = apcu_fetch(APC_PREFIX.'ojn_userstorage'))) {
-	$cmd = 'du /home/prod/OpenJabNab/http-wrapper/ojn_local/users/ --max-depth=0 | cut -d"/" -f1';
+	$cmd = 'du '.ROOT_LOCAL.'/users/ --max-depth=0 | cut -d"/" -f1';
 	$user_storage = round((trim(exec($cmd)) + 0) / 1024, 1);
 	apcu_store(APC_PREFIX.'ojn_userstorage', $user_storage, 3600);
 }
@@ -42,12 +42,6 @@ mysqli_close($link);
 apcu_store(APC_PREFIX.'ojn_stats_minbunnies_'.$Infos['language'], $min, 3600);
 }
 
-if(isset($_GET['addmac2'])) {
-	apcu_delete(APC_PREFIX.'ojn_bunnies_'.$ojnAPI->getToken());
-	Message::AddFromApi($ojnAPI->getApiString('plugin/reset/reset?action=free&bunny=0013d380f400&'.$ojnAPI->getToken()));
-	header('Location: index.php');
-	exit;
-}
 if(isset($_GET['addmac'])) {
 	if(strlen($_GET['addmac']) == 12 && ctype_xdigit($_GET['addmac'])) {
 		apcu_delete(APC_PREFIX.'ojn_bunnies_'.$ojnAPI->getToken());

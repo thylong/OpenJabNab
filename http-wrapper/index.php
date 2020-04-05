@@ -113,11 +113,6 @@ if(isset($_POST['login']) && isset($_POST['password'])) {
 	exit;
 }
 
-/*
-if(isset($_SESSION['login']) && $_SESSION['login'] == 'alain4444') {
-	Message::AddError('Bonjour Mr "alain4444". Vous avez envoyé un formulaire de demande d\'aide, mais vous n\'avez pas rempli correctement le champ adresse mail. De plus, vous n\'avez pas renseigné votre adresse mail dans votre compte utilisateur. De ce fait, je ne peux vous répondre.');
-}
-*/
 if(isset($_SESSION['login']) && isset($_SESSION['logged_from'])) {
 	Message::AddWarning(__tr('Your are connected as %1, from your admin account %2', $_SESSION['login'], $_SESSION['logged_from']));
 }
