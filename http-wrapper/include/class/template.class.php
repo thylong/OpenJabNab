@@ -130,7 +130,7 @@ class ojnTemplate {
 				$menu .= '<li><a href="/admin/server/rawapi.php">'.__tr("Raw API Call").'</a></li>'."\n";
 				$menu .= '<li><a href="/admin/server/settings.php">'.__tr("Bunny settings").'</a></li>'."\n";
 				$menu .= ' <li class="divider"></li>'."\n";
-				$menu .= '<li><a href="/admin/translation.php">'.__tr("Translations").'</a></li>'."\n";
+				$menu .= '<li><a href="/admin/translation/index.php">'.__tr("Translations").'</a></li>'."\n";
 				$menu .= '<li><a href="/admin/sentences.php">'.__tr("Sentences").'</a></li>'."\n";
 				$menu .= '<li><a href="/admin/language.php">'.__tr("Languages").'</a></li>'."\n";
 				$menu .= ' <li class="divider"></li>'."\n";
@@ -151,7 +151,7 @@ class ojnTemplate {
 			$menu .= '<ul class="dropdown-menu">'."\n";
 			$menu .= '<li><a href="/account/index.php">'.__tr("My profile").' ( <i>'.__tr($this->UInfos['status']).'</i> )</a></li>'."\n";
 			foreach(getTranslates($_SESSION['login']) as $lng)
-				$menu .= '<li><a href="/admin/translator/edit.php?lng='.$lng.'">'.__tr("Translation (%1)", $lng).'</a></li>'."\n";
+				$menu .= '<li><a href="/admin/translation/edit.php?lng='.$lng.'">'.__tr("Translation (%1)", $lng).'</a></li>'."\n";
 			$menu .= ' <li class="divider"></li>'."\n";
 			$menu .= '<li><a href="/index.php?logout">'.__tr("Logout").'</a></li>'."\n";
 			$menu .= '</ul>'."\n";

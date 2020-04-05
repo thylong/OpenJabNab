@@ -1,8 +1,8 @@
 <?php
-require_once "include/common.php";
+require_once "../include/common.php";
 $translates = getTranslates($_SESSION['login']);
 if(!isset($_SESSION['token']) || (!$Infos['isAdmin'] && !in_array($_GET['lng'], $translates)))
-	header('Location: index.php');
+	header('Location: /index.php');
 
 $reload = false;
 if(count($_POST) && isset($_POST['format'])) {
@@ -73,7 +73,7 @@ finfo_close($finfo);
 		$link = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
 		if (!$link) {
 		    Message::AddError(__tr('Connexion impossible : ') . mysqli_error());
-			header('Location: translator.php?lng=' . $_GET['lng']);
+			header('Location: ?lng=' . $_GET['lng']);
 			exit;
 		}
 		$total = 0;
@@ -107,7 +107,7 @@ finfo_close($finfo);
 			$link = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
 			if (!$link) {
 			    Message::AddError(__tr('Connexion impossible : ') . mysqli_error());
-				header('Location: translator.php?lng=' . $_GET['lng']);
+				header('Location: ?lng=' . $_GET['lng']);
 				exit;
 			}
 			$total = 0;
@@ -196,10 +196,10 @@ echo "<br />";
 	}
 }
 if($reload) {
-	header('Location: translator.php?lng=' . $_GET['lng']);
+	header('Location: ?lng=' . $_GET['lng']);
 	exit;
 }
-include('include/message.php');
+include(ROOT_SITE.'include/message.php');
 ?>
 	      <div class="row">
 	      	<div class="span12">
@@ -261,5 +261,5 @@ include('include/message.php');
 		    </div> <!-- /span12 -->     	
 	      </div> <!-- /row -->
 <?php
-require_once "include/append.php"
+require_once "../include/append.php"
 ?>

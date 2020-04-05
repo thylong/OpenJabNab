@@ -13,7 +13,7 @@ function getTr($text, $lng, $orig)
 $link = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
 if (!$link) {
     Message::AddError(__tr('Connexion impossible') . ' : '. mysqli_error());
-	header('Location: translation.php');
+	header('Location: index.php');
 	exit;
 }
 $sql = "SELECT * FROM sentence WHERE id NOT IN (SELECT sentence_id FROM translation WHERE language='".$_SESSION['elanguage']."')";

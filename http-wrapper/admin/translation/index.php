@@ -1,5 +1,5 @@
 <?php
-require_once 'include/common.php';
+require_once '../include/common.php';
 
 $reload = false;
 if(isset($_GET['elanguage'])) {
@@ -13,21 +13,21 @@ if(isset($_GET['clear']) && $_GET['clear'] == 'cache') {
 	Message::AddSuccess(__tr("Cache successfully cleared for '%1'", $_SESSION['elanguage']));
 }
 if(isset($_GET['scan']) && $_GET['scan'] == 'server') {
-	require('translation.server.php');
+	require('server.php');
 	$reload = true;
 	Message::AddSuccess(__tr("%1 new translations in database", $new));
 }
 if(isset($_GET['scan']) && $_GET['scan'] == 'files') {
-	require('translation.scan.php');
+	require('scan.php');
 	$reload = true;
 	Message::AddSuccess(__tr("%1 new translations in database", $new));
 }
 if(isset($_GET['auto']) && $_GET['auto'] == 'google') {
-	require('translation.auto.php');
+	require('auto.php');
 	$reload = true;
 }
 if(isset($_GET['generate']) && $_GET['generate'] == 'tr') {
-	require('translation.generate.php');
+	require('generate.php');
 	$reload = true;
 	Message::AddSuccess(__tr("Translation cache generated", $new));
 }
@@ -36,7 +36,7 @@ if(isset($_GET['did']) && is_numeric($_GET['did'])) {
 	$link = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
 	if (!$link) {
 	    Message::AddError(__tr('Connexion impossible : ') . mysqli_error());
-		header('Location: translation.php');
+		header('Location: index.php');
 		exit;
 	}
 
@@ -59,7 +59,7 @@ if(isset($_POST['sid']) && is_numeric($_POST['sid'])) {
 	$link = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
 	if (!$link) {
 	    Message::AddError(__tr('Connexion impossible : ') . mysqli_error());
-		header('Location: translation.php');
+		header('Location: index.php');
 		exit;
 	}
 
@@ -77,7 +77,7 @@ if(isset($_POST['aid']) && is_numeric($_POST['aid']) && $_POST['aid'] == -1) {
 	$link = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
 	if (!$link) {
 	    Message::AddError(__tr('Connexion impossible : ') . mysqli_error());
-		header('Location: translation.php');
+		header('Location: index.php');
 		exit;
 	}
 
@@ -102,7 +102,7 @@ if(!isset($_SESSION['elanguage'])) {
 	$_SESSION['elanguage'] = 'fr';
 }
 if($reload) {
-	header('Location: translation.php');
+	header('Location: index.php');
 	exit;
 }
 include(ROOT_SITE.'include/message.php');
@@ -115,12 +115,12 @@ include(ROOT_SITE.'include/message.php');
 						<h3><?php echo __tr("Translate openJabNab") ?></h3>
 					</div> <!-- /widget-header -->
 					<div class="widget-content">
-<a href="translation.php?clear=cache" class="btn btn-primary"><?php echo __tr("Clear translation cache") ?></a>
-<a href="translation.php?scan=files" class="btn btn-primary"><?php echo __tr("Scan files") ?></a>
-<a href="translation.php?scan=server" class="btn btn-primary"><?php echo __tr("Scan server files") ?></a>
-<a href="translation.php?auto=google" class="btn btn-primary"><?php echo __tr("Auto translate") ?></a>
-<a href="translation.php?manual=add" class="btn btn-primary"><?php echo __tr("Manually add a sentence") ?></a>
-<a style="float:right" href="translation.php?generate=tr" class="btn btn-success"><?php echo __tr("Generate translations") ?></a>
+<a href="?clear=cache" class="btn btn-primary"><?php echo __tr("Clear translation cache") ?></a>
+<a href="?scan=files" class="btn btn-primary"><?php echo __tr("Scan files") ?></a>
+<a href="?scan=server" class="btn btn-primary"><?php echo __tr("Scan server files") ?></a>
+<a href="?auto=google" class="btn btn-primary"><?php echo __tr("Auto translate") ?></a>
+<a href="?manual=add" class="btn btn-primary"><?php echo __tr("Manually add a sentence") ?></a>
+<a style="float:right" href="?generate=tr" class="btn btn-success"><?php echo __tr("Generate translations") ?></a>
 <br /><br />
 	<form id="edit-profile" method="get" class="well form-inline">
 				<label class="control-label" for="sentence"><?php echo __tr('Language to edit') ?> : </label>
@@ -236,7 +236,7 @@ else {
 
 	$sql = "SELECT translation.translation, sentence.sentence, sentence.id, translation.note, sentence.web FROM sentence LEFT JOIN translation ON translation.language='".$_SESSION['elanguage']."' AND translation.sentence_id = sentence.id ORDER BY translation.note ASC, sentence ASC";
 	$res = mysqli_query($link, $sql);
-	$type = array(__tr('Server'), __tr('Web admin'), __tr('Both'));
+	$type = array(__tr('Server'), __tr('Web admin'), __tr('Both'), __tr('Unknown'));
 	while($row = mysqli_fetch_assoc($res))
 	{
 ?>
@@ -244,7 +244,7 @@ else {
 		<td><?php echo $row['sentence']; ?></td>
 		<td><?php echo $row['translation']; ?></td>
 		<td><?php echo $type[$row['web']]; ?></td>
-		<td><a  href="translation.php?eid=<?php echo $row['id']; ?>" class="btn btn-primary"><?php echo __tr('Edit') ?></a> &nbsp;<a  href="translation.php?did=<?php echo $row['id']; ?>" class="btn btn-danger"><?php echo __tr('Remove') ?></a></td>
+		<td><a  href="?eid=<?php echo $row['id']; ?>" class="btn btn-primary"><?php echo __tr('Edit') ?></a> &nbsp;<a  href="?did=<?php echo $row['id']; ?>" class="btn btn-danger"><?php echo __tr('Remove') ?></a></td>
 	</tr>
 <?php
 	}
@@ -260,5 +260,5 @@ else {
 		    </div> <!-- /span12 -->
 	      </div> <!-- /row -->
 <?php
-require_once 'include/append.php'
+require_once '../include/append.php'
 ?>

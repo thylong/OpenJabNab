@@ -1,13 +1,13 @@
 <?php
-require_once "include/common.php";
+require_once "../include/common.php";
 $translates = getTranslates($_SESSION['login']);
 if(!isset($_SESSION['token']) || (!$Infos['isAdmin'] && !in_array($_GET['lng'], $translates)))
-	header('Location: index.php');
+	header('Location: /index.php');
 
 $reload = false;
 
 if(isset($_GET['generate']) && $_GET['generate'] == 'tr') {
-	require('translator.generate.php');
+	require('generate.php');
 	apcu_delete(APC_PREFIX.'ojn_tr_' . $_GET['lng']);
 	$reload = true;
 	Message::AddSuccess(__tr("Translation cache generated", $new));
@@ -17,7 +17,7 @@ if(isset($_POST['sid']) && is_numeric($_POST['sid'])) {
 	$link = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
 	if (!$link) {
 	    Message::AddError(__tr('Connexion impossible : ') . mysqli_error());
-		header('Location: translator_edit.php?lng=' . $_GET['lng']);
+		header('Location: ?lng=' . $_GET['lng']);
 		exit;
 	}
 
@@ -32,10 +32,10 @@ if(isset($_POST['sid']) && is_numeric($_POST['sid'])) {
 }
 
 if($reload) {
-	header('Location: translator_edit.php?lng=' . $_GET['lng']);
+	header('Location: ?lng=' . $_GET['lng']);
 	exit;
 }
-include('include/message.php');
+include(ROOT_SITE.'include/message.php');
 ?>
 	      <div class="row">
 	      	<div class="span12">
@@ -45,8 +45,8 @@ include('include/message.php');
 						<h3><?php echo __tr("Online translation (%1)", $_GET['lng']) ?></h3>
 					</div> <!-- /widget-header -->
 					<div class="widget-content">
-<a href="translator.php?lng=<?php echo $_GET['lng'] ?>" class="btn ">&lt; <?php echo __tr("Back") ?></a>
-<a style="float:right" href="translator_edit.php?lng=<?php echo $_GET['lng'] ?>&generate=tr" class="btn btn-success"><?php echo __tr("Generate translations") ?></a>
+<a href="?lng=<?php echo $_GET['lng'] ?>" class="btn ">&lt; <?php echo __tr("Back") ?></a>
+<a style="float:right" href="?lng=<?php echo $_GET['lng'] ?>&generate=tr" class="btn btn-success"><?php echo __tr("Generate translations") ?></a>
 <br /><br />
 <?php
 if(isset($_GET['eid']) && is_numeric($_GET['eid'])) {
@@ -117,7 +117,7 @@ else {
 	<tr<?php echo $i++ % 2 ? " class='l2'" : "" ?>>
 		<td><?php echo $row['sentence']; ?></td>
 		<td><?php echo $row['translation']; ?></td>
-		<td><a  href="translator_edit.php?lng=<?php echo $_GET['lng'] ?>&eid=<?php echo $row['id']; ?>" class="btn btn-primary"><?php echo __tr('Edit') ?></a></td>
+		<td><a  href="?lng=<?php echo $_GET['lng'] ?>&eid=<?php echo $row['id']; ?>" class="btn btn-primary"><?php echo __tr('Edit') ?></a></td>
 	</tr>
 <?php
 	}
@@ -133,5 +133,5 @@ else {
 		    </div> <!-- /span12 -->     	
 	      </div> <!-- /row -->
 <?php
-require_once "include/append.php"
+require_once "../include/append.php"
 ?>

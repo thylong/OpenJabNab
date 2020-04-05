@@ -1,7 +1,7 @@
 <?php
-require_once "include/common.php";
+require_once "../include/common.php";
 if(!isset($_SESSION['token']) || !$Infos['isAdmin'])
-	header('Location: index.php');
+	header('Location: /index.php');
 
 $link = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
 if (!$link) {
