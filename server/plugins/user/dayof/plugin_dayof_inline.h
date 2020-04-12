@@ -1,6 +1,5 @@
 inline void PluginDayof::InitData()
 {
-    QMap<int, QMultiMap<int, QString> > data;
     QMultiMap<int, QString> data_janvier;
     QMultiMap<int, QString> data_fevrier;
     QMultiMap<int, QString> data_mars;
