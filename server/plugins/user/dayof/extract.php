@@ -1,76 +1,47 @@
 <?php
-function Slugify($text) {
-	setlocale(LC_ALL, 'en_GB');
-	// replace non letter or digits by -
-
-//	$text = preg_replace('#[^\\pL\d]+#u', '-', $text);
-//	$text = preg_replace('/\pM*/u','',normalizer_normalize( $text, \Normalizer::FORM_D));
-
-	// trim
-//	$text = trim($text, '-');
-
-	//$text = utf8_decode($text);
-	// transliterate
+function Slugify($text)
+{
 	if (function_exists('iconv'))
-	{
 	    $text = iconv('utf-8', 'us-ascii//TRANSLIT', $text);
-	}
-
-	// lowercase
-//	$text = strtolower($text);
-
-	// remove unwanted characters
-//	$text = preg_replace('#[^-\w]+#', '', $text);
-
-	setlocale(LC_ALL, 'C');
-
 	return $text;
 }
 
-
-$mois = array('janvier', 'fevrier', 'mars', 'avril', 'mai', 'juin', 'juillet', 'aout', 'septembre', 'octobre', 'novembre', 'decembre');
 $url = 'http://www.journee-mondiale.com/les-journees-mondiales.htm';
-
-//<li><a href="http://www.journee-mondiale.com/303/journee-du-domaine-public.htm"><time datetime="1er janvier">1er janvier</time> : Journée du domaine public</a></li>
+//<li><a href="https://www.journee-mondiale.com/5/journee-mondiale-de-la-paix.htm"><time datetime="1er janvier">1er janvier</time> : Journée Mondiale de la Paix</a></li>
 
 $content = file_get_contents($url);
-//$content = Slugify($content);
-echo 'inline void InitData()'."\n";
-echo '{'."\n";
-echo '    QMap<int, QMultiMap<int, QString> > data;'."\n";
+
+echo "inline void PluginDayof::InitData()\n{\n";
 $slugified = array();
-if(preg_match_all('|<li><a href="http://www.journee-mondiale.com/(\d+)/([^\"]*)"><time datetime="([^\"]*)">([^<]*)</time> : ([^<]*)</a></li>|isU', Slugify($content), $match, PREG_SET_ORDER)) {
-
-	foreach($match as $line) {
-		$d = $line[4];
-		$day = $line[1];
-		$slugified[$day] = $d;
-	}
-} else {
-	die('erreur en '. $m . "\n" . $content);
+if(preg_match_all('`<li><a href="https?:\/\/www.journee-mondiale.com\/\d+\/[^\"]+"><time datetime="[^\"]+">([^<]*)<\/time> : ([^<]*)<\/a><\/li>`', $content, $match, PREG_SET_ORDER))
+{
+  foreach($match as $line)
+  {
+    if(count($line) != 3)
+    {
+      echo 'erreur en '.$line;
+      die();
+    }
+    $day   = $line[1];
+    $month = explode(' ', $day);
+    $day = (int)(preg_replace('~\D~', '', $month[0]));
+    $month = Slugify($month[1]);
+    $slugified[$month][$day][] = $line[2];
+  }
 }
-if(preg_match_all('|<li><a href="http://www.journee-mondiale.com/(\d+)/([^\"]*)"><time datetime="([^\"]*)">([^<]*)</time> : ([^<]*)</a></li>|isU', $content, $match, PREG_SET_ORDER)) {
-	foreach($mois as $j => $m) {
-		echo '    QMultiMap<int, QString> data_'.$m.';'."\n";
-	}
-
-	foreach($match as $line) {
-		$day = trim($line[5]);
-		$d = $line[4];
-		$d = Slugify($line[4]);
-		$d = $slugified[$line[1]];
-		if(preg_match('/^(\d+)(?:er)? ('.implode($mois, '|').')$/', $d, $date)) {
-			$d = $date[1];
-			$m = $date[2];
-			echo '    data_'.$m.'.insert('.$d . ',"' . $day . '");'."\n";
-		} else {
-			echo $d."\n";
-		}
-	}
-	foreach($mois as $k => $m) {
-		echo '    data.insert('.($k+1).', data_'.$m.');'."\n";
-	}
-} else {
-	die('erreur en '. $m . "\n" . $content);
+$mois = array('','janvier', 'fevrier', 'mars', 'avril', 'mai', 'juin', 'juillet', 'aout', 'septembre', 'octobre', 'novembre', 'decembre');
+foreach($slugified as $month => $days)
+{
+  $k = array_search($month, $mois);
+  if($k == false)
+  {
+    echo 'erreur en '.$month;
+    die();
+  }
+  echo '  QMultiMap<int,QString> data_'.$k.";\n";
+  foreach($days as $d => $vs)
+    foreach($vs as $v)
+      echo '    '.'data_'.$k.'.insert('.$d.',"'.addslashes($v).'");'."\n";
+  echo '  data.insert('.$k.', data_'.$k.");\n";
 }
-echo '}'."\n";
+echo "}\n";
