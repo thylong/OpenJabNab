@@ -23,7 +23,7 @@ require_once '../include/common.php';
 function printr($a,$l=0) {
 	if(is_array($a))
 		foreach($a as $b=>$sa) {
-			if(count($sa) < 2) {
+			if(!is_array($sa) || count($sa) < 2) {
 				if(!is_array($sa))
 					echo str_repeat('    ',$l).$b." => ".$sa."\n";
 				else if(!is_numeric($b))
