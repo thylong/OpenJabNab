@@ -660,9 +660,10 @@ API_CALL(AccountManager::Api_SetUserInfos)
 	int value = hRequest.GetArg("value").toInt();
 	if(setting == "login_count") {
 		ac->SetLoginCount(value);
-	} else if(setting == "abuse_count") {
-		ac->SetAbuseCount(value);
-	}
+	} else if(setting == "abuse") {
+		ac->SetAbuse();					// Update abuse date
+		ac->SetAbuseCount(value);		// Clear abuse count
+	} 
 
 	QMap<QString, QVariant> list;
 	list.insert("login",ac->GetLogin());
