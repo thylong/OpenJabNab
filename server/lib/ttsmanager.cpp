@@ -586,7 +586,7 @@ QString TTSManager::convertToAdp(QString file, bool overwrite, bool fullPath, bo
 		pclose (fd);
 	}
 	//program = "/home/wav2adp";
-	program = "/srv/www/ojn/prod/utils/wav24adp2";
+	program = "/home/ojn/ojn_env/utils/wav24adp2";
 	arguments.clear();
 	arguments << fileWav;
 	arguments << fileAdpFS;
