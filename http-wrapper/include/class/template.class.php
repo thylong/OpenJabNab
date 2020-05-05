@@ -147,7 +147,7 @@ class ojnTemplate {
 
 			$menu .= '<li class="dropdown">'."\n";
 			$menu .= '<a href="/account/index.php" class="dropdown-toggle" data-toggle="dropdown">'."\n";
-			$menu .= '<i class="icon-user"></i>'.$this->UInfos['username'].' <b class="caret"></b></a>'."\n";
+			$menu .= '<i class="'.(empty($_SESSION['logged_from']) ? 'icon-user' : 'icon-info-sign').'"></i>'.$this->UInfos['username'].' <b class="caret"></b></a>'."\n";
 			$menu .= '<ul class="dropdown-menu">'."\n";
 			$menu .= '<li><a href="/account/index.php">'.__tr("My profile").' ( <i>'.__tr($this->UInfos['status']).'</i> )</a></li>'."\n";
 			foreach(getTranslates($_SESSION['login']) as $lng)

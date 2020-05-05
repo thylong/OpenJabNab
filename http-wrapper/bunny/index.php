@@ -586,7 +586,7 @@ $tzs = $ojnAPI->getApiMapped("translate/listTimezones?".$ojnAPI->getToken());
 			$sql .= " OR code='".$t."'";
 
 	$res = mysqli_query($link, $sql);
-	while($row = mysqli_fetch_assoc($res))
+	while($res && $row = mysqli_fetch_assoc($res))
 	{
 ?>
 <option value="<?php echo $row['code'] ?>"<?php if($Lng == $row['code']) { ?> selected="selected"<?php } ?>><?php echo $row['language'] ?></option>
@@ -738,12 +738,14 @@ function lngSort2($a, $b)
 uasort($plugins, 'lngSort2');
 function filterPlugins($plugins, $version = 2)
 {
+	global $bunnyPlugins;
 	$ret = array();
-	//var_dump($plugins);
-	foreach($plugins as $name => $infos) {
-		if($infos['v' . $version] == 1) {
+	foreach($plugins as $name => $infos) 
+	{
+		if(in_array($name, $bunnyPlugins) &&
+			 $infos['v' . $version] == 1
+			)
 			$ret[$name] = $infos;
-		}
 	}
 	return $ret;
 }
@@ -777,46 +779,42 @@ $plugins = filterPlugins($plugins, bunnyVersion($_SESSION['bunny']));
             <button class="btn"><?php echo __tr("Cancel") ?></button>
           </div>
 	</form>
-<center>
 <table class="table table-bordered table-striped span10">
 	<tr>
-		<th><?php echo __tr('Name of plugin') ?></th>
-		<th colspan="2"><?php echo __tr('Actions') ?></th>
+		<th scope="col" class="col-md-8"><?php echo __tr('Name of plugin') ?></th>
+		<th scope="col" class="col-md-2"><?php echo __tr('Actions') ?></th>
 	</tr>
 <?php
 	$i = 0;
-	if(is_array($plugins)) {
-	foreach($plugins as $id => $plugin)
-	{
-		if(in_array($id, $bunnyPlugins))
-		{
-			if($Infos['isAdmin'] || $plugin['display'] || isBeta($_SESSION['bunny'], $id))
-			{
-?>
-	<tr<?php echo $i++ % 2 ? " class='l2'" : "" ?>>
-		<td>
-<?php if(isBeta($_SESSION['bunny'], $id)): ?><span class="label label-info"><?php echo __tr('Beta-test') ?></span> <?php endif; ?>
-<?php if($plugin['new']): ?><span class="label label-info"><?php echo __tr('New plugin') ?></span> <?php endif; ?>
-<?php if($plugin['updated']): ?><span class="label label-success" alt="<?php echo $plugin['version'] ?>" title="<?php echo $plugin['version'] ?>"><?php echo __tr('New version') ?></span> <?php endif; ?>
-<?php echo $plugin['name'] ?>
-		</td>
-		<?php if(!($Infos['isAdmin'] || $Infos['status'] == 'VIP' || $Infos['status'] == 'Premium' || $Infos['status'] == 'Demo') && $plugin['premium']): ?>
-		<td colspan="2"><a class="btn btn-small btn-warning" href="/bunny/index.php?premium"><?php echo __tr("Premium plugin") ?></a></td>
-		<?php elseif(!($Infos['isAdmin'] || isTester($Infos['login'], $id)) && $plugin['dev']): ?>
-		<td colspan="2"><a class="btn btn-small btn-warning" href="/bunny/index.php?wip"><?php echo __tr("WIP") ?></a></td>
-		<?php else: ?>
-		<td class="span2"><a class="btn btn-small btn-<?php echo $plugin['actif'] ? "danger" : "success";?>" href="?stat=<?php echo $plugin['actif'] ? "unregister" : "register"; ?>&plug=<?php echo $id ?>"><?php echo $plugin['actif'] ? __tr('Disable plugin') : __tr('Enable plugin') ?></a></td>
-		<td class="span3"><?php if($plugin['actif'] && file_exists("plugins/".$id.".plugin.php")) { ?><a href="bunny_plugin.php?p=<?php echo $id; ?>" class="btn btn-small btn-primary"><i class="icon-cog icon-large"></i> <?php echo __tr('Setup / Use') ?></a><?php } else { ?>&nbsp;<?php } ?></td>
-		<?php endif; ?>
-	</tr>
-<?php
-			}
-		}
-	}
-	}
-?>
+	foreach($plugins as $id => $plugin):
+		if(!($Infos['isAdmin'] || $plugin['display'] || isBeta($_SESSION['bunny'], $id)))
+			continue;
+	?>
+		<tr>
+			<td class="col-md-8">
+				<?php echo $plugin['name'] ?>
+				<span class="float-right">
+					<?php if(isBeta($_SESSION['bunny'], $id)): ?><span class="label label-info"><?php echo __tr('Beta-test') ?></span> <?php endif; ?>
+					<?php if($plugin['new']): ?><span class="label label-info"><?php echo __tr('New plugin') ?></span> <?php endif; ?>
+					<?php if($plugin['updated']): ?><span class="label label-success" alt="<?php echo $plugin['version'] ?>" title="<?php echo $plugin['version'] ?>"><?php echo __tr('New version') ?></span> <?php endif; ?>
+					<?php if($plugin['premium']): ?><span class="label label-warning"><?php echo __tr("Premium") ?></span> <?php endif; ?>
+					<?php if($plugin['dev']): ?><span class="label label-warning"><?php echo __tr("WIP") ?></span><?php endif; ?>
+					&nbsp;
+				</span>
+			</td>
+			<td class="col-md-2">
+				<?php if($plugin['premium'] && !($Infos['isAdmin'] || $Infos['status'] == 'VIP' || $Infos['status'] == 'Premium' || $Infos['status'] == 'Demo')): ?>
+				<a class="btn btn-small btn-warning" href="/bunny/index.php?premium"><?php echo __tr("Premium") ?></a>
+				<?php elseif($plugin['dev'] && !($Infos['isAdmin'] || isTester($Infos['login'], $id))): ?>
+				<span class="label label-warning"><?php echo __tr("WIP") ?></span>
+				<?php else: ?>
+					<a class="btn btn-small btn-<?php echo $plugin['actif'] ? "danger" : "success";?>" href="?stat=<?php echo $plugin['actif'] ? "unregister" : "register"; ?>&plug=<?php echo $id ?>"><?php echo $plugin['actif'] ? __tr('Disable plugin') : __tr('Enable plugin') ?></a>
+					<?php if($plugin['actif'] && file_exists("plugins/".$id.".plugin.php")): ?><a href="bunny_plugin.php?p=<?php echo $id; ?>" class="btn btn-small btn-primary"><i class="icon-cog icon-large"></i> <?php echo __tr('Setup / Use') ?></a> <?php endif; ?>
+				<?php endif; ?>
+			</td>
+		</tr>
+<?php endforeach; ?>
 </table>
-</center>
 								</div>
 								<div class="tab-pane<?php echo $_SESSION['tab'] == 'bunny_expert' ? ' active' : '' ?>" id="expert">
 <?php if(bunnyVersion($_SESSION['bunny']) == 2): ?>

@@ -2,11 +2,11 @@
 ob_end_flush();
 if($Infos['isAdmin'])
 {
-	echo '<pre><hr />';
+	echo '<hr /><pre>';
 	$ojnAPI->getLog();
-	echo "<hr />";
+	echo "</pre><hr /><pre>";
 	var_dump($_SERVER);
-	echo "<hr />";
+	echo "</pre><hr /><pre>";
 	$headers = apache_request_headers();
 	var_dump($headers);
 	echo '</pre>';
