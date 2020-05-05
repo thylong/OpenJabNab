@@ -22,7 +22,7 @@
 
 #include <QJsonDocument>
 
-PluginWeather::PluginWeather():PluginInterface("weather", "Current weather and forecasts", BunnyV2Plugin | ApiPlugin | SingleClickPlugin | CronPlugin | RfidPlugin | VoicePlugin)
+PluginWeather::PluginWeather():PluginInterface("weather", "Current weather and forecasts", BunnyV2Plugin | ApiPlugin | SingleClickPlugin | CronPlugin | RfidPlugin | VoicePlugin | DevPlugin)
 {
 }
 
@@ -834,29 +834,29 @@ QString PluginWeather::GetTranslatedWind(int code, QString lng)
 /*
 Code 	Description
 0 	tornade
-1 	tempête tropicale
+1 	tempÃªte tropicale
 2 	ouragan
 3 	orages violents
 4 	orages
 5 	la pluie et la neige
 6 	la pluie et la neige fondue mixte
-7 	mêlée de neige et le grésil
-8 	bruine verglaçante
+7 	mÃ©lÃ©e de neige et le grÃ©sil
+8 	bruine verglaÃ§ante
 9 	bruine
-10 	pluie verglaçante
+10 	pluie verglaÃ§ante
 11 	douches
 12 	douches
 13 	averses de neige
-14 	légères averses de neige
+14 	lÃ©gÃ¨res averses de neige
 15 	poudrerie
 16 	neige
-17 	grêle
+17 	grÃªle
 18 	neige fondue
-19 	poussière
+19 	poussiÃ¨re
 20 	brumeux
 21 	brume
-22 	enfumé
-23 	de tempête
+22 	enfumÃ©
+23 	de tempÃªte
 24 	venteux
 25 	froid
 26 	nuageux
@@ -865,22 +865,22 @@ Code 	Description
 29 	partiellement nuageux (nuit)
 30 	partiellement nuageux (jour)
 31 	effacer (nuit)
-32 	ensoleillé
-33 	équitable (nuit)
-34 	équitable (jour)
-35 	la pluie et la grêle mixte
+32 	ensoleillÃ©
+33 	Ã©quitable (nuit)
+34 	Ã©quitable (jour)
+35 	la pluie et la grÃªle mixte
 36 	chaud
-37 	orages isolés
-38 	orages dispersés
-39 	orages dispersés
+37 	orages isolÃ©s
+38 	orages dispersÃ©s
+39 	orages dispersÃ©s
 40 	averses intermittentes
 41 	fortes chutes de neige
-42 	averses de neige éparses
+42 	averses de neige Ã©parses
 43 	fortes chutes de neige
 44 	partiellement nuageux
 45 	orages
 46 	averses de neige
-47 	orages isolés
+47 	orages isolÃ©s
 3200 	pas disponible
 */
 
