@@ -10,6 +10,11 @@ $timezones = array();
 foreach($ips as $bunny => $ip)
 {
 	$url = 'http://api.ipstack.com/'.$ip.'?access_key='.IPSTACK_APIKEY; // 10000 req/month limit
+	if(strstr($ip,'ffff'))
+	{
+		echo 'Invalid IP for bunny '.$bunny.' : '.$ip."\n";
+	}
+
 	$jdata = json_decode(file_get_contents($url));
 	$long = $jdata->latitude;
 	$lat = $jdata->longitude;
