@@ -13,7 +13,7 @@
 #include "ttsmanager.h"
 #include "translator.h"
 
-PluginLedcustom::PluginLedcustom():PluginInterface("ledcustom", "Custom LED language plugin", BunnyV2Plugin | PeriodPlugin | PremiumPlugin | ApiPlugin )
+PluginLedcustom::PluginLedcustom():PluginInterface("ledcustom", "Custom LED language plugin", BunnyV2Plugin | PeriodPlugin /*| PremiumPlugin*/ | ApiPlugin )
 {
 }
 
