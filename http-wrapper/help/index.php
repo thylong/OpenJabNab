@@ -226,7 +226,7 @@ mysqli_close($link);
 ?>
 <?php if( count($faqs) ): ?>
 	<?php foreach($faqs as $f): ?>
-<a href="faq.php?question=<?php echo $f['slug'] ?><?php if($Infos['isAdmin']): ?>&debug=true<?php endif; ?>"><?php echo $f['question'] ?></a><br />
+	<a href="faq.php?question=<?php echo $f['slug'] ?><?php if($Infos['isAdmin']): ?><?php /* &debug=true<?php*/ endif; ?>"><?php echo $f['question'] ?></a><br />
 	<?php endforeach; ?>
 <?php endif; ?>
             </div>

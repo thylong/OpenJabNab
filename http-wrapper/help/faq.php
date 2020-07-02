@@ -95,7 +95,7 @@ mysqli_close($link);
 
 require(ROOT_SITE.'include/message.php');
 ?>
-<?php if(count($searchs)): ?>
+<?php if(is_array($searchs) && !empty($searchs)): ?>
 <div class="row">
     <div class="span12">
         <div class="widget widget">
@@ -146,7 +146,7 @@ require(ROOT_SITE.'include/message.php');
             <div class="widget-content">
 <?php if( count($faqs) ): ?>
 	<?php foreach($faqs as $f): ?>
-<a href="/help/faq.php?question=<?php echo $f['slug'] ?><?php if($Infos['isAdmin']): ?>&debug=true<?php endif; ?>"><?php echo $f['question'] ?></a><br />
+	<a href="/help/faq.php?question=<?php echo $f['slug'] ?><?php if($Infos['isAdmin']): ?><?php /*&debug=true<?php*/ endif; ?>"><?php echo $f['question'] ?></a><br />
 	<?php endforeach; ?>
 <?php else: ?>
 <?php endif; ?>
