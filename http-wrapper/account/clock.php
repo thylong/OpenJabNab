@@ -21,7 +21,7 @@ if (is_dir($user_dir)) {
 		$out = exec("/usr/bin/ffprobe -sexagesimal -show_streams -show_format " . $user_dir.$file, $retour);
 		foreach($retour as $line)
 		{
-			$line = split("=", $line);
+			$line = explode("=", $line);
 			if(isset($line[0]) && isset($line[1])) {
 				$f[$line[0]] = $line[1];
 			}

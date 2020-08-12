@@ -104,8 +104,12 @@ if(isset($_SESSION['token']) && !strpos($_SERVER['REQUEST_URI'],"logout")) {
 		$iFix = array('lastBanStart','lastBanEnd','abuseCount','loginCount');
 		foreach($iFix as $k)
 			if(empty($Infos[$k]))
-			$Infos[$k] = 0;
+				$Infos[$k] = 0;
 
+		$sFix = array('email');
+		foreach($sFix as $k)
+			if(empty($Infos[$k]))
+				$Infos[$k] = "";
 //		echo '<pre>'; var_dump($Infos);
 
 		$Infos['status'] = "User";
@@ -121,7 +125,7 @@ if(isset($_SESSION['token']) && !strpos($_SERVER['REQUEST_URI'],"logout")) {
 			$Infos['status'] = $row['status'];
 		}
 
-		//var_dump($Infos);
+	//	var_dump($Infos);
 		mysqli_close($link);
 		apcu_store(APC_PREFIX.'ojn_user_'.$_SESSION['login'], $Infos, 60);
 	}
