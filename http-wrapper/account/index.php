@@ -100,7 +100,7 @@ require('../include/message.php');
 										<div class="control-group">
 											<label class="control-label" for="username"><?php echo __tr('Login') ?></label>
 											<div class="controls">
-												<input type="text" class="input-medium disabled" id="username" value="<?php echo $_SESSION['login'] ?>" disabled>
+												<input type="text" class="input-medium disabled" id="username" value="<?php echo !empty($_SESSION['login']) ? $_SESSION['login'] : _tr('Unknown') ?>" disabled>
 												<p class="help-block"><?php echo __tr('Your login cannot be changed.') ?></p>
 											</div> <!-- /controls -->
 										</div> <!-- /control-group -->

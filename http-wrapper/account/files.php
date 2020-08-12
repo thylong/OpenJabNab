@@ -34,7 +34,7 @@ if (is_dir($user_dir)) {
 				$f[$line[0]] = $line[1];
 			}
 		}
-		$f['size'] = $f['size'] / 1024 / 1024;
+		$f['size'] = !empty($f['size']) ? $f['size'] / 1024 / 1024 : 0;
 		$size += $f['size'] ;
 		$user_files[$f['name']] = $f;
 	    }

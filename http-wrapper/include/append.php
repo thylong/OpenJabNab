@@ -1,6 +1,6 @@
 <?php
 ob_end_flush();
-if($Infos['isAdmin'])
+if(!empty($Infos['isAdmin']))
 {
 	echo '<hr /><pre>';
 	$ojnAPI->getLog();
