@@ -35,6 +35,7 @@ void ZtampManager::InitApiCalls()
 {
 	DECLARE_API_CALL("getListOfZtamps()", &ZtampManager::Api_GetListOfZtamps);
 	DECLARE_API_CALL("getListOfAllZtamps()", &ZtampManager::Api_GetListOfAllZtamps);
+	DECLARE_API_CALL("removeZtamp(serial)", &ZtampManager::Api_RemoveZtamp);
 }
 
 int ZtampManager::GetZtampCount()
@@ -127,6 +128,44 @@ API_CALL(ZtampManager::Api_GetListOfAllZtamps)
 		list.insert(z->GetID(), z->GetZtampName());
 
 	return new ApiManager::ApiMappedList(list);
+}
+
+API_CALL(ZtampManager::Api_RemoveZtamp)
+{
+	if(!account.IsAdmin())
+		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+
+	QString serial = hRequest.GetArg("serial");
+	QByteArray hexSerial = QByteArray::fromHex(serial.toLatin1());
+	if(!listOfZtamps.contains(hexSerial))
+		return new ApiManager::ApiError(Translator::tr("Ztamp '%1' does not exist", account).arg(serial));
+
+	Ztamp *z = listOfZtamps.value(hexSerial);
+/*
+	QString ownerName = z->GetGlobalSetting("OwnerAccount", "").toString();
+	if(ownerName != "")
+	{
+		Account * owner = AccountManager::GetAccountByLogin(ownerName.toLatin1());
+		owner->RemoveZtamp(z->GetID());
+        owner->SetSaveNeeded(true);
+	}
+*/
+	delete z;
+	listOfZtamps.remove(hexSerial);
+
+	QSqlDatabase db = DbManager::getDb();
+	bool close = DbManager::openDbIfNeeded();
+	QSqlQuery *query = new QSqlQuery(db);
+	query->prepare("DELETE FROM ztamp WHERE serial=:serial");
+	query->bindValue(":serial", hexSerial.toHex());
+	bool ret = query->exec();
+	query->finish();
+	delete query;
+	if(close)
+		DbManager::releaseDb();
+	if(ret)
+		return new ApiManager::ApiOk(Translator::tr("Ztamp %1 removed", account).arg(serial));
+	return new ApiManager::ApiError(Translator::tr("Error when removing ztamp %1", account).arg(serial));
 }
 
 QHash<QByteArray, Ztamp *> ZtampManager::listOfZtamps;
