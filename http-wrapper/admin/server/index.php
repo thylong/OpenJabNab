@@ -30,6 +30,10 @@ if((!empty($_GET['plug']) && !empty($_GET['stat'])) || (!empty($_POST['plug']) &
 	Message::AddFromApi($ojnAPI->getApiString('bunnies/removeBunny?serial='.$_GET['removeB'].'&'.$ojnAPI->getToken()));
 	$reload = true;
 }
+} else if(!empty($_GET['removeZ'])) {
+	Message::AddFromApi($ojnAPI->getApiString('ztamps/removeZtamp?serial='.urlencode($_GET['removeZ']).'&'.$ojnAPI->getToken()));
+	$reload = true;
+	header('Location: server.php');
 if($reload) {
 	header('Location: /admin/server/index.php');
 	exit;
@@ -245,7 +249,9 @@ function updateBTable(p)
 	<tr<?php echo $i++ % 2 ? " class='l2'" : "" ?>>
 		<td width="20%"><?php echo $id; ?></td>
 		<td><?php echo $name; ?></td>
-		<td width="20%"><a href='/account/ztamp.php?z=<?php echo $id; ?>'>Configurer</a>
+		<td width="20%"><a href='/account/ztamp.php?z=<?php echo $id; ?>'>Configurer</a>&nbsp;
+						<a href="?removeZ=<?php echo urlencode($id); ?>"><?php echo __tr('Remove') ?></a>
+		</td>
 	</tr>
 <?php } ?>
 <?php //fclose($fp); ?>
