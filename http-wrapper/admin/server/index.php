@@ -29,11 +29,11 @@ if((!empty($_GET['plug']) && !empty($_GET['stat'])) || (!empty($_POST['plug']) &
 } else if(!empty($_GET['removeB'])) {
 	Message::AddFromApi($ojnAPI->getApiString('bunnies/removeBunny?serial='.$_GET['removeB'].'&'.$ojnAPI->getToken()));
 	$reload = true;
-}
 } else if(!empty($_GET['removeZ'])) {
 	Message::AddFromApi($ojnAPI->getApiString('ztamps/removeZtamp?serial='.urlencode($_GET['removeZ']).'&'.$ojnAPI->getToken()));
 	$reload = true;
 	header('Location: server.php');
+}
 if($reload) {
 	header('Location: /admin/server/index.php');
 	exit;
