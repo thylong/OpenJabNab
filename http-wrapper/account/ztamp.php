@@ -84,21 +84,26 @@ $q = $ojnAPI->getAPIList('ztamp/'.$_SESSION['ztamp'].'/owner?action=list&'.$ojnA
 foreach($q as $it)
   if(!empty($it))
     $ownersList[] = (string)($it);
+
+$reload=true;
+if(!empty($_GET['add_owner']))
+  Message::AddFromApi($ojnAPI->getApiString('ztamp/'.$_SESSION['ztamp'].'/owner?action=add&login='.$_GET['add_owner'].'&'.$ojnAPI->getToken()));
+else if(!empty($_GET['rm_owner']))
+  Message::AddFromApi($ojnAPI->getApiString('ztamp/'.$_SESSION['ztamp'].'/owner?action=del&login='.$_GET['rm_owner'].'&'.$ojnAPI->getToken()));
+else
+  $reload=false;
+
+if($reload)
+{
+  header('Location: /account/ztamp.php');    
+  exit;
+}
 ?>
 						<h3><?php echo __tr("Setup of ztamp '%1'", !empty($_SESSION['ztamp_name']) ? $_SESSION['ztamp_name'] : $_SESSION['ztamp']) ?></h3>
 					</div> <!-- /widget-header -->
 
 
 <div class="widget-content">
-  <fieldset>
-    <legend>Informations</legend>
-    Owner(s):
-    <ul>
-      <?php foreach($ownersList as $login): ?>
-      <li><?php echo $login; ?></li>
-      <?php endforeach; ?>
-    </ul>   
-  </fieldset>
   <form>
     <fieldset>
       <legend>Configuration</legend>
@@ -109,12 +114,25 @@ $plugins = $ojnAPI->getListOfPlugins(false, $ojnTemplate->getLanguage());
     </fieldset>
   </form>
 <?php if($Infos['isAdmin']): ?>
-  <fieldset>
-    <form method="get">
-      <legend>Debug features</legend>
-      <input name="resetown" type="submit" value="Liberer le ztamp de ce compte">
-  </form>
-  </fieldset>
+  <div class="card alert alert-light">
+    <h4 class="card-header alert alert-danger">Administration</h4>
+    <div class="card-body">
+      Ztamp ID <?php echo $_SESSION['ztamp']; ?><br />
+      Owner(s):
+      <ul>
+        <?php foreach($ownersList as $login): ?>
+        <li class="text-primary"><?php echo $login; ?> <a class="text-danger" href="?rm_owner=<?php echo $login; ?>">Supprimer</a></li>
+        <?php endforeach; ?>
+      </ul>
+      <form class="form-inline" method="get">
+        <label for="add_owner">Add owner</label>
+        <input type="text" name="add_owner" placeholder="Login" />
+        <input type="submit" value="Valider" class="btn btn-primary" />
+      </form>
+      <a class="btn btn-warning" href="?resetown">Liberer le ztamp de ce compte</a>
+      <a class="btn btn-danger" href="?delete">Supprimer ce Ztamp</a>
+    </div>
+  </div>
 <?php endif; ?>
 <?php }
 ?>
