@@ -274,7 +274,7 @@ if($reload)
 	<option value=""></option>
 	<?php  if(!empty($pList))
 	foreach($pList as $k => $item) { ?>
-		<option <?php if($k == $defaults['RFID']): ?> selected="selected"<?php endif; ?>value="<?php echo urldecode($k) ?>"><?php echo urldecode($item); ?></option>
+		<option <?php if($k == $defaults['RFID']): ?> selected="selected"<?php endif; ?>value="<?php echo urldecode($k) ?>"><?php echo urldecode($k); ?></option>
 	<?php } ?>
 </select>
             </div>
@@ -291,7 +291,7 @@ if($reload)
 	<option value=""></option>
 	<?php  if(!empty($pList))
 	foreach($pList as $k => $item) { ?>
-		<option value="<?php echo urldecode($k) ?>"><?php echo urldecode($item); ?></option>
+		<option value="<?php echo urldecode($item) ?>"><?php echo $k; ?></option>
 	<?php } ?>
 </select> <?php echo __tr("on Ztamp") ?> <select name="atag" class="select2" style="width: 300px">
     <option value=""></option>
@@ -521,6 +521,6 @@ if(!empty($wList)){
 <?php } ?>
 </fieldset>
 <?php
-$js = '<link href="js/select2.css" rel="stylesheet"/><script src="js/select2.js"></script> <script>$(document).ready(function() { $(".select2").select2(); });</script>';
+$js = '<link href="/media/js/select2.css" rel="stylesheet"/><script src="/media/js/select2.js"></script> <script>$(document).ready(function() { $(".select2").select2(); });</script>';
 $ojnTemplate->setJS($js);
 ?>

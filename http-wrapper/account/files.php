@@ -26,7 +26,7 @@ if (is_dir($user_dir)) {
 		$f = array();
 		$f['name'] = $file;
 		$retour = "";
-		$out = exec("/usr/bin/ffprobe -sexagesimal -show_streams -show_format " . $user_dir.$file, $retour);
+		$out = exec("/usr/bin/ffprobe -sexagesimal -show_streams -show_format " . $user_dir.escapeshellcmd($file), $retour);
 		foreach($retour as $line)
 		{
 			$line = explode("=", $line);

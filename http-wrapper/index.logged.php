@@ -187,7 +187,7 @@ $silence_survey = false;
 	<?php endif; ?>
 								</tr></thead>
 							<tbody>
-						<?php if(count($bunnies) && is_array($bunnies)): ?>
+						<?php if(is_array($bunnies) && count($bunnies)): ?>
 						<?php foreach($bunnies as $mac => $name): ?>
 							<tr>
 								<td class="description"><?php echo $mac?> </td>

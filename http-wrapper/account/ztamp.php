@@ -79,28 +79,42 @@ Dernier Ztamp utilis&eacute;  par <?php echo $nom; ?> (<?php echo $mac; ?>): <?p
 }
 }
 } else {
+$ownersList = array();
+$q = $ojnAPI->getAPIList('ztamp/'.$_SESSION['ztamp'].'/owner?action=list&'.$ojnAPI->getToken());
+foreach($q as $it)
+  if(!empty($it))
+    $ownersList[] = (string)($it);
 ?>
 						<h3><?php echo __tr("Setup of ztamp '%1'", !empty($_SESSION['ztamp_name']) ? $_SESSION['ztamp_name'] : $_SESSION['ztamp']) ?></h3>
 					</div> <!-- /widget-header -->
 
 
-					<div class="widget-content">
-<form>
-<fieldset>
-<legend>Configuration</legend>
+<div class="widget-content">
+  <fieldset>
+    <legend>Informations</legend>
+    Owner(s):
+    <ul>
+      <?php foreach($ownersList as $login): ?>
+      <li><?php echo $login; ?></li>
+      <?php endforeach; ?>
+    </ul>   
+  </fieldset>
+  <form>
+    <fieldset>
+      <legend>Configuration</legend>
 <?php
 $plugins = $ojnAPI->getListOfPlugins(false, $ojnTemplate->getLanguage());
 ?>
-Nom : <input type="text" name="ztamp_name" value="<?php echo $_SESSION['ztamp_name']; ?>"> <input type="submit" value="Enregistrer">
-</form>
-</fieldset>
+      Nom : <input type="text" name="ztamp_name" value="<?php echo $_SESSION['ztamp_name']; ?>"> <input type="submit" value="Enregistrer">
+    </fieldset>
+  </form>
 <?php if($Infos['isAdmin']): ?>
-<fieldset>
-<form method="get">
-<legend>Debug features</legend>
-<input name="resetown" type="submit" value="Liberer le ztamp de ce compte">
-</fieldset>
-</form>
+  <fieldset>
+    <form method="get">
+      <legend>Debug features</legend>
+      <input name="resetown" type="submit" value="Liberer le ztamp de ce compte">
+  </form>
+  </fieldset>
 <?php endif; ?>
 <?php }
 ?>

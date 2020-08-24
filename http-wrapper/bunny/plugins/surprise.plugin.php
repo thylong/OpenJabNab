@@ -47,7 +47,7 @@ $freqs = array(
 <option value="<?php echo $folder ?>"><?php echo $folder ?></option>
 <?php } ?>
 </select>
-	<p class="help-block"><?php echo __tr('You can now use your file groups') ?>. <a href="files.php"><?php echo __tr('Create a group') ?></a></p>
+	<p class="help-block"><?php echo __tr('You can now use your file groups') ?>. <a href="/account/files.php"><?php echo __tr('Create a group') ?></a></p>
             </div>
           </div>
           <div class="control-group">
