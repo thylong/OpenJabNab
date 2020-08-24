@@ -459,6 +459,23 @@ API_CALL(Ztamp::Api_Owner)
 	{
 		return new ApiManager::ApiList(GetGlobalSetting("OwnerAccounts",QStringList()).toStringList());
 	}
+	else if(action == "add")
+	{
+		if(!hRequest.HasArg("login"))
+			return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("login"));
+
+		QString owner = hRequest.GetArg("login");
+		if(owner == "")
+			return new ApiManager::ApiError(Translator::tr("Bad login", account));
+
+		QStringList owners = GetGlobalSetting("OwnerAccounts",QStringList()).toStringList();
+		if(owners.contains(owner))
+			return new ApiManager::ApiError(Translator::tr("'%1' is not an owner", account).arg(owner));
+		
+		owners.append(owner);
+		SetGlobalSetting("OwnerAccounts", owners);
+		return new ApiManager::ApiOk(Translator::tr("Owner '%1' added", account).arg(owner));
+	}
 	else if(action == "del")
 	{
 		if(!hRequest.HasArg("login"))

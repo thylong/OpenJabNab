@@ -1053,19 +1053,17 @@ API_CALL(AccountManager::Api_ListSound)
 
 API_CALL(AccountManager::Api_User)
 {
-	QString login = "";
-	Account *user = listOfAccountsByName.value(account.GetLogin().toLatin1());
+	QString login = account.GetLogin();
 
 	if(hRequest.HasArg("login"))
-	{
 		login = hRequest.GetArg("login");
 
-		user = listOfAccountsByName.value(login.toLatin1());
-		if(user == NULL)
-			return new ApiManager::ApiError(Translator::tr("Account not found", account));
-	}
+	Account *user = listOfAccountsByName.value(login.toLatin1());
+	if(user == NULL)
+		return new ApiManager::ApiError(Translator::tr("Account '%1' not found", account).arg(login));
 
-	if(login != "" && (!account.IsAdmin() || login != account.GetLogin()))
+	//if(login != "" && (!account.IsAdmin() || login != account.GetLogin()))
+	if(user != &account && !account.IsAdmin())
 		return new ApiManager::ApiError(Translator::tr("Access denied", account));
 
 	if(!hRequest.HasArg("action"))
@@ -1087,9 +1085,28 @@ API_CALL(AccountManager::Api_User)
 		}
 		return new ApiManager::ApiString(Translator::tr("User informations updated", account));
 	}
-	else
+	else if(action == "add")
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1'", account).arg("action"));
+		if(hRequest.HasArg("bunny"))
+		{
+			QString mac = hRequest.GetArg("bunny");
+			user->AddBunny(mac.toLatin1());
+			// FIXME Add user as bunny owner in bunny config (see APICall Api_AddBunny)
+		}
+		else if(hRequest.HasArg("ztamp"))
+		{
+			QString zID = hRequest.GetArg("ztamp");
+			user->AddZtamp(zID.toLatin1());
+			// FIXME Add user as ztamp owner in ztamp config (see APICall Api_AddZtamp)
+		}
+		else
+			return new ApiManager::ApiError(Translator::tr("Invalid argument for action '%1'", account).arg(action));
 	}
+	else
+		return new ApiManager::ApiError(Translator::tr("Bad argument '%1'", account).arg("action"));
+
+	user->SetSaveNeeded(true);
+	return new ApiManager::ApiString(Translator::tr("User informations updated", account));
 }
+
 
