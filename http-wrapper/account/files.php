@@ -7,46 +7,50 @@ if(!isset($_SESSION['token'])) {
 	exit;
 }
 
-$quota = QUOTA;
 if($Infos['status'] == "VIP")
 	$quota = 100;
-if($Infos['status'] == "Premium")
+else if($Infos['status'] == "Premium")
 	$quota = 250;
-if($Infos['status'] == "Admin")
+else if($Infos['status'] == "Admin")
 	$quota = 1000;
+else 
+	$quota = QUOTA;
 
 $user_dir = ROOT_LOCAL . "users/" . md5($_SESSION['login']) . "/";
 $user_files = array();
 $size = 0;
-if (is_dir($user_dir)) {
-    if ($dh = opendir($user_dir)) {
-        while (($file = readdir($dh)) !== false) {
-	    if($file != '..' && $file != '.')
-	    {
-		$f = array();
-		$f['name'] = $file;
-		$retour = "";
-		$out = exec("/usr/bin/ffprobe -sexagesimal -show_streams -show_format " . $user_dir.escapeshellcmd($file), $retour);
-		foreach($retour as $line)
-		{
-			$line = explode("=", $line);
-			if(isset($line[0]) && isset($line[1])) {
-				$f[$line[0]] = $line[1];
-			}
-		}
-		$f['size'] = !empty($f['size']) ? $f['size'] / 1024 / 1024 : 0;
-		$size += $f['size'] ;
-		$user_files[$f['name']] = $f;
-	    }
+if (is_dir($user_dir)) 
+{
+    if ($dh = opendir($user_dir)) 
+    {
+        while (($file = readdir($dh)) !== false) 
+        {
+          if($file != '..' && $file != '.')
+          {
+            $f = array();
+            $f['name'] = $file;
+            $retour = "";
+            $out = exec("/usr/bin/ffprobe -sexagesimal -show_streams -show_format " . $user_dir.escapeshellcmd($file), $retour);
+            foreach($retour as $line)
+            {
+              $line = explode("=", $line);
+              if(isset($line[0]) && isset($line[1])) {
+                $f[$line[0]] = $line[1];
+              }
+            }
+            $f['size'] = !empty($f['size']) ? $f['size'] / 1024 / 1024 : 0;
+            $size += $f['size'] ;
+            $user_files[$f['name']] = $f;
+          }
         }
         closedir($dh);
     }
     ksort($user_files);
 }
 else
-{
 	mkdir($user_dir);
-}
+
+
 if(isset($_GET['cancel']))
 {
 	$_SESSION['tab'] = 'files_file';
@@ -176,7 +180,8 @@ if(isset($_GET['rg']))
 }
 
 if(!isset($_SESSION['tab']) || !preg_match("|^files_|", $_SESSION['tab']))
-	$_SESSION['tab'] = 'files_file';
+  $_SESSION['tab'] = 'files_file';
+  
 if(isset($_GET['edit']))
 	$_SESSION['tab'] = 'files_group';
 
@@ -187,207 +192,179 @@ if($reload) {
 
 require(ROOT_SITE.'include/message.php');
 ?>
-	<div class="row">
-		<div class="span12">
-			<div class="widget">
-			<div class="widget-header">
-			    <h3><?php echo __tr("File manager") ?></h3>
-			</div>
-			<div class="widget-content">
+<div class="card ">
+  <h5 class="card-header">
+    <i class="icon-user"></i> <?php echo __tr("File manager") ?>
+  </h5>
+  <div class="card-body">
+    <div class="tabbable">
+    <ul class="nav nav-tabs">
+      <li class="nav-item <?php echo $_SESSION['tab'] == 'files_file' ? 'active' : '' ?>">
+        <a class="nav-link" href="#file" data-toggle="tab" role="tab" aria-controls="profile" aria-selected="true"><?php echo __tr('Files') ?></a>
+      </li>
+			<li class="nav-item <?php echo $_SESSION['tab'] == 'files_group' ? 'active' : '' ?>">
+        <a class="nav-link" href="#group" data-toggle="tab" role="tab" aria-controls="profile" aria-selected="false"><?php echo __tr('Groups') ?></a>
+      </li>
+    </ul>
 
-						<div class="tabbable">
-						<ul class="nav nav-tabs">
-						  <li<?php echo $_SESSION['tab'] == 'files_file' ? ' class="active"' : '' ?>><a href="#file" data-toggle="tab"><?php echo __tr('Files') ?></a></li>
-						  <li<?php echo $_SESSION['tab'] == 'files_group' ? ' class="active"' : '' ?>><a href="#group" data-toggle="tab"><?php echo __tr('Groups') ?></a></li>
-						</ul>
-						<br />
-
-							<div class="tab-content">
-								<div class="tab-pane<?php echo $_SESSION['tab'] == 'files_file' ? ' active' : '' ?>" id="file">
-
-
-<?php echo __tr("You can upload files, and use them later with plugins"); ?>.
-<br style="clear:both"/>
-<br />
-<table class="table table-bordered table-striped">
-	<thead>
-	<tr>
-		<th class="span4"><?php echo __tr('Filename') ?></th>
-		<th class="span1"><?php echo __tr('Size') ?></th>
-		<th class="span2"><?php echo __tr('File format') ?></th>
-		<th class="span3"><?php echo __tr('Actions') ?></th>
-	</tr>
-	</thead>
-<tbody>
-<?php
-	$i = 0;
-	foreach($user_files as $file){
-?>
-	<tr>
-		<td><?php echo $file['name']; ?></td>
-		<td><?php echo __tr("%1 Mb", round($file['size'], 3)); ?></td>
-		<td><?php echo round($file['bit_rate']/1000, 0); ?> kbps, <?php echo round($file['sample_rate']/1000,1); ?> kHz, <?php echo $file['channels'] == 2 ? "Stéréo" : "Mono"; ?></td>
-		<td><a href="files.php?r=<?php echo $file['name']; ?>&execute" class="btn btn-small btn-danger"><i class="icon-trash icon-large"></i> <?php echo __tr('Remove') ?></a><?php if($file['bit_rate']/1000 > 97 || $file['channels'] == 2 || $file['sample_rate']/1000 > 45): ?>&nbsp;<a href="files.php?c=<?php echo $file['name']; ?>&execute" class="btn btn-small btn-primary"><i class="icon-trash icon-large"></i> <?php echo __tr('Convert to bunny format') ?></a><?php endif; ?>&nbsp;<a href="files.php?vup=<?php echo $file['name']; ?>&execute" class="btn btn-small btn-success"><i class="icon-volume-up icon-large"></i> <?php echo __tr('Volume up') ?></a></td>
-	</tr>
-<?php } ?>
-</tbody>
-</table>
-<br style="clear:both"/>
-<div class="well">
-<span><?php echo __tr('Quota') ?> : <?php echo __tr('%1 Mb', round($size,2)." / ".$quota) ?></span>
-<br style="clear:both"/>
-<div class="progress progress-<?php echo $size >= 0.9*$quota ? "danger" : ($size >= 0.7*$quota ? "warning" : "success") ?>">
-<div class="bar" style="width: <?php echo round($size*100/$quota, 0); ?>%"></div>
-</div>
-</div>
-<form method="post" class="form-horizontal" enctype="multipart/form-data">
-<input type="hidden" name="f" value="upload">
-          <div class="control-group">
-            <label for="input01" class="control-label"><?php echo __tr("Upload a file") ?></label>
-            <div class="controls">
-<input type="file" name="file" maxlength="6000000" accept="audio/mpeg"/>
+		<div class="tab-content">
+      <br />
+		  <div class="tab-pane<?php echo $_SESSION['tab'] == 'files_file' ? ' active' : '' ?>" id="file">
+        <?php echo __tr("You can upload files, and use them later with plugins"); ?>.
+        <br />
+        <br />
+        <table class="table table-bordered table-striped">
+	        <thead>
+            <tr>
+              <th class="span4"><?php echo __tr('Filename') ?></th>
+              <th class="span1"><?php echo __tr('Size') ?></th>
+              <th class="span2"><?php echo __tr('File format') ?></th>
+              <th class="span3"><?php echo __tr('Actions') ?></th>
+            </tr>
+	        </thead>
+          <tbody>
+            <?php foreach($user_files as $file): ?>
+            <tr>
+              <td><?php echo $file['name']; ?></td>
+              <td><?php echo __tr("%1 Mb", round($file['size'], 3)); ?></td>
+              <td><?php echo round($file['bit_rate']/1000, 0); ?> kbps, <?php echo round($file['sample_rate']/1000,1); ?> kHz, <?php echo $file['channels'] == 2 ? "Stéréo" : "Mono"; ?></td>
+              <td>
+                <a href="files.php?r=<?php echo $file['name']; ?>&execute" class="btn btn-small btn-danger"><i class="icon-trash icon-large"></i> <?php echo __tr('Remove') ?></a>&nbsp;
+                <?php if($file['bit_rate']/1000 > 97 || $file['channels'] == 2 || $file['sample_rate']/1000 > 45): ?><a href="files.php?c=<?php echo $file['name']; ?>&execute" class="btn btn-small btn-primary"><i class="icon-trash icon-large"></i> <?php echo __tr('Convert to bunny format') ?></a>&nbsp;<?php endif; ?>
+                <a href="files.php?vup=<?php echo $file['name']; ?>&execute" class="btn btn-small btn-success"><i class="icon-volume-up icon-large"></i> <?php echo __tr('Volume up') ?></a>
+              </td>
+            </tr>
+            <?php endforeach ?>
+          </tbody>
+        </table>
+        <div class="well">
+          <?php echo __tr('Quota') ?> : <?php echo __tr('%1 Mb', round($size,2)." / ".$quota) ?>
+          <div class="progress progress-<?php echo $size >= 0.9*$quota ? "danger" : ($size >= 0.7*$quota ? "warning" : "success") ?>">
+            <div class="bar" style="width: <?php echo round($size*100/$quota, 0); ?>%"></div>
+          </div>
+        </div>
+        <br />
+        <form method="post" class="form-horizontal" enctype="multipart/form-data">
+          <fieldset class="border p-3">
+            <legend><h6><?php echo __tr("Upload a file"); ?></h6></legend>
+            <input type="hidden" name="f" value="upload">
+            <div class="form-group row">
+              <label class="col-sm-1 col-form-label" for="file"><?php echo __tr("File") ?></label>
+              <div class="col-sm-4">
+                <input type="file" class="form-control" name="file" maxlength="6000000" accept="audio/mpeg"/>
+              </div>
             </div>
-          </div>
-          <div class="form-actions">
-            <button class="btn btn-primary" type="submit"><?php echo __tr("Add file") ?></button>
-          </div>
-</form>
-
-								</div>
-
-								<div class="tab-pane<?php echo $_SESSION['tab'] == 'files_group' ? ' active' : '' ?>" id="group">
-
-<?php
-/*
-	DECLARE_API_CALL("delgroup(login,group)", &AccountManager::Api_DelSoundGroup);
-	DECLARE_API_CALL("editgroup(login,group)", &AccountManager::Api_EditSoundGroup);
-	DECLARE_API_CALL("listgroup(login)", &AccountManager::Api_ListSoundGroup);
-	DECLARE_API_CALL("listsound(login,group)", &AccountManager::Api_ListSound);
-	DECLARE_API_CALL("addsound(login,group,sound)", &AccountManager::Api_AddSound);
-	DECLARE_API_CALL("removesound(login,group,sound)", &AccountManager::Api_RemoveSound);
-*/
-$groups = $ojnAPI->getApiList("accounts/listgroup?login=".$_SESSION['login']."&".$ojnAPI->getToken());
-?>
-<?php if(isset($_GET['edit']) && in_array($_GET['edit'], $groups)): ?>
-<?php $group = $_GET['edit']; ?>
-
-<table class="table table-bordered table-striped">
-	<thead>
-	<tr>
-		<th class="span5"><?php echo __tr('File') ?></th>
-		<th class="span3"><?php echo __tr('Actions') ?></th>
-	</tr>
-	</thead>
-<tbody>
-<?php
-apcu_delete(APC_PREFIX.'ojn_group_'.$_SESSION['login']."_".$group);
-if(!($gsounds = apcu_fetch(APC_PREFIX.'ojn_group_'.$_SESSION['login']."_".$group))) {
-	$gsounds = $ojnAPI->getApiList("accounts/listsound?login=".$_SESSION['login']."&group=".$group."&".$ojnAPI->getToken());
-	apcu_store(APC_PREFIX.'ojn_group_'.$_SESSION['login']."_".$group, $gsounds, 86400);
-}
-?>
-<?php foreach($gsounds as $sound): ?>
-	<tr>
-		<td><?php echo $sound; ?></td>
-		<td><a href="files.php?edit=<?php echo $group ?>&rs=<?php echo base64_encode($sound); ?>" class="btn btn-small btn-danger"><i class="icon-trash icon-large"></i> <?php echo __tr('Remove') ?></a></td>
-	</tr>
-<?php endforeach; ?>
-</tbody>
-</table>
-<br style="clear:both"/>
-<?php /*
-<form method="post" class="form-horizontal">
-          <div class="control-group">
-            <label for="input01" class="control-label"><?php echo __tr("New name") ?></label>
-            <div class="controls">
-<input type="text" name="egroup" value="<?php echo trim($group) ?>" />
+            <div class="form-group row">
+              <div class="col-sm-12 text-left">
+                <button class="btn btn-primary" type="submit"><?php echo __tr("Add file") ?></button>
+              </div>
             </div>
-          </div>
-          <div class="form-actions">
-            <button class="btn btn-primary" type="submit"><?php echo __tr("Rename group") ?></button>
-          </div>
-</form>
-*/ ?>
-<form method="post" class="form-horizontal">
-          <div class="control-group">
-            <label for="input01" class="control-label"><?php echo __tr("File to add") ?></label>
-            <div class="controls">
-<select name="addfile">
-<?php	foreach($user_files as $file): ?>
-		<option value="<?php echo base64_encode($file['name']); ?>"><?php echo $file['name']; ?></option>
-<?php endforeach; ?>
-</select>
+        </form>
+      </div>
 
+    	<div class="tab-pane<?php echo $_SESSION['tab'] == 'files_group' ? ' active' : '' ?>" id="group">
+        <?php
+          $groups = $ojnAPI->getApiList("accounts/listgroup?login=".$_SESSION['login']."&".$ojnAPI->getToken());
+        ?>
+        <?php if(isset($_GET['edit']) && in_array($_GET['edit'], $groups)): ?>
+        <?php $group = $_GET['edit']; ?>
+        <table class="table table-bordered table-striped">
+          <thead>
+            <tr>
+              <th class="span5"><?php echo __tr('File') ?></th>
+              <th class="span3"><?php echo __tr('Actions') ?></th>
+            </tr>
+          </thead>
+          <tbody>
+            <?php
+            apcu_delete(APC_PREFIX.'ojn_group_'.$_SESSION['login']."_".$group);
+            if(!($gsounds = apcu_fetch(APC_PREFIX.'ojn_group_'.$_SESSION['login']."_".$group))) {
+              $gsounds = $ojnAPI->getApiList("accounts/listsound?login=".$_SESSION['login']."&group=".$group."&".$ojnAPI->getToken());
+              apcu_store(APC_PREFIX.'ojn_group_'.$_SESSION['login']."_".$group, $gsounds, 86400);
+            }
+            foreach($gsounds as $sound): ?>
+            <tr>
+              <td><?php echo $sound; ?></td>
+              <td><a href="files.php?edit=<?php echo $group ?>&rs=<?php echo base64_encode($sound); ?>" class="btn btn-small btn-danger"><i class="icon-trash icon-large"></i> <?php echo __tr('Remove') ?></a></td>
+            </tr>
+            <?php endforeach; ?>
+          </tbody>
+        </table>
+        
+        <form method="post" class="form-horizontal">
+          <fieldset class="border p-3">
+            <legend><h6><?php echo __tr("Add a new file to the group") ?></h6></legend>
+            <div class="form-group row">
+              <label class="col-sm-2 col-form-label" for="addfile"><?php echo __tr("File to add") ?></label>
+              <div class="col-sm-4">
+                <select name="addfile" class="form-control" >
+                  <?php	foreach($user_files as $file): ?>
+                  <option value="<?php echo base64_encode($file['name']); ?>"><?php echo $file['name']; ?></option>
+                  <?php endforeach; ?>
+                </select>
+              </div>
             </div>
-          </div>
-          <div class="form-actions">
-            <button class="btn btn-primary" type="submit"><?php echo __tr("Add file") ?></button>
-            <button class="btn btn-danger" type="button" onclick="document.location.href='files.php?cancel'"><?php echo __tr("Cancel") ?></button>
-          </div>
-</form>
-
-
-
-
-
-
-
-
-
-<?php else: ?>
-<table class="table table-bordered table-striped">
-	<thead>
-	<tr>
-		<th class="span4"><?php echo __tr('Group name') ?></th>
-		<th class="span5"><?php echo __tr('Files in group') ?></th>
-		<th class="span3"><?php echo __tr('Actions') ?></th>
-	</tr>
-	</thead>
-<tbody>
-<?php
-	foreach($groups as $group){
-if(!($gsounds = apcu_fetch(APC_PREFIX.'ojn_group_'.$_SESSION['login']."_".$group))) {
-	$gsounds = $ojnAPI->getApiList("accounts/listsound?login=".$_SESSION['login']."&group=".$group."&".$ojnAPI->getToken());
-	apcu_store(APC_PREFIX.'ojn_group_'.$_SESSION['login']."_".$group, $gsounds, 86400);
-}
-?>
-	<tr>
-		<td><?php echo $group; ?></td>
-		<td><ul>
-<?php foreach($gsounds as $sound): ?>
-	<li><?php echo $sound; ?></li>
-<?php endforeach; ?>
-		</ul></td>
-		<td><a href="files.php?rg=<?php echo $group; ?>" class="btn btn-small btn-danger"><i class="icon-trash icon-large"></i> <?php echo __tr('Remove') ?></a>&nbsp;<a href="files.php?edit=<?php echo $group; ?>" class="btn btn-small btn-primary"><i class="icon-trash icon-large"></i> <?php echo __tr('Edit') ?></a></td>
-	</tr>
-<?php } ?>
-</tbody>
-</table>
-<br style="clear:both"/>
-<form method="post" class="form-horizontal">
-          <div class="control-group">
-            <label for="input01" class="control-label"><?php echo __tr("New group") ?></label>
-            <div class="controls">
-<input type="text" name="ngroup" />
+            <div class="form-group row">
+              <div class="col-sm-12 text-left">
+                <button class="btn btn-primary" type="submit"><?php echo __tr("Add file") ?></button>
+                <button class="btn btn-danger" type="button" onclick="document.location.href='files.php?cancel'"><?php echo __tr("Cancel") ?></button>
+              </div>
             </div>
-          </div>
-          <div class="form-actions">
-            <button class="btn btn-primary" type="submit"><?php echo __tr("Create group") ?></button>
-          </div>
-</form>
-<?php endif; ?>
+        </form>
+        <?php else: ?>
+        <table class="table table-bordered table-striped">
+          <thead>
+            <tr>
+              <th class="span4"><?php echo __tr('Group name') ?></th>
+              <th class="span5"><?php echo __tr('Files in group') ?></th>
+              <th class="span3"><?php echo __tr('Actions') ?></th>
+            </tr>
+          </thead>
+          <tbody>
+            <?php foreach($groups as $group):
+              if(!($gsounds = apcu_fetch(APC_PREFIX.'ojn_group_'.$_SESSION['login']."_".$group))) {
+                $gsounds = $ojnAPI->getApiList("accounts/listsound?login=".$_SESSION['login']."&group=".$group."&".$ojnAPI->getToken());
+                apcu_store(APC_PREFIX.'ojn_group_'.$_SESSION['login']."_".$group, $gsounds, 86400);
+              }
+            ?>
+            <tr>
+              <td><?php echo $group; ?></td>
+              <td>
+                <ul>
+                  <?php foreach($gsounds as $sound): ?>
+                  <li><?php echo $sound; ?></li>
+                  <?php endforeach; ?>
+                </ul>
+              </td>
+              <td>
+                <a href="files.php?rg=<?php echo $group; ?>" class="btn btn-small btn-danger"><i class="icon-trash icon-large"></i> <?php echo __tr('Remove') ?></a>&nbsp;
+                <a href="files.php?edit=<?php echo $group; ?>" class="btn btn-small btn-primary"><i class="icon-trash icon-large"></i> <?php echo __tr('Edit') ?></a>
+              </td>
+            </tr>
+            <?php endforeach; ?>
+          </tbody>
+        </table>
 
-
-
-								</div>
+        <form method="post" class="form-horizontal">
+          <fieldset class="border p-3">
+            <legend><h6><?php echo __tr("New group") ?></h6></legend>
+            <div class="form-group row">
+              <label class="col-sm-1 col-form-label" for="ngroup"><?php echo __tr("Group") ?></label>
+              <div class="col-sm-2">
+                <input type="text" class="form-control" name="ngroup" >
+              </div>
+            </div>
+            <div class="form-group row">
+              <div class="col-sm-12 text-left">
+                <button class="btn btn-primary" type="submit"><?php echo __tr("Create group") ?></button>
+              </div>
+            </div>
+        </form>
+        <?php endif; ?>
+      </div>
+    </div>
+  </div>
 </div>
-</div>
-</div>
-
-
-</div>
-		</div>
-	</div>
 <?php
 require_once "../include/append.php";
 ?>

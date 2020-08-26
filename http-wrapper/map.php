@@ -1,28 +1,19 @@
 <?php
 if(!file_exists("include/common.php"))
-	header('Location: install.php');
+  header('Location: install.php');
 require_once "include/common.php";
 $ojnTemplate->setTitle(__tr('Map'));
 
 require_once('include/message.php');
 ?>
-	      <div class="row">
-	      	<div class="span12">
-					<div class="widget">
-
-						<div class="widget-header">
-							<i class="icon-map"></i>
-							<h3><?php echo __tr('Location of bunnies') ?></h3>
-						</div>
-
-						<div class="widget-content">
-							<div id="map" style="height: 500px"></div>
-
-						</div>
-
-					</div>
-		</div>
-		</div>
+<div class="card my-4">
+	<h5 class="card-header">
+		<i class="icon-world"></i> <?php echo __tr('Location of bunnies') ?>
+	</h5>
+	<div class="card-body">
+		<div id="map" style="height: 500px"></div>
+	</div>
+</div>
 <?php
 //$js = ' <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7/leaflet.css" /><script src="http://cdn.leafletjs.com/leaflet-0.7/leaflet.js"></script>';
 $js = ' <link rel="stylesheet" href="http://unpkg.com/leaflet@1.4.0/dist/leaflet.css" /><script src="http://unpkg.com/leaflet@1.4.0/dist/leaflet.js"></script>';
@@ -36,25 +27,25 @@ $js .= ' <script src="http://leaflet.github.io/Leaflet.markercluster/dist/leafle
 /*
 $js .= '
 <script>
-		var tiles = L.tileLayer(\'http://{s}.tile.osm.org/{z}/{x}/{y}.png\', {
-				maxZoom: 18,
-				attribution: \'&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors\'
-			}),
-			latlng = L.latLng(-37.82, 175.24);
+    var tiles = L.tileLayer(\'http://{s}.tile.osm.org/{z}/{x}/{y}.png\', {
+        maxZoom: 18,
+        attribution: \'&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors\'
+      }),
+      latlng = L.latLng(-37.82, 175.24);
 
-		var map = L.map(\'map\', {center: latlng, zoom: 13, layers: [tiles]});
+    var map = L.map(\'map\', {center: latlng, zoom: 13, layers: [tiles]});
 
-		var markers = L.markerClusterGroup();
+    var markers = L.markerClusterGroup();
 
-		for (var i = 0; i < addressPoints.length; i++) {
-			var a = addressPoints[i];
-			var title = a[2];
-			var marker = L.marker(new L.LatLng(a[0], a[1]), { title: title });
-			marker.bindPopup(title);
-			markers.addLayer(marker);
-		}
+    for (var i = 0; i < addressPoints.length; i++) {
+      var a = addressPoints[i];
+      var title = a[2];
+      var marker = L.marker(new L.LatLng(a[0], a[1]), { title: title });
+      marker.bindPopup(title);
+      markers.addLayer(marker);
+    }
 
-		map.addLayer(markers);
+    map.addLayer(markers);
 ';
 */
 $js .= '<script>
@@ -71,9 +62,9 @@ L.tileLayer(\'http://tile.thunderforest.com/landscape/{z}/{x}/{y}.png?apikey={ap
     apiKey: \''. THUNDERFOREST_APIKEY .'\'
 }).addTo(map);
 
-	map.setView(new L.LatLng(48.85, 2.35),4);
+  map.setView(new L.LatLng(48.85, 2.35),4);
 var markers = L.markerClusterGroup();
-	';
+  ';
 
 //var marker = L.marker([51.5, -0.09]).addTo(map);
 

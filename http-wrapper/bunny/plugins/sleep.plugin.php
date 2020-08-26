@@ -32,87 +32,62 @@ if($reload) {
 	header("Location: bunny_plugin.php?p=sleep");
 	exit;
 }
-/*
-$wakeup = "";
-$sleep = "";
-*/
 $lists = $ojnAPI->getApiList("bunny/".$_SESSION['bunny']."/sleep/config?action=list&".$ojnAPI->getToken());
 ?>
 <form method="post" class="form-horizontal">
-          <div class="control-group">
-            <label for="input01" class="control-label"><?php echo __tr('Go to sleep') ?></label>
-            <div class="controls">
-<select name="s2">
-<?php foreach($days as $d => $day): ?>
-<option value="<?php echo $d ?>"><?php echo $day ?></option>
-<?php endforeach; ?>
-</select>&nbsp;&nbsp;
-<div class="input-append bootstrap-timepicker">
-<input type="text" name="s1" value="" class="timepicker input-small"><span class="add-on">
-<i class="icon-time"></i>
-</span>
-</div>
-            </div>
-          </div>
+  <fieldset  class="border p-3">
+    <legend><h6><?php echo __tr('Add a new sleep time'); ?></h6></legend>
+    <div class="form-group row">
+      <label class="col-sm-1 col-form-label" for="s2"><?php echo __tr('Go to sleep') ?></label>
+      <div class="col-sm-4">    
+        <select name="s2" class="form-control">
+          <?php foreach($days as $d => $day): ?>
+          <option value="<?php echo $d ?>"><?php echo $day ?></option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+      <div class="col-sm-2 input-group">
+        <div class="input-group-preprend">
+          <div class="input-group-text"><i class="icon-time"></i></div>
+        </div>
+        <input type="text" name="s1" value="" class="timepicker form-control  text-center">
+      </div>
+    </div>
+    <div class="form-group row">
+      <label class="col-sm-1 col-form-label" for="w2"><?php echo __tr('Wake up') ?></label>
+      <div class="col-sm-4">    
+        <select name="w2" class="form-control">
+          <?php foreach($days as $d => $day): ?>
+          <option value="<?php echo $d ?>"><?php echo $day ?></option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+      <div class="col-sm-2 input-group">
+        <div class="input-group-preprend">
+          <div class="input-group-text"><i class="icon-time"></i></div>
+        </div>
+        <input type="text" name="w1" value="" class="timepicker form-control  text-center">
+      </div>
+    </div>
 
-          <div class="control-group">
-            <label for="input01" class="control-label"><?php echo __tr('Wake up') ?></label>
-            <div class="controls">
-<select name="w2">
-<?php foreach($days as $d => $day): ?>
-<option value="<?php echo $d ?>"><?php echo $day ?></option>
-<?php endforeach; ?>
-</select>&nbsp;&nbsp;
-<div class="input-append bootstrap-timepicker">
-<input type="text" name="w1" value="" class="timepicker input-small"><span class="add-on">
-<i class="icon-time"></i>
-</span>
-</div>
-            </div>
-          </div>
-
-          <div class="form-actions">
-            <button class="btn btn-primary" type="submit"><?php echo __tr("Add") ?></button>
-            <a href="bunny_plugin.php?p=sleep&wake=true" class="btn btn-info"><?php echo __tr("Wake up") ?></a>
-            <a href="bunny_plugin.php?p=sleep&sleep=true" class="btn btn-info"><?php echo __tr("Go to sleep") ?></a>
-          </div>
+    <div class="form-group row">
+      <div class="col-sm-7 input-group text-center">
+        <button class="btn btn-primary" type="submit"><?php echo __tr("Add") ?></button>
+      </div>
+    </div>
+  </fieldset>
+  <div class="form-group row mt-2">
+    <label class="col-sm-1 col-form-label" ><?php echo __tr('Actions'); ?></label>
+    <div class="col-sm-6"> 
+      <a href="bunny_plugin.php?p=sleep&wake=true" class="btn btn-info"><?php echo __tr("Wake up") ?></a>
+      <a href="bunny_plugin.php?p=sleep&sleep=true" class="btn btn-info"><?php echo __tr("Go to sleep") ?></a>
+    </div>
+  </div>
 </form>
+<script type="text/javascript">
+  $(".timepicker").timepicker({minuteStep: 1,showMeridian: false});
+</script>
 <?php
-$ojnTemplate->setJs('<script type="text/javascript">jQuery(".timepicker").timepicker({minuteStep: 1,showSeconds: false,showMeridian: false});</script>');
-/*
-?>
-<form method="post" class="form-horizontal">
-<?php
-	foreach($days as $id => $day):
-?>
-          <div class="control-group">
-            <label for="input01" class="control-label"><?php echo $day ?></label>
-            <div class="controls">
-
- <div class="input-prepend input-append bootstrap-timepicker">
-<span class="add-on"><?php echo __tr('Wake up') ?></span><input type="text" name="w[<?php echo $id-1; ?>]" value="<?php echo $lists[$id-1]; ?>" class="timepicker input-small"><span class="add-on">
-<i class="icon-time"></i>
-</span>
-</div>
-&nbsp;&nbsp;&nbsp;&nbsp;
- <div class="input-prepend input-append bootstrap-timepicker">
-<span class="add-on"><?php echo __tr('Go to sleep') ?></span><input type="text" name="s[<?php echo $id-1; ?>]" value="<?php echo $lists[$id+6]; ?>" class="timepicker input-small"><span class="add-on">
-<i class="icon-time"></i>
-</span>
-</div>
-            </div>
-          </div>
-<?php
-	endforeach;
-?>
-          <div class="form-actions">
-            <button class="btn btn-primary" type="submit"><?php echo __tr("Save") ?></button>
-            <a href="bunny_plugin.php?p=sleep&wake=true" class="btn btn-info"><?php echo __tr("Wake up") ?></a>
-            <a href="bunny_plugin.php?p=sleep&sleep=true" class="btn btn-info"><?php echo __tr("Go to sleep") ?></a>
-          </div>
-</form>
-<?php
-*/
 global $size;
 $size = 30;
 $offset = 100;
@@ -174,69 +149,72 @@ foreach($lists as $s) {
 	}
 }
 ?>
-<center>
-    <canvas id="myCanvas" width="<?php echo $size*24 + 350?>" height="200"></canvas>
-</center>
-    <script>
-      var canvas = document.getElementById('myCanvas');
-      var context = canvas.getContext('2d');
+<div>
+  <h5><?php echo __tr('Schedule'); ?></h5>
+  <canvas id="myCanvas" width="<?php echo $size*24 + 350?>" height="200"></canvas>
+</div>
+<script>
+  var canvas = document.getElementById('myCanvas');
+  var context = canvas.getContext('2d');
 
-<?php for($i=1; $i<=7; $i++): ?>
-      context.font = "bold 12px sans-serif";
-      context.fillStyle = 'black';
-      context.fillText("<?php echo $days[$i] ?>", 10, <?php echo 25+($i-1)*20 ?>);
+  <?php 
+  for($i=1; $i<=7; $i++): ?>
+  context.font = "bold 12px sans-serif";
+  context.fillStyle = 'black';
+  context.fillText("<?php echo $days[$i] ?>", 10, <?php echo 25+($i-1)*20 ?>);
 
-      context.beginPath();
-      context.rect(<?php echo $offset ?>, <?php echo 10+($i-1)*20 ?>, <?php echo $size*24?>, 20);
-      context.fillStyle = 'yellow';
-      context.fill();
-      context.lineWidth = 1;
-      context.strokeStyle = 'black';
-      context.stroke();
-      context.closePath();
-<?php endfor; ?>
-<?php foreach($sleeps as $day => $list): ?>
-<?php foreach($list as $sleep): ?>
-      context.beginPath();
-      context.rect(<?php echo $offset+$sleep[0] ?>, <?php echo 10+($day-1)*20 ?>, <?php echo $sleep[1] ?>, 20);
-      context.fillStyle = 'blue';
-      context.fill();
-      context.lineWidth = 1;
-      context.strokeStyle = 'black';
-      context.stroke();
-      context.closePath();
-<?php endforeach; ?>
-<?php endforeach; ?>
+  context.beginPath();
+  context.rect(<?php echo $offset ?>, <?php echo 10+($i-1)*20 ?>, <?php echo $size*24?>, 20);
+  context.fillStyle = 'yellow';
+  context.fill();
+  context.lineWidth = 1;
+  context.strokeStyle = 'black';
+  context.stroke();
+  context.closePath();
+  <?php 
+  endfor; 
 
-<?php for($i=0; $i<3; $i++): ?>
-context.beginPath();
-context.strokeStyle = 'black';
-context.setLineDash([1,5]);
-context.moveTo(<?php echo $offset+6*($i+1)*($size) ?>, 10);
-context.lineTo(<?php echo $offset+6*($i+1)*($size) ?>,150);
-context.stroke();
-context.closePath();
-<?php endfor; ?>
+  foreach($sleeps as $day => $list):
+    foreach($list as $sleep): ?>
+  context.beginPath();
+  context.rect(<?php echo $offset+$sleep[0] ?>, <?php echo 10+($day-1)*20 ?>, <?php echo $sleep[1] ?>, 20);
+  context.fillStyle = 'blue';
+  context.fill();
+  context.lineWidth = 1;
+  context.strokeStyle = 'black';
+  context.stroke();
+  context.closePath();
+  <?php 
+    endforeach;
+  endforeach; ?>
 
-    </script>
+  <?php for($i=0; $i<3; $i++): ?>
+  context.beginPath();
+  context.strokeStyle = 'black';
+  context.setLineDash([1,5]);
+  context.moveTo(<?php echo $offset+6*($i+1)*($size) ?>, 10);
+  context.lineTo(<?php echo $offset+6*($i+1)*($size) ?>,150);
+  context.stroke();
+  context.closePath();
+  <?php endfor; ?>
+
+</script>
 <table class="table table-bordered table-striped span11">
-<tr>
-<th><?php echo __tr('Go to sleep') ?></th>
-<th><?php echo __tr('Wake up') ?></th>
-<th><?php echo __tr('Actions') ?></th>
-</tr>
-<?php
-foreach($lists as $i => $s) {
-  if(empty($s))
-    continue;
-  list($s1, $s2, $w1, $w2) = preg_split('/\|/', $s);
-?>
-<tr>
-<td><?php echo $s1 ?>, <?php echo $days[$s2] ?></td>
-<td><?php echo $w1 ?>, <?php echo $days[$w2] ?></td>
-<td><a href="bunny_plugin.php?p=sleep&rm=<?php echo $i ?>"><?php echo __tr('Remove') ?></a></td>
-</tr>
-<?php
-}
-?>
+  <tr>
+    <th><?php echo __tr('Go to sleep') ?></th>
+    <th><?php echo __tr('Wake up') ?></th>
+    <th><?php echo __tr('Actions') ?></th>
+    </tr>
+  <?php
+  foreach($lists as $i => $s):
+    if(empty($s))
+      continue;
+    list($s1, $s2, $w1, $w2) = preg_split('/\|/', $s);
+  ?>
+  <tr>
+    <td><?php echo $s1 ?>, <?php echo $days[$s2] ?></td>
+    <td><?php echo $w1 ?>, <?php echo $days[$w2] ?></td>
+    <td><a href="bunny_plugin.php?p=sleep&rm=<?php echo $i ?>"><?php echo __tr('Remove') ?></a></td>
+  </tr>
+  <?php endforeach; ?>
 </table>

@@ -7,19 +7,18 @@ if(isset($_POST['voix'])) {
 $voices = $ojnAPI->getApiList("bunny/".$_SESSION['bunny']."/clock/voice?action=list&".$ojnAPI->getToken());
 $voice = $ojnAPI->getApiValue("bunny/".$_SESSION['bunny']."/clock/voice?action=get&".$ojnAPI->getToken());
 ?>
-<form method="post" class="form-horizontal">
-          <div class="control-group">
-            <label for="voix" class="control-label"><?php echo __tr("Voice to use") ?></label>
-            <div class="controls">
-<select name="voix">
-<?php foreach($voices as $voix) { ?>
-<option value="<?php echo $voix ?>"<?php echo $voix == $voice ? ' selected="selected"' : ''; ?>><?php echo $voix; ?></option>
-<?php } ?>
-</select>
-            </div>
-          </div>
-          <div class="form-actions">
-            <button class="btn btn-primary" type="submit"><?php echo __tr("Save") ?></button>
-            <button class="btn"><?php echo __tr("Cancel") ?></button>
-          </div>
+<form method="post">
+  <div class="form-group row">
+    <label class="col-sm-2 col-form-label" for="voix"><?php echo __tr("Voice to use") ?></label>
+    <div class="col-sm-1">    
+      <select name="voix" class="form-control">
+        <?php foreach($voices as $voix): ?>
+        <option value="<?php echo $voix ?>"<?php echo $voix == $voice ? ' selected="selected"' : ''; ?>><?php echo $voix; ?></option>
+        <?php endforeach; ?>
+      </select>
+    </div>
+    <div class="col-sm-4">
+      <button class="btn btn-primary" type="submit"><?php echo __tr("Save") ?></button>
+    </div>
+  </div>
 </form>

@@ -389,841 +389,788 @@ if(isset($Infos['isAdmin']) && $Infos['isAdmin']) {
 }
 
 require_once(ROOT_SITE.'include/message.php');
+
+$title = empty($_SESSION['bunny']) ?  __tr("Choose your bunny") : 
+                                      __tr("Setup of bunny '%1'", !empty($_SESSION['bunny_name']) ? $_SESSION['bunny_name'] : $_SESSION['bunny']).
+                                        ' ('.__tr(in_array($_SESSION['bunny'], $online) ? 'Connected' : 'Disconnected').')' ;
 ?>
-	      <div class="row">
-	      	<div class="span12">
-	      		<div class="widget">
-					<div class="widget-header">
-						<i class="icon-th-large"></i>
-<?php
-if(empty($_SESSION['bunny'])) {
-	?>
-						<h3><?php echo __tr("Choose your bunny") ?></h3>
-					</div> <!-- /widget-header -->
-					<div class="widget-content">
-						<div class="object-list object-4">
 
-<?php
-$bunnies = $ojnAPI->getListOfBunnies(false);
-if(!empty($bunnies)) {
-	foreach($bunnies as $bunny => $nom) {
-?>
-				<div class="obj-container">
-				<div class="object">
-					<div class="obj-header">
-					    <div class="obj-name"><?php echo $nom; ?></div>
-					    <div class="obj-info"><?php echo $bunny; ?></div>
-					</div>
+<div class="card ">
+  <h5 class="card-header">
+    <i class="icon-th-large"></i> <?php echo $title; ?>
+  </h5>
+  <div class="card-body">
+    <?php if(empty($_SESSION['bunny'])): ?>
+    <div class="object-list object-4">
+      <?php
+      $bunnies = $ojnAPI->getListOfBunnies(false);
+      if(!empty($bunnies))
+        foreach($bunnies as $bunny => $nom):
+      ?>
+      <div class="obj-container">
+        <div class="object">
+          <div class="obj-header">
+            <div class="obj-name"><?php echo $nom; ?></div>
+            <div class="obj-info"><?php echo $bunny; ?></div>
+          </div>
+          <div class="obj-actions">
+            <p class="text-center">
+              <?php echo __tr(in_array($bunny, $online) ? 'Connected' : 'Disconnected') ?>
+            </p>
+            <a class="btn" href="/bunny/index.php?b=<?php echo $bunny; ?>"><i class="icon-cog"></i> <?php echo __tr("Setup") ?></a>
+          </div>
+        </div>
+      </div>
+      <?php endforeach; ?>
+    </div>
+    <?php else: 
+      $ojnTemplate->setTitle(__tr('Bunny setup'));
+      if(defined(BUNNY_API))
+        define("BUNNY_API", "bunny/" . $_SESSION['bunny']);
+      $Token = $ojnAPI->getApiString(BUNNY_API."/getVAPIToken?".$ojnAPI->getToken());
+      $Token = isset($Token['value']) ? $Token['value'] : '';
+      /* Status */
+      $Status = $ojnAPI->getApiString(BUNNY_API."/getVAPIStatus?".$ojnAPI->getToken());
+      $Status= (!empty($Status['value']) && $Status['value'] == 'enabled') ? true : false;
+      /* Public */
+      $Public = $ojnAPI->getApiString(BUNNY_API."/getPublicVAPI?".$ojnAPI->getToken());
+      $Public= (!empty($Public['value']) && $Public['value'] == "public") ? true : false;
+      /* Night */
+      $Insomniac = $ojnAPI->getApiString(BUNNY_API."/getInsomniac?".$ojnAPI->getToken());
+      $Insomniac = (!empty($Insomniac['value']) && $Insomniac['value'] == "insomniac") ? true : false;
 
-						<div class="obj-actions">
-						<p style="text-align: center">
-						<?php if(in_array($bunny, $online)): ?>
-						<?php echo __tr('Connected') ?>
-						<?php else: ?>
-						<i><?php echo __tr('Disconnected') ?></i>
-						<?php endif; ?>
-						</p>
-						 <a class="btn" href="/bunny/index.php?b=<?php echo $bunny; ?>"><li class="icon-cog"></li>&nbsp;<?php echo __tr("Setup") ?></a>
-						</div> <!-- /obj-actions -->
+      ?>
+      <ul class="nav nav-tabs">
+      <li class="nav-item <?php echo $_SESSION['tab'] == 'bunny_base' ? 'active' : '' ?>">
+        <a class="nav-link" href="#base" data-toggle="tab" role="tab" aria-controls="base" aria-selected="true"><?php echo __tr('Base setup') ?></a>
+      </li>
+      <li class="nav-item <?php echo $_SESSION['tab'] == 'bunny_language' ? 'active' : '' ?>">
+        <a class="nav-link" href="#language" data-toggle="tab" role="tab" aria-controls="language" aria-selected="false"><?php echo __tr('Language') ?></a>
+      </li>
+      <li class="nav-item <?php echo $_SESSION['tab'] == 'bunny_api' ? 'active' : '' ?>">
+        <a class="nav-link" href="#api" data-toggle="tab" role="tab" aria-controls="api" aria-selected="false"><?php echo __tr('API') ?></a>
+      </li>
+      <li class="nav-item <?php echo $_SESSION['tab'] == 'bunny_plugins' ? 'active' : '' ?>">
+        <a class="nav-link" href="#plugins" data-toggle="tab" role="tab" aria-controls="plugins" aria-selected="false"><?php echo __tr('Plugins') ?></a>
+      </li>
+      <li class="nav-item <?php echo $_SESSION['tab'] == 'bunny_expert' ? 'active' : '' ?>">
+        <a class="nav-link bg-warning text-secondary" href="#expert" data-toggle="tab" role="tab" aria-controls="expert" aria-selected="false"><?php echo __tr('Expert') ?></a>
+      </li>
+      <?php if(!empty($Infos['isAdmin'])): ?>
+      <li class="nav-item <?php echo $_SESSION['tab'] == 'bunny_debug' ? 'active' : '' ?>">
+        <a class="nav-link bg-danger text-light" href="#debug" data-toggle="tab" role="tab" aria-controls="debug" aria-selected="false"><?php echo __tr('Debug') ?></a>
+      </li>
+      <li class="nav-item <?php echo $_SESSION['tab'] == 'bunny_admin' ? 'active' : '' ?>">
+        <a class="nav-link bg-danger text-light" href="#admin" data-toggle="tab" role="tab" aria-controls="admin" aria-selected="false"><?php echo __tr('Admin') ?></a>
+      </li>
+      <li class="nav-item <?php echo $_SESSION['tab'] == 'bunny_migrate' ? 'active' : '' ?>">
+        <a class="nav-link bg-danger text-light" href="#migrate" data-toggle="tab" role="tab" aria-controls="migrate" aria-selected="false"><?php echo __tr('Migrate') ?></a>
+      </li>
+      <?php endif; ?>
+    </ul>
+    <div class="tab-content">
+      <br />
+			<div class="tab-pane<?php echo $_SESSION['tab'] == 'bunny_base' ? ' active' : '' ?>" id="base">
+        <?php
+        global $plugins;
+        //$plugins = $ojnAPI->getListOfPlugins(false, $ojnTemplate->getLanguage());
+        $bunnyPlugins = $ojnAPI->getListOfBunnyEnabledPlugins(false);
 
-					</div> <!-- /object -->
-			    </div> <!-- /obj-container -->
-<?php
-	}
-}
-/*
-?>
-			<div class="obj-container">
-			<div class="object">
-				<div class="obj-header">
-				    <div class="obj-name"><?php echo __tr('Add a bunny'); ?></div>
-				    <div class="obj-info"><?php  ?></div>
-				</div>
-
-					<div class="obj-actions">
-					<p style="text-align: center">
-					 <a class="btn" href="/bunny/index.php?b=<?php echo $bunny; ?>"><li class="icon-cog"></li>&nbsp;<?php echo __tr("Setup") ?></a>
-					</div> <!-- /obj-actions -->
-
-				</div> <!-- /object -->
-			    </div> <!-- /obj-container -->
-<?php */ ?>
-</div>
-<?php
-} else {
-$ojnTemplate->setTitle(__tr('Bunny setup'));
-if(defined(BUNNY_API))
-	define("BUNNY_API", "bunny/" . $_SESSION['bunny']);
-$Token = $ojnAPI->getApiString(BUNNY_API."/getVAPIToken?".$ojnAPI->getToken());
-$Token = isset($Token['value']) ? $Token['value'] : '';
-/* Status */
-$Status = $ojnAPI->getApiString(BUNNY_API."/getVAPIStatus?".$ojnAPI->getToken());
-$Status= (!empty($Status['value']) && $Status['value'] == 'enabled') ? true : false;
-/* Public */
-$Public = $ojnAPI->getApiString(BUNNY_API."/getPublicVAPI?".$ojnAPI->getToken());
-$Public= (!empty($Public['value']) && $Public['value'] == "public") ? true : false;
-/* Night */
-$Insomniac = $ojnAPI->getApiString(BUNNY_API."/getInsomniac?".$ojnAPI->getToken());
-$Insomniac = (!empty($Insomniac['value']) && $Insomniac['value'] == "insomniac") ? true : false;
-
-?>
-					<h3>
-						<?php echo __tr("Setup of bunny '%1'", !empty($_SESSION['bunny_name']) ? $_SESSION['bunny_name'] : $_SESSION['bunny']) ?>
-						(
-						<?php if(in_array($_SESSION['bunny'], $online)): ?>
-						<?php echo __tr('Connected') ?>
-						<?php else: ?>
-						<i><?php echo __tr('Disconnected') ?></i>
-						<?php endif; ?>
-						)
-					</h3>
-					</div> <!-- /widget-header -->
-
-
-					<div class="widget-content">
-
-						<div class="tabbable">
-						<ul class="nav nav-tabs">
-						  <li<?php echo $_SESSION['tab'] == 'bunny_base' ? ' class="active"' : '' ?>><a href="#base" data-toggle="tab"><?php echo __tr('Base setup') ?></a></li>
-						  <li<?php echo $_SESSION['tab'] == 'bunny_language' ? ' class="active"' : '' ?>><a href="#language" data-toggle="tab"><?php echo __tr('Language') ?></a></li>
-						  <li<?php echo $_SESSION['tab'] == 'bunny_api' ? ' class="active"' : '' ?>><a href="#api" data-toggle="tab"><?php echo __tr('API') ?></a></li>
-						  <li<?php echo $_SESSION['tab'] == 'bunny_plugins' ? ' class="active"' : '' ?>><a href="#plugins" data-toggle="tab"><?php echo __tr('Plugins') ?></a></li>
-						  <li<?php echo $_SESSION['tab'] == 'bunny_expert' ? ' class="active"' : '' ?>><a href="#expert" data-toggle="tab"><?php echo __tr('Expert') ?></a></li>
-<?php if(isset($Infos['isAdmin']) && $Infos['isAdmin']): ?>
-						  <li<?php echo $_SESSION['tab'] == 'bunny_debug' ? ' class="active"' : '' ?>><a href="#debug" data-toggle="tab"><?php echo __tr('Debug') ?></a></li>
-						  <li<?php echo $_SESSION['tab'] == 'bunny_admin' ? ' class="active"' : '' ?>><a href="#admin" data-toggle="tab"><?php echo __tr('Admin') ?></a></li>
-						  <li<?php echo $_SESSION['tab'] == 'bunny_migrate' ? ' class="active"' : '' ?>><a href="#migrate" data-toggle="tab"><?php echo __tr('Migrate') ?></a></li>
-<?php endif; ?>
-
-						</ul>
-						<br />
-
-							<div class="tab-content">
-								<div class="tab-pane<?php echo $_SESSION['tab'] == 'bunny_base' ? ' active' : '' ?>" id="base">
-
-<?php
-
-global $plugins;
-//$plugins = $ojnAPI->getListOfPlugins(false, $ojnTemplate->getLanguage());
-$bunnyPlugins = $ojnAPI->getListOfBunnyEnabledPlugins(false);
-
-$actifs = $ojnAPI->bunnyListOfPlugins($_SESSION['bunny'],false);
-foreach($actifs as $actif) {
-	$plugins[$actif]['actif'] = true;
-}
-$clicks = $ojnAPI->getApiList(BUNNY_API."/getClickPlugins?".$ojnAPI->getToken());
-$t = $ojnAPI->getApiValue(BUNNY_API."/getTimezone?".$ojnAPI->getToken());
-$tzs = $ojnAPI->getApiMapped("translate/listTimezones?".$ojnAPI->getToken());
-?>
-      <form class="form-horizontal">
-        <fieldset>
-          <div class="control-group">
-            <label for="input01" class="control-label"><?php echo __tr("Name") ?></label>
-            <div class="controls">
-              <input type="text" name="bunny_name" value="<?php echo $_SESSION['bunny_name']; ?>" class="input-xlarge">
+        $actifs = $ojnAPI->bunnyListOfPlugins($_SESSION['bunny'],false);
+        foreach($actifs as $actif)
+          $plugins[$actif]['actif'] = true;
+        $clicks = $ojnAPI->getApiList(BUNNY_API."/getClickPlugins?".$ojnAPI->getToken());
+        $t = $ojnAPI->getApiValue(BUNNY_API."/getTimezone?".$ojnAPI->getToken());
+        $tzs = $ojnAPI->getApiMapped("translate/listTimezones?".$ojnAPI->getToken());
+        ?>
+        <form method="post">
+          <div class="form-group row">
+            <label class="col-sm-2 col-form-label" for="bunny_name"><?php echo __tr("Name") ?></label>
+            <div class="col-sm-2">
+              <input type="text" class="form-control" name="bunny_name" value="<?php echo $_SESSION['bunny_name']; ?>">
+            </div>
+            <div class="col-sm-8">
               <p class="help-block"><?php echo __tr("Name of your bunny, choose what you want") ?></p>
             </div>
           </div>
-<?php /*
-          <div class="control-group">
-            <label for="input01" class="control-label"><?php echo __tr("Silent bunny") ?></label>
-            <div class="controls">
-              <label class="checkbox">
-		<input type="radio" name="aSilent" value="2" <?php echo $Silent == 2 ? 'checked="checked"' : ''; ?> /> <?php echo __tr("Sorry, my bunny isn't silent") ?>
-              </label>
-              <label class="checkbox">
-		<input type="radio" name="aSilent" value="1" <?php echo $Silent == 1 ? 'checked="checked"' : ''; ?>/> <?php echo __tr("My bunny is silent, and I want to help discover why") ?><br />
-              </label>
-              <label class="checkbox">
-		<input type="radio" name="aSilent" value="0" <?php echo $Silent == 0 ? 'checked="checked"' : ''; ?> /> <?php echo __tr("My bunny is silent, but I don't wan't him to be part of experimentations") ?>
-              </label>
+          <div class="form-group row">
+            <div class="col-sm-12 text-left">
+              <button type="submit" class="btn btn-primary"><?php echo __tr('Save') ?></button>
             </div>
           </div>
-          <div class="control-group">
-            <label for="optionsCheckbox" class="control-label"><?php echo __tr("How is the night ?") ?></label>
-            <div class="controls">
-              <label class="checkbox">
-		<input type="radio" name="aInsomniac" value="1" <?php echo !$Insomniac ? 'checked="checked"' : ''; ?>/> <?php echo __tr("I'm sleeping") ?><br />
-              </label>
-              <label class="checkbox">
-		<input type="radio" name="aInsomniac" value="2" <?php echo $Insomniac ? 'checked="checked"' : ''; ?> /> <?php echo __tr("I'm insomniac") ?>
-              </label>
-            </div>
-          </div>
-          <?php */ ?>
-          <div class="form-actions">
-            <button class="btn btn-primary" type="submit"><?php echo __tr("Save") ?></button>
-            <button class="btn"><?php echo __tr("Cancel") ?></button>
-          </div>
-        </fieldset>
-      </form>
-								</div>
+        </form>
+      </div>
 
-								<div class="tab-pane<?php echo $_SESSION['tab'] == 'bunny_language' ? ' active' : '' ?>" id="language">
+      <div class="tab-pane<?php echo $_SESSION['tab'] == 'bunny_language' ? ' active' : '' ?>" id="language">
+        <form method="post">
+          <div class="form-group row">
+            <label class="col-sm-2 col-form-label" for="lng"><?php echo __tr("Language") ?></label>
+            <div class="col-sm-2">
+              <select name="lng"  class="form-control" onchange="$('#voiceList').val('');">
+                <?php
+                  $Lng = $ojnAPI->getApiString(BUNNY_API."/getlanguage?".$ojnAPI->getToken());
+                  $Lng = isset($Lng['value']) ? $Lng['value'] : 'en';
+                  $tr = getTranslates(isset($_SESSION['login']) ? $_SESSION['login'] : '');
+                  $link = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+                  if (!$link) {
+                      die('Connexion impossible : ' . mysqli_error());
+                  }
 
-      <form class="form-horizontal">
-        <fieldset>
-          <div class="control-group">
-            <label for="select01" class="control-label"><?php echo __tr("Language") ?></label>
-            <div class="controls">
+                  $sql = "SELECT * FROM language";
+                  if(!empty($Infos['isAdmin']))
+                    $sql .= " WHERE public=1";
+                  // Exceptions de dev :
+                  if(count($tr))
+                    foreach($tr as $t)
+                      $sql .= " OR code='".$t."'";
 
-<select name="lng" onchange="$('#voiceList').val('');">
-<?php
-	$Lng = $ojnAPI->getApiString(BUNNY_API."/getlanguage?".$ojnAPI->getToken());
-	$Lng = isset($Lng['value']) ? $Lng['value'] : 'en';
-	$tr = getTranslates(isset($_SESSION['login']) ? $_SESSION['login'] : '');
-	$link = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
-	if (!$link) {
-	    die('Connexion impossible : ' . mysqli_error());
-	}
-
-	$sql = "SELECT * FROM language";
-	if(!isset($Infos['isAdmin']) || !$Infos['isAdmin'])
-		$sql .= " WHERE public=1";
-	// Exceptions de dev :
-	if(count($tr))
-		foreach($tr as $t)
-			$sql .= " OR code='".$t."'";
-
-	$res = mysqli_query($link, $sql);
-	while($res && $row = mysqli_fetch_assoc($res))
-	{
-?>
-<option value="<?php echo $row['code'] ?>"<?php if($Lng == $row['code']) { ?> selected="selected"<?php } ?>><?php echo $row['language'] ?></option>
-<?php
-	}
-	mysqli_close($link);
-?>
-</select>
-
-            </div>
-          </div>
-          <div class="control-group">
-            <label for="select01" class="control-label"><?php echo __tr("Timezone") ?></label>
-            <div class="controls">
-              <select name="timezone">
-                <?php foreach($tzs as $tz=>$time) { ?>
-                <option value="<?php echo $tz; ?>" <?php echo ($t == $tz ? ' selected="selected"' : '') ?>><?php echo $tz.' ('.$time.')'; ?></option>
-                <?php } ?>
+                  $res = mysqli_query($link, $sql);
+                  while($res && $row = mysqli_fetch_assoc($res)):
+                ?>
+                <option value="<?php echo $row['code'] ?>"<?php if($Lng == $row['code']) { ?> selected="selected"<?php } ?>>
+                  <?php echo $row['language'] ?>
+                </option>
+                <?php endwhile;
+                  mysqli_close($link);
+                ?>
               </select>
             </div>
           </div>
-<?php
-$voices = $ojnAPI->getApiMapped(BUNNY_API."/voice?action=list&".$ojnAPI->getToken());
-$Voice = $ojnAPI->getApiValue(BUNNY_API."/voice?action=get&".$ojnAPI->getToken());
-?>
-          <div class="control-group">
-            <label for="select01" class="control-label"><?php echo __tr("Voice") ?></label>
-            <div class="controls">
-	      <select name="voice" id="voiceList">
-		<option value=""></option>
-	      <?php if(is_array($voices)): ?>
-	      <?php foreach($voices as $tts => $vlist): ?>
-		<?php if(preg_match('|^(.*)/(.*)$|', $tts, $match)): ?>
-	      <option value="<?php echo $tts; ?>" <?php echo ($Voice == $tts ? ' selected="selected"' : '') ?>><?php echo $vlist." (".$match[0].")"; ?></option>
-		<?php else: ?>
-		<?php foreach(preg_split("/,/", $vlist) as $voice): ?>
-	      <option value="<?php echo $tts."/".$voice; ?>" <?php echo ($Voice == $tts."/".$voice ? ' selected="selected"' : '') ?>><?php echo $voice." (".$tts.")"; ?></option>
-	        <?php endforeach; ?>
-		<?php endif; ?>
-	      <?php endforeach; ?>
-	      <?php endif; ?>
-	      </select>
-<div class="input-append"><input type="text" id="testvoice" class="span3" value="<?php echo __tr('Test sentence : hello world') ?>"><a onclick="testVoice()" class="btn btn-success"><?php echo __tr('Test this voice') ?></a></div>
-<span id="testvoice_results" style="display: inline-block; margin-top: -6px; top: 6px; position: relative; margin-left: 20px;"></span>
-<script>
-function testVoice()
-{
-$.get('testVoice.php?voice=' + $("#voiceList").val() + '&sentence=' + $("#testvoice").val(), function(data) {
-  $('#testvoice_results').html(data);
-});
-}
-
-</script>
+          <div class="form-group row">
+            <label class="col-sm-2 col-form-label" for="timezone"><?php echo __tr("Timezone") ?></label>
+            <div class="col-sm-4">
+              <select name="timezone" class="form-control">
+                <?php foreach($tzs as $tz=>$time): ?>
+                  <option value="<?php echo $tz; ?>" <?php echo ($t == $tz ? ' selected="selected"' : '') ?>>
+                    <?php echo $tz.' ('.$time.')'; ?>
+                  </option>
+                <?php endforeach; ?>
+              </select>
             </div>
           </div>
-          <div class="form-actions">
-            <button class="btn btn-primary" type="submit"><?php echo __tr("Save") ?></button>
-            <button class="btn"><?php echo __tr("Cancel") ?></button>
-          </div>
-        </fieldset>
-      </form>
-								</div>
-								<div class="tab-pane<?php echo $_SESSION['tab'] == 'bunny_api' ? ' active' : '' ?>" id="api">
-
-      <form class="form-horizontal">
-        <fieldset>
-          <div class="control-group">
-            <label for="input01" class="control-label"><?php echo __tr("MAC address") ?></label>
-            <div class="controls"><?php echo $_SESSION['bunny'] ; ?></div>
-          </div>
-          <div class="control-group">
-            <label for="input01" class="control-label"><?php echo __tr("Violet API Token") ?></label>
-            <div class="controls"><?php echo $Token ; ?></div>
-          </div>
-          <div class="control-group">
-            <label for="optionsCheckbox" class="control-label"><?php echo __tr("Violet API") ?></label>
-            <div class="controls">
-              <label class="checkbox">
-		<input type="radio" name="aVAPI" value="enable" <?php echo $Status ? 'checked="checked"' : ''; ?>/> <?php echo __tr('Enabled') ?><br />
-              </label>
-              <label class="checkbox">
-		<input type="radio" name="aVAPI" value="disable" <?php echo !$Status ? 'checked="checked"' : ''; ?> /> <?php echo __tr('Disabled') ?>
-              </label>
+          <?php
+          $voices = $ojnAPI->getApiMapped(BUNNY_API."/voice?action=list&".$ojnAPI->getToken());
+          $Voice = $ojnAPI->getApiValue(BUNNY_API."/voice?action=get&".$ojnAPI->getToken());
+          ?>
+          <div class="form-group row">
+            <label class="col-sm-2 col-form-label" for="voice"><?php echo __tr("Voice") ?></label>
+            <div class="col-sm-3">
+              <select name="voice" id="voiceList" class="form-control">
+                <?php 
+                if(is_array($voices)):
+                  foreach($voices as $tts => $vlist):
+                    if(preg_match('|^(.*)/(.*)$|', $tts, $match)): ?>
+                <option value="<?php echo $tts; ?>" <?php echo ($Voice == $tts ? ' selected="selected"' : '') ?>><?php echo $vlist." (".$match[0].")"; ?></option>
+                <?php 
+                    else: 
+                      foreach(preg_split("/,/", $vlist) as $voice): 
+                ?>
+                <option value="<?php echo $tts."/".$voice; ?>" <?php echo ($Voice == $tts."/".$voice ? ' selected="selected"' : '') ?>><?php echo $voice." (".$tts.")"; ?></option>
+                <?php 
+                      endforeach; 
+                    endif; 
+                  endforeach;
+                endif; ?>
+              </select>
+            </div>
+            <div class="col-sm-7">
+              <div class="row">
+                <div class="col-sm-8">
+                  <input type="text" id="testvoice" class="form-control" value="<?php echo __tr('Test sentence : hello world') ?>">
+                </div>
+                <div class="col-sm-4">
+                  <a onclick="testVoice()" class="btn btn-sm btn-light"><?php echo __tr('Test this voice') ?></a>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-12 text-center mt-1" id="testvoice_results"></div>
+                <script>
+                  function testVoice()
+                  {
+                    $.get('testVoice.php?voice=' + $("#voiceList").val() + '&sentence=' + $("#testvoice").val(), function(data) {
+                      $('#testvoice_results').html(data);
+                    });
+                  }
+                </script>
+              </div>
             </div>
           </div>
-          <div class="control-group">
-            <label for="optionsCheckbox" class="control-label"><?php echo __tr("Public") ?></label>
-            <div class="controls">
-              <label class="checkbox">
-		<input type="radio" name="pVAPI" value="2" <?php echo $Public ? 'checked="checked"' : ''; ?>/> <?php echo __tr('Public') ?><br />
-              </label>
-              <label class="checkbox">
-		<input type="radio" name="pVAPI" value="1" <?php echo !$Public ? 'checked="checked"' : ''; ?> /> <?php echo __tr('Private') ?>
-              </label>
+          <div class="form-group row">
+            <div class="col-sm-12 text-left">
+              <button class="btn btn-primary" type="submit"><?php echo __tr("Save") ?></button>            
             </div>
           </div>
-          <div class="form-actions">
-            <button class="btn btn-primary" type="submit"><?php echo __tr("Save") ?></button>
-            <button class="btn"><?php echo __tr("Cancel") ?></button>
+        </form>
+      </div>
+
+		  <div class="tab-pane<?php echo $_SESSION['tab'] == 'bunny_api' ? ' active' : '' ?>" id="api">
+        <form method="post">
+          <div class="form-group row">
+            <label class="col-sm-2 col-form-label"><?php echo __tr("MAC address") ?></label>
+            <div class="col-sm-2">
+              <?php echo $_SESSION['bunny'] ; ?>
+            </div>
           </div>
-	</form>
-								</div>
-								<div class="tab-pane<?php echo $_SESSION['tab'] == 'bunny_plugins' ? ' active' : '' ?>" id="plugins">
-
-      <form class="form-horizontal">
-          <div class="control-group">
-            <label for="input01" class="control-label"><?php echo __tr("Single click plugin") ?></label>
-            <div class="controls">
-<?php
-$single = $ojnAPI->getClickPlugins();
-$double = $ojnAPI->getClickPlugins("double");
-
-function lngSort($a, $b)
-{
-	global $plugins;
-	$_a = $plugins[$a['id']];
-	$_b = $plugins[$b['id']];
-	if($_a == $_b) return 0;
-	return $_a < $_b ? -1 : 1;
-}
-
-uasort($single, 'lngSort');
-uasort($double, 'lngSort');
-
-function lngSort2($a, $b)
-{
-	$active1 = $a['actif'] + 0;
-	$active2 = $b['actif'] + 0;
-	$name1 = $a['name'];
-	$name2 = $b['name'];
-	$new1 = $a['new'] + 0;
-	$new2 = $b['new'] + 0;
-
-	$s1 = 8;
-	$s2 = 8;
-	if($active1 == 1) $s1 = 5;
-	if($active2 == 1) $s2 = 5;
-
-	if($active1 == 0 && $new1 == 1) $s1 = 2;
-	if($active2 == 0 && $new2 == 1) $s2 = 2;
-	$p1 = $s1 . '_' . $name1;
-	$p2 = $s2 . '_' . $name2;
-
-	if($p1 == $p2) return 0;
-	return $p1 < $p2 ? -1 : 1;
-
-}
-
-uasort($plugins, 'lngSort2');
-function filterPlugins($plugins, $version = 2)
-{
-	global $bunnyPlugins;
-	$ret = array();
-	foreach($plugins as $name => $infos) 
-	{
-		if(in_array($name, $bunnyPlugins) &&
-			 $infos['v' . $version] == 1
-			)
-			$ret[$name] = $infos;
-	}
-	return $ret;
-}
-$plugins = filterPlugins($plugins, bunnyVersion($_SESSION['bunny']));
-?>
-<select name="single" class="span4">
-<option value="none"><?php echo __tr('None') ?></option>
-<?php foreach($single as $plugin => $info) { ?>
-	<?php if($info['enabled'] == "1" && isset($plugins[$plugin]) && $plugins[$plugin]['actif']): ?>
-<option value="<?php echo $plugin; ?>" <?php echo ($plugin == $clicks[0] ? ' selected="selected"' : '') ?>><?php echo __tr($plugins[$plugin]['name']); ?></option>
-	<?php endif; ?>
-<?php } ?>
-</select>
-	    </div>
+          <div class="form-group row">
+            <label class="col-sm-2 col-form-label"><?php echo __tr("Violet API Token") ?></label>
+            <div class="col-sm-4">
+              <?php echo $Token ; ?>
+            </div>
           </div>
-          <div class="control-group">
-            <label for="input01" class="control-label"><?php echo __tr("Double click plugin") ?></label>
-            <div class="controls">
-<select name="double" class="span4">
-<option value="none"><?php echo __tr('None') ?></option>
-<?php foreach($double as $plugin => $info) { ?>
-	<?php if($info['enabled'] == "1" && isset($plugins[$plugin]) && $plugins[$plugin]['actif']): ?>
-<option value="<?php echo $plugin; ?>" <?php echo ($plugin == $clicks[1] ? ' selected="selected"' : '') ?>><?php echo __tr($plugins[$plugin]['name']); ?></option>
-	<?php endif; ?>
-<?php } ?>
-</select>
-	    </div>
+          <div class="form-group row">
+            <label class="col-sm-2 col-form-label" for="aVAPI"><?php echo __tr("Violet API") ?></label>
+            <div class="col-sm-4">
+		          <input type="radio" name="aVAPI" value="enable" <?php echo $Status ? 'checked="checked"' : ''; ?>/> <?php echo __tr('Enabled') ?><br />
+		          <input type="radio" name="aVAPI" value="disable" <?php echo !$Status ? 'checked="checked"' : ''; ?> /> <?php echo __tr('Disabled') ?>
+            </div>
           </div>
-          <div class="form-actions">
-            <button class="btn btn-primary" type="submit"><?php echo __tr("Save") ?></button>
-            <button class="btn"><?php echo __tr("Cancel") ?></button>
+          <div class="form-group row">
+            <label class="col-sm-2 col-form-label" for="pVAPI"><?php echo __tr("Public") ?></label>
+            <div class="col-sm-4">
+		          <input type="radio" name="pVAPI" value="2" <?php echo $Public ? 'checked="checked"' : ''; ?>/> <?php echo __tr('Public') ?><br />
+              <input type="radio" name="pVAPI" value="1" <?php echo !$Public ? 'checked="checked"' : ''; ?> /> <?php echo __tr('Private') ?>
+            </div>
           </div>
-	</form>
-<table class="table table-bordered table-striped span10">
-	<tr>
-		<th scope="col" class="col-md-8"><?php echo __tr('Name of plugin') ?></th>
-		<th scope="col" class="col-md-2"><?php echo __tr('Actions') ?></th>
-	</tr>
-<?php
-	$i = 0;
-	foreach($plugins as $id => $plugin):
-		if(!($Infos['isAdmin'] || $plugin['display'] || isBeta($_SESSION['bunny'], $id)))
-			continue;
-	?>
-		<tr>
-			<td class="col-md-8">
-				<?php echo $plugin['name'] ?>
-				<span class="float-right">
-					<?php if(isBeta($_SESSION['bunny'], $id)): ?><span class="label label-info"><?php echo __tr('Beta-test') ?></span> <?php endif; ?>
-					<?php if($plugin['new']): ?><span class="label label-info"><?php echo __tr('New plugin') ?></span> <?php endif; ?>
-					<?php if($plugin['updated']): ?><span class="label label-success" alt="<?php echo $plugin['version'] ?>" title="<?php echo $plugin['version'] ?>"><?php echo __tr('New version') ?></span> <?php endif; ?>
-					<?php if($plugin['premium']): ?><span class="label label-warning"><?php echo __tr("Premium") ?></span> <?php endif; ?>
-					<?php if($plugin['dev']): ?><span class="label label-warning"><?php echo __tr("WIP") ?></span><?php endif; ?>
-					&nbsp;
-				</span>
-			</td>
-			<td class="col-md-2">
-				<?php if($plugin['premium'] && !($Infos['isAdmin'] || $Infos['status'] == 'VIP' || $Infos['status'] == 'Premium' || $Infos['status'] == 'Demo')): ?>
-				<a class="btn btn-small btn-warning" href="/bunny/index.php?premium"><?php echo __tr("Premium") ?></a>
-				<?php elseif($plugin['dev'] && !($Infos['isAdmin'] || isTester($Infos['login'], $id))): ?>
-				<span class="label label-warning"><?php echo __tr("WIP") ?></span>
-				<?php else: ?>
-					<a class="btn btn-small btn-<?php echo $plugin['actif'] ? "danger" : "success";?>" href="?stat=<?php echo $plugin['actif'] ? "unregister" : "register"; ?>&plug=<?php echo $id ?>"><?php echo $plugin['actif'] ? __tr('Disable plugin') : __tr('Enable plugin') ?></a>
-					<?php if($plugin['actif'] && file_exists("plugins/".$id.".plugin.php")): ?><a href="bunny_plugin.php?p=<?php echo $id; ?>" class="btn btn-small btn-primary"><i class="icon-cog icon-large"></i> <?php echo __tr('Setup / Use') ?></a> <?php endif; ?>
-				<?php endif; ?>
-			</td>
-		</tr>
-<?php endforeach; ?>
-</table>
-								</div>
-								<div class="tab-pane<?php echo $_SESSION['tab'] == 'bunny_expert' ? ' active' : '' ?>" id="expert">
-<?php if(bunnyVersion($_SESSION['bunny']) == 2): ?>
-      <form class="form-horizontal">
-          <div class="form-actions">
-            <input class="btn btn-primary" name="disconnect" type="submit" value="<?php echo __tr("Disconnect the bunny") ?>">
-            <input class="btn btn-primary" name="reboot" type="submit" value="<?php echo __tr("Reboot the bunny") ?>">
+          <div class="form-group row">
+            <div class="col-sm-12 text-left">
+              <button class="btn btn-primary" type="submit"><?php echo __tr("Save") ?></button>
+            </div>
           </div>
-	</form>
+	      </form>
+      </div>
 
-<h4><?php echo __tr('Use another openJabNab server without modifying bunny setup') ?></h4>
-<span style="color: red; font-weight: bold"><?php echo __tr('Use at your own risk, bunny may loose connection if parameters are bad') ?></span>
-<?php
-$pingserver = $ojnAPI->getApiValue(BUNNY_API."/locate/getcustomlocate?param=PingServer&".$ojnAPI->getToken());
-$broadserver = $ojnAPI->getApiValue(BUNNY_API."/locate/getcustomlocate?param=BroadServer&".$ojnAPI->getToken());
-$xmppserver = $ojnAPI->getApiValue(BUNNY_API."/locate/getcustomlocate?param=XmppServer&".$ojnAPI->getToken());
-$xmppport = $ojnAPI->getApiValue(BUNNY_API."/locate/getcustomlocate?param=ListeningXmppPort&".$ojnAPI->getToken());
-$xmppaltport = $ojnAPI->getApiValue(BUNNY_API."/locate/getcustomlocate?param=ListeningXmppAltPort&".$ojnAPI->getToken());
-$xmpptimeout = $ojnAPI->getApiValue(BUNNY_API."/locate/getcustomlocate?param=XmppTcpIdleTime&".$ojnAPI->getToken());
+      <div class="tab-pane<?php echo $_SESSION['tab'] == 'bunny_plugins' ? ' active' : '' ?>" id="plugins">
+        <?php
+        $single = $ojnAPI->getClickPlugins();
+        $double = $ojnAPI->getClickPlugins("double");
 
-?>
+        function lngSort($a, $b)
+        {
+          global $plugins;
+          $_a = $plugins[$a['id']];
+          $_b = $plugins[$b['id']];
+          if($_a == $_b) return 0;
+          return $_a < $_b ? -1 : 1;
+        }
 
-      <form class="form-horizontal" method="post">
-          <div class="control-group">
-            <label for="pingserver" class="control-label"><?php echo __tr("Ping Server") ?></label>
-            <div class="controls">
-		<input type="text" name="pingserver" value="<?php echo $pingserver ?>">
-	    </div>
-          </div>
-          <div class="control-group">
-            <label for="broadserver" class="control-label"><?php echo __tr("Broad Server") ?></label>
-            <div class="controls">
-		<input type="text" name="broadserver" value="<?php echo $broadserver ?>">
-	    </div>
-          </div>
-          <div class="control-group">
-            <label for="xmppserver" class="control-label"><?php echo __tr("Xmpp Server") ?></label>
-            <div class="controls">
-		<input type="text" name="xmppserver" value="<?php echo $xmppserver ?>">
-	    </div>
-          </div>
-          <div class="control-group">
-            <label for="xmppport" class="control-label"><?php echo __tr("Xmpp Port") ?></label>
-            <div class="controls">
-		<input type="text" name="xmppport" value="<?php echo $xmppport ?>">
-	    </div>
-          </div>
-          <div class="control-group">
-            <label for="xmppaltport" class="control-label"><?php echo __tr("Xmpp Port") ?> (<?php echo __tr("Alternative") ?>)</label>
-            <div class="controls">
-		<input type="text" name="xmppaltport" value="<?php echo $xmppaltport ?>">
-	    </div>
-          </div>
-          <div class="control-group">
-            <label for="xmpptimeout" class="control-label"><?php echo __tr("Xmpp timeout") ?></label>
-            <div class="controls">
-		<input type="text" name="xmpptimeout" value="<?php echo $xmpptimeout ?>">
-	    </div>
-          </div>
-          <div class="form-actions">
-            <button class="btn btn-primary" type="submit"><?php echo __tr("Save") ?></button>
-            <button class="btn"><?php echo __tr("Cancel") ?></button>
-          </div>
-	</form>
+        uasort($single, 'lngSort');
+        uasort($double, 'lngSort');
 
-<?php if(isset($Infos['isAdmin']) && $Infos['isAdmin']): ?>
-<?php
-$tips = array("wifi_crypt" => "0 : Aucun, 1 : WEP, 2 : WPA", "wifi_auth" => "0 : OpenSystem, 1 : SharedKey");
-foreach(array("wifi_ssid", "wifi_crypt", "wifi_auth", "wifi_key", "server_url", "dhcp", "ip", "mask", "gateway", "dns_server") as $conf): ?>
-<?php
-$value = $ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/locate/config?action=get&config=$conf&".$ojnAPI->getToken());
-$value = $value['value'];
-?>
-      <form class="form-horizontal" method="post">
-          <div class="control-group">
-            <label for="xmpptimeout" class="control-label"><?php echo $conf ?></label>
-            <div class="controls">
-		<input type="text" name="conf_<?php echo $conf ?>" value="<?php echo $value ?>">
+        function lngSort2($a, $b)
+        {
+          $active1 = $a['actif'] + 0;
+          $active2 = $b['actif'] + 0;
+          $name1 = $a['name'];
+          $name2 = $b['name'];
+          $new1 = $a['new'] + 0;
+          $new2 = $b['new'] + 0;
+
+          $s1 = 8;
+          $s2 = 8;
+          if($active1 == 1) $s1 = 5;
+          if($active2 == 1) $s2 = 5;
+
+          if($active1 == 0 && $new1 == 1) $s1 = 2;
+          if($active2 == 0 && $new2 == 1) $s2 = 2;
+          $p1 = $s1 . '_' . $name1;
+          $p2 = $s2 . '_' . $name2;
+
+          if($p1 == $p2) return 0;
+          return $p1 < $p2 ? -1 : 1;
+
+        }
+
+        uasort($plugins, 'lngSort2');
+        function filterPlugins($plugins, $version = 2)
+        {
+          global $bunnyPlugins;
+          $ret = array();
+          foreach($plugins as $name => $infos) 
+          {
+            if(in_array($name, $bunnyPlugins) &&
+              $infos['v' . $version] == 1
+              )
+              $ret[$name] = $infos;
+          }
+          return $ret;
+        }
+        $plugins = filterPlugins($plugins, bunnyVersion($_SESSION['bunny']));
+        ?>
+        <form method="post">
+          <fieldset class="border p-3">
+            <legend><h6><?php echo __tr('Clic(s) plugins configuration'); ?></h6></legend>
+            <div class="form-group row">
+              <label class="col-sm-2 col-form-label" for="single"><?php echo __tr("Single click plugin") ?></label>
+              <div class="col-sm-6">          
+                <select name="single" class="form-control">
+                  <option value="none"><?php echo __tr('None') ?></option>
+                  <?php foreach($single as $plugin => $info):
+                    if($info['enabled'] == "1" && isset($plugins[$plugin]) && $plugins[$plugin]['actif']): 
+                  ?>
+                  <option value="<?php echo $plugin; ?>" <?php echo ($plugin == $clicks[0] ? ' selected="selected"' : '') ?>><?php echo __tr($plugins[$plugin]['name']); ?></option>
+                  <?php 
+                    endif;
+                  endforeach; ?>
+                </select>
+              </div>
+            </div>
+            <div class="form-group row">
+              <label class="col-sm-2 col-form-label" for="double"><?php echo __tr("Double click plugin") ?></label>
+              <div class="col-sm-6">          
+                <select name="double" class="form-control">
+                  <option value="none"><?php echo __tr('None') ?></option>
+                  <?php foreach($double as $plugin => $info):
+                    if($info['enabled'] == "1" && isset($plugins[$plugin]) && $plugins[$plugin]['actif']): 
+                  ?>
+                  <option value="<?php echo $plugin; ?>" <?php echo ($plugin == $clicks[1] ? ' selected="selected"' : '') ?>><?php echo __tr($plugins[$plugin]['name']); ?></option>
+                  <?php 
+                    endif;
+                  endforeach; ?>
+                </select>
+	            </div>
+            </div>
+            <div class="form-group row">
+              <div class="col-sm-12 text-left">
                 <button class="btn btn-primary" type="submit"><?php echo __tr("Save") ?></button>
-<?php if(isset($tips[$conf])) { echo $tips[$conf]; } ?>
-	    </div>
-          </div>
-	</form>
-<?php endforeach; ?>
-<?php endif; ?>
-      <form class="form-horizontal" method="post">
-	<input type="hidden" name="update_conf" value="1">
-          <div class="form-actions">
-            <button class="btn btn-primary" type="submit"><?php echo __tr("Update") ?></button>
-          </div>
-	</form>
+              </div>
+            </div>
+          </fieldset>
+	      </form>
 
-<?php else: ?>
-Aucune option n'est disponible pour votre lapin.
-<?php endif; ?>
-								</div>
-<?php if(isset($Infos['isAdmin']) && $Infos['isAdmin']):
-$lasts = $ojnAPI->getApiMapped("bunny/".$_SESSION['bunny']."/getlasts?".$ojnAPI->getToken());
-$xml = $ojnAPI->getApiRaw("bunny/".$_SESSION['bunny']."/getallcrons?".$ojnAPI->getToken());
-$crons = simplexml_load_string($xml);
-$owner = $ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/getOwner?".$ojnAPI->getToken());
-?>
-								<div class="tab-pane<?php echo $_SESSION['tab'] == 'bunny_debug' ? ' active' : '' ?>" id="debug">
+        <table class="table table-bordered table-striped mt-2">
+	        <tr>
+		        <th class="col-md-8"><?php echo __tr('Name of plugin') ?></th>
+		        <th class="col-md-4"><?php echo __tr('Actions') ?></th>
+	        </tr>
+          <?php
+          foreach($plugins as $id => $plugin):
+            if(!($Infos['isAdmin'] || $plugin['display'] || isBeta($_SESSION['bunny'], $id)))
+              continue;
+          ?>
+          <tr>
+            <td>
+              <?php echo $plugin['name'] ?>
+              <span class="float-right">
+                <?php if(isBeta($_SESSION['bunny'], $id)): ?><span class="badge badge-info"><?php echo __tr('Beta-test') ?></span> <?php endif; ?>
+                <?php if($plugin['new']): ?><span class="badge badge-info"><?php echo __tr('New plugin') ?></span> <?php endif; ?>
+                <?php if($plugin['updated']): ?><span class="badge badge-success" alt="<?php echo $plugin['version'] ?>" title="<?php echo $plugin['version'] ?>"><?php echo __tr('New version') ?></span> <?php endif; ?>
+                <?php if($plugin['premium']): ?><span class="badge badge-warning"><?php echo __tr("Premium") ?></span> <?php endif; ?>
+                <?php if($plugin['dev']): ?><span class="badge badge-warning"><?php echo __tr("WIP") ?></span><?php endif; ?>
+                &nbsp;
+              </span>
+            </td>
+            <td>
+              <?php if($plugin['premium'] && !($Infos['isAdmin'] || $Infos['status'] == 'VIP' || $Infos['status'] == 'Premium' || $Infos['status'] == 'Demo')): ?>
+              <a class="btn btn-sm btn-warning" href="/bunny/index.php?premium"><?php echo __tr("Premium") ?></a>
+              <?php elseif($plugin['dev'] && !($Infos['isAdmin'] || isTester($Infos['login'], $id))): ?>
+              <span class="badge badge-warning"><?php echo __tr("WIP") ?></span>
+              <?php else: ?>
+                <a class="btn btn-sm btn-<?php echo $plugin['actif'] ? "danger" : "success";?>" href="?stat=<?php echo $plugin['actif'] ? "unregister" : "register"; ?>&plug=<?php echo $id ?>"><?php echo $plugin['actif'] ? __tr('Disable plugin') : __tr('Enable plugin') ?></a>
+                <?php if($plugin['actif'] && file_exists("plugins/".$id.".plugin.php")): ?><a href="bunny_plugin.php?p=<?php echo $id; ?>" class="btn btn-sm btn-primary"><i class="icon-cog icon-large"></i> <?php echo __tr('Setup / Use') ?></a> <?php endif; ?>
+              <?php endif; ?>
+            </td>
+          </tr>
+          <?php endforeach; ?>
+        </table>
+      </div>
 
-      <form class="form-horizontal" method="get">
-          <div class="control-group">
-            <label class="control-label"><?php echo __tr("Last IP address") ?></label>
-            <div class="controls">
-		<input disabled class="input-xlarge span8 disabled" type="text" value="<?php echo isset($lasts['LastIP']) && $lasts['LastIP'] != "" ? $lasts['LastIP'] : __tr('Unknow') ?>">
-	    </div>
-          </div>
-<?php
-if(bunnyVersion($_SESSION['bunny']) == 1 && isset($lasts['Last PingConnection']) && $lasts['Last PingConnection'] != ""):
-?>
-          <div class="control-group">
-            <label class="control-label"><?php echo __tr("Last PingConnection") ?></label>
-            <div class="controls">
-		<input disabled class="input-xlarge span8 disabled" type="text" value="<?php echo isset($lasts['Last PingConnection']) && $lasts['Last PingConnection'] != "" ? date("d/m/Y H:i:s", strtotime($lasts['Last PingConnection'])) : __tr('Unknow') ?>">
-	    </div>
-          </div>
-          <div class="control-group">
-            <label class="control-label"><?php echo __tr("Last Ping") ?></label>
-            <div class="controls">
-		<input disabled class="input-xlarge span8 disabled" type="text" value="<?php echo isset($lasts['Last Ping']) && $lasts['Last Ping'] != "" ? date("d/m/Y H:i:s", strtotime($lasts['Last Ping'])) : __tr('Unknow') ?>">
-	    </div>
-          </div>
-<?php else: ?>
-          <div class="control-group">
-            <label class="control-label"><?php echo __tr("Last Jabber Connection") ?></label>
-            <div class="controls">
-		<input disabled class="input-xlarge span8 disabled" type="text" value="<?php echo isset($lasts['Last JabberConnection']) && $lasts['Last JabberConnection'] != "" ? date("d/m/Y H:i:s", strtotime($lasts['Last JabberConnection'])) : __tr('Unknow') ?>">
-	    </div>
-          </div>
-          <div class="control-group">
-            <label class="control-label"><?php echo __tr("Last Jabber Disconnection") ?></label>
-            <div class="controls">
-		<input disabled class="input-xlarge span8 disabled" type="text" value="<?php echo isset($lasts['Last JabberDisconnection']) && $lasts['Last JabberDisconnection'] != "" ? date("d/m/Y H:i:s", strtotime($lasts['Last JabberDisconnection'])) : __tr('Unknow') ?>">
-	    </div>
-          </div>
-          <div class="control-group">
-            <label class="control-label"><?php echo __tr("Last Record") ?></label>
-            <div class="controls">
-		<input disabled class="input-xlarge span8 disabled" type="text" value="<?php echo isset($lasts['LastRecord']) && $lasts['LastRecord'] != "" ? $lasts['LastRecord'] : __tr('Unknow') ?>">
-	    </div>
-          </div>
-          <div class="control-group">
-            <label class="control-label"><?php echo __tr("Last Locate") ?></label>
-            <div class="controls">
-		<input disabled class="input-xlarge span8 disabled" type="text" value="<?php echo isset($lasts['LastLocate']) && $lasts['LastLocate'] != "" ? date("d/m/Y H:i:s", strtotime($lasts['LastLocate'])) : __tr('Unknow') ?>">
-	    </div>
-          </div>
-          <div class="control-group">
-            <label class="control-label"><?php echo __tr("Last Locate string") ?></label>
-            <div class="controls">
-		<textarea disabled class="input-xlarge span8 disabled" style="height: 60px;"><?php echo isset($lasts['LastLocateString']) && $lasts['LastLocateString'] != "" ? $lasts['LastLocateString'] : __tr('Unknow') ?></textarea>
-	    </div>
-          </div>
-<?php endif; ?>
-          <div class="control-group">
-            <label class="control-label"><?php echo __tr("Last Cron") ?></label>
-            <div class="controls">
-		<input disabled class="input-xlarge span8 disabled" type="text" value="<?php echo isset($lasts['LastCron']) && $lasts['LastCron'] != "" ? $lasts['LastCron'] : __tr('Unknow') ?>">
-	    </div>
-          </div>
-          <div class="control-group">
-            <label class="control-label"><?php echo __tr("Crons") ?></label>
-            <div class="controls">
-		<textarea disabled class="input-xlarge span8 disabled" style="height: <?php echo max(60, 19 * count($crons->crons->cron)) ?>px;">
-<?php foreach($crons->crons->cron as $cron): ?>
-<?php echo $cron->plugin ?>-&gt;<?php echo strlen($cron->callback) ? $cron->callback : 'OnCron' ?>(<?php echo strlen($cron->data_string) ? '"' . $cron->data_string . '"' : ( strlen($cron->data_int) ? $cron->data_int : '') ?>) @ <?php echo date('H:i d/m/Y', $cron->next_run + 0) ?>
+      <div class="tab-pane<?php echo $_SESSION['tab'] == 'bunny_expert' ? ' active' : '' ?>" id="expert">
+        <?php if(bunnyVersion($_SESSION['bunny']) == 2): ?>
+        <form method="post">
+          <fieldset class="border p-3">
+            <legend><h6><?php echo __tr('Actions'); ?></h6></legend>
+            <div class="form-group row">
+              <div class="col-sm-6">            
+                <input class="btn btn-primary" name="disconnect" type="submit" value="<?php echo __tr("Disconnect the bunny") ?>">
+                <input class="btn btn-primary" name="reboot" type="submit" value="<?php echo __tr("Reboot the bunny") ?>">
+              <div>
+            </div>
+          </fieldset>
+	      </form>
 
-<?php endforeach; ?>
-		</textarea>
-	    </div>
+        <?php
+        $pingserver = $ojnAPI->getApiValue(BUNNY_API."/locate/getcustomlocate?param=PingServer&".$ojnAPI->getToken());
+        $broadserver = $ojnAPI->getApiValue(BUNNY_API."/locate/getcustomlocate?param=BroadServer&".$ojnAPI->getToken());
+        $xmppserver = $ojnAPI->getApiValue(BUNNY_API."/locate/getcustomlocate?param=XmppServer&".$ojnAPI->getToken());
+        $xmppport = $ojnAPI->getApiValue(BUNNY_API."/locate/getcustomlocate?param=ListeningXmppPort&".$ojnAPI->getToken());
+        $xmppaltport = $ojnAPI->getApiValue(BUNNY_API."/locate/getcustomlocate?param=ListeningXmppAltPort&".$ojnAPI->getToken());
+        $xmpptimeout = $ojnAPI->getApiValue(BUNNY_API."/locate/getcustomlocate?param=XmppTcpIdleTime&".$ojnAPI->getToken());
+        ?>
+        <form method="post" class="mt-2">
+          <fieldset class="border p-3">
+            <legend><h6><?php echo __tr('Use another openJabNab server without modifying bunny setup') ?></h6></legend>
+            <div class="alert alert-danger">
+              <?php echo __tr('Use at your own risk, bunny may loose connection if parameters are bad') ?>
+            </div>
+            <div class="form-group row">
+              <label class="col-sm-2 col-form-label" for="pingserver"><?php echo __tr('Ping Server') ?></label>
+              <div class="col-sm-3">
+                <input type="text" class="form-control" name="pingserver" value="<?php echo $pingserver ?>">
+              </div>
+            </div>
+            <div class="form-group row">
+              <label class="col-sm-2 col-form-label" for="pingserver"><?php echo __tr('Broad server') ?></label>
+              <div class="col-sm-3">
+                <input type="text" class="form-control" name="pingserver" value="<?php echo $pingserver ?>">
+              </div>
+            </div>
+            <div class="form-group row">
+              <label class="col-sm-2 col-form-label" for="xmppserver"><?php echo __tr('Xmpp server') ?></label>
+              <div class="col-sm-3">
+                <input type="text" class="form-control" name="xmppserver" value="<?php echo $xmppserver ?>">
+              </div>
+            </div>
+            <div class="form-group row">
+              <label class="col-sm-2 col-form-label" for="xmppport"><?php echo __tr('Xmpp port') ?></label>
+              <div class="col-sm-1">
+                <input type="text" class="form-control" name="xmppport" value="<?php echo $xmppport ?>">
+              </div>
+            </div>
+            <div class="form-group row">
+              <label class="col-sm-2 col-form-label" for="xmppaltport"><?php echo __tr("Xmpp port") ?> (<?php echo __tr("Alternative") ?>)</label>
+              <div class="col-sm-1">
+                <input type="text" class="form-control" name="xmppaltport" value="<?php echo $xmppaltport ?>">
+              </div>
+            </div>
+            <div class="form-group row">
+              <label class="col-sm-2 col-form-label" for="xmpptimeout"><?php echo __tr('Xmpp timeout') ?></label>
+              <div class="col-sm-1">
+                <input type="text" class="form-control" name="xmpptimeout" value="<?php echo $xmpptimeout ?>">
+              </div>
+            </div>
+            <div class="form-group row">
+              <div class="col-sm-1 offset-sm-2 text-left">
+                <button class="btn btn-primary" type="submit"><?php echo __tr("Save") ?></button>
+              </div>
+            </div>
+          </fieldset>
+	      </form>
+	    
+        <?php if($Infos['isAdmin']): ?>
+        <div class="card">
+          <h6 class="card-header bg-danger text-light">Administration</h6>
+          <div class="card-body">
+            <?php
+            $tips = array("wifi_crypt" => "0 : Aucun, 1 : WEP, 2 : WPA", "wifi_auth" => "0 : OpenSystem, 1 : SharedKey");
+            foreach(array("wifi_ssid", "wifi_crypt", "wifi_auth", "wifi_key", "server_url", "dhcp", "ip", "mask", "gateway", "dns_server") as $conf): ?>
+            <?php
+            $value = $ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/locate/config?action=get&config=$conf&".$ojnAPI->getToken());
+            $value = $value['value'];
+            ?>
+            <form cclass="form-inline" method="post">
+              <div class="form-group row">
+                <label class="col-sm-2 col-form-label" for="conf_<?php echo $conf; ?>"><?php echo ucfirst($conf); ?></label>
+                <div class="col-sm-2">
+                  <input type="text" class="form-control" name="conf_<?php echo $conf; ?>" value="<?php echo $value; ?>">
+                </div>
+                <div class="col-sm-2">
+                  <button class="btn btn-primary" type="submit"><?php echo __tr("Save") ?></button>
+                </div>
+                <?php if(!empty($tips[$conf])): ?>
+                <div class="col-sm-3">
+                  <?php echo $tips[$conf]; ?>
+                </div>   
+                <?php endif; ?>
+              </div>
+            </form>
+            <?php endforeach; ?>
+            <hr />
+            <form class="form" method="post">
+              <div class="form-group row">
+                <label class="col-sm-2 col-form-label" for="update_conf"><?php echo __tr('Update configuration'); ?></label>
+                <input type="hidden" name="update_conf" value="1">
+                <div class="col-sm-2">
+                  <button class="btn btn-primary" type="submit"><?php echo __tr("Update") ?></button>
+                </div>
+              </div>
+            </form>
           </div>
-<?php if(isset($owner['value']) && $owner['value'] != ""): ?>
-          <div class="control-group">
-            <label class="control-label"><?php echo __tr("Owner") ?></label>
-            <div class="controls">
-		<input disabled class="input-xlarge span7 disabled" type="text" value="<?php echo isset($owner['value']) && $owner['value'] != "" ? $owner['value'] : __tr('Unknow') ?>"> &nbsp;
-			<a target="_blank" class="btn btn-small btn-primary" href="account_expert.php?acc=<?php echo $owner['value'] ?>"><?php echo __tr('Expert view') ?></a>
-	    </div>
+        </div>
+        <?php endif; /* Not Admin */ ?>
+        <?php else: /* Not V2 */ ?>
+        Aucune option n'est disponible pour votre lapin.
+        <?php endif; ?>
+      </div>
+
+      <?php if(!empty($Infos['isAdmin'])):
+        $lasts = $ojnAPI->getApiMapped("bunny/".$_SESSION['bunny']."/getlasts?".$ojnAPI->getToken());
+        $xml = $ojnAPI->getApiRaw("bunny/".$_SESSION['bunny']."/getallcrons?".$ojnAPI->getToken());
+        $crons = simplexml_load_string($xml);
+        $owner = $ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/getOwner?".$ojnAPI->getToken());
+      ?>
+      <div class="tab-pane<?php echo $_SESSION['tab'] == 'bunny_debug' ? ' active' : '' ?>" id="debug">
+        <form>
+          <div class="form-group row">
+            <label class="col-sm-3 col-form-label"><?php echo __tr("Last IP address") ?></label>
+            <div class="col-sm-9">
+              <input disabled class="form-control disabled" type="text" value="<?php echo isset($lasts['LastIP']) && $lasts['LastIP'] != "" ? $lasts['LastIP'] : __tr('Unknow') ?>">
+	          </div>
           </div>
-<?php else: ?>
-          <div class="control-group">
-            <label class="control-label"><?php echo __tr("Owner") ?></label>
-            <div class="controls">
-		<input disabled class="input-xlarge span8 disabled" type="text" value="">
-	    </div>
+          <?php if(bunnyVersion($_SESSION['bunny']) == 1 && isset($lasts['Last PingConnection']) && $lasts['Last PingConnection'] != ""): ?>
+          <div class="form-group row">
+            <label class="col-sm-3 col-form-label"><?php echo __tr("Last PingConnection") ?></label>
+            <div class="col-sm-9">
+              <input disabled class="form-control disabled" type="text" value="<?php echo isset($lasts['Last PingConnection']) && $lasts['Last PingConnection'] != "" ? date("d/m/Y H:i:s", strtotime($lasts['Last PingConnection'])) : __tr('Unknow') ?>">
+	          </div>
           </div>
-<?php endif; ?>
-<?php if(isset($_GET['rawconf']) || isset($_SESSION['rawconf'])) : ?>
-          <div class="control-group">
-            <label class="control-label"><?php echo __tr("RAW Conf") ?></label>
-            <div class="controls">
-		<textarea disabled class="input-xlarge span8 disabled" style="height: 320px;">
-<?php
-unset($_SESSION['rawconf']);
-function getIp($s) {
-	$ss = array();
-	for($i=0; $i<strlen($s); $i++) {
-		$ss[] = ord($s[$i]);
-	}
-	return implode('.', $ss);
-}
-function getString($s) {
-	$ss = array();
-	for($i=0; $i<strlen($s); $i++) {
-		if(ord($s[$i]) == 0) {
-			break;
-		}
-		$ss[] = $s[$i];
-	}
-	return implode('', $ss);
-}
-$str = $ojnAPI->getApiString("bunny/" . $_SESSION['bunny'] . "/locate/config?action=getraw&".$ojnAPI->getToken());
-$str = (string)$str['value'];
-if(strlen($str)) {
-	$s = "";
-	while(strlen($str)) {
-		$s .= chr(hexdec(substr($str, 0, 2)));
-		$str = substr($str, 2, strlen($str));
-	}
-	echo "Serveur : " . getString(substr($s, 0, 41)) . "\n";
-	echo "DHCP    : " . ord(substr($s, 41, 1)) . "\n";
-	echo "IP      : " . getIp(substr($s, 42, 4)) . "\n";
-	echo "Mask    : " . getIp(substr($s, 46, 4)) . "\n";
-	echo "Gateway : " . getIp(substr($s, 50, 4)) . "\n";
-	echo "DNS     : " . getIp(substr($s, 54, 4)) . "\n";
-	echo "Wifi    : " . getString(substr($s, 58, 32)) . "\n";
-	echo "Auth    : " . getString(substr($s, 90, 1)) . "\n";
-	echo "Crypt   : " . ord(substr($s, 91, 1)) . "\n";
-	echo "Key     : " . getString(substr($s, 92, 64)) . "\n";
-	echo "Proxy   : " . ord(substr($s, 156, 1)) . "\n";
-	echo "IP      : " . getIp(substr($s, 157, 4)) . "\n";
-	echo "Port    : " . (substr($s, 161, 2)) . "\n";
-	echo "Login   : " . getString(substr($s, 163, 6)) . "\n";
-	echo "Pwd     : " . getString(substr($s, 169, 6)) . "\n";
-	echo "PMK     : " . getString(substr($s, 175, 32)) . "\n";
-	echo "Magic   : " . ord(substr($s, 207, 1)) ;
-}
-?>
-		</textarea>
-	    </div>
+          <div class="form-group row">
+            <label class="col-sm-3 col-form-label"><?php echo __tr("Last Ping") ?></label>
+            <div class="col-sm-9">
+              <input disabled class="form-control disabled" type="text" value="<?php echo isset($lasts['Last Ping']) && $lasts['Last Ping'] != "" ? date("d/m/Y H:i:s", strtotime($lasts['Last Ping'])) : __tr('Unknow') ?>">
+	          </div>
           </div>
-<?php endif; ?>
-          <div class="form-actions">
-		<input class="btn btn-primary" name="resetpwd" type="submit" value="<?php echo __tr('Reset password') ?>">
-		<input class="btn btn-primary" name="resetown" type="submit" value="<?php echo __tr('Reset owner') ?>">
-		<input class="btn btn-primary" name="removeB" type="submit" value="<?php echo __tr('Remove bunny') ?>">
-		<input class="btn btn-primary" name="rawconf" type="submit" value="<?php echo __tr('RAW Conf') ?>">
+          <?php else: ?>
+          <div class="form-group row">
+            <label class="col-sm-3 col-form-label"><?php echo __tr("Last Jabber Connection") ?></label>
+            <div class="col-sm-9">
+              <input disabled class="form-control disabled" type="text" value="<?php echo isset($lasts['Last JabberConnection']) && $lasts['Last JabberConnection'] != "" ? date("d/m/Y H:i:s", strtotime($lasts['Last JabberConnection'])) : __tr('Unknow') ?>">
+	          </div>
           </div>
-</form>
-<form class="form-horizontal" method="get">
-<?php 
-$StTitles = array(
-  'config' => 'Configuration',
-  'shortconfig' => 'ShortConfiguration',
-  'running' => 'Running',
-  'silent' => 'Silent'
-);
-foreach($asks as $ask): ?>
-<?php if(isset($StDbg[$ask])): ?>
-  <div class="control-group">
-    <table class="table table-bordered table-striped span10">
-      <tr>
-        <th colspan="2"><?php echo __tr($StTitles[$ask]); ?></th>
-      </tr>
-      <?php foreach($StDbg[$ask] as $key => $value): ?>
-			<tr>
-				<th class="span3"><?php echo $key ?></th>
-				<td><?php echo $value ?></td>
-			</tr>
-      <?php endforeach; ?>
-		</table>
-  </div>
-<?php endif; ?>
-<?php endforeach; ?>
-  <div class="form-actions">
-		<input class="btn btn-primary" name="askconfig" type="submit" value="<?php echo __tr('Ask for config') ?>">
-		<input class="btn btn-primary" name="askshortconfig" type="submit" value="<?php echo __tr('Ask for shortconfig') ?>">
-		<input class="btn btn-primary" name="askrunning" type="submit" value="<?php echo __tr('Ask for running') ?>">
-		<input class="btn btn-primary" name="asksilent" type="submit" value="<?php echo __tr('Ask for silent') ?>">
-  </div>
-</form>
-								</div>
-								<div class="tab-pane<?php echo $_SESSION['tab'] == 'bunny_admin' ? ' active' : '' ?>" id="admin">
-
-<table class="table table-bordered table-striped span11">
-	<tr>
-		<th colspan="4"><?php echo __tr('Recorded messages') ?></th>
-	</tr>
-	<tr>
-		<th><?php echo __Tr('Date') ?></th>
-		<th><?php echo __Tr('File') ?></th>
-		<th><?php echo __tr('Actions') ?></th>
-	</tr>
-<?php
-	$i = 0;
-$dir = "../ojn_local/plugins/record/";
-$files = array();
-// Ouvre un dossier bien connu, et liste tous les fichiers
-if (is_dir($dir)) {
-    if ($dh = opendir($dir)) {
-        while (($file = readdir($dh)) !== false) {
-		if(preg_match('/record_'.$_SESSION['bunny'].'_(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2}).wav/', $file, $match)) {
-			$files[$file] = strtotime($match[1]."-".$match[2]."-".$match[3]." ".$match[4].":".$match[5].":".$match[6]);
-		}
-	}
-        closedir($dh);
-   }
-}
-krsort($files);
-foreach($files as $file => $date) {
-	$date = date('d/m/Y H:i:s', $date);
-	$url = "http://openjabnab.fr/ojn_local/plugins/record/" . $file;
-	$path = "../ojn_local/plugins/record/" . $file;
-/*
-		$parts = explode("|", $message);
-		$date = date('d/m/Y H:i:s', $parts[0]);
-		$plugin = $parts[1];
-		$files = array();
-		for($i=2; $i<count($parts);$i++)
-		{
-			$files[] = preg_replace("|^broadcast/|", "http://openjabnab.fr/", $parts[$i]);
-		}
-*/
-
-?>
-	<tr>
-		<td><?php echo $date ?></td>
-		<td><?php echo $url ?></td>
-		<td>
-			<?php /* <audio id="audio1" src="<?php echo $path ?>" controls preload="auto" autobuffer></audio> */ ?>
-			<embed src="<?php echo $path ?>" autostart=false loop=false style="height: 16px" >
-		</td>
-	</tr>
-<?php
-
-}
-?>
-</table>
-
-								</div>
-
-								<div class="tab-pane<?php echo $_SESSION['tab'] == 'bunny_migrate' ? ' active' : '' ?>" id="migrate">
-
-
-
-<?php if(isset($_SESSION['migration_bunny']) && strlen($_SESSION['migration_bunny']) == 12): ?>
-<?php
-$bunnies = $ojnAPI->getApiMapped("bunnies/getListofAllBunnies?".$ojnAPI->getToken());
-$actifs_migration = $ojnAPI->bunnyListOfPlugins($_SESSION['migration_bunny'], true);
-?>
-<table class="table table-bordered table-striped span11">
-	<tr>
-		<th><?php echo isset($bunnies[$_SESSION['bunny']]) ? $bunnies[$_SESSION['bunny']] : $_SESSION['bunny'] ?></th>
-		<th><?php echo __Tr('Plugin') ?></th>
-		<th><?php echo isset($bunnies[$_SESSION['migration_bunny']]) ? $bunnies[$_SESSION['migration_bunny']] : $_SESSION['migration_bunny'] ?></th>
-	</tr>
-<?php foreach($plugins as $id => $plugin): ?>
-	<tr>
-		<td><a href="/bunny/index.php?migrate=<?php echo $id ?>&from=<?php echo $_SESSION['migration_bunny'] ?>&to=<?php echo $_SESSION['bunny'] ?>" class="btn">&lt;&lt; <?php echo __tr("Migrate") ?></a></td>
-		<td style="text-align: center">
-    <div class="btn-toolbar">
-    <div class="btn-group">
-    <a class="btn span2 btn-<?php echo $plugin['actif'] ? "danger" : "success";?>" href="?migrate=<?php echo $_SESSION['bunny'] ?>&stat=<?php echo $plugin['actif'] ? "unregister" : "register"; ?>&plug=<?php echo $id ?>"><?php echo $plugin['actif'] ? __tr('Disable plugin') : __tr('Enable plugin') ?></a>
-    <a class="btn span6 disabled"><?php echo $plugin['name'] ?></a>
-    <a class="btn span2 btn-<?php echo in_array($id, $actifs_migration) ? "danger" : "success";?>" href="?migrate=<?php echo $_SESSION['migration_bunny']?>&stat=<?php echo in_array($id, $actifs_migration) ? "unregister" : "register"; ?>&plug=<?php echo $id ?>"><?php echo in_array($id, $actifs_migration) ? __tr('Disable plugin') : __tr('Enable plugin') ?></a>
-    </div>
-    </div>
-		</td>
-		<td style="text-align: right"><a href="/bunny/index.php?migrate=<?php echo $id ?>&to=<?php echo $_SESSION['migration_bunny'] ?>&from=<?php echo $_SESSION['bunny'] ?>" class="btn"><?php echo __tr("Migrate") ?> &gt;&gt;</a></td>
-	</tr>
-<?php endforeach; ?>
-</table>
-<br style="clear: both" />
-<hr />
-<?php endif; ?>
-
-      <form method="post" class="form-horizontal">
-        <fieldset>
-          <div class="control-group">
-            <label for="select01" class="control-label"><?php echo __tr("Bunny") ?></label>
-            <div class="controls">
-<input type="text" name="migration_bunny" class="span3" value="<?php echo isset($_SESSION['migration_bunny']) ? $_SESSION['migration_bunny'] : '' ?>">
+          <div class="form-group row">
+            <label class="col-sm-3 col-form-label"><?php echo __tr("Last Jabber Disconnection") ?></label>
+            <div class="col-sm-9">
+              <input disabled class="form-control disabled" type="text" value="<?php echo isset($lasts['Last JabberDisconnection']) && $lasts['Last JabberDisconnection'] != "" ? date("d/m/Y H:i:s", strtotime($lasts['Last JabberDisconnection'])) : __tr('Unknow') ?>">
+	          </div>
+          </div>
+          <div class="form-group row">
+            <label class="col-sm-3 col-form-label"><?php echo __tr("Last Record") ?></label>
+            <div class="col-sm-9">
+              <input disabled class="form-control disabled" type="text" value="<?php echo isset($lasts['LastRecord']) && $lasts['LastRecord'] != "" ? $lasts['LastRecord'] : __tr('Unknow') ?>">
+	          </div>
+          </div>
+          <div class="form-group row">
+            <label class="col-sm-3 col-form-label"><?php echo __tr("Last Locate") ?></label>
+            <div class="col-sm-9">
+              <input disabled class="form-control disabled" type="text" value="<?php echo isset($lasts['LastLocate']) && $lasts['LastLocate'] != "" ? date("d/m/Y H:i:s", strtotime($lasts['LastLocate'])) : __tr('Unknow') ?>">
+	          </div>
+          </div>
+          <div class="form-group row">
+            <label class="col-sm-3 col-form-label"><?php echo __tr("Last Locate string") ?></label>
+            <div class="col-sm-9">
+              <textarea disabled class="form-control disabled" rows="6"><?php echo isset($lasts['LastLocateString']) && $lasts['LastLocateString'] != "" ? trim($lasts['LastLocateString']) : __tr('Unknow') ?></textarea>
+	          </div>
+          </div>
+          <?php endif; ?>
+          <div class="form-group row">
+            <label class="col-sm-3 col-form-label"><?php echo __tr("Last Cron") ?></label>
+            <div class="col-sm-9">
+              <input disabled class="form-control disabled" type="text" value="<?php echo isset($lasts['LastCron']) && $lasts['LastCron'] != "" ? $lasts['LastCron'] : __tr('Unknow') ?>">
+	          </div>
+          </div>
+          <div class="form-group row">
+            <label class="col-sm-3 col-form-label"><?php echo __tr("Crons") ?></label>
+            <div class="col-sm-9">
+              <textarea disabled class="form-control disabled" rows="<?php echo max(10, count($crons->crons->cron)); ?>"><?php 
+                foreach($crons->crons->cron as $cron):
+                echo $cron->plugin ?>-&gt;<?php echo strlen($cron->callback) ? $cron->callback : 'OnCron' ?>(<?php echo strlen($cron->data_string) ? '"' . $cron->data_string . '"' : ( strlen($cron->data_int) ? $cron->data_int : '') ?>) @ <?php echo date('H:i d/m/Y', $cron->next_run + 0)."\n";
+                endforeach; ?>
+		          </textarea>
+	          </div>
+          </div>
+          <div class="form-group row">
+            <label class="col-sm-3 col-form-label"><?php echo __tr("Owner") ?></label>
+            <div class="col-sm-3">
+		          <input disabled class="form-control disabled" type="text" value="<?php echo !empty($owner['value']) ? $owner['value'] : __tr('Unknow') ?>"> &nbsp;
+            <?php if(!empty($owner['value'])): ?>
+            </div>
+            <div class="col-sm-">
+			        <a target="_blank" class="btn btn-sm btn-primary" href="/admin/account_expert.php?acc=<?php echo $owner['value'] ?>"><?php echo __tr('Expert view') ?></a>
+              <input class="btn btn-primary btn-sm btn-danger" name="resetown" type="submit" value="<?php echo __tr('Reset owner') ?>">
+            <?php endif; ?>
+	          </div>
+          </div>
+          <div class="form-group row">
+            <label class="col-sm-2 col-form-label"><?php echo __tr("Raw configuration") ?></label>
+            <div class="col-sm-1">
+              <input class="btn btn-primary" name="rawconf" type="submit" value="<?php echo __tr('RAW Conf') ?>"> 
+            </div>
+            <div class="col-sm-9">
+              <textarea disabled class="form-control disabled" rows="10"><?php if(isset($_GET['rawconf']) || isset($_SESSION['rawconf'])) : 
+                unset($_SESSION['rawconf']);
+                function getIp($s) {
+                  $ss = array();
+                  for($i=0; $i<strlen($s); $i++) {
+                    $ss[] = ord($s[$i]);
+                  }
+                  return implode('.', $ss);
+                }
+                function getString($s) {
+                  $ss = array();
+                  for($i=0; $i<strlen($s); $i++) {
+                    if(ord($s[$i]) == 0) {
+                      break;
+                    }
+                    $ss[] = $s[$i];
+                  }
+                  return implode('', $ss);
+                }
+                $str = $ojnAPI->getApiString("bunny/" . $_SESSION['bunny'] . "/locate/config?action=getraw&".$ojnAPI->getToken());
+                $str = (string)$str['value'];
+                if(strlen($str)) {
+                  $s = "";
+                  while(strlen($str)) {
+                    $s .= chr(hexdec(substr($str, 0, 2)));
+                    $str = substr($str, 2, strlen($str));
+                  }
+                  echo "Serveur : " . getString(substr($s, 0, 41)) . "\n";
+                  echo "DHCP    : " . ord(substr($s, 41, 1)) . "\n";
+                  echo "IP      : " . getIp(substr($s, 42, 4)) . "\n";
+                  echo "Mask    : " . getIp(substr($s, 46, 4)) . "\n";
+                  echo "Gateway : " . getIp(substr($s, 50, 4)) . "\n";
+                  echo "DNS     : " . getIp(substr($s, 54, 4)) . "\n";
+                  echo "Wifi    : " . getString(substr($s, 58, 32)) . "\n";
+                  echo "Auth    : " . getString(substr($s, 90, 1)) . "\n";
+                  echo "Crypt   : " . ord(substr($s, 91, 1)) . "\n";
+                  echo "Key     : " . getString(substr($s, 92, 64)) . "\n";
+                  echo "Proxy   : " . ord(substr($s, 156, 1)) . "\n";
+                  echo "IP      : " . getIp(substr($s, 157, 4)) . "\n";
+                  echo "Port    : " . (substr($s, 161, 2)) . "\n";
+                  echo "Login   : " . getString(substr($s, 163, 6)) . "\n";
+                  echo "Pwd     : " . getString(substr($s, 169, 6)) . "\n";
+                  echo "PMK     : " . getString(substr($s, 175, 32)) . "\n";
+                  echo "Magic   : " . ord(substr($s, 207, 1)) ;
+                }
+                endif; ?></textarea>
             </div>
           </div>
-          <div class="form-actions">
-            <button class="btn btn-primary" type="submit"><?php echo __tr("Save") ?></button>
+          <div class="form-group row">
+            <label class="col-sm-3 col-form-label"><?php echo __tr('Actions'); ?></label>
+            <div class="col-sm-9">
+              <input class="btn btn-primary" name="resetpwd" type="submit" value="<?php echo __tr('Reset password') ?>">
+		          <input class="btn btn-primary btn-danger" name="removeB" type="submit" value="<?php echo __tr('Remove bunny') ?>">
+            </div>
           </div>
-        </fieldset>
-      </form>
+        </form>
 
-								</div>
-<?php endif; ?>
-							</div>
-</div>
-</div>
-</div>
+        <?php 
+        $StTitles = array(
+          'config' => 'Configuration',
+          'shortconfig' => 'ShortConfiguration',
+          'running' => 'Running',
+          'silent' => 'Silent'
+        ); ?>
+        <form class="mt-3" method="get">
+          <div class="form-group row">
+            <label class="col-sm-3 col-form-label"><?php echo __tr('Dumps'); ?></label>
+            <div class="col-sm-9">
+              <?php foreach($asks as $ask): ?>
+              <input class="btn btn-primary" name="ask<?php echo $ask; ?>" type="submit" value="<?php echo __tr('Ask for '.$ask) ?>">
+              <?php endforeach ?>
+            </div>
+          </div>
+        </form>
+        <?php foreach($asks as $ask): 
+          if(isset($StDbg[$ask])): 
+        ?>
+        <div class="form-group row">
+          <table class="table table-bordered table-striped span10">
+            <tr>
+              <th colspan="2"><?php echo __tr($StTitles[$ask]); ?> <i>('<?php echo $ask; ?>')</i></th>
+            </tr>
+            <?php foreach($StDbg[$ask] as $key => $value): ?>
+            <tr>
+              <th class="span3"><?php echo $key ?></th>
+              <td><?php echo $value ?></td>
+            </tr>
+            <?php endforeach; ?>
+          </table>
+        </div>
+        <?php endif;
+        endforeach; ?>
+      </div>
 
+      <div class="tab-pane<?php echo $_SESSION['tab'] == 'bunny_admin' ? ' active' : '' ?>" id="admin">
+        <h5><?php echo __tr('Recorded messages') ?></h5>
+        <table class="table table-bordered table-striped span11">
+	        <tr>
+            <th><?php echo __Tr('Date') ?></th>
+            <th><?php echo __Tr('File') ?></th>
+            <th><?php echo __tr('Actions') ?></th>
+          </tr>
+          <?php
+          $dir = "../ojn_local/plugins/record/";
+          $files = array();
+          // Ouvre un dossier bien connu, et liste tous les fichiers
+          if (is_dir($dir)) {
+              if ($dh = opendir($dir)) {
+                  while (($file = readdir($dh)) !== false) {
+              if(preg_match('/record_'.$_SESSION['bunny'].'_(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2}).wav/', $file, $match)) {
+                $files[$file] = strtotime($match[1]."-".$match[2]."-".$match[3]." ".$match[4].":".$match[5].":".$match[6]);
+              }
+            }
+                  closedir($dh);
+            }
+          }
+          krsort($files);
+          foreach($files as $file => $date):
+            $date = date('d/m/Y H:i:s', $date);
+            $url = "http://openjabnab.fr/ojn_local/plugins/record/" . $file;
+            $path = "../ojn_local/plugins/record/" . $file;
+          ?>
+          <tr>
+            <td><?php echo $date ?></td>
+            <td><a target="_blank" href="<?php echo $url ?>"><?php echo $file ?></a></td>
+            <td>
+              <?php /* <audio id="audio1" src="<?php echo $path ?>" controls preload="auto" autobuffer></audio> */ ?>
+              <embed src="<?php echo $path ?>" autostart=false loop=false style="height: 16px" >
+              <a class="btn btn-sm btn-primary" href="#"><i class="icon-play"></i></a>
+              <a class="btn btn-sm btn-danger" href="#"><i class="icon-trash"></i></a>
+            </td>
+          </tr>
+          <?php endforeach; ?>
+        </table>
+      </div>
 
-<?php
-}
-?>
-					</div> <!-- /widget-content -->
-				</div> <!-- /widget -->
-		    </div> <!-- /span12 -->
-	      </div> <!-- /row -->
+      <div class="tab-pane<?php echo $_SESSION['tab'] == 'bunny_migrate' ? ' active' : '' ?>" id="migrate">
+        <h6>Copy plugins settings from/to another bunny</h6>
+        <form class="form-inline mt-3" method="get">
+            <div class="form-group row">
+              <label class="col-sm-5 col-form-label"><?php echo __tr("Other bunny") ?></label>
+              <div class="col-sm-5">
+                <input type="text" placeholder="00xxxxxxxxxx" name="migration_bunny" class="form-control" value="<?php echo isset($_SESSION['migration_bunny']) ? $_SESSION['migration_bunny'] : '' ?>">
+              </div>
+              <div class="col-sm-1">
+                <button class="btn btn-primary" type="submit"><?php echo __tr("Save") ?></button>
+              </div>
+            </div>
+        </form>
+        <hr />
+
+        <?php if(isset($_SESSION['migration_bunny']) && strlen($_SESSION['migration_bunny']) == 12):
+          $bunnies = $ojnAPI->getApiMapped("bunnies/getListofAllBunnies?".$ojnAPI->getToken());
+          $actifs_migration = $ojnAPI->bunnyListOfPlugins($_SESSION['migration_bunny'], true);
+        ?>
+        <table class="table table-bordered table-striped span11">
+          <tr>
+            <th><?php echo isset($bunnies[$_SESSION['bunny']]) ? $bunnies[$_SESSION['bunny']] : $_SESSION['bunny'] ?></th>
+            <th><?php echo __tr('Plugin') ?></th>
+            <th><?php echo isset($bunnies[$_SESSION['migration_bunny']]) ? $bunnies[$_SESSION['migration_bunny']] : $_SESSION['migration_bunny'] ?></th>
+          </tr>
+          <?php foreach($plugins as $id => $plugin): ?>
+            <tr>
+              <td>
+                <a href="/bunny/index.php?migrate=<?php echo $id ?>&from=<?php echo $_SESSION['migration_bunny'] ?>&to=<?php echo $_SESSION['bunny'] ?>" class="btn">&lt;&lt; <?php echo __tr("Migrate") ?></a>
+                <a class="btn btn-sm btn-<?php echo $plugin['actif'] ? "danger" : "success";?>" href="?migrate=<?php echo $_SESSION['bunny'] ?>&stat=<?php echo $plugin['actif'] ? "unregister" : "register"; ?>&plug=<?php echo $id ?>"><?php echo $plugin['actif'] ? __tr('Disable plugin') : __tr('Enable plugin') ?></a>
+                </td>
+              <td class="text-center">
+                <?php echo $plugin['name'] ?>
+              </td>
+              <td class="text-right">
+                <a class="btn btn-sm btn-<?php echo in_array($id, $actifs_migration) ? "danger" : "success";?>" href="?migrate=<?php echo $_SESSION['migration_bunny']?>&stat=<?php echo in_array($id, $actifs_migration) ? "unregister" : "register"; ?>&plug=<?php echo $id ?>"><?php echo in_array($id, $actifs_migration) ? __tr('Disable plugin') : __tr('Enable plugin') ?></a>
+                <a href="/bunny/index.php?migrate=<?php echo $id ?>&to=<?php echo $_SESSION['migration_bunny'] ?>&from=<?php echo $_SESSION['bunny'] ?>" class="btn"><?php echo __tr("Migrate") ?> &gt;&gt;</a>
+              </td>
+            </tr>
+          <?php endforeach; ?>
+        </table>
+        <?php endif; ?>
+      </div>
+
+      <?php endif; // is Admin ?>
+
+    </div>
+    <?php endif; // Bunny selected ?>
+  </div>
+</div>
 <?php
 require_once "../include/append.php";
 ?>

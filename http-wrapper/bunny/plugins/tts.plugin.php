@@ -6,15 +6,14 @@ if(isset($_POST['text']) && trim($_POST['text']) != "")
 	exit();
 }
 ?>
-<form method="post" class="form-horizontal">
-          <div class="control-group">
-            <label for="input01" class="control-label"><?php echo __tr("Text to send") ?></label>
-            <div class="controls">
-		<input type="text" name="text"/>
-            </div>
-          </div>
-          <div class="form-actions">
-            <button class="btn btn-primary" type="submit"><?php echo __tr("Send") ?></button>
-            <button class="btn"><?php echo __tr("Cancel") ?></button>
-          </div>
+<form method="post">
+  <div class="form-group row">
+    <label class="col-sm-2 col-form-label" for="text"><?php echo __tr("Text to send") ?></label>
+    <div class="col-sm-8">    
+      <input type="text" name="text"  class="form-control" />
+    </div>
+    <div class="col-sm-2">
+      <button class="btn btn-primary" type="submit"><?php echo __tr("Submit") ?></button>
+    </div>
+  </div>
 </form>

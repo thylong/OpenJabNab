@@ -75,217 +75,211 @@ if($reload) {
 
 require('../include/message.php');
 ?>
-	      <div class="row">
-	      	<div class="span12">
-	      		<div class="widget ">
-	      			<div class="widget-header">
-	      				<i class="icon-user"></i>
-	      				<h3><?php echo __tr('Your account') ?></h3>
-	  				</div> <!-- /widget-header -->
-					<div class="widget-content">
+<div class="card ">
+  <h5 class="card-header">
+    <i class="icon-user"></i> <?php echo __tr('Your account') ?>
+  </h5>
+  <div class="card-body">
+    <ul class="nav nav-tabs">
+      <li class="nav-item <?php echo $_SESSION['tab'] == 'account_profile' ? 'active' : '' ?>">
+        <a class="nav-link" href="#profile" data-toggle="tab" role="tab" aria-controls="profile" aria-selected="true"><?php echo __tr('Profile') ?></a>
+      </li>
+      <li class="nav-item <?php echo $_SESSION['tab'] == 'account_bunnies' ? 'active' : '' ?>">
+        <a class="nav-link" href="#bunnies" data-toggle="tab" role="tab" aria-controls="bunnies" aria-selected="false"><?php echo __tr('Bunnies') ?></a>
+      </li>
+      <li class="nav-item <?php echo $_SESSION['tab'] == 'account_ztamps' ? 'active' : '' ?>">
+        <a class="nav-link" href="#ztamps" data-toggle="tab" role="tab" aria-controls="ztamps" aria-selected="false"><?php echo __tr('Ztamps') ?></a>
+      </li>
+      <li class="nav-item <?php echo $_SESSION['tab'] == 'account_settings' ? 'active' : '' ?>">
+        <a class="nav-link" href="#settings" data-toggle="tab" role="tab" aria-controls="settings" aria-selected="false"><?php echo __tr('Settings') ?></a>
+      </li>
+    </ul>
+    <div class="tab-content">
+      <br />
+      <div class="tab-pane<?php echo $_SESSION['tab'] == 'account_profile' ? ' active' : '' ?>" id="profile">
+        <form method="post">
+          <div class="form-group row">
+            <label class="col-sm-2 col-form-label" for="login"><?php echo __tr('Login') ?></label>
+            <div class="col-sm-2">
+              <input type="text" class="form-control" name="login" value="<?php echo !empty($_SESSION['login']) ? $_SESSION['login'] : _tr('Unknown') ?>" disabled>
+            </div>
+            <div class="col-sm-8">
+              <p class="help-block"><?php echo __tr('Your login cannot be changed.') ?></p>
+            </div>
+          </div>
+          <div class="form-group row">
+            <label class="col-sm-2 col-form-label" for="status"><?php echo __tr('Status') ?></label>
+            <div class="col-sm-2">
+              <input type="text" class="form-control" name="status" value="<?php echo __tr($Infos['status']) ?>" disabled>
+            </div>
+          </div>
+          <div class="form-group row">
+            <label class="col-sm-2 col-form-label" for="username"><?php echo __tr('Username') ?></label>
+            <div class="col-sm-2">
+              <input type="text" class="form-control" name="username" value="<?php echo $Infos['username'] ?>">
+            </div>
+          </div>
+          <div class="form-group row">
+            <label class="col-sm-2 col-form-label" for="email"><?php echo __tr('Email address') ?></label>
+            <div class="col-sm-3">
+              <input type="text" class="form-control" name="email" value="<?php echo $Infos['email'] ?>">
+            </div>
+          </div>
+          <div class="form-group row">
+            <label class="col-sm-2 col-form-label" for="npwd"><?php echo __tr('Password') ?></label>
+            <div class="col-sm-2">
+              <input type="password" class="form-control" name="npwd" value="">
+            </div>
+          </div>
+          <div class="form-group row">
+            <label class="col-sm-2 col-form-label" for="npwd2"><?php echo __tr('Confirm') ?></label>
+            <div class="col-sm-2">
+              <input type="password" class="form-control" name="npwd2" value="">
+            </div>
+          </div>
+          <div class="form-group row">
+            <div class="col-sm-12 text-center">
+              <button type="submit" class="btn btn-primary"><?php echo __tr('Save') ?></button>
+              <button class="btn btn-warning"><?php echo __tr('Cancel') ?></button>
+            </div>
+          </div>
+        </form>
+      </div>
 
-						<div class="tabbable">
-						<ul class="nav nav-tabs">
-						  <li<?php echo $_SESSION['tab'] == 'account_profile' ? ' class="active"' : '' ?>><a href="#profile" data-toggle="tab"><?php echo __tr('Profile') ?></a></li>
-						  <li<?php echo $_SESSION['tab'] == 'account_bunnies' ? ' class="active"' : '' ?>><a href="#bunnies" data-toggle="tab"><?php echo __tr('Bunnies') ?></a></li>
-						  <li<?php echo $_SESSION['tab'] == 'account_ztamps' ? ' class="active"' : '' ?>><a href="#ztamps" data-toggle="tab"><?php echo __tr('Ztamps') ?></a></li>
-						  <li<?php echo $_SESSION['tab'] == 'account_settings' ? ' class="active"' : '' ?>><a href="#settings" data-toggle="tab"><?php echo __tr('Settings') ?></a></li>
-						</ul>
-						<br />
+      <div class="tab-pane<?php echo $_SESSION['tab'] == 'account_bunnies' ? ' active' : '' ?>" id="bunnies">
+        <form method="post">
+          <fieldset class="border p-3">
+            <legend><h6><?php echo __tr('Add a bunny to your account') ?></h6></legend>
+            <div class="form-group row">
+              <label class="col-sm-2 col-form-label" for="bmac"><?php echo __tr('MAC address') ?></label>
+              <div class="col-sm-2">
+                <input type="text" class="input-medium" name="bmac" value="">
+              </div>
+              <div class="col-sm-8">
+                <p class="help-block"><?php echo __tr('Will only work if the server allows it') ?></p>
+              </div>
+            </div>
+            <div class="form-group row">
+              <label class="col-sm-2 col-form-label" for="bname"><?php echo __tr('Name of your Bunny') ?></label>
+              <div class="col-sm-2">
+                <input type="text" class="input-medium" name="bname" value="">
+              </div>
+            </div>
+            <div class="form-group row">
+              <div class="col-sm-12 text-left">
+                <button type="submit" class="btn btn-primary"><?php echo  __tr('Add bunny') ?></button>
+                <button class="btn  btn-warning"><?php echo __tr('Cancel') ?></button>
+              </div>
+            </div>
+          </fieldset>
+        </form>
+        <br />
+        <form method="post">
+          <fieldset class="border p-3">
+          <legend><h6><?php echo __tr('Remove a bunny from your account') ?></h6></legend>
+            <div class="form-group row">
+              <label class="col-sm-1 col-form-label" for="bmac_rm"><?php echo __tr('Bunny'); ?></label>
+              <div class="col-sm-3">
+                <select name="bmac_rm">
+                  <option value=""><?php echo __tr('Choose the bunny to remove') ?></option>
+                  <?php
+                  $bunnies = $ojnAPI->getListOfBunnies(true);
+                  foreach($bunnies as $mac => $bunny): ?>
+                    <option value="<?php echo $mac; ?>"><?php echo $bunny; ?> (<?php echo $mac; ?>)</option>
+                  <?php endforeach; ?>
+                </select>
+              </div>
+              <div class="col-sm-6">
+                <p class="help-block"><?php echo __tr('No confirmation, so... be careful!') ?></p>
+              </div>
+            </div>
+            <div class="form-group row">
+              <div class="col-sm-12 text-left">
+                <button type="submit" class="btn btn-danger"><?php echo  __tr('Remove bunny') ?></button>
+              </div>
+            </div>
+          </fieldset>
+        </form>
+      </div>
+      
+      <div class="tab-pane<?php echo $_SESSION['tab'] == 'account_ztamps' ? ' active' : '' ?>" id="ztamps">
+        <form method="post">
+          <fieldset class="border p-3">
+            <legend><h6><?php echo __tr('Remove a ztamp from your account') ?></h6></legend>
+            <div class="form-group row">
+              <label class="col-sm-1 col-form-label" for="zid_rm"><?php echo __tr('Ztamp'); ?></label>
+              <div class="col-sm-3">
+                <select name="zid_rm">
+                  <option value=""><?php echo __tr('Choose the ztamp to remove') ?></option>
+                  <?php
+                  $ztamps = $ojnAPI->getListOfZtamps(true);
+                  if(!empty($ztamps))
+                      foreach($ztamps as $id => $ztamp): 
+                  ?><option value="<?php echo $id; ?>"><?php echo $ztamp; ?> (<?php echo $id; ?>)</option>
+                  <?php endforeach; ?>
+                </select>
+                </select>
+              </div>
+              <div class="col-sm-6">
+                <p class="help-block"><?php echo __tr('No confirmation, so... be careful!') ?></p>
+              </div>
+            </div>
+            <div class="form-group row">
+              <div class="col-sm-12 text-left">
+                <button type="submit" class="btn btn-danger"><?php echo  __tr('Remove ztamp') ?></button>
+              </div>
+            </div>
+          </fieldset>
+        </form>
+      </div>
 
-							<div class="tab-content">
-								<div class="tab-pane<?php echo $_SESSION['tab'] == 'account_profile' ? ' active' : '' ?>" id="profile">
-								<form id="edit-profile" class="form-horizontal" method="post">
-									<fieldset>
-										<div class="control-group">
-											<label class="control-label" for="username"><?php echo __tr('Login') ?></label>
-											<div class="controls">
-												<input type="text" class="input-medium disabled" id="username" value="<?php echo !empty($_SESSION['login']) ? $_SESSION['login'] : _tr('Unknown') ?>" disabled>
-												<p class="help-block"><?php echo __tr('Your login cannot be changed.') ?></p>
-											</div> <!-- /controls -->
-										</div> <!-- /control-group -->
-										<div class="control-group">
-											<label class="control-label" for="username"><?php echo __tr('Status') ?></label>
-											<div class="controls">
-												<input type="text" class="input-medium disabled" id="status" value="<?php echo __tr($Infos['status']) ?>" disabled>
-											</div> <!-- /controls -->
-										</div> <!-- /control-group -->
+      <?php
+        $lng = $Infos['language'];
+      ?>
+			<div class="tab-pane<?php echo $_SESSION['tab'] == 'account_settings' ? ' active' : '' ?>" id="settings">
+			  <form method="post">
+            <div class="form-group row">
+              <label class="col-sm-1 col-form-label" for="lng"><?php echo __tr('Language') ?></label>
+              <div class="col-sm-3">
+                <select name="lng">
+                  <?php
+                    $tr = getTranslates($_SESSION['login']);
+                    $link = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+                    if (!$link) {
+                        die('Connexion impossible : ' . mysqli_error());
+                    }
 
-										<div class="control-group">
-											<label class="control-label" for="firstname"><?php echo __tr('Username') ?></label>
-											<div class="controls">
-												<input type="text" class="input-medium" name="displayname" value="<?php echo $Infos['username'] ?>">
-											</div> <!-- /controls -->
-										</div> <!-- /control-group -->
+                    $sql = "SELECT * FROM language";
+                    if(!$Infos['isAdmin'])
+                      $sql .= " WHERE public=1";
+                    // Exceptions de dev :
+                    if(count($tr))
+                      foreach($tr as $t)
+                        $sql .= " OR code='".$t."'";
 
-										<div class="control-group">
-											<label class="control-label" for="email"><?php echo __tr('Email address') ?></label>
-											<div class="controls">
-												<input type="text" class="input-large" name="email" value="<?php echo $Infos['email'] ?>">
-											</div> <!-- /controls -->
-										</div> <!-- /control-group -->
-										<br />
-
-										<div class="control-group">
-											<label class="control-label" for="npwd"><?php echo __tr('Password') ?></label>
-											<div class="controls">
-												<input type="password" class="input-medium" name="npwd" value="">
-											</div> <!-- /controls -->
-										</div> <!-- /control-group -->
-
-
-										<div class="control-group">
-											<label class="control-label" for="npwd2"><?php echo __tr('Confirm') ?></label>
-											<div class="controls">
-												<input type="password" class="input-medium" name="npwd2" value="">
-											</div> <!-- /controls -->
-										</div> <!-- /control-group -->
-
-											<br />
-
-
-										<div class="form-actions">
-											<button type="submit" class="btn btn-primary"><?php echo __tr('Save') ?></button>
-											<button class="btn"><?php echo __tr('Cancel') ?></button>
-										</div> <!-- /form-actions -->
-									</fieldset>
-								</form>
-								</div>
-
-								<div class="tab-pane<?php echo $_SESSION['tab'] == 'account_bunnies' ? ' active' : '' ?>" id="bunnies">
-									<form id="edit-profile2" class="form-horizontal" method="post">
-										<div class="control-group">
-											<label class="control-label" for="bmac"><?php echo __tr('MAC address') ?></label>
-											<div class="controls">
-												<input type="text" class="input-medium" name="bmac" value="">
-												<p class="help-block"><?php echo __tr('Will only work if the server allows it') ?></p>
-											</div> <!-- /controls -->
-										</div> <!-- /control-group -->
-										<div class="control-group">
-											<label class="control-label" for="bname"><?php echo __tr('Name of your Bunny') ?></label>
-											<div class="controls">
-												<input type="text" class="input-medium" name="bname" value="">
-											</div> <!-- /controls -->
-										</div> <!-- /control-group -->
-											<div class="form-actions">
-												<button type="submit" class="btn btn-primary"><?php echo  __tr('Add bunny') ?></button> <button class="btn"><?php echo __tr('Cancel') ?></button>
-											</div>
-
-
-
-										<div class="control-group">
-											<label class="control-label" for="bmac_rm"><?php echo __tr('Remove a bunny from your account') ?></label>
-											<div class="controls">
-<select name="bmac_rm">
-        <option value="">- <?php echo __tr('Choose the bunny to remove') ?> -</option>
-    <?php
-    $bunnies = $ojnAPI->getListOfBunnies(true);
-    if(!empty($bunnies))
-        foreach($bunnies as $mac => $bunny) { ?>
-        <option value="<?php echo $mac; ?>"><?php echo $bunny; ?> (<?php echo $mac; ?>)</option>
-    <?php } ?>
-</select>
-												<p class="help-block"><?php echo __tr('No confirmation, so... be careful!') ?></p>
-											</div> <!-- /controls -->
-										</div> <!-- /control-group -->
-											<div class="form-actions">
-												<button type="submit" class="btn btn-primary"><?php echo  __tr('Remove bunny') ?></button>
-											</div>
-									</form>
-								</div>
-								<div class="tab-pane<?php echo $_SESSION['tab'] == 'account_ztamps' ? ' active' : '' ?>" id="ztamps">
-									<form id="edit-profile2" class="form-horizontal" method="post">
-
-
-										<div class="control-group">
-											<label class="control-label" for="zid_rm"><?php echo __tr('Remove a ztamp from your account') ?></label>
-											<div class="controls">
-<select name="zid_rm">
-        <option value="">- <?php echo __tr('Choose the ztamp to remove') ?> -</option>
-    <?php
-    $ztamps = $ojnAPI->getListOfZtamps(true);
-    if(!empty($ztamps))
-        foreach($ztamps as $id => $ztamp) { ?>
-        <option value="<?php echo $id; ?>"><?php echo $ztamp; ?> (<?php echo $id; ?>)</option>
-    <?php } ?>
-</select>
-												<p class="help-block"><?php echo __tr('No confirmation, so... be careful!') ?></p>
-											</div> <!-- /controls -->
-										</div> <!-- /control-group -->
-											<div class="form-actions">
-												<button type="submit" class="btn btn-primary"><?php echo  __tr('Remove ztamp') ?></button>
-											</div>
-
-									</form>
-								</div>
-<?php
-$lng = $Infos['language'];
-?>
-								<div class="tab-pane<?php echo $_SESSION['tab'] == 'account_settings' ? ' active' : '' ?>" id="settings">
-									<form id="edit-profile2" class="form-horizontal" method="post">
-										<fieldset>
-											<div class="control-group">
-												<label class="control-label" for="accountusername"><?php echo __tr('Language') ?></label>
-												<div class="controls">
-<select name="lng">
-<?php
-	$tr = getTranslates($_SESSION['login']);
-	$link = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
-	if (!$link) {
-	    die('Connexion impossible : ' . mysqli_error());
-	}
-
-	$sql = "SELECT * FROM language";
-	if(!$Infos['isAdmin'])
-		$sql .= " WHERE public=1";
-	// Exceptions de dev :
-	if(count($tr))
-		foreach($tr as $t)
-			$sql .= " OR code='".$t."'";
-
-	$res = mysqli_query($link, $sql);
-	while($row = mysqli_fetch_assoc($res))
-	{
-?>
-<option value="<?php echo $row['code'] ?>"<?php if($lng == $row['code']) { ?> selected="selected"<?php } ?>><?php echo $row['language'] ?></option>
-<?php
-	}
-	mysqli_close($link);
-?>
-</select>
-												</div>
-											</div>
-
-											<br />
-											<div class="form-actions">
-												<button type="submit" class="btn btn-primary">Save</button> <button class="btn">Cancel</button>
-											</div>
-										</fieldset>
-									</form>
-								</div>
-							</div>
-						</div>
-					</div> <!-- /widget-content -->
-				</div> <!-- /widget -->
-		    </div> <!-- /span8 -->
-
-<?php /*
-	      	<div class="span4">
-				<div class="widget widget-box">
-					<div class="widget-header">
-	      				<h3>Extra Info</h3>
-	  				</div> <!-- /widget-header -->
-					<div class="widget-content">
-
-						<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-
-						<p> Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
-
-					</div> <!-- /widget-content -->
-				</div> <!-- /widget-box -->
-		      </div> <!-- /span4 -->
-*/ ?>
-	      </div> <!-- /row -->
+                    $res = mysqli_query($link, $sql);
+                    while($row = mysqli_fetch_assoc($res)):
+                  ?>
+                  <option value="<?php echo $row['code'] ?>"<?php if($lng == $row['code']) { ?> selected="selected"<?php } ?>>
+                    <?php echo $row['language'] ?>
+                  </option>
+                  <?php endwhile;
+                    mysqli_close($link); ?>
+                </select>
+              </div>
+            </div>
+            <div class="form-group row">
+              <div class="col-sm-12 text-left">
+                <button type="submit" class="btn btn-primary"><?php echo __tr('Save'); ?></button>
+                <button class="btn btn-warning"><?php echo __tr('Cancel'); ?></button>
+              </div>
+            </div>
+          </fieldset>
+        </form>
+      </div>
+		</div>
+  </div>
+</div>
 <?php
 require_once '../include/append.php';
 ?>

@@ -3,13 +3,14 @@ $reload = false;
 
 $quand = array('before' => __tr('Before'), 'after' => __tr('After'));
 
-$quota = QUOTA;
 if($Infos['status'] == "VIP")
-	$quota = 100;
-if($Infos['status'] == "Premium")
-	$quota = 250;
-if($Infos['status'] == "Administrator")
-	$quota = 1000;
+  $quota = 100;
+else if($Infos['status'] == "Premium")
+  $quota = 250;
+else if($Infos['status'] == "Admin")
+  $quota = 1000;
+else
+  $quota = QUOTA;
 
 $Ztamps = $ojnAPI->GetListofZtamps(false);
 $Files = $ojnAPI->getApiMapped("bunny/".$_SESSION['bunny']."/signature/sound?action=list&".$ojnAPI->getToken());
@@ -18,20 +19,22 @@ $user_dir = ROOT_LOCAL . "users/" . md5($_SESSION['login']) . "/";
 $user_files = "";
 $user_files_not = "";
 $size = 0;
-if (is_dir($user_dir)) {
-    if ($dh = opendir($user_dir)) {
-        while (($file = readdir($dh)) !== false) {
-	    if($file != '..' && $file != '.')
-	    {
-		$size += filesize($user_dir.$file)/1024/1024;
-            	$user_files .="<option value='$file'>$file</option>\n";
-		if(!in_array($file, $Files)) {
-            		$user_files_not .="<option value='$file'>$file</option>\n";
-		}
-	    }
-        }
-        closedir($dh);
+if (is_dir($user_dir)) 
+{
+  if ($dh = opendir($user_dir)) 
+  {
+    while (($file = readdir($dh)) !== false) 
+    {
+      if($file != '..' && $file != '.')
+      {
+        $size += filesize($user_dir.$file)/1024/1024;
+        $user_files .="<option value='$file'>$file</option>\n";
+        if(!in_array($file, $Files))
+          $user_files_not .="<option value='$file'>$file</option>\n";
+      }
     }
+    closedir($dh);
+  }
 }
 if(isset($_POST['sfile']) && isset($_POST['when']) && isset($_POST['sender'])) {
 	$_SESSION['subtab'] = "signature_setup";
@@ -99,170 +102,167 @@ if(is_array($plugins)) {
 }
 $bunnyPlugins = $ojnAPI->getListOfBunnyEnabledPlugins(false);
 ?>
-
-		<div class="tabbable">
-		<ul class="nav nav-tabs">
-		  <li<?php echo $_SESSION['subtab'] == 'signature_setup' ? ' class="active"' : '' ?>><a href="#setup" data-toggle="tab"><?php echo __tr('Setup') ?></a></li>
-		  <li<?php echo $_SESSION['subtab'] == 'signature_files' ? ' class="active"' : '' ?>><a href="#files" data-toggle="tab"><?php echo __tr('Files') ?></a></li>
-		  <li<?php echo $_SESSION['subtab'] == 'signature_manager' ? ' class="active"' : '' ?>><a href="#manager" data-toggle="tab"><?php echo __tr('File manager') ?></a></li>
-		</ul>
-		<br />
-		
-			<div class="tab-content">
-				<div class="tab-pane<?php echo $_SESSION['subtab'] == 'signature_setup' ? ' active' : '' ?>" id="setup">
-<form method="post" class="form-horizontal">
-          <div class="control-group">
-            <label for="input01" class="control-label"><?php echo __tr("Play file") ?></label>
-            <div class="controls">
-<select name="sfile">
-<option value=""><?php echo __tr('Choose a file') ?></option>
-<optgroup label="<?php echo __tr('My files') ?>">
-<?php foreach($Files as $f => $file) { ?>
-<option value="<?php echo $f; ?>"><?php echo $f ?></option>
-<?php } ?>
-</optgroup>
-<optgroup label="<?php echo __tr('Plugin files') ?>">
-<?php foreach($pluginFiles as $f => $file) { ?>
-<option value="<?php echo $f; ?>"><?php echo $f ?></option>
-<?php } ?>
-</optgroup>
-</select>
-            </div>
+<div class="tabbable">
+	<ul class="nav nav-tabs">
+    <li class="nav-item <?php echo $_SESSION['subtab'] == 'signature_setup' ? ' active' : '' ?>">
+      <a class="nav-link" href="#setup" data-toggle="tab"><?php echo __tr('Setup') ?></a>
+    </li>
+		<li class="nav-item <?php echo $_SESSION['subtab'] == 'signature_files' ? ' active' : '' ?>">
+      <a class="nav-link" href="#files" data-toggle="tab"><?php echo __tr('Files') ?></a>
+    </li>
+		<li class="nav-item <?php echo $_SESSION['subtab'] == 'signature_manager' ? ' active' : '' ?>">
+      <a class="nav-link" href="#manager" data-toggle="tab"><?php echo __tr('File manager') ?></a>
+    </li>
+	</ul>		
+	<div class="tab-content">
+    <br />
+    <div class="tab-pane<?php echo $_SESSION['subtab'] == 'signature_setup' ? ' active' : '' ?>" id="setup">
+      <form method="post" class="form-inline">
+        <div class="form-group row">
+          <label class="col-sm-2 col-form-label" for="sfile"><?php echo __tr("Play file") ?></label>
+          <div class="col-sm-2">    
+            <select name="sfile" class="form-control">
+              <option value=""><?php echo __tr('Choose a file') ?></option>
+              <optgroup label="<?php echo __tr('My files') ?>">
+                <?php foreach($Files as $f => $file): ?>
+                <option value="<?php echo $f; ?>"><?php echo $f ?></option>
+                <?php endforeach ?>
+              </optgroup>
+              <optgroup label="<?php echo __tr('Plugin files') ?>">
+                <?php foreach($pluginFiles as $f => $file) { ?>
+                <option value="<?php echo $f; ?>"><?php echo $f ?></option>
+                <?php } ?>
+              </optgroup>
+            </select>
           </div>
-          <div class="control-group">
-            <div class="controls">
-<select name="when">
-	<?php foreach($quand as $k=>$v): ?>
-	<option value="<?php echo $k; ?>"><?php echo $v; ?></option>
-	<?php endforeach; ?>
-</select>
-&nbsp;
-<select name="sender" class="span6">
-	<?php foreach($plugins as $k=>$p): ?>
-		<?php if($k != 'signature'): ?>
-	<option value="<?php echo $k; ?>"><?php echo $p; ?></option>
-		<?php endif; ?>
-	<?php endforeach; ?>
-</select>
-            </div>
+          <div class="col-sm-7">    
+            <select name="when" class="form-control">
+              <?php foreach($quand as $k=>$v): ?>
+                <option value="<?php echo $k; ?>"><?php echo $v; ?></option>
+              <?php endforeach; ?>
+            </select>
+            &nbsp;
+            <select name="sender" class="form-control">
+              <?php foreach($plugins as $k=>$p):
+                if($k != 'signature'): 
+              ?>
+              <option value="<?php echo $k; ?>"><?php echo $p; ?></option>
+              <?php 
+                endif;
+              endforeach; ?>
+            </select>
           </div>
-          <div class="form-actions">
+          <div class="col-sm-1"> 
             <button class="btn btn-primary" type="submit"><?php echo __tr("Add") ?></button>
           </div>
-</form>
-
-<?php if(count($Assoc)): ?>
-<table class="table table-bordered table-striped span10">
-<tr><th colspan="3"><?php echo __tr('Signatures') ?></th></tr>
-<tr>
-	<th><?php echo __tr('When') ?></th>
-	<th><?php echo __tr('File') ?></th>
-	<th><?php echo __tr('Actions') ?></th>
-</tr>
-<?php foreach($Assoc as $k=>$v): ?>
-<?php list($when, $sender) = explode('_', $k); ?>
-<tr>
-	<td><?php echo __tr(ucfirst($when)) . " \"" . $plugins[$sender] . "\""; ?></td>
-	<td><?php echo $v; ?></td>
-	<td><a href="bunny_plugin.php?p=signature&rmsign=<?php echo $k ?>" class="btn btn-danger btn-small"><i class="icon-trash icon-large"></i> <?php echo __tr('Remove') ?></a></td>
-</tr>
-<?php endforeach; ?>
-
-</table>
-<?php endif; ?>
-
-				</div>
-				<div class="tab-pane<?php echo $_SESSION['subtab'] == 'signature_files' ? ' active' : '' ?>" id="files">
-<form method="post" class="form-horizontal">
-          <div class="control-group">
-            <label for="input01" class="control-label"><?php echo __tr("Name") ?></label>
-            <div class="controls">
-		<input type="text" name="name">
-            </div>
-          </div>
-          <div class="control-group">
-            <label for="input01" class="control-label"><?php echo __tr("For file") ?></label>
-            <div class="controls">
-<select name="nfile">
-<?php echo $user_files_not ?>
-</select>
-            </div>
-          </div>
-          <div class="form-actions">
-            <button class="btn btn-primary" type="submit"><?php echo __tr("Add") ?></button>
-          </div>
-</form>
-<form method="post" class="form-horizontal">
-          <div class="control-group">
-            <label for="input01" class="control-label"><?php echo __tr("Name") ?></label>
-            <div class="controls">
-		<input type="text" name="name">
-            </div>
-          </div>
-          <div class="control-group">
-            <label for="input01" class="control-label"><?php echo __tr("For url") ?></label>
-            <div class="controls">
-		<input type="text" name="nurl" class="span8">
-            </div>
-          </div>
-          <div class="form-actions">
-            <button class="btn btn-primary" type="submit"><?php echo __tr("Add") ?></button>
-          </div>
-</form>
-
-<?php if(count($Files)): ?>
-<table class="table table-bordered table-striped span10">
-<tr><th colspan="3"><?php echo __tr('Files') ?></th></tr>
-<tr>
-	<th><?php echo __tr('Name') ?></th>
-	<th><?php echo __tr('File') ?></th>
-	<th><?php echo __tr('Actions') ?></th>
-</tr>
-<?php foreach($Files as $k=>$v): ?>
-<tr>
-	<td><?php echo $k; ?></td>
-	<td><?php echo $v; ?></td>
-	<td><a href="bunny_plugin.php?p=signature&rmfile=<?php echo urlencode($k) ?>" class="btn btn-danger btn-small"><i class="icon-trash icon-large"></i> <?php echo __tr('Remove') ?></a></td>
-</tr>
-<?php endforeach; ?>
-
-</table>
-<?php endif; ?>
-
-				</div>
-
-				<div class="tab-pane<?php echo $_SESSION['subtab'] == 'signature_manager' ? ' active' : '' ?>" id="manager">
-<div class="span6">
-<form method="post" class="form-horizontal" enctype="multipart/form-data">
-<input type="hidden" name="f" value="upload">
-          <div class="control-group">
-            <label for="input01" class="control-label"><?php echo __tr("Upload a file") ?></label>
-            <div class="controls">
-<input type="file" name="file" maxlength="3000000" accept="audio/mpeg"/>
-            </div>
-          </div>
-          <div class="form-actions">
-            <button class="btn btn-primary" type="submit"><?php echo __tr("Add file") ?></button>
-          </div>
-</form>
-<form method="post" class="form-horizontal">
-<input type="hidden" name="f" value="remove" />
-          <div class="control-group">
-            <label for="input01" class="control-label"><?php echo __tr("Remove a file") ?></label>
-            <div class="controls">
-<select name="rf"><?php echo $user_files ?></select>
-            </div>
-          </div>
-          <div class="form-actions">
-            <button class="btn btn-danger" type="submit"><?php echo __tr("Remove") ?></button>
-          </div>
-</form>
-</div>
-<div class="span5">
-<?php echo __tr('Quota') ?> : <?php echo __tr('%1 Mb', round($size,2)." / ".$quota) ?><div style="width: 300px; height: 20px; border: 1px solid black;">
-<div style="width: <?php echo $size*300/$quota ?>px; background-color: <?php echo $size <= $quota*0.7 ? "green" : ($size > $quota*0.9 ? "red" : "yellow") ?>; height: 20px;">&nbsp;</div>
-</div>
-</div>
-				</div>
-			</div>
+        </div>
+      </form>
+      <?php if(count($Assoc)): ?>
+      <br />
+      <h5><?php echo __tr('Signatures') ?></h5>
+      <table class="table table-bordered table-striped mt-3">
+        <tr>
+          <th><?php echo __tr('When') ?></th>
+          <th><?php echo __tr('File') ?></th>
+          <th><?php echo __tr('Actions') ?></th>
+        </tr>
+        <?php foreach($Assoc as $k=>$v): 
+          list($when, $sender) = explode('_', $k); 
+        ?>
+        <tr>
+          <td><?php echo __tr(ucfirst($when)) . " \"" . $plugins[$sender] . "\""; ?></td>
+          <td><?php echo $v; ?></td>
+          <td><a href="bunny_plugin.php?p=signature&rmsign=<?php echo $k ?>" class="btn btn-danger btn-small"><i class="icon-trash icon-large"></i> <?php echo __tr('Remove') ?></a></td>
+        </tr>
+        <?php endforeach; ?>
+      </table>
+      <?php endif; ?>
 		</div>
+		
+    <div class="tab-pane<?php echo $_SESSION['subtab'] == 'signature_files' ? ' active' : '' ?>" id="files">
+      <form method="post">
+        <div class="form-group row">
+          <label class="col-sm-1 col-form-label" for="name"><?php echo __tr("Name") ?></label>
+          <div class="col-sm-2">    
+            <input type="text" name="name"  class="form-control">
+          </div>
+          <label class="col-sm-1 col-form-label" for="nfile"><?php echo __tr("For file") ?></label>
+          <div class="col-sm-4">    
+            <select name="nfile"  class="form-control">
+              <?php echo $user_files_not ?>
+            </select>
+          </div>
+          <div class="col-sm-4 text-right">
+            <button class="btn btn-primary" type="submit"><?php echo __tr("Add") ?></button>
+          </div>
+        </div>
+      </form>
+      <form method="post">
+        <div class="form-group row">
+          <label class="col-sm-1 col-form-label" for="name"><?php echo __tr("Name") ?></label>
+          <div class="col-sm-2">    
+            <input type="text" name="name" class="form-control">
+          </div>
+          <label class="col-sm-1 col-form-label" for="nurl"><?php echo __tr("For url") ?></label>
+          <div class="col-sm-6">    
+            <input type="text" name="nurl"  class="form-control">
+          </div>
+          <div class="col-sm-2 text-right">
+            <button class="btn btn-primary" type="submit"><?php echo __tr("Add") ?></button>
+          </div>
+        </div>
+      </form>
+
+      <?php if(count($Files)): ?>
+      <h5><?php echo __tr('Files') ?></h5>
+      <table class="table table-bordered table-striped span10">
+        <tr>
+          <th><?php echo __tr('Name') ?></th>
+          <th><?php echo __tr('File') ?></th>
+          <th><?php echo __tr('Actions') ?></th>
+        </tr>
+        <?php foreach($Files as $k=>$v): ?>
+        <tr>
+          <td><?php echo $k; ?></td>
+          <td><?php echo $v; ?></td>
+          <td><a href="bunny_plugin.php?p=signature&rmfile=<?php echo urlencode($k) ?>" class="btn btn-danger btn-small"><i class="icon-trash icon-large"></i> <?php echo __tr('Remove') ?></a></td>
+        </tr>
+        <?php endforeach; ?>
+      </table>
+      <?php endif; ?>
+		</div>
+
+    <div class="tab-pane<?php echo $_SESSION['subtab'] == 'signature_manager' ? ' active' : '' ?>" id="manager">
+      <form method="post" class="form-horizontal" enctype="multipart/form-data">
+        <input type="hidden" name="f" value="upload">
+        <div class="control-group">
+          <label for="input01" class="control-label"><?php echo __tr("Upload a file") ?></label>
+          <div class="controls">
+            <input type="file" name="file" maxlength="3000000" accept="audio/mpeg"/>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" type="submit"><?php echo __tr("Add file") ?></button>
+        </div>
+      </form>
+      <br />
+      <form method="post" class="form-horizontal">
+        <input type="hidden" name="f" value="remove" />
+        <div class="control-group">
+          <label for="input01" class="control-label"><?php echo __tr("Remove a file") ?></label>
+          <div class="controls">
+            <select name="rf"><?php echo $user_files ?></select>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-danger" type="submit"><?php echo __tr("Remove") ?></button>
+        </div>
+      </form>
+      <br />
+      <div>
+        <?php echo __tr('Quota') ?> : <?php echo __tr('%1 Mb', round($size,2)." / ".$quota) ?><div style="width: 300px; height: 20px; border: 1px solid black;">
+        <div style="width: <?php echo $size*300/$quota ?>px; background-color: <?php echo $size <= $quota*0.7 ? "green" : ($size > $quota*0.9 ? "red" : "yellow") ?>; height: 20px;">&nbsp;</div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -63,86 +63,87 @@ if(!empty($_POST['login']) &&
 <?php
 require(ROOT_SITE.'include/message.php');
 ?>
-<div class="row">
-    <div class="span12">
-        <div class="widget widget">
-            <div class="widget-header">
-                <i class="icon-list-alt"></i><h3><?php echo __tr("Registration form") ?></h3>
-            </div>
-            <div class="widget-content">
-    <form method="post" class="form-horizontal">
-
-	<div class="control-group">
-		<label class="control-label" for="login"><?php echo __tr('Login') ?></label>
-		<div class="controls">
-			<input type="text" class="input-medium" name="login" value="<?php echo isset($_POST['login']) ? $_POST['login'] : "" ?>">
-			<p class="help-block"><?php echo __tr('Will be used for login') ?></p>
-			<p class="help-block help-warning"><?php echo __tr('Use only lowercase letters and numbers (no space,accentued character, or other weird stuff...)') ?></p>
-		</div>
-	</div>
-	<div class="control-group">
-		<label class="control-label" for="name"><?php echo __tr('Name') ?></label>
-		<div class="controls">
-			<input type="text" class="input-medium" name="name" value="<?php echo isset($_POST['name']) ? $_POST['name'] : "" ?>">
-			<p class="help-block"><?php echo __tr('Will be used for display') ?></p>
-		</div>
-	</div>
-	<div class="control-group">
-		<label class="control-label" for="pwd"><?php echo __tr('Password') ?></label>
-		<div class="controls">
-			<input type="password" class="input-medium" name="pwd" value="">
-		</div>
-	</div>
-	<div class="control-group">
-		<label class="control-label" for="pwd"><?php echo __tr('Confirm') ?></label>
-		<div class="controls">
-			<input type="password" class="input-medium" name="pwd2" value="">
-		</div>
-	</div>
-	<hr />
-	<h4><?php echo __tr('Optional informations') ?></h4>
-	<br />
-	<div class="control-group">
-		<label class="control-label" for="email"><?php echo __tr('Email') ?></label>
-		<div class="controls">
-			<input type="text" class="input-medium" name="email" value="<?php echo isset($_POST['email']) ? $_POST['email'] : "" ?>">
-		</div>
-	</div>
-
-											<div class="control-group">
-												<label class="control-label" for="accountusername"><?php echo __tr('Language') ?></label>
-												<div class="controls">
-
-<select name="lng">
-<option value=""><?php echo __tr('Choose your language') ?></option>
-<?php
-	$link = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
-	if (!$link) {
-	    die('Connexion impossible : ' . mysqli_error());
-	}
-
-	$sql = "SELECT * FROM language";
-	$sql .= " WHERE public=1";
-	$res = mysqli_query($link, $sql);
-	while($row = mysqli_fetch_assoc($res))
-	{
-?>
-<option value="<?php echo $row['code'] ?>"><?php echo $row['language'] ?></option>
-<?php
-	}
-	mysqli_close($link);
-?>
-</select>
-												</div>
-											</div>
-	<div class="form-actions">
-		<button type="submit" class="btn btn-primary"><?php echo __tr('Create account') ?></button>
-	</div> <!-- /form-actions -->
-</form>
-
-		</div>
-	</div>
+<div class="card">
+	<h5 class="card-header">
+		<i class="icon-list-alt"></i> <?php echo __tr("Registration form") ?>
+	</h5>
+  <form class="card-body" method="post">
+    <div>
+      <h4><?php echo __tr('Required informations') ?></h4>
+      <div class="form-group row">
+        <label class="col-sm-2 col-form-label" for="login"><?php echo __tr('Login') ?></label>
+        <div class="col-sm-2">
+          <input type="text" class="form-control" name="login" value="<?php echo isset($_POST['login']) ? $_POST['login'] : "" ?>">
+        </div>
+        <div class="col-sm-8">
+          <?php echo __tr('Will be used for login') ?><br />
+          <?php echo __tr('Use only lowercase letters and numbers (no space,accentued character, or other weird stuff...)') ?>
+        </div>
+      </div>
+      <div class="form-group row">
+        <label class="col-sm-2 col-form-label" for="name"><?php echo __tr('Name') ?></label>
+        <div class="col-sm-2">
+          <input type="text" class="form-control" name="name" value="<?php echo isset($_POST['name']) ? $_POST['name'] : "" ?>">
+        </div>
+        <div class="col-sm-8">
+          <?php echo __tr('Will be used for display') ?>
+        </div>
+      </div>
+      <div class="form-group row">
+        <label class="col-sm-2 col-form-label" for="pwd"><?php echo __tr('Password') ?></label>
+        <div class="col-sm-3">
+          <input type="password" class="form-control" name="pwd" value="">
+        </div>
+      </div>
+      <div class="form-group row">
+        <label class="col-sm-2 col-form-label" for="pwd2"><?php echo __tr('Confirm') ?></label>
+        <div class="col-sm-3">
+          <input type="password" class="form-control" name="pwd2" value="">
+        </div>
+      </div>
     </div>
+    <hr />
+    <div>
+      <h4><?php echo __tr('Optional informations') ?></h4>
+      <div class="form-group row">
+        <label class="col-sm-2 col-form-label" for="email"><?php echo __tr('Email') ?></label>
+        <div class="col-sm-3">
+          <input type="text" class="form-control" name="email" value="<?php echo isset($_POST['email']) ? $_POST['email'] : "" ?>">
+        </div>
+        <div class="col-sm-7">
+          <?php echo __tr('Will only be used for password recovery and important OpenJabNab communications') ?>
+        </div>
+      </div>
+      <div class="form-group row">
+        <label class="col-sm-2 col-form-label" for="lng"><?php echo __tr('Language') ?></label>
+        <div class="col-sm-2">
+          <select class="form-control" name="lng">
+            <option value=""><?php echo __tr('Choose your language') ?></option>
+            <?php
+            $link = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+            if (!$link) {
+                die('Connexion impossible : ' . mysqli_error());
+            }
+
+            $sql = "SELECT * FROM language";
+            $sql .= " WHERE public=1";
+            $res = mysqli_query($link, $sql);
+            while($row = mysqli_fetch_assoc($res)):
+            ?>
+            <option value="<?php echo $row['code'] ?>"><?php echo $row['language'] ?></option>
+            <?php endwhile;
+            mysqli_close($link);
+            ?>
+          </select>
+        </div>
+      </div>
+      <div class="form-group row">
+        <div class="col-sm-12 text-center">
+          <button type="submit" class="btn btn-primary"><?php echo __tr('Create account') ?></button>
+        </div>
+      </div>
+    </form>
+  </div>
 </div>
 <?php
 require_once(ROOT_SITE.'include/append.php');

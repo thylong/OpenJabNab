@@ -29,11 +29,17 @@ if(isset($_SESSION['login']))
 if(isset($_SESSION['Message']) ) {
 	foreach($_SESSION['Message'] as $type => $array)
 	{
+		if(strtolower($type) == 'error')
+			$type = 'danger';
+
 		asort($array);
 		foreach($array as $id => $msg)
 		{
 ?>
-<div class="alert alert-<?php echo strtolower($type) ?>"><a class="close" data-dismiss="alert" href="#">×</a><?php echo __tr($msg); ?></div>
+<div class="alert alert-<?php echo strtolower($type) ?>">
+  <a class="close" data-dismiss="alert" href="#">×</a>
+  <?php echo __tr($msg); ?>
+</div>
 <?php
 		}
 	}

@@ -100,129 +100,101 @@ if(isset($_GET['c'])) {
 }
 
 if($reload) {
-	header("Location: clock.php");
+	header("Location: /account/clock.php");
 	exit;
 }
 
 $bunnies = array();//$ojnAPI->getListOfConnectedBunnies(false);
 require(ROOT_SITE.'include/message.php');
 ?>
-	<div class="row">
-		<div class="span12">
-			<div class="widget">
-				<div class="widget-header">
-				    <h3><?php echo __tr("File manager for clock plugin") ?></h3>
-				</div>
-				<div class="widget-content">
-					<div class="tabbable">
-<?php /* if(count($bunnies)) { ?>
-<?php echo __tr("Bunny to test sounds") ?> : <select id="bunny" name="bunny">
-<?php foreach($bunnies as $mac => $name) { ?>
-<option value="<?php echo $mac ?>"><?php echo $name ?> (<?php echo $mac ?>)</option>
-<?php } ?>
-</select>
-<?php } else { ?>
-	<?php echo __tr("No connected bunny to test sounds") ?>
-<?php } */ ?>
+<div class="card ">
+  <h5 class="card-header">
+    <i class="icon-time"></i> <?php echo __tr("File manager for clock plugin") ?>
+  </h5>
+  <div class="card-body">
+    <table class="table table-bordered table-striped">
+      <thead>
+        <tr>
+          <th class="span4"><?php echo __tr('Filename') ?></th>
+          <th class="span1"><?php echo __tr('Size') ?></th>
+          <th class="span2"><?php echo __tr('File format') ?></th>
+          <th class="span3"><?php echo __tr('Actions') ?></th>
+        </tr>
+      </thead>
+      <tbody>
+        <?php
+          foreach($user_files as $file):
+        ?>
+        <tr>
+          <td><?php echo $file['name']; ?></td>
+          <td><?php echo __tr("%1 Mb", round($file['size'], 3)); ?></td>
+          <td><?php echo round($file['bit_rate']/1000, 0); ?> kbps, <?php echo round($file['sample_rate']/1000,1); ?> kHz, <?php echo $file['channels'] == 2 ? "Stéréo" : "Mono"; ?></td>
+          <td><a href="clock.php?r=<?php echo $file['name']; ?>&execute" class="btn btn-small btn-danger"><i class="icon-trash icon-large"></i> <?php echo __tr('Remove') ?></a><?php if($file['bit_rate']/1000 > 97 || $file['channels'] == 2 || $file['sample_rate']/1000 > 45): ?>&nbsp;<a href="clock.php?c=<?php echo $file['name']; ?>&execute" class="btn btn-small btn-primary"><i class="icon-trash icon-large"></i> <?php echo __tr('Convert to bunny format') ?></a><?php endif; ?>&nbsp;<a href="clock.php?vup=<?php echo $file['name']; ?>&execute" class="btn btn-small btn-success"><i class="icon-volume-up icon-large"></i> <?php echo __tr('Volume up') ?></a><?php if(count($bunnies)) { ?>&nbsp; <a class="btn btn-small btn-warning" onclick="testSound('<?php echo $file['name']; ?>')"><?php echo __tr("Test") ?></a><?php } ?></td>
+        </tr>
+          <?php endforeach; ?>
+      </tbody>
+    </table>
+		<br />
+    <form method="post" class="form-horizontal" enctype="multipart/form-data">
+      <fieldset class="border p-3">
+        <legend><h6><?php echo __tr("Upload a file"); ?></h6></legend>
+        <input type="hidden" name="f" value="upload">
+        <div class="form-group row">
+          <label class="col-sm-1 col-form-label" for="file"><?php echo __tr("File") ?></label>
+          <div class="col-sm-4">
+            <input type="file" class="form-control" name="file" maxlength="6000000" accept="audio/mpeg"/>
+          </div>
+        </div>
+        <div class="form-group row">
+          <label class="col-sm-1 col-form-label" for="group"><?php echo __tr("Group") ?></label>
+          <div class="col-sm-2">
+            <input type="text" class="form-control" name="group" >
+          </div>
+        </div>
+        <div class="form-group row">
+          <label class="col-sm-1 col-form-label" for="language"><?php echo __tr("Language") ?></label>
+          <div class="col-sm-2">
+            <select name="language" class="form-control" >
+              <?php
+                $link = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+                if (!$link) {
+                    die('Connexion impossible : ' . mysqli_error());
+                }
 
-						<br style="clear:both"/>
-						<table class="table table-bordered table-striped">
-							<thead>
-							<tr>
-								<th class="span4"><?php echo __tr('Filename') ?></th>
-								<th class="span1"><?php echo __tr('Size') ?></th>
-								<th class="span2"><?php echo __tr('File format') ?></th>
-								<th class="span3"><?php echo __tr('Actions') ?></th>
-							</tr>
-							</thead>
-						<tbody>
-						<?php
-							$i = 0;
-							foreach($user_files as $file){
-						?>
-							<tr>
-								<td><?php echo $file['name']; ?></td>
-								<td><?php echo __tr("%1 Mb", round($file['size'], 3)); ?></td>
-								<td><?php echo round($file['bit_rate']/1000, 0); ?> kbps, <?php echo round($file['sample_rate']/1000,1); ?> kHz, <?php echo $file['channels'] == 2 ? "Stéréo" : "Mono"; ?></td>
-								<td><a href="clock.php?r=<?php echo $file['name']; ?>&execute" class="btn btn-small btn-danger"><i class="icon-trash icon-large"></i> <?php echo __tr('Remove') ?></a><?php if($file['bit_rate']/1000 > 97 || $file['channels'] == 2 || $file['sample_rate']/1000 > 45): ?>&nbsp;<a href="clock.php?c=<?php echo $file['name']; ?>&execute" class="btn btn-small btn-primary"><i class="icon-trash icon-large"></i> <?php echo __tr('Convert to bunny format') ?></a><?php endif; ?>&nbsp;<a href="clock.php?vup=<?php echo $file['name']; ?>&execute" class="btn btn-small btn-success"><i class="icon-volume-up icon-large"></i> <?php echo __tr('Volume up') ?></a><?php if(count($bunnies)) { ?>&nbsp; <a class="btn btn-small btn-warning" onclick="testSound('<?php echo $file['name']; ?>')"><?php echo __tr("Test") ?></a><?php } ?></td>
-							</tr>
-						<?php } ?>
-						</tbody>
-						</table>
-						<br style="clear:both"/>
-						<form method="post" class="form-horizontal" enctype="multipart/form-data">
-						<input type="hidden" name="f" value="upload">
-							  <div class="control-group">
-							    <label for="input01" class="control-label"><?php echo __tr("Upload a file") ?></label>
-							    <div class="controls">
-								<input type="file" name="file" maxlength="6000000" accept="audio/mpeg"/>
-							    </div>
-							  </div>
-							  <div class="control-group">
-							    <label for="input01" class="control-label"><?php echo __tr("Group") ?></label>
-							    <div class="controls">
-								<input type="text" name="group">
-							    </div>
-							  </div>
-							  <div class="control-group">
-							    <label for="input01" class="control-label"><?php echo __tr("Language") ?></label>
-							    <div class="controls">
-<select name="language">
-<?php
-	$link = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
-	if (!$link) {
-	    die('Connexion impossible : ' . mysqli_error());
-	}
+                $sql = "SELECT * FROM language";
+                if(!$Infos['isAdmin'])
+                  $sql .= " WHERE public=1";
 
-	$sql = "SELECT * FROM language";
-	$sql .= " WHERE public=1";
+                $res = mysqli_query($link, $sql);
+                while($row = mysqli_fetch_assoc($res)):
+              ?>
+              <option value="<?php echo $row['code'] ?>"><?php echo $row['language'] ?></option>
+                <?php endwhile;
+                mysqli_close($link);
+              ?>
+            </select>
+          </div>
+        </div>
+        <div class="form-group row">
+          <label class="col-sm-1 col-form-label" for="hour"><?php echo __tr("Hour") ?></label>
+          <div class="col-sm-1">
+            <select name="hour" class="form-control" >
+              <?php for($i=0; $i<24; $i++): ?>
+	            <option value="<?php echo $i ?>"><?php echo $i ?></option>
+              <?php endfor; ?>
+						</select>
+          </div>
+        </div>
 
-	$res = mysqli_query($link, $sql);
-	while($row = mysqli_fetch_assoc($res))
-	{
-?>
-<option value="<?php echo $row['code'] ?>"><?php echo $row['language'] ?></option>
-<?php
-	}
-	mysqli_close($link);
-?>
-</select>
-							    </div>
-							  </div>
-							  <div class="control-group">
-							    <label for="input01" class="control-label"><?php echo __tr("Hour") ?></label>
-							    <div class="controls">
-								<select name="hour">
-<?php for($i=0; $i<=23; $i++) { ?>
-	<option value="<?php echo $i ?>"><?php echo $i ?></option>
-<?php } ?>
-								</select>
-							    </div>
-							  </div>
-							  <div class="form-actions">
-							    <button class="btn btn-primary" type="submit"><?php echo __tr("Add file") ?></button>
-							  </div>
-						</form>
-					</div>
-				</div>
-			</div>
-		</div>
+        <div class="form-group row">
+          <div class="col-sm-12 text-left">
+            <button class="btn btn-primary" type="submit"><?php echo __tr("Add file") ?></button>
+          </div>
+        </div>
+      </fieldset>
+    </form>
 	</div>
-<script>
-<?php /*
-function testSound(filename) {
-	var bunnies=document.getElementById('bunny');
-	var bunny = bunnies.options[bunnies.selectedIndex].value;
-	alert(bunny);
-	alert(filename);
-	//Message::AddFromApi($ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/fairytales/preset?action=play&name=".urlencode(preg_replace('/OJN_/', '', $_GET['play']))."&".$ojnAPI->getToken()));
-	//$reload = true;
-	$.get('testVoice.php?voice=' + $("#voiceList").val() + '&sentence=' + $("#testvoice").val(), function(data) {
-	  $('#testvoice_results').html(data);
-	});
-}
-*/ ?>
-</script>
+</div>
 <?php
 require_once "../include/append.php";
 ?>
