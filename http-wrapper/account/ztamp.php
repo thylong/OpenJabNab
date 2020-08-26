@@ -25,7 +25,13 @@ if(isset($_GET['z']) && (empty($_GET['z']) || $_GET['z'] == 'clear')) {
 	$_SESSION['message'] = $ojnAPI->getApiString("ztamp/".$_SESSION['ztamp']."/resetOwner?".$ojnAPI->getToken());
 	header('Location: /account/ztamp.php');
 	exit();
-}	else if(!empty($_GET['ztamp_name'])) {
+}
+elseif(isset($_GET['delete'])) {
+	Message::AddFromApi($ojnAPI->getApiString("ztamps/removeZtamp?serial=".$_SESSION['ztamp']."&".$ojnAPI->getToken()));
+	header('Location: /account/ztamp.php');
+	exit();
+}
+else if(!empty($_GET['ztamp_name'])) {
 	$_SESSION['message'] = $ojnAPI->getApiString("ztamp/".$_SESSION['ztamp']."/setZtampName?name=".urlencode($_GET['ztamp_name'])."&".$ojnAPI->getToken());
 	$_SESSION['ztamp_name'] = $_GET['ztamp_name'];
 	header('Location: /account/ztamp.php');

@@ -207,7 +207,6 @@ if(count($accounts)) {
 		<td><?php echo $account['username'] ?></td>
 		<td>
 			<a target="_blank" class="btn btn-small btn-primary" href="account_expert.php?accid=<?php echo $account['id'] ?>"><?php echo __tr('Expert view') ?></a> &nbsp;
-			<a target="_blank" class="btn btn-small btn-primary" href="account_view.php?accid=<?php echo $account['id'] ?>"><?php echo __tr('View') ?></a> &nbsp;
 			<a target="_blank" class="btn btn-small btn-success" href="/index.php?logid=<?php echo $account['id'] ?>"><?php echo __tr('Connect') ?></a> &nbsp;
 			<a target="_blank" class="btn btn-small btn-danger" href="server/index.php?removeA=<?php echo urlencode($account['username']) ?>"><?php echo __tr('Remove account') ?></a>
 		</td>
