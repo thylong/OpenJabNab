@@ -1102,6 +1102,23 @@ API_CALL(AccountManager::Api_User)
 		else
 			return new ApiManager::ApiError(Translator::tr("Invalid argument for action '%1'", account).arg(action));
 	}
+	else if(action == "del")
+	{
+		if(hRequest.HasArg("bunny"))
+		{
+			QString mac = hRequest.GetArg("bunny");
+			user->RemoveBunny(mac.toLatin1());
+			// FIXME Remove user as bunny owner in bunny config (see APICall Api_RemoveBunny)
+		}
+		else if(hRequest.HasArg("ztamp"))
+		{
+			QString zID = hRequest.GetArg("ztamp");
+			user->RemoveZtamp(zID.toLatin1());
+			// FIXME Add user as ztamp owner in ztamp config (see APICall Api_RemoveZtamp)
+		}
+		else
+			return new ApiManager::ApiError(Translator::tr("Invalid argument for action '%1'", account).arg(action));
+	}
 	else
 		return new ApiManager::ApiError(Translator::tr("Bad argument '%1'", account).arg("action"));
 

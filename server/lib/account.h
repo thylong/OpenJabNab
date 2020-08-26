@@ -54,6 +54,7 @@ public:
 	QList<QByteArray> const& GetZtampsList() const;
 	static int Version();
 	QByteArray AddZtamp(QByteArray const& z);
+	bool RemoveZtamp(QByteArray const& z);
 	QDir * GetUserDir();
 
 	bool GetAbuse();
@@ -74,7 +75,6 @@ private:
 	Account(QString const& login, QString const& username, QByteArray const& passwordHash, QString const& language, QString const& email);
 
 	void SetDefault();
-	bool RemoveZtamp(QByteArray const& z);
 	bool SaveNeeded();
 	void SetSaveNeeded(bool const& s);
 
