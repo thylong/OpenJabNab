@@ -101,14 +101,14 @@ if(isset($_POST['aurl']) && isset($_POST['avoice']) && strlen(trim(($_POST['avoi
 	Message::AddFromApi($ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/callurl/voice?action=add&command=".urlencode($_POST['avoice'])."&name=".urlencode(($_POST['aurl']))."&".$ojnAPI->getToken()));
 	$reload = true;
 }
-if(isset($_POST['rvoice'])) {
+if(isset($_GET['rvoice'])) {
 	$_SESSION['subtab'] = "callurl_voice";
-	Message::AddFromApi($ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/callurl/voice?action=del&command=".($_POST['rvoice'])."&".$ojnAPI->getToken()));
+	Message::AddFromApi($ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/callurl/voice?action=del&command=".($_GET['rvoice'])."&".$ojnAPI->getToken()));
 	$reload = true;
 }
-if(isset($_POST['rear'])) {
+if(isset($_GET['rear'])) {
 	$_SESSION['subtab'] = "callurl_ears";
-	list($ear, $pos) = preg_split("|(\d+)|", $_POST['rear'], -1,  PREG_SPLIT_DELIM_CAPTURE |  PREG_SPLIT_NO_EMPTY  );
+	list($ear, $pos) = preg_split("|(\d+)|", $_GET['rear'], -1,  PREG_SPLIT_DELIM_CAPTURE |  PREG_SPLIT_NO_EMPTY  );
 	Message::AddFromApi($ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/callurl/ear?action=del&ear=".$ear."&pos=".$pos."&".$ojnAPI->getToken()));
 	$reload = true;
 }
@@ -137,9 +137,9 @@ if(isset($_POST['allrfidurl'])) {
 	Message::AddFromApi($ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/callurl/url?action=set&type=RFID&name=".urlencode($_POST['allrfidurl'])."&".$ojnAPI->getToken()));
 	$reload = true;
 }
-if(isset($_POST['rtag'])) {
+if(isset($_GET['rtag'])) {
 	$_SESSION['subtab'] = "callurl_rfid";
-	Message::AddFromApi($ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/callurl/rfid?action=del&tag=".$_POST['rtag']."&".$ojnAPI->getToken()));
+	Message::AddFromApi($ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/callurl/rfid?action=del&tag=".$_GET['rtag']."&".$ojnAPI->getToken()));
 	$reload = true;
 }
 else if(isset($_GET['rp'])) {
@@ -178,349 +178,355 @@ if($reload)
 }
 ?>
 
-		<div class="tabbable">
-		<ul class="nav nav-tabs">
-		  <li<?php echo $_SESSION['subtab'] == 'callurl_url' ? ' class="active"' : '' ?>><a href="#url" data-toggle="tab"><?php echo __tr('URL List') ?></a></li>
-		  <li<?php echo $_SESSION['subtab'] == 'callurl_schedule' ? ' class="active"' : '' ?>><a href="#schedule" data-toggle="tab"><?php echo __tr('Schedules') ?></a></li>
-		  <li<?php echo $_SESSION['subtab'] == 'callurl_rfid' ? ' class="active"' : '' ?>><a href="#rfid" data-toggle="tab"><?php echo __tr('RFID') ?></a></li>
-		  <li<?php echo $_SESSION['subtab'] == 'callurl_ears' ? ' class="active"' : '' ?>><a href="#ears" data-toggle="tab"><?php echo __tr('Ears') ?></a></li>
-		  <li<?php echo $_SESSION['subtab'] == 'callurl_voice' ? ' class="active"' : '' ?>><a href="#voice" data-toggle="tab"><?php echo __tr('Voice command') ?></a></li>
-		</ul>
-		<br />
-		
-			<div class="tab-content">
-				<div class="tab-pane<?php echo $_SESSION['subtab'] == 'callurl_url' ? ' active' : '' ?>" id="url">
-<div>
-<?php echo __tr("You can create dynamic url, with the following variables") ?>.
-<?php echo __tr("Those variables will be replaced by values (or empty when not avaliable)") ?>.
-<ul>
-<li><?php echo __tr("BUNNYMAC will be replaced with MAC address (on all url)") ?></li>
-<li><?php echo __tr("CLICTYPE will be replaced with 1 for a single click, 2 for a double click") ?></li>
-<li><?php echo __tr("LEFTPOS will be replaced with left ear position (only when left ear is moved)") ?></li>
-<li><?php echo __tr("RIGHTPOS will be replaced with right ear position (only when right ear is moved)") ?></li>
-<li><?php echo __tr("ZTAMPSN will be replaced with ztamp serial number (only when using a ztamp)") ?></li>
-<li><?php echo __tr("VOICECMD will be replaced with the voice command you ask (only when using voice command, and only available to VIP users)") ?></li>
+<ul class="nav nav-tabs">
+	<li class="nav-item">
+    <a class="nav-link <?php echo $_SESSION['subtab'] == 'callurl_url' ? ' active' : '' ?>" href="#url" data-toggle="tab"><?php echo __tr('URL List') ?></a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link <?php echo $_SESSION['subtab'] == 'callurl_schedule' ? ' active' : '' ?>" href="#schedule" data-toggle="tab"><?php echo __tr('Schedules') ?></a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link <?php echo $_SESSION['subtab'] == 'callurl_rfid' ? ' active' : '' ?>" href="#rfid" data-toggle="tab"><?php echo __tr('RFID') ?></a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link <?php echo $_SESSION['subtab'] == 'callurl_ears' ? ' active' : '' ?>" href="#ears" data-toggle="tab"><?php echo __tr('Ears') ?></a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link <?php echo $_SESSION['subtab'] == 'callurl_voice' ? ' active' : '' ?>" href="#voice" data-toggle="tab"><?php echo __tr('Voice command') ?></a>
+  </li>
 </ul>
-</div>
-<form method="post" class="form-horizontal">
-          <div class="control-group">
-            <label for="input01" class="control-label"><?php echo __tr("Add an url") ?></label>
-            <div class="controls">
-		<input type="text" name="addurl" class="input-xlarge span6"/>
-            </div>
-          </div>
-          <div class="control-group">
-            <label for="input01" class="control-label"><?php echo __tr("Name") ?> (<?php echo __tr('Optional') ?>)</label>
-            <div class="controls">
-		<input type="text" name="addname" class="input-xlarge span6"/>
-            </div>
-          </div>
-          <div class="form-actions">
-            <button class="btn btn-primary" type="submit"><?php echo __tr("Save") ?></button>
-            <button class="btn"><?php echo __tr("Cancel") ?></button>
-          </div>
-</form>
-				</div>
 
-				<div class="tab-pane<?php echo $_SESSION['subtab'] == 'callurl_schedule' ? ' active' : '' ?>" id="schedule">
-<form method="post" class="form-horizontal">
-          <div class="control-group">
-            <label for="input01" class="control-label"><?php echo __tr("Add a schedule at (hh:mm)") ?></label>
-            <div class="controls">
- <div class="input-append bootstrap-timepicker">
-<input id="timepicker2" type="text" name="scheduleT" class="input-small"><span class="add-on">
-<i class="icon-time"></i>
-</span>
-</div>
-<?php $ojnTemplate->setJs('<script type="text/javascript">jQuery("#timepicker2").timepicker({minuteStep: 1,showSeconds: false,showMeridian: false});</script>'); ?>
-            </div>
-          </div>
-          <div class="control-group">
-            <label for="input01" class="control-label"><?php echo __tr("Day") ?></label>
-            <div class="controls">
-		<select name="scheduleD">
-		<?php foreach($days as $d => $day) { ?>
-			<option value="<?php echo $d ?>"><?php echo $day ?></option>
-		<?php } ?>
-		</select>
-            </div>
-          </div>
-          <div class="control-group">
-            <label for="input01" class="control-label"><?php echo __tr("Url") ?></label>
-            <div class="controls">
-<select name="scheduleN">
-	<option value=""></option>
-	<?php if(!empty($pList))
-	foreach($pList as $key => $item) { ?>
-		<option value="<?php echo $key ?>"><?php echo $item; ?></option>
-	<?php } ?>
-</select>
-            </div>
-          </div>
-          <div class="form-actions">
-            <button class="btn btn-primary" type="submit"><?php echo __tr("Save") ?></button>
-            <button class="btn"><?php echo __tr("Cancel") ?></button>
-          </div>
-</form>
-
-				</div>
-
-				<div class="tab-pane<?php echo $_SESSION['subtab'] == 'callurl_rfid' ? ' active' : '' ?>" id="rfid">
-<form method="post" class="form-horizontal">
-          <div class="control-group">
-		<label for="input01" class="control-label"><?php echo __tr("Call url for all RFID") ?></label>
-            <div class="controls">
-	<select name="allrfidurl" class="span6">
-	<option value=""></option>
-	<?php  if(!empty($pList))
-	foreach($pList as $k => $item) { ?>
-		<option <?php if($k == $defaults['RFID']): ?> selected="selected"<?php endif; ?>value="<?php echo urldecode($k) ?>"><?php echo urldecode($k); ?></option>
-	<?php } ?>
-</select>
-            </div>
-          </div>
-          <div class="form-actions">
-            <button class="btn btn-primary" type="submit"><?php echo __tr("Save") ?></button>
-          </div>
-</form>
-<form method="post" class="form-horizontal">
-          <div class="control-group">
-            <label for="input01" class="control-label"><?php echo __tr("Launch") ?></label>
-            <div class="controls">
-	<select name="aurl" class="span5">
-	<option value=""></option>
-	<?php  if(!empty($pList))
-	foreach($pList as $k => $item) { ?>
-		<option value="<?php echo urldecode($item) ?>"><?php echo $k; ?></option>
-	<?php } ?>
-</select> <?php echo __tr("on Ztamp") ?> <select name="atag" class="select2" style="width: 300px">
-    <option value=""></option>
-	<?php foreach($Ztamps as $k=>$v): ?>
-	<option value="<?php echo $k; ?>"><?php echo $v; ?> (<?php echo $k; ?>)</option>
-	<?php endforeach; ?>
-	</select><br />
-            </div>
-          </div>
-          <div class="form-actions">
-            <button class="btn btn-primary" type="submit"><?php echo __tr("Save") ?></button>
-          </div>
-</form>
-<?php if(count($Assoc)): ?>
-<form method="post" class="form-horizontal">
-<?php echo __tr("Delete Ztamp association") ?>
-&nbsp;<select name="rtag" class="span8">
-    <option value=""><?php echo __tr('Choose an association') ?></option>
-	<?php foreach($Assoc as $k=>$v): ?>
-	<option value="<?php echo $k; ?>"><?php echo $v; ?> (<?php echo $Ztamps[$k] . " - " . $k; ?>)</option>
-	<?php endforeach; ?>
-	</select>
-
-
-          <div class="form-actions">
-            <button class="btn btn-danger" type="submit"><?php echo __tr("Remove") ?></button>
-          </div>
-<?php endif; ?>
-</form>
-
-				</div>
-
-				<div class="tab-pane<?php echo $_SESSION['subtab'] == 'callurl_ears' ? ' active' : '' ?>" id="ears">
-
-<form method="post" class="form-horizontal">
-          <div class="control-group">
-		<label for="input01" class="control-label"><?php echo __tr("Call url for all left ear positions") ?></label>
-            <div class="controls">
-	<select name="alllefturl" class="span6">
-	<option <?php if("" == $defaults['LeftEar']): ?> selected="selected"<?php endif; ?> value=""></option>
-	<?php  if(!empty($pList))
-	foreach($pList as $k => $item) { ?>
-		<option <?php if($k == $defaults['LeftEar']): ?> selected="selected"<?php endif; ?>value="<?php echo urldecode($k) ?>"><?php echo urldecode($item); ?></option>
-	<?php } ?>
-</select>
-            </div>
-          </div>
-          <div class="control-group">
-		<label for="input01" class="control-label"><?php echo __tr("Call url for all right ear positions") ?></label>
-            <div class="controls">
-	<select name="allrighturl" class="span6">
-	<option <?php if("" == $defaults['RightEar']): ?> selected="selected"<?php endif; ?> value=""></option>
-	<?php  if(!empty($pList))
-	foreach($pList as $k => $item) { ?>
-		<option <?php if($k == $defaults['RightEar']): ?> selected="selected"<?php endif; ?> value="<?php echo urldecode($k) ?>"><?php echo urldecode($item); ?></option>
-	<?php } ?>
-</select>
-            </div>
-          </div>
-          <div class="form-actions">
-            <button class="btn btn-primary" type="submit"><?php echo __tr("Save") ?></button>
-          </div>
-</form>
-
-<form method="post" class="form-horizontal">
-<?php echo __tr("Launch") ?> <select name="aurl" class="span7">
-	<option value=""></option>
-	<?php  if(!empty($pList))
-	foreach($pList as $k => $item) { ?>
-		<option value="<?php echo urldecode($k) ?>"><?php echo urldecode($item); ?></option>
-	<?php } ?>
-</select> <?php echo __tr("on ear position") ?> <select name="aear">
-    <option value=""></option>
-	<?php foreach($Ears as $k=>$v): ?>
-	<option value="<?php echo $k; ?>"><?php echo $v; ?></option>
-	<?php endforeach; ?>
-	</select><br />
-          <div class="form-actions">
-            <button class="btn btn-primary" type="submit"><?php echo __tr("Save") ?></button>
-          </div>
-</form>
-<?php if(array_unique(array_values($Assocear)) != array("")): ?>
-<form method="post" class="form-horizontal">
-<?php echo __tr("Delete ear position association") ?>
-&nbsp;<select name="rear" class="span8">
-    <option value=""><?php echo __tr('Choose an association') ?></option>
-	<?php foreach($Assocear as $k=>$v): ?>
-	<?php if(strlen(trim($v))): ?>
-	<option value="<?php echo $k; ?>"><?php echo $v; ?> (<?php echo $Ears[$k]; ?>)</option>
-	<?php endif; ?>
-	<?php endforeach; ?>
-	</select>
-
-
-          <div class="form-actions">
-            <button class="btn btn-danger" type="submit"><?php echo __tr("Remove") ?></button>
-          </div>
-<?php endif; ?>
-</form>
-
-				</div>
-
-
-
-
-				<div class="tab-pane<?php echo $_SESSION['subtab'] == 'callurl_voice' ? ' active' : '' ?>" id="voice">
-<div class="alert alert-warning"><a class="close" data-dismiss="alert" href="#">×</a><?php echo __tr("Only available to VIP and premium users"); ?></div>
-
-<form method="post" class="form-horizontal">
-          <div class="control-group">
-		<label for="input01" class="control-label"><?php echo __tr("Call url for all voice commands") ?></label>
-            <div class="controls">
-	<select name="allvoiceurl" class="span6">
-	<option <?php if("" == $defaults['Voice']): ?> selected="selected"<?php endif; ?> value=""></option>
-	<?php  if(!empty($pList))
-	foreach($pList as $k => $item) { ?>
-		<option <?php if($k == $defaults['Voice']): ?> selected="selected"<?php endif; ?>value="<?php echo urldecode($k) ?>"><?php echo urldecode($item); ?></option>
-	<?php } ?>
-</select>
-            </div>
-          </div>
-          <div class="form-actions">
-            <button class="btn btn-primary" type="submit"><?php echo __tr("Save") ?></button>
-          </div>
-</form>
-
-<form method="post" class="form-horizontal">
-<?php echo __tr("Launch") ?> <select name="aurl" class="span7">
-	<option value=""></option>
-	<?php  if(!empty($pList))
-	foreach($pList as $k => $item) { ?>
-		<option value="<?php echo $k ?>"><?php echo urldecode($item); ?></option>
-	<?php } ?>
-</select> <?php echo __tr("on voice command") ?> <input type="text" name="avoice">
-          <div class="form-actions">
-            <button class="btn btn-primary" type="submit"><?php echo __tr("Save") ?></button>
-          </div>
-</form>
-<form method="post" class="form-horizontal">
-<?php if(count($Assocvoice)): ?>
-<?php echo __tr("Delete a voice command association") ?>
-&nbsp;<select name="rvoice" class="span8">
-    <option value=""><?php echo __tr('Choose an association') ?></option>
-	<?php foreach($Assocvoice as $k=>$v): ?>
-	<option value="<?php echo $k; ?>"><?php echo $v." ".__tr('for command')." ".$k ?></option>
-	<?php endforeach; ?>
-	</select>
-
-
-          <div class="form-actions">
-            <button class="btn btn-danger" type="submit"><?php echo __tr("Remove") ?></button>
-          </div>
-<?php endif; ?>
-</form>
-
-				</div>
-
-
-
-
-
-
-
-
-
-
-
-
-			</div>
+<div class="tab-content pt-2">
+	<div class="tab-pane<?php echo $_SESSION['subtab'] == 'callurl_url' ? ' active' : '' ?>" id="url">
+		<div class="alert alert-success">
+			<?php echo __tr("You can create dynamic url, with the following variables") ?>.
+			<?php echo __tr("Those variables will be replaced by values (or empty when not avaliable)") ?>.
+			<ul class="m-2">
+				<li><?php echo __tr("BUNNYMAC will be replaced with MAC address (on all url)") ?></li>
+				<li><?php echo __tr("CLICTYPE will be replaced with 1 for a single click, 2 for a double click") ?></li>
+				<li><?php echo __tr("LEFTPOS will be replaced with left ear position (only when left ear is moved)") ?></li>
+				<li><?php echo __tr("RIGHTPOS will be replaced with right ear position (only when right ear is moved)") ?></li>
+				<li><?php echo __tr("ZTAMPSN will be replaced with ztamp serial number (only when using a ztamp)") ?></li>
+				<li><?php echo __tr("VOICECMD will be replaced with the voice command you ask (only when using voice command, and only available to VIP users)") ?></li>
+			</ul>
 		</div>
+		<form method="post">
+      <div class="form-group row">
+        <label class="col-sm-2 col-form-label" for="addurl"><?php echo __tr("Add an url") ?></label>
+        <div class="col-sm-6 input-group">
+          <input type="text" name="addurl" class="form-control"/>
+        </div>
+      </div>
+      <div class="form-group row">
+        <label class="col-sm-2 col-form-label" for="addname"><?php echo __tr("Name") ?> (<?php echo __tr('Optional') ?>)</label>
+        <div class="col-sm-2 input-group">
+          <input type="text" name="addname" class="form-control"/>
+        </div>
+      </div>
+      <div class="form-group row">
+        <div class="col-sm-1 offset-sm-2">
+          <button class="btn btn-primary" type="submit"><?php echo __tr("Save") ?></button>
+        </div>
+      </div>
+    </form>
 
-<?php
-if(!empty($pList)) {
-?>
-<hr />
-<center>
-<table class="table table-bordered table-striped span11">
-	<tr>
-		<th colspan="4"><?php echo __tr('URL List') ?></th>
-	</tr>
-	<tr>
-		<th class="span2"><?php echo __tr('Name') ?></th>
-		<th class="span6"><?php echo __tr('URL') ?></th>
-		<th colspan="2"><?php echo __tr('Actions') ?></th>
-	</tr>
-<?php
-	$i = 0;
-	foreach($pList as $k => $item) {
-?>
-	<tr<?php echo $i++ % 2 ? " class='l2'" : "" ?>>
-		<td><?php echo urldecode($k) ?></td>
-		<td><?php echo urldecode($item) ?></td>
-		<td class="span1"><a class="btn btn-danger" href="bunny_plugin.php?p=callurl&rp=<?php echo $k ?>"><?php echo __tr("Remove") ?></a></td>
-		<td class="span2"><?php if($defaults['Click'] != $k) { ?><a class="btn btn-primary" href="bunny_plugin.php?p=callurl&d=<?php echo $k ?>"><?php echo __tr("Set as default") ?></a><?php } else { ?><?php echo __tr("Default url") ?><?php } ?></td>
-	</tr>
-<?php } ?>
-</table>
-<?php
-}
-if(!empty($wList)){
-?>
-<hr />
-<center>
-<table class="table table-bordered table-striped span11">
-	<tr>
-		<th colspan="4"><?php echo __tr('Schedules') ?></th>
-	</tr>
-	<tr>
-		<th><?php echo __tr('Day') ?></th>
-		<th><?php echo __tr('Time') ?></th>
-		<th><?php echo __tr('Name') ?></th>
-		<th><?php echo __tr('Actions') ?></th>
-	</tr>
-<?php
-	$i = 0;
-	foreach($wList as $when => $item) {
-		list($day, $time) = preg_split("/\|/", $when);
-?>
-	<tr<?php echo $i++ % 2 ? " class='l2'" : "" ?>>
-		<td><?php echo $days[$day] ?></td>
-		<td><?php echo $time ?></td>
-		<td><?php echo $pList[$item] ?></td>
-		<td width="15%"><a href="bunny_plugin.php?p=callurl&rwt=<?php echo $time ?>&rwd=<?php echo $day ?>" class="btn btn-danger"><?php echo __tr('Remove') ?></a></td>
-	</tr>
-<?php  } ?>
-</table>
-<?php } ?>
-</fieldset>
-<?php
-$js = '<link href="/media/js/select2.css" rel="stylesheet"/><script src="/media/js/select2.js"></script> <script>$(document).ready(function() { $(".select2").select2(); });</script>';
-$ojnTemplate->setJS($js);
-?>
+		<?php if(!empty($pList)): ?>
+		<hr />
+		<h5><?php echo __tr('URL List') ?></h5>
+		<table class="table table-bordered table-striped span11">
+			<tr>
+				<th class="col-sm-2"><?php echo __tr('Name') ?></th>
+				<th><?php echo __tr('URL') ?></th>
+				<th class="col-sm-3"><?php echo __tr('Actions') ?></th>
+			</tr>
+			<?php foreach($pList as $k => $item): ?>
+			<tr>
+				<td><?php echo urldecode($k) ?></td>
+				<td><?php echo urldecode($item) ?></td>
+				<td>
+					<a class="btn btn-danger btn-sm" href="bunny_plugin.php?p=callurl&rp=<?php echo $k ?>"><i class="icon-trash icon-large"></i> <?php echo __tr("Remove") ?></a>
+					<?php if($defaults['Click'] != $k): ?>
+					<a class="btn btn-primary btn-sm" href="bunny_plugin.php?p=callurl&d=<?php echo $k ?>"><?php echo __tr("Set as default") ?></a>
+					<?php else: ?>
+					<span class="btn btn-sm btn-secondary"><?php echo __tr("Default url") ?></span>
+					<?php endif; ?>
+				</td>
+			</tr>
+			<?php endforeach; ?>
+		</table>
+		<?php endif; ?>
+	</div>
+
+	<div class="tab-pane<?php echo $_SESSION['subtab'] == 'callurl_schedule' ? ' active' : '' ?>" id="schedule">
+		<form method="post">
+      <div class="form-group row">
+        <label class="col-sm-3 col-form-label" for="scheduleT"><?php echo __tr("Add a schedule at (hh:mm)") ?></label>
+        <div class="col-sm-2 input-group">
+          <div class="input-group-preprend">
+            <div class="input-group-text"><i class="icon-time"></i></div>
+          </div>
+          <input type="text" name="scheduleT" class="timepicker form-control text-center">
+        </div>
+        <script type="text/javascript">
+          $(".timepicker").timepicker({minuteStep: 1,showMeridian: false});
+        </script>
+      </div>
+      <div class="form-group row">
+        <label class="col-sm-3 col-form-label" for="scheduleD"><?php echo __tr("Day") ?></label>
+        <div class="col-sm-2 input-group">
+          <select name="scheduleD" class="form-control">
+            <?php foreach($days as $d => $day): ?>
+            <option value="<?php echo $d ?>"><?php echo $day ?></option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+      </div>
+      <div class="form-group row">
+        <label class="col-sm-3 col-form-label" for="scheduleN"><?php echo __tr("Url") ?></label>
+        <div class="col-sm-2 input-group">
+          <select name="scheduleN" class="form-control">
+            <option value=""></option>
+            <?php if(!empty($pList))
+						foreach($pList as $key => $item): ?>
+							<option value="<?php echo $key ?>"><?php echo $key; ?></option>
+						<?php endforeach; ?>
+          </select>
+        </div>
+      </div>
+      <div class="form-group row">
+        <div class="col-sm-1 offset-sm-3">
+          <button class="btn btn-primary" type="submit"><?php echo __tr("Add") ?></button>
+        </div>
+      </div>
+    </form>
+
+    <?php if(!empty($wList)): ?>
+    <h5><?php echo __tr('Schedules') ?></h5>
+    <table class="table table-bordered table-striped">
+      <tr>
+        <th class="col-sm-2"><?php echo __tr('Day') ?></th>
+        <th class="col-sm-1"><?php echo __tr('Time') ?></th>
+        <th><?php echo __tr('Name') ?></th>
+        <th class="col-sm-1"><?php echo __tr('Actions') ?></th>
+      </tr>
+      <?php foreach($wList as $when => $name):
+          list($day, $time) = preg_split("/\|/", $when);
+      ?>
+      <tr>
+        <td><?php echo $days[$day] ?></td>
+        <td><?php echo $time ?></td>
+        <td><?php echo preg_replace('/OJN_/', '', $name) ?></td>
+        <td><a href="bunny_plugin.php?p=callurl&rwt=<?php echo $time ?>&rwd=<?php echo $day ?>" class="btn btn-sm btn-danger"><?php echo __tr('Remove') ?></a></td>
+      </tr>
+      <?php endforeach; ?>
+    </table>
+    <?php endif; ?>
+  </div>
+
+	<div class="tab-pane<?php echo $_SESSION['subtab'] == 'callurl_rfid' ? ' active' : '' ?>" id="rfid">
+		<form method="post">
+			<div class="form-group row">
+				<label class="col-sm-1 col-form-label" for="allrfidurl"><?php echo __tr("Launch") ?></label>
+				<div class="col-sm-2 input-group">
+					<select name="allrfidurl" class="form-control">
+						<option value=""></option>
+						<?php foreach($pList as $k => $item): ?>
+							<option <?php if($k == $defaults['RFID']): ?> selected="selected"<?php endif; ?>value="<?php echo urldecode($k) ?>"><?php echo urldecode($k); ?></option>
+						<?php endforeach; ?>
+					</select>
+				</div>
+				<div class="col-sm-2 input-group">
+					<span class="col-form-label"><?php echo __tr("for all RFID") ?></span>
+				</div>
+				<div class="col-sm-2">
+					<button class="btn btn-primary" type="submit"><?php echo __tr("Save") ?></button>
+				</div>
+			</div>
+		</form>
+		<form method="post">
+			<div class="form-group row">
+				<label class="col-sm-1 col-form-label" for="aurl"><?php echo __tr("Launch") ?></label>
+				<div class="col-sm-2 input-group">
+					<select name="aurl" class="form-control">
+						<option value=""></option>
+						<?php foreach($pList as $k => $item): ?>
+							<option value="<?php echo urldecode($k) ?>"><?php echo urldecode($k); ?></option>
+						<?php endforeach; ?>
+					</select>
+				</div>
+				<label class="col-sm-2 col-form-label" for="atag"><?php echo __tr("on Ztamp") ?></label>
+				<div class="col-sm-4 input-group">
+					<select name="atag"  class="form-control">
+						<option value=""></option>
+						<?php foreach($Ztamps as $k=>$v): ?>
+						<option value="<?php echo $k; ?>"><?php echo $v; ?> (<?php echo $k; ?>)</option>
+						<?php endforeach; ?>
+					</select>
+				</div>
+				<div class="col-sm-2">
+					<button class="btn btn-primary" type="submit"><?php echo __tr("Save") ?></button>
+				</div>
+			</div>
+		</form>
+
+		<?php if(!empty($Assoc)): ?>
+		<h5><?php echo __tr('Associations') ?></h5>
+		<table class="table table-bordered table-stripe">
+			<tr>
+				<th><?php echo __tr('Url') ?></th>
+				<th class="col-sm-4"><?php echo __tr('Ztamp') ?></th>
+				<th class="col-sm-1"><?php echo __tr('Actions') ?></th>
+			</tr>
+			<?php foreach($Assoc as $k=>$v): ?>
+			<tr>
+				<td><?php echo preg_replace('/OJN_/', '', $v); ?></td>
+				<td><?php echo $Ztamps[$k] . " - " . $k; ?></td>
+				<td><a href="bunny_plugin.php?p=callurl&rtag=<?php echo $k ?>" class="btn btn-danger btn-sm"><i class="icon-trash icon-large"></i> <?php echo __tr('Remove') ?></a></td>
+			</tr>
+			<?php endforeach; ?>
+		</table>
+		<?php endif; ?>
+	</div>
+
+	<div class="tab-pane<?php echo $_SESSION['subtab'] == 'callurl_ears' ? ' active' : '' ?>" id="ears">
+		<form method="post">
+			<div class="form-group row">
+				<label class="col-sm-4 col-form-label" for="alllefturl"><?php echo __tr("Call url for all left ear positions") ?></label>
+				<div class="col-sm-2 input-group">
+					<select name="alllefturl" class="form-control">
+						<option value=""></option>
+						<?php foreach($pList as $k => $item): ?>
+						<option <?php if($k == $defaults['LeftEar']): ?> selected="selected"<?php endif; ?>value="<?php echo urldecode($k) ?>"><?php echo urldecode($k); ?></option>
+						<?php endforeach; ?>
+					</select>
+				</div>
+			</div>
+			<div class="form-group row">
+				<label class="col-sm-4 col-form-label" for="allrighturl"><?php echo __tr("Call url for all right ear positions") ?></label>
+				<div class="col-sm-2 input-group">
+					<select name="allrighturl" class="form-control">
+						<option value=""></option>
+						<?php foreach($pList as $k => $item): ?>
+						<option <?php if($k == $defaults['LeftEar']): ?> selected="selected"<?php endif; ?>value="<?php echo urldecode($k) ?>"><?php echo urldecode($k); ?></option>
+						<?php endforeach; ?>
+					</select>
+				</div>
+			</div>
+			<div class="form-group row">
+				<div class="col-sm-2 offset-sm-4">
+					<button class="btn btn-primary" type="submit"><?php echo __tr("Save") ?></button>
+				</div>
+			</div>
+		</form>
+		<hr />
+		<form method="post">
+			<div class="form-group row">
+				<label class="col-sm-1 col-form-label" for="aurl"><?php echo __tr("Launch") ?></label>
+				<div class="col-sm-2 input-group">
+					<select name="aurl" class="form-control">
+						<option value=""></option>
+						<?php foreach($pList as $k => $item): ?>
+							<option value="<?php echo urldecode($k) ?>"><?php echo urldecode($k); ?></option>
+						<?php endforeach; ?>
+					</select>
+				</div>
+				<label class="col-sm-2 col-form-label" for="aear"><?php echo __tr("on ear position") ?></label>
+				<div class="col-sm-3 input-group">
+					<select name="aear" class="form-control">
+						<option value=""></option>
+						<?php foreach($Ears as $k=>$v): ?>
+						<option value="<?php echo $k; ?>"><?php echo $v; ?></option>
+						<?php endforeach; ?>
+					</select>
+				</div>
+				<div class="col-sm-2">
+					<button class="btn btn-primary" type="submit"><?php echo __tr("Save") ?></button>
+				</div>
+			</div>
+		</form>
+
+		<?php if(array_unique(array_values($Assocear)) != array("")): ?>
+		<h5><?php echo __tr('Ear positions associations') ?></h5>
+		<table class="table table-bordered table-stripe">
+			<tr>
+				<th class="col-sm-2"><?php echo __tr('Url') ?></th>
+				<th><?php echo __tr('Ear position') ?></th>
+				<th class="col-sm-1"><?php echo __tr('Actions') ?></th>
+			</tr>
+			<?php foreach($Assocear as $k=>$v):
+					if(!strlen(trim($v)))
+						continue;
+			?>
+			<tr>
+				<td><?php echo preg_replace('/OJN_/', '', $v); ?></td>
+				<td><?php echo $Ears[$k]; ?></td>
+				<td><a href="bunny_plugin.php?p=callurl&rear=<?php echo $k ?>" class="btn btn-danger btn-sm"><i class="icon-trash icon-large"></i> <?php echo __tr('Remove') ?></a></td>
+			</tr>
+			<?php endforeach; ?>
+		</table>
+		<?php endif; ?>
+	</div>
+
+	<div class="tab-pane<?php echo $_SESSION['subtab'] == 'callurl_voice' ? ' active' : '' ?>" id="voice">
+		<div class="alert alert-warning"><?php echo __tr("Only available to VIP and premium users"); ?></div>
+
+		<form method="post">
+			<div class="form-group row">
+				<label class="col-sm-1 col-form-label" for="allvoiceurl"><?php echo __tr("Launch") ?></label>
+				<div class="col-sm-3 input-group">
+					<select name="allvoiceurl" class="form-control">
+						<option value=""></option>
+						<?php  if(!empty($pList))
+						foreach($pList as $k => $item): ?>
+							<option <?php if($k == $defaults['Voice']): ?> selected="selected"<?php endif; ?>value="<?php echo urldecode($k) ?>"><?php echo urldecode($k); ?></option>
+						<?php endforeach; ?>
+					</select>
+				</div>
+				<div class="col-sm-2 input-group">
+					<span class="col-form-label"><?php echo __tr("for all voice commands") ?></span>
+				</div>
+				<div class="col-sm-2">
+					<button class="btn btn-primary" type="submit"><?php echo __tr("Save") ?></button>
+				</div>
+			</div>
+		</form>
+		<form method="post">
+			<div class="form-group row">
+				<label class="col-sm-1 col-form-label" for="aurl"><?php echo __tr("Launch") ?></label>
+				<div class="col-sm-3 input-group">
+					<select name="aurl" class="form-control">
+						<option value=""></option>
+						<?php foreach($pList as $k => $item): ?>
+							<option value="<?php echo urldecode($k) ?>"><?php echo urldecode($k); ?></option>
+						<?php endforeach; ?>
+					</select>
+				</div>
+				<label class="col-sm-2 col-form-label" for="avoice"><?php echo __tr("on voice command"); ?></label>
+				<div class="col-sm-2 input-group">
+					<input type="text" name="avoice" class="form-control">
+				</div>
+				<div class="col-sm-2">
+					<button class="btn btn-primary" type="submit"><?php echo __tr("Save") ?></button>
+				</div>
+			</div>
+		</form>
+
+		<?php if(!empty($Assocvoice)): ?>
+		<h5><?php echo __tr('Voice commands associations') ?></h5>
+		<table class="table table-bordered table-stripe">
+			<tr>
+				<th><?php echo __tr('Url') ?></th>
+				<th class="col-sm-2"><?php echo __tr('Command') ?></th>
+				<th class="col-sm-1"><?php echo __tr('Actions') ?></th>
+			</tr>
+			<?php foreach($Assocvoice as $k=>$v): ?>
+			<tr>
+				<td><?php echo $v; ?></td>
+				<td><?php echo $k; ?></td>
+				<td><a href="bunny_plugin.php?p=callurl&rvoice=<?php echo $k ?>" class="btn btn-danger btn-sm"><i class="icon-trash icon-large"></i> <?php echo __tr('Remove') ?></a></td>
+			</tr>
+			<?php endforeach; ?>
+		</table>
+		<?php endif; ?>
+	</div>
+</div>

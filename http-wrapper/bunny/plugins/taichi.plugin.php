@@ -26,35 +26,34 @@ $frequency = $ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/taichi/getFrequ
 $frequency = isset($frequency['value']) ? $frequency['value'] : '';
 ?>
 
-<form method="post" class="form-horizontal">
-          <div class="control-group">
-            <label for="input01" class="control-label"><?php echo __tr("Frequency") ?></label>
-            <div class="controls">
-<select name="frequency"> 
-<?php foreach($frequencies as $k => $v): ?>
-<option value="<?php echo $k ?>" <?php if ($frequency==$k) echo 'selected'; ?> ><?php echo $v ?></option>
-<?php endforeach; ?>
-</select>
-            </div>
-          </div>
-          <div class="form-actions">
-            <button class="btn btn-primary" type="submit"><?php echo __tr("Save") ?></button>
-            <button class="btn"><?php echo __tr("Cancel") ?></button>
-          </div>
+<form method="post">
+  <div class="form-group row">
+    <label class="col-sm-1 col-form-label" for="frequency"><?php echo __tr("Frequency") ?></label>
+    <div class="col-sm-2 input-group">
+      <select name="frequency" class="form-control">
+        <?php foreach($frequencies as $k => $v): ?>
+        <option value="<?php echo $k ?>" <?php if ($frequency==$k) echo 'selected'; ?> ><?php echo $v ?></option>
+        <?php endforeach; ?>
+      </select>
+    </div>
+    <div class="col-sm-1">
+      <button class="btn btn-primary" type="submit"><?php echo __tr("Save") ?></button>
+    </div>
+  </div>
 </form>
-<form method="post" class="form-horizontal">
-          <div class="control-group">
-            <label for="input01" class="control-label"><?php echo __tr("Select RFID to use") ?></label>
-            <div class="controls">
-<select name="RFID">
-	<?php foreach($Ztamps as $k=>$v): ?>
-	<option value="<?php echo $k; ?>"><?php echo $v.($k != "" ? "($k)" : ""); ?></option>
-	<?php endforeach; ?>
-	</select>
-            </div>
-          </div>
-          <div class="form-actions">
-            <button class="btn btn-primary" type="submit"><?php echo __tr("Save") ?></button>
-            <button class="btn"><?php echo __tr("Cancel") ?></button>
-          </div>
+
+<form method="post">
+  <div class="form-group row">
+    <label class="col-sm-3 col-form-label" for="RFID"><?php echo __tr("Select RFID to use") ?></label>
+    <div class="col-sm-4 input-group">
+      <select name="RFID" class="form-control">
+        <?php foreach($Ztamps as $k=>$v): ?>
+        <option value="<?php echo $k; ?>"><?php echo $v.($k != "" ? "($k)" : ""); ?></option>
+        <?php endforeach; ?>
+      </select>
+    </div>
+    <div class="col-sm-1">
+      <button class="btn btn-primary" type="submit"><?php echo __tr("Save") ?></button>
+    </div>
+  </div>
 </form>

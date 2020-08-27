@@ -57,75 +57,73 @@ if($reload)
 }
 $wList = $ojnAPI->getApiMapped("bunny/".$_SESSION['bunny']."/memo/schedule?action=list&".$ojnAPI->getToken());
 
-if(isset($_GET['et']) && isset($_GET['ed'])) {
+if(isset($_GET['et']) && isset($_GET['ed']))
 	$edit = $wList[$_GET['ed'] . "|" . $_GET['et']];
-}
 
 ?>
 
-<form method="post" class="form-horizontal">
-          <div class="control-group">
-            <label for="input01" class="control-label"><?php echo __tr("Add a schedule at (hh:mm)") ?></label>
-            <div class="controls">
-		<input type="text" name="scheduleT" class="input-xlarge span6" value="<?php echo isset($_GET['et']) ? $_GET['et'] : '' ?>"/>
-            </div>
-          </div>
-          <div class="control-group">
-            <label for="input01" class="control-label"><?php echo __tr("Day") ?></label>
-            <div class="controls">
-		<select name="scheduleD">
-		<?php foreach($days as $d => $day) { ?>
-			<option value="<?php echo $d ?>"<?php echo isset($_GET['ed']) && $_GET['ed'] == $d ? ' selected="selected"' : '' ?>><?php echo $day ?></option>
-		<?php } ?>
-		</select>
-            </div>
-          </div>
-          <div class="control-group">
-            <label for="input01" class="control-label"><?php echo __tr("Text to say") ?></label>
-            <div class="controls">
-		<textarea name="scheduleM" class="input-xlarge span6"><?php echo isset($edit) ? $edit : '' ?></textarea>
-            </div>
-          </div>
-          <div class="form-actions">
-<?php if(isset($edit)): ?>
-	<input type="hidden" name="scheduleE" value="1"/>
-            <button class="btn btn-primary" type="submit"><?php echo __tr("Edit the schedule") ?></button>
-<?php else: ?>
-            <button class="btn btn-primary" type="submit"><?php echo __tr("Add the schedule") ?></button>
-<?php endif; ?>
-            <a href="bunny_plugin.php?p=memo" class="btn"><?php echo __tr("Cancel") ?></a>
-          </div>
+<form method="post">
+	<div class="form-group row">
+		<label class="col-sm-3 col-form-label" for="scheduleT"><?php echo __tr("Add a schedule at (hh:mm)") ?></label>
+		<div class="col-sm-2 input-group">
+			<div class="input-group-preprend">
+				<div class="input-group-text"><i class="icon-time"></i></div>
+			</div>
+			<input type="text" name="scheduleT" class="timepicker form-control text-center" value="<?php echo isset($_GET['et']) ? $_GET['et'] : '' ?>">
+		</div>
+		<script type="text/javascript">
+			$(".timepicker").timepicker({minuteStep: 1,showMeridian: false});
+		</script>
+	</div>
+	<div class="form-group row">
+		<label class="col-sm-3 col-form-label" for="scheduleD"><?php echo __tr("Day") ?></label>
+		<div class="col-sm-2 input-group">
+			<select name="scheduleD" class="form-control">
+				<?php foreach($days as $d => $day): ?>
+				<option value="<?php echo $d ?>"<?php echo isset($_GET['ed']) && $_GET['ed'] == $d ? ' selected="selected"' : '' ?>><?php echo $day ?></option>
+				<?php endforeach; ?>
+			</select>
+		</div>
+	</div>
+	<div class="form-group row">
+		<label class="col-sm-3 col-form-label" for="scheduleM"><?php echo __tr("Text to say") ?></label>
+		<div class="col-sm-6 input-group">
+			<textarea name="scheduleM" rows="6" class="form-control"><?php echo isset($edit) ? $edit : '' ?></textarea>
+		</div>
+	</div>
+	<div class="form-group row">
+		<div class="col-sm-1 offset-sm-3">
+			<?php if(isset($edit)): ?>
+			<input type="hidden" name="scheduleE" value="1"/>
+			<button class="btn btn-primary" type="submit"><?php echo __tr("Edit the schedule") ?></button>
+			<?php else: ?>
+			<button class="btn btn-primary" type="submit"><?php echo __tr("Add the schedule") ?></button>
+			<?php endif; ?>
+		</div>
+	</div>
 </form>
 
-<?php
-if(count($wList)){
-?>
-<hr />
-<center>
-<table class="table table-bordered table-striped span11">
+<?php if(count($wList)): ?>
+<h5><?php echo __tr('Schedules') ?></h5>
+<table class="table table-bordered table-striped">
 	<tr>
-		<th colspan="4"><?php echo __tr('Schedules') ?></th>
+		<th class="col-sm-2"><?php echo __Tr('Day') ?></th>
+		<th class="col-sm-1"><?php echo __Tr('Time') ?></th>
+		<th><?php echo __tr('Memo') ?></th>
+		<th class="col-sm-3"><?php echo __tr('Actions') ?></th>
 	</tr>
+	<?php foreach($wList as $key => $item):
+		list($day, $time) = explode("|", $key);
+	?>
 	<tr>
-		<th><?php echo __Tr('Day') ?></th>
-		<th><?php echo __Tr('Time') ?></th>
-		<th><?php echo __tr('Name') ?></th>
-		<th><?php echo __tr('Actions') ?></th>
-	</tr>
-<?php
-	$i = 0;
-	foreach($wList as $key => $item) {
-	list($day, $time) = explode("|", $key);
-?>
-	<tr<?php echo $i++ % 2 ? " class='l2'" : "" ?>>
 		<td><?php echo $days[$day] ?></td>
 		<td><?php echo $time ?></td>
 		<td><?php echo $item ?></td>
-		<td width="25%">
-			<a class="btn btn-danger" href="bunny_plugin.php?p=memo&rd=<?php echo $day ?>&rt=<?php echo $time ?>"><?php echo __tr('Remove') ?></a>&nbsp;
-			<a class="btn btn-success" href="bunny_plugin.php?p=memo&ed=<?php echo $day ?>&et=<?php echo $time ?>"><?php echo __tr('Edit') ?></a>
+		<td>
+			<a class="btn btn-sm btn-primary" href="bunny_plugin.php?p=memo&ed=<?php echo $day ?>&et=<?php echo $time ?>"><i class="icon-edit icon-large"></i> <?php echo __tr('Edit') ?></a>
+			<a class="btn btn-sm btn-danger" href="bunny_plugin.php?p=memo&rd=<?php echo $day ?>&rt=<?php echo $time ?>"><i class="icon-trash icon-large"></i> <?php echo __tr('Remove') ?></a>&nbsp;
 		</td>
 	</tr>
-<?php  } ?>
+	<?php endforeach; ?>
 </table>
-<?php } ?>
+	<?php endif; ?>

@@ -40,125 +40,105 @@ if($reload) {
 }
 
 ?>
-	      <div class="row">
-	      	<div class="span12">
-	      		<div class="widget ">
-	      			<div class="widget-header">
-	      				<i class="icon-cog"></i> <h3><?php echo __tr('Server settings') ?></h3>
-	  				</div> <!-- /widget-header -->
-					<div class="widget-content">
-						<div class="tabbable">
-						<ul class="nav nav-tabs">
-						  <li class="active"><a href="#plugins" data-toggle="tab"><?php echo __tr('Plugins') ?></a></li>
-						  <li><a href="#bunnies" data-toggle="tab"><?php echo __tr('Bunnies') ?></a></li>
-						  <li><a href="#ztamps" data-toggle="tab"><?php echo __tr('Ztamps') ?></a></li>
-						  <li><a href="#accounts" data-toggle="tab"><?php echo __tr('Accounts') ?></a></li>
-						</ul>
-						<br />
+<?php
+  require_once(ROOT_SITE.'/include/message.php');
+?>
+<div class="card">
+  <h5 class="card-header">
+    <i class="icon-cog"></i> <?php echo __tr('Server settings') ?>
+  </h5>
+  <div class="card-body">
+    <ul class="nav nav-tabs">
+      <li class="nav-item"><a class="nav-link active" href="#plugins" data-toggle="tab"><?php echo __tr('Plugins') ?></a></li>
+      <li class="nav-item"><a class="nav-link" href="#bunnies" data-toggle="tab"><?php echo __tr('Bunnies') ?></a></li>
+      <li class="nav-item"><a class="nav-link" href="#ztamps" data-toggle="tab"><?php echo __tr('Ztamps') ?></a></li>
+      <li class="nav-item"><a class="nav-link" href="#accounts" data-toggle="tab"><?php echo __tr('Accounts') ?></a></li>
+    </ul>
+		<div class="tab-content pt-4">
+      <div class="tab-pane active" id="plugins">
+        <?php
+        $Plugins = $ojnAPI->getListOfPlugins(false, $ojnTemplate->getLanguage());
+        asort($Plugins);
+        $BPlugins = $ojnAPI->getListOfBunnyPlugins(false);
+        $ZPlugins = $ojnAPI->getListOfZtampPlugins(false);
+        $UPlugins = $BPlugins;
+        /* Merge Bunny Plugins and ZTamp Plugins */
+        if(!empty($ZPlugins))
+          foreach($ZPlugins as $v)
+            if(!in_array($v,$BPlugins))
+              $BPlugins[] = $v;
+        $APlugins = $ojnAPI->getListOfEnabledPlugins(false);
+        $SPlugins = $ojnAPI->getListOfSystemPlugins(false);//ApiList("plugins/getListOfSystemPlugins?".$ojnAPI->getToken());
+        $RPlugins = $ojnAPI->getListOfRequiredPlugins(false);//ApiList("plugins/getListOfRequiredPlugins?".$ojnAPI->getToken());
+      ?>
+      <table class="table table-bordered table-striped">
+	      <thead>
+	        <tr>
+            <th class="col-sm-7"><?php echo __tr('Required plugins') ?></th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php
+          foreach($Plugins as $p => $name):
+            if(!in_array($p, $RPlugins))
+              continue;
+          ?>
+          <tr>
+            <td><?php echo $name ?></td>
+            <td class="text-right">
+              <?php if(file_exists("plugins/".$p.".plugin.php")) { ?><a href="server_plugin.php?p=<?php echo $p; ?>" class="btn btn-sm btn-primary"><i class="icon-cog icon-large"></i> <?php echo __tr('Setup') ?></a><?php } ?>
+              <?php if($Plugins[$p][1]): ?><a class="btn btn-sm btn-warning" href="?stat=reload&plug=<?php echo $p ?>"><i class="icon-refresh icon-large"></i> <?php echo __tr('Reload') ?></a><?php endif; ?>
+            </td>
+          </tr>
+            <?php endforeach; ?>
+        </tbody>
+      </table>
 
-							<div class="tab-content">
-								<div class="tab-pane active" id="plugins">
-									<fieldset>
-<?php
-require_once(ROOT_SITE.'/include/message.php');
-?>
-<?php
-	$Plugins = $ojnAPI->getListOfPlugins(false, $ojnTemplate->getLanguage());
-	asort($Plugins);
-	$BPlugins = $ojnAPI->getListOfBunnyPlugins(false);
-	$ZPlugins = $ojnAPI->getListOfZtampPlugins(false);
-	$UPlugins = $BPlugins;
-	/* Merge Bunny Plugins and ZTamp Plugins */
-	if(!empty($ZPlugins))
-		foreach($ZPlugins as $v)
-			if(!in_array($v,$BPlugins))
-				$BPlugins[] = $v;
-	$APlugins = $ojnAPI->getListOfEnabledPlugins(false);
-	$SPlugins = $ojnAPI->getListOfSystemPlugins(false);//ApiList("plugins/getListOfSystemPlugins?".$ojnAPI->getToken());
-	$RPlugins = $ojnAPI->getListOfRequiredPlugins(false);//ApiList("plugins/getListOfRequiredPlugins?".$ojnAPI->getToken());
-?>
-<center>
-<table class="table table-bordered table-striped span10">
-	<thead>
-	<tr>
-		<th class="span6"><?php echo __tr('Required plugins') ?></th>
-		<th colspan="2">Actions</th>
-	</tr>
-	</thead>
-<tbody>
-<?php
-	$i = 0;
-	foreach($Plugins as $p => $name)
-	{
-		if(in_array($p, $RPlugins))
-		{
-?>
-	<tr<?php echo $i++ % 2 ? " class='l2'" : "" ?>>
-		<td><?php echo $name ?></td>
-		<td class="span2"><?php if(file_exists("plugins/".$p.".plugin.php")) { ?><a href="server_plugin.php?p=<?php echo $p; ?>" class="btn btn-small btn-primary"><i class="icon-cog icon-large"></i> <?php echo __tr('Setup') ?></a><?php } else { ?>&nbsp;<?php } ?></td>
-		<td class="span2"><?php if($Plugins[$p][1]): ?><a class="btn btn-small btn-primary" href="?stat=reload&plug=<?php echo $p ?>"><i class="icon-refresh icon-large"></i> <?php echo __tr('Reload') ?></a><?php endif; ?></td>
-	</tr>
-<?php
- 		}
-	}
- ?>
-</tbody>
-</table>
+      <table class="table table-bordered table-striped">
+	      <tr>
+		      <th class="col-sm-7"><?php echo __tr('System plugins') ?></th>
+		      <th><?php echo __tr('Actions') ?></th>
+	      </tr>
+        <?php
+        foreach($Plugins as $p => $name):
+          if(!in_array($p, $SPlugins))
+            continue;
+        ?>
+	      <tr>
+		      <td><?php echo $name ?></td>
+		      <td class="text-right">
+            <?php if(file_exists("plugins/".$p.".plugin.php")) { ?><a href="server_plugin.php?p=<?php echo $p; ?>" class="btn btn-sm btn-primary"><i class="icon-cog icon-large"></i> <?php echo __tr('Setup') ?></a><?php } ?>
+		        <a class="btn btn-sm btn-<?php echo in_array($p,$APlugins) ? "danger" : "success";?>" href="?stat=<?php echo in_array($p,$APlugins) ? "deactivate" : "activate"; ?>&plug=<?php echo $p ?>"><?php echo in_array($p,$APlugins) ? __tr('Disable plugin') : __tr('Enable plugin') ?></a>
+		        <?php if(in_array($p,$APlugins)): ?><a href="?stat=reload&plug=<?php echo $p ?>" class="btn btn-sm btn-warning"><i class="icon-refresh icon-large"></i> <?php echo __tr('Reload') ?></a><?php endif; ?>
+          </td>
+        </tr>
+        <?php endforeach; ?>
+      </table>
 
-<table class="table table-bordered table-striped span10">
-	<tr>
-		<th><?php echo __tr('System plugins') ?></th>
-		<th colspan="3"><?php echo __tr('Actions') ?></th>
-	</tr>
-<?php
-	$i = 0;
-	foreach($Plugins as $p => $name)
-	{
-		if(in_array($p, $SPlugins))
-		{
-?>
-	<tr<?php echo $i++ % 2 ? " class='l2'" : "" ?>>
-		<td><?php echo $name ?></td>
-		<td class="span2"><?php if(file_exists("plugins/".$p.".plugin.php")) { ?><a href="server_plugin.php?p=<?php echo $p; ?>" class="btn btn-small btn-primary"><i class="icon-cog icon-large"></i> <?php echo __tr('Setup') ?></a><?php } else { ?>&nbsp;<?php } ?></td>
-		<td class="span2"><a class="btn btn-small btn-<?php echo in_array($p,$APlugins) ? "danger" : "success";?>" href="?stat=<?php echo in_array($p,$APlugins) ? "deactivate" : "activate"; ?>&plug=<?php echo $p ?>"><?php echo in_array($p,$APlugins) ? __tr('Disable plugin') : __tr('Enable plugin') ?></a></td>
-		<?php if(in_array($p,$APlugins)): ?><td width="14%"><a href="?stat=reload&plug=<?php echo $p ?>" class="btn btn-small btn-primary"><i class="icon-refresh icon-large"></i> <?php echo __tr('Reload') ?></a></td><?php endif; ?>
-	</tr>
-<?php
- 		}
-	}
- ?>
-</table>
-
-<table class="table table-bordered table-striped span10">
-	<tr>
-		<th><?php echo __tr('Bunnies & Ztamps plugins') ?></th>
-		<th colspan="3"><?php echo __tr('Actions') ?></th>
-	</tr>
-<?php
-	$i = 0;
-	foreach($Plugins as $p => $name)
-	{
-		if(in_array($p, $UPlugins))
-		{
-?>
-	<tr<?php echo $i++ % 2 ? " class='l2'" : "" ?>>
-		<td><?php echo $name; ?></td>
-		<td class="span2"><?php if(file_exists("plugins/".$p.".plugin.php")) { ?><a href="server_plugin.php?p=<?php echo $p; ?>" class="btn btn-small btn-primary"><i class="icon-cog icon-large"></i> <?php echo __tr('Setup') ?></a><?php } else { ?>&nbsp;<?php } ?></td>
-		<td class="span2"><a class="btn btn-small btn-<?php echo in_array($p,$APlugins) ? "danger" : "success";?>" href="?stat=<?php echo in_array($p,$APlugins) ? "deactivate" : "activate"; ?>&plug=<?php echo $p ?>"><?php echo in_array($p,$APlugins) ? __tr('Disable plugin') : __tr('Enable plugin') ?></a></td>
-		<?php if(in_array($p,$APlugins)): ?></td><td width="14%"><a href="?stat=reload&plug=<?php echo $p ?>" class="btn btn-small btn-primary"><i class="icon-refresh icon-large"></i> <?php echo __tr('Reload') ?></a><?php endif; ?>
-		</td>
-	</tr>
-<?php
- 		}
-	}
- ?>
-</table>
-
-</p>
-</center>
-						</fieldset>
-						</div>
-								<div class="tab-pane" id="bunnies">
+      <table class="table table-bordered table-striped">
+	      <tr>
+		      <th class="col-sm-7"><?php echo __tr('Bunnies & Ztamps plugins') ?></th>
+		      <th><?php echo __tr('Actions') ?></th>
+	      </tr>
+        <?php
+	      foreach($Plugins as $p => $name):
+          if(!in_array($p, $UPlugins))
+            continue;
+        ?>
+        <tr>
+          <td><?php echo $name; ?></td>
+          <td class="text-right">
+            <?php if(file_exists("plugins/".$p.".plugin.php")) { ?><a href="server_plugin.php?p=<?php echo $p; ?>" class="btn btn-sm btn-primary"><i class="icon-cog icon-large"></i> <?php echo __tr('Setup') ?></a><?php } ?>
+            <a class="btn btn-sm btn-<?php echo in_array($p,$APlugins) ? "danger" : "success";?>" href="?stat=<?php echo in_array($p,$APlugins) ? "deactivate" : "activate"; ?>&plug=<?php echo $p ?>"><?php echo in_array($p,$APlugins) ? __tr('Disable plugin') : __tr('Enable plugin') ?></a>
+            <?php if(in_array($p,$APlugins)): ?><a href="?stat=reload&plug=<?php echo $p ?>" class="btn btn-sm btn-warning"><i class="icon-refresh icon-large"></i> <?php echo __tr('Reload') ?></a><?php endif; ?>
+          </td>
+        </tr>
+        <?php endforeach; ?>
+      </table>
+		</div>
+		
+    <div class="tab-pane" id="bunnies">
 <h3 id="bunnies"><?php echo __tr('List of bunnies') ?></h3>
 <center>
 <table class="table table-bordered table-striped span10" id="btable">
@@ -187,7 +167,7 @@ require_once(ROOT_SITE.'/include/message.php');
 		<td><?php echo $mac; ?></td>
 		<td><?php echo $name; ?></td>
 		<td><?php echo isset($cbunnies[$mac]) ? __tr('Connected') : __tr('Disconnected') ?></td>
-		<td><a href='/bunny/index.php?b=<?php echo $mac; ?>' class="btn btn-small btn-primary"><i class="icon-cog icon-large"></i> <?php echo __tr('Setup') ?></a>&nbsp;<a class="btn btn-small btn-danger" href='server.php?removeB=<?php echo $mac; ?>'><?php echo __tr('Remove') ?></a></td>
+		<td><a href='/bunny/index.php?b=<?php echo $mac; ?>' class="btn btn-sm btn-primary"><i class="icon-cog icon-large"></i> <?php echo __tr('Setup') ?></a>&nbsp;<a class="btn btn-sm btn-danger" href='server.php?removeB=<?php echo $mac; ?>'><?php echo __tr('Remove') ?></a></td>
 	</tr>
 <?php } */?>
 	</tbody>
@@ -213,7 +193,7 @@ function updateBTable(p)
 	result = JSON.parse(result);
 	$('#bpage').html('Page ' + (result.page+1) + ' sur ' + result.pages + ' ('+ result.total+' bunnies) ');
 	$.each(result['data'], function(i, val) {
-	$("#btable tr:last").after('<tr class="btablerow"><td>'+i+'</td><td>'+val.name+'</td><td>'+(val.connected ? '<?php echo __tr('Connected') ?>' : '<?php echo __tr('Disconnected') ?>')+'</td><td><a href="/bunny/index.php?b='+i+'" class="btn btn-small btn-primary"><i class="icon-cog icon-large"></i> <?php echo __tr('Setup') ?></a>&nbsp;<a class="btn btn-small btn-danger" href="server.php?removeB='+i+'"><?php echo __tr('Remove') ?></a>&nbsp;<a class="btn btn-small" href="bunny_expert.php?mac='+i+'"><?php echo __tr('Expert') ?></a></td></tr>');
+	$("#btable tr:last").after('<tr class="btablerow"><td>'+i+'</td><td>'+val.name+'</td><td>'+(val.connected ? '<?php echo __tr('Connected') ?>' : '<?php echo __tr('Disconnected') ?>')+'</td><td><a href="/bunny/index.php?b='+i+'" class="btn btn-sm btn-primary"><i class="icon-cog icon-large"></i> <?php echo __tr('Setup') ?></a>&nbsp;<a class="btn btn-sm btn-warning" href="bunny_expert.php?mac='+i+'"><?php echo __tr('Expert') ?></a>&nbsp;<a class="btn btn-sm btn-danger" href="server.php?removeB='+i+'"><?php echo __tr('Remove') ?></a></td></tr>');
 //  	alert(i + " / " + val);
 
 });

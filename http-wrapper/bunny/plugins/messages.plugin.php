@@ -125,243 +125,204 @@ $count = $ojnAPI->getApiValue("bunny/".$_SESSION['bunny']."/messages/message?act
 $messages = $ojnAPI->getApiList("bunny/".$_SESSION['bunny']."/messages/message?action=list&".$ojnAPI->getToken());
 
 ?>
-<style>
-.form-horizontal .controls_setup {
-    margin-left: 310px;
-}
-.form-horizontal .control_setup-label {
-    width: 300px;
-}
-</style>
+<ul class="nav nav-tabs">
+<li class="nav-item">
+    <a class="nav-link <?php echo $_SESSION['subtab'] == 'messages_status' ? ' active' : '' ?>" href="#status" data-toggle="tab"><?php echo __tr('Status') ?></a>
+  </li>
+	<li class="nav-item">
+    <a class="nav-link <?php echo $_SESSION['subtab'] == 'messages_config' ? ' active' : '' ?>" href="#config" data-toggle="tab"><?php echo __tr('Setup') ?></a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link <?php echo $_SESSION['subtab'] == 'messages_schedule' ? ' active' : '' ?>" href="#schedule" data-toggle="tab"><?php echo __tr('Schedules') ?></a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link <?php echo $_SESSION['subtab'] == 'messages_rfid' ? ' active' : '' ?>" href="#rfid" data-toggle="tab"><?php echo __tr('RFID') ?></a>
+  </li>
+</ul>
 
-		<div class="tabbable">
-		<ul class="nav nav-tabs">
-		  <li<?php echo $_SESSION['subtab'] == 'messages_status' ? ' class="active"' : '' ?>><a href="#status" data-toggle="tab"><?php echo __tr('Status') ?></a></li>
-		  <li<?php echo $_SESSION['subtab'] == 'messages_config' ? ' class="active"' : '' ?>><a href="#config" data-toggle="tab"><?php echo __tr('Setup') ?></a></li>
-		  <li<?php echo $_SESSION['subtab'] == 'messages_schedule' ? ' class="active"' : '' ?>><a href="#schedule" data-toggle="tab"><?php echo __tr('Schedules') ?></a></li>
-		  <li<?php echo $_SESSION['subtab'] == 'messages_rfid' ? ' class="active"' : '' ?>><a href="#rfid" data-toggle="tab"><?php echo __tr('RFID') ?></a></li>
-		</ul>
-		<br />
-		
-			<div class="tab-content">
+<div class="tab-content pt-4">
+	<div class="tab-pane<?php echo $_SESSION['subtab'] == 'messages_status' ? ' active' : '' ?>" id="status">
+		<?php if($count):?>
+		<h5><?php echo __tr('Previous messages read by the bunny') ?></h5>
+		<table class="table table-bordered table-striped span11">
+			<tr>
+				<th><?php echo __Tr('Date') ?></th>
+				<th><?php echo __Tr('Plugin') ?></th>
+				<th><?php echo __tr('Actions') ?></th>
+			</tr>
+			<?php
+				foreach($messages as $id => $message):
+					$parts = explode("|", $message);
+					$date = date('d/m/Y H:i:s', $parts[0]);
+					$plugin = $parts[1];
+					$files = array();
+					for($i=2; $i<count($parts);$i++)
+						$files[] = preg_replace("|^broadcast/|", "http://openjabnab.fr/", $parts[$i]);
+			?>
+			<tr>
+				<td><?php echo $date ?></td>
+				<td><?php echo $plugins[$plugin] ?></td>
+				<td>
+					<object type="application/x-shockwave-flash" data="/media/player_mp3_multi.swf" width="200" height="20">
+							<param name="movie" value="/media/player_mp3_multi.swf" />
+							<param name="FlashVars" value="loadingcolor=0074CC&slidercolor1=0088CC&slidercolor2=0055CC&sliderovercolor=0074CC&buttonovercolor=0074CC&showlist=0&mp3=<?php echo implode('|', $files) ?>" />
+					</object>
+					<a class="btn btn-sm btn-danger" href="bunny_plugin.php?p=messages&rmid=<?php echo $id ?>"><?php echo __tr('Remove') ?></a>
+				</td>
+			</tr>
+			<?php endforeach; ?>
+		</table>
+		<?php else: ?>
+		<div class="alert"><?php echo __tr("No previous message said by the bunny") ?></div>
+		<?php endif; ?>
+	</div>
 
-				<div class="tab-pane<?php echo $_SESSION['subtab'] == 'messages_status' ? ' active' : '' ?>" id="status">
-
-<?php
-if($count){
-?>
-<center>
-<table class="table table-bordered table-striped span11">
-	<tr>
-		<th colspan="4"><?php echo __tr('Previous messages read by the bunny') ?></th>
-	</tr>
-	<tr>
-		<th><?php echo __Tr('Date') ?></th>
-		<th><?php echo __Tr('Plugin') ?></th>
-		<th><?php echo __tr('Actions') ?></th>
-	</tr>
-<?php
-	$i = 0;
-	foreach($messages as $id => $message)
-	{
-		$parts = explode("|", $message);
-		$date = date('d/m/Y H:i:s', $parts[0]);
-		$plugin = $parts[1];
-		$files = array();
-		for($i=2; $i<count($parts);$i++)
-		{
-			$files[] = preg_replace("|^broadcast/|", "http://openjabnab.fr/", $parts[$i]);
-		}
-?>
-	<tr>
-		<td><?php echo $date ?></td>
-		<td><?php echo $plugins[$plugin] ?></td>
-		<td>
-			<object type="application/x-shockwave-flash" data="player_mp3_multi.swf" width="200" height="20">
-			     <param name="movie" value="player_mp3_multi.swf" />
-			     <param name="FlashVars" value="loadingcolor=0074CC&slidercolor1=0088CC&slidercolor2=0055CC&sliderovercolor=0074CC&buttonovercolor=0074CC&showlist=0&mp3=<?php echo implode('|', $files) ?>" />
-			</object>
-			<a class="btn btn-danger" href="bunny_plugin.php?p=messages&rmid=<?php echo $id ?>"><?php echo __tr('Remove') ?></a>
-		</td>
-	</tr>
-<?php  } ?>
-</table>
-<?php } else { ?>
-<p><?php echo __tr("No previous message said by the bunny") ?></p>
-<?php } ?>
-
+	<div class="tab-pane<?php echo $_SESSION['subtab'] == 'messages_config' ? ' active' : '' ?>" id="config">
+		<form method="post">
+			<div class="form-group row">
+        <label class="col-sm-2 col-form-label" for="defaultAction"><?php echo __tr('Default action') ?></label>
+        <div class="col-sm-2 input-group">
+					<select name="defaultAction" class="form-control">
+						<?php foreach($actions as $key => $value): ?>
+						<option value="<?php echo $key ?>"><?php echo $value ?></option>
+						<?php endforeach; ?>
+					</select>
 				</div>
-
-
-
-				<div class="tab-pane<?php echo $_SESSION['subtab'] == 'messages_config' ? ' active' : '' ?>" id="config">
-<form method="post" class="form-horizontal">
-          <div class="control-group">
-            <label for="input01" class="control_setup-label control-label"><?php echo __tr('Default action') ?></label>
-            <div class="controls_setup controls">
-		<select name="defaultAction">
-<?php foreach($actions as $key => $value): ?>
-			<option value="<?php echo $key ?>"><?php echo $value ?></option>
-<?php endforeach; ?> 
-		</select>
-            </div>
-          </div>
-          <div class="form-actions">
-            <button class="btn btn-primary" type="submit"><?php echo __tr("Save") ?></button>
-            <a href="bunny_plugin.php?p=messages" class="btn"><?php echo __tr("Cancel") ?></a>
-          </div>
-</form>
-<form method="post" class="form-horizontal">
-          <div class="control-group">
-		<p><?php echo __tr('Enter the number of hours a message will be kept for each plugin') ?></p>
-	  </div>
-          <div class="control-group">
-            <label for="input01" class="control_setup-label control-label"><?php echo __tr('Default') ?></label>
-            <div class="controls_setup controls">
-		<div class="input-append"><input type="text" name="keep[default]" class="input-xlarge span1" value="<?php echo $ojnAPI->getApiValue("bunny/".$_SESSION['bunny']."/messages/option?action=keep&".$ojnAPI->getToken()) ?>"/><span class="add-on"><?php echo __tr('hour(s)') ?></span></div>
-            </div>
-          </div>
-<?php foreach($plugins as $id => $name): ?>
-          <div class="control-group">
-            <label for="input01" class="control-label control_setup-label"><?php echo $name ?></label>
-            <div class="controls controls_setup">
-		<div class="input-append"><input type="text" name="keep[<?php echo $id ?>]" class="input-xlarge span1" value="<?php echo $ojnAPI->getApiValue("bunny/".$_SESSION['bunny']."/messages/option?action=keep&plugin=".$id."&".$ojnAPI->getToken()) ?>"/><span class="add-on"><?php echo __tr('hour(s)') ?></span></div>
-            </div>
-          </div>
-<?php endforeach; ?>
-          <div class="form-actions">
-            <button class="btn btn-primary" type="submit"><?php echo __tr("Save") ?></button>
-            <a href="bunny_plugin.php?p=messages" class="btn"><?php echo __tr("Cancel") ?></a>
-          </div>
-</form>
-
-
+				<div class="col-sm-1 input-group">
+					<button class="btn btn-sm btn-primary" type="submit"><?php echo __tr("Save") ?></button>
 				</div>
-
-				<div class="tab-pane<?php echo $_SESSION['subtab'] == 'messages_schedule' ? ' active' : '' ?>" id="schedule">
-<form method="post" class="form-horizontal">
-          <div class="control-group">
-            <label for="input01" class="control-label"><?php echo __tr("Add a schedule at (hh:mm)") ?></label>
-            <div class="controls">
-		<input type="text" name="scheduleT" class="input-xlarge span6"/>
-            </div>
-          </div>
-          <div class="control-group">
-            <label for="input01" class="control-label"><?php echo __tr("Day") ?></label>
-            <div class="controls">
-		<select name="scheduleD">
-		<?php foreach($days as $d => $day) { ?>
-			<option value="<?php echo $d ?>"><?php echo $day ?></option>
-		<?php } ?>
-		</select>
-            </div>
-          </div>
-          <div class="control-group">
-            <label for="input01" class="control-label"><?php echo __tr('Action') ?></label>
-            <div class="controls">
-		<select name="scheduleA">
-<?php foreach($actions as $key => $value): ?>
-			<option value="<?php echo $key ?>"><?php echo $value ?></option>
-<?php endforeach; ?> 
-		</select>
-            </div>
-          </div>
-          <div class="form-actions">
-            <button class="btn btn-primary" type="submit"><?php echo __tr("Add the schedule") ?></button>
-            <a href="bunny_plugin.php?p=messages" class="btn"><?php echo __tr("Cancel") ?></a>
-          </div>
-</form>
-
-<?php
-if(count($wList)){
-?>
-<hr />
-<center>
-<table class="table table-bordered table-striped span11">
-	<tr>
-		<th colspan="4"><?php echo __tr('Schedules') ?></th>
-	</tr>
-	<tr>
-		<th><?php echo __Tr('Day') ?></th>
-		<th><?php echo __Tr('Time') ?></th>
-		<th><?php echo __tr('Option') ?></th>
-		<th><?php echo __tr('Actions') ?></th>
-	</tr>
-<?php
-	$i = 0;
-	foreach($wList as $when => $option)
-	{
-		list($day, $time) = explode("|", $when);
-?>
-	<tr>
-		<td><?php echo $days[$day] ?></td>
-		<td><?php echo $time ?></td>
-		<td><?php echo $actions[$option] ?></td>
-		<td width="15%"><a class="btn btn-danger" href="bunny_plugin.php?p=messages&rd=<?php echo $day ?>&rt=<?php echo $time ?>"><?php echo __tr('Remove') ?></a></td>
-	</tr>
-<?php  } ?>
-</table>
-<?php } ?>
-
-				</div>
-
-				<div class="tab-pane<?php echo $_SESSION['subtab'] == 'messages_rfid' ? ' active' : '' ?>" id="rfid">
-
-<form method="post" class="form-horizontal">
-
-          <div class="control-group">
-            <label for="input01" class="control-label"><?php echo __tr('Execute') ?></label>
-            <div class="controls">
-		<select name="aA">
-<?php foreach($actions as $key => $value): ?>
-			<option value="<?php echo $key ?>"><?php echo $value ?></option>
-<?php endforeach; ?> 
-		</select>
-            </div>
-          </div>
-          <div class="control-group">
-            <label for="input01" class="control-label"><?php echo __tr("Ztamp") ?></label>
-            <div class="controls">
-<select name="atag" class="span4"> 
-    <option value=""></option>
-	<?php foreach($Ztamps as $k=>$v): ?>
-	<option value="<?php echo $k; ?>"><?php echo $v; ?> (<?php echo $k; ?>)</option>
-	<?php endforeach; ?>
-</select>
-            </div>
-          </div>
-          <div class="form-actions">
-            <button class="btn btn-primary" type="submit"><?php echo __tr("Save") ?></button>
-            <a href="bunny_plugin.php?p=messages" class="btn"><?php echo __tr("Cancel") ?></a>
-          </div>
-
-
-</form>
-
-<?php if(count($Assoc)): ?>
-<table class="table table-bordered table-striped span10">
-<tr><th colspan="3"><?php echo __tr('Associations') ?></th></tr>
-<tr>
-	<th><?php echo __tr('Ztamp') ?></th>
-	<th><?php echo __tr('Option') ?></th>
-	<th><?php echo __tr('Actions') ?></th>
-</tr>
-<?php foreach($Assoc as $k=>$v): ?>
-<?php //list($when, $what, $zone) = preg_split("/;/", $v); ?>
-<tr>
-	<td><?php echo $Ztamps[$k] . " - " . $k; ?></td>
-		<td><?php echo $actions[$v] ?></td>
-	<td><a href="bunny_plugin.php?p=messages&rtag=<?php echo $k ?>" class="btn btn-danger btn-small"><i class="icon-trash icon-large"></i> <?php echo __tr('Remove') ?></a></td>
-</tr>
-<?php endforeach; ?>
-
-</table>
-<?php endif; ?>
-</form>
-
-
-
-				</div>
-
 			</div>
-		</div>
+		</form>
+		<hr />
+		<?php $plugins = array_merge(array('default' => __tr('Default')), $plugins); ?>
+		<form method="post">
+			<div class="alert"><?php echo __tr('Enter the number of hours a message will be kept for each plugin') ?></div>
+			<?php foreach($plugins as $id => $name): ?>
+			<div class="form-group row">
+				<label class="col-sm-3 col-form-label" for="keep[<?php echo $id; ?>"><?php echo $name; ?></label>
+				<div class="col-sm-2 input-group">
+					<?php $val = $ojnAPI->getApiValue("bunny/".$_SESSION['bunny']."/messages/option?action=keep&plugin=".$id."&".$ojnAPI->getToken()); ?>
+					<input type="text" name="keep[<?php echo $id ?>]" class="input-xlarge span1" value="<?php echo $val;?>" />
+				</div>
+				<div class="col-sm-1 input-group">
+					<span class="col-form-label"><?php echo __tr('hour(s)') ?></span>
+				</div>
+			</div>
+			<?php endforeach; ?>
+			<div class="form-group row">
+				<div class="col-sm-1 offset-sm-3 input-group">
+					<button class="btn btn-primary" type="submit"><?php echo __tr("Save") ?></button>
+				</div>
+			</div>
+		</form>
+	</div>
+
+	<div class="tab-pane<?php echo $_SESSION['subtab'] == 'messages_schedule' ? ' active' : '' ?>" id="schedule">
+		<form method="post">
+      <div class="form-group row">
+        <label class="col-sm-3 col-form-label" for="scheduleT"><?php echo __tr("Add a schedule at (hh:mm)") ?></label>
+        <div class="col-sm-2 input-group">
+          <div class="input-group-preprend">
+            <div class="input-group-text"><i class="icon-time"></i></div>
+          </div>
+          <input type="text" name="scheduleT" class="timepicker form-control text-center">
+        </div>
+        <script type="text/javascript">
+          $(".timepicker").timepicker({minuteStep: 1,showMeridian: false});
+        </script>
+      </div>
+      <div class="form-group row">
+        <label class="col-sm-3 col-form-label" for="scheduleD"><?php echo __tr("Day") ?></label>
+        <div class="col-sm-2 input-group">
+          <select name="scheduleD" class="form-control">
+            <?php foreach($days as $d => $day): ?>
+            <option value="<?php echo $d ?>"><?php echo $day ?></option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+      </div>
+      <div class="form-group row">
+        <label class="col-sm-3 col-form-label" for="scheduleA"><?php echo __tr("Action") ?></label>
+        <div class="col-sm-2 input-group">
+					<select name="scheduleA" class="form-control">
+						<?php foreach($actions as $key => $value): ?>
+						<option value="<?php echo $key ?>"><?php echo $value ?></option>
+						<?php endforeach; ?>
+					</select>
+        </div>
+      </div>
+      <div class="form-group row">
+        <div class="col-sm-1 offset-sm-3">
+          <button class="btn btn-primary" type="submit"><?php echo __tr("Add the schedule") ?></button>
+        </div>
+      </div>
+    </form>
+
+		<?php if(!empty($wList)): ?>
+    <h5><?php echo __tr('Schedules') ?></h5>
+    <table class="table table-bordered table-striped">
+      <tr>
+        <th class="col-sm-2"><?php echo __tr('Day') ?></th>
+        <th class="col-sm-1"><?php echo __tr('Time') ?></th>
+        <th><?php echo __tr('Option') ?></th>
+        <th class="col-sm-1"><?php echo __tr('Actions') ?></th>
+      </tr>
+      <?php foreach($wList as $when => $option):
+          list($day, $time) = preg_split("/\|/", $when);
+      ?>
+      <tr>
+        <td><?php echo $days[$day] ?></td>
+        <td><?php echo $time ?></td>
+        <td><?php echo $actions[$option] ?></td>
+				<td><a class="btn btn-sm btn-danger" href="bunny_plugin.php?p=messages&rd=<?php echo $day ?>&rt=<?php echo $time ?>"><i class="icon-trash icon-large"></i> <?php echo __tr('Remove') ?></a></td>
+      </tr>
+      <?php endforeach; ?>
+    </table>
+    <?php endif; ?>
+  </div>
+
+	<div class="tab-pane<?php echo $_SESSION['subtab'] == 'messages_rfid' ? ' active' : '' ?>" id="rfid">
+	<form method="post">
+      <div class="form-group row">
+        <label class="col-sm-1 col-form-label" for="aA"><?php echo __tr("Execute") ?></label>
+        <div class="col-sm-2 input-group">
+					<select name="aA" class="form-control">
+						<?php foreach($actions as $key => $value): ?>
+						<option value="<?php echo $key ?>"><?php echo $value ?></option>
+						<?php endforeach; ?>
+					</select>
+        </div>
+        <label class="col-sm-2 col-form-label" for="atag"><?php echo __tr("on Ztamp") ?></label>
+        <div class="col-sm-4 input-group">
+          <select name="atag" class="form-control">
+            <option value=""></option>
+            <?php foreach($Ztamps as $k=>$v): ?>
+            <option value="<?php echo $k; ?>"><?php echo $v; ?> (<?php echo $k; ?>)</option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+        <div class="col-sm-2">
+          <button class="btn btn-primary" type="submit"><?php echo __tr("Save") ?></button>
+        </div>
+      </div>
+    </form>
+
+    <?php if(!empty($Assoc)): ?>
+    <h5><?php echo __tr('Associations') ?></h5>
+    <table class="table table-bordered table-stripe">
+      <tr>
+        <th class="col-sm-1"><?php echo __tr('Action') ?></th>
+        <th class="col-sm-4"><?php echo __tr('Ztamp') ?></th>
+        <th class="col-sm-1"><?php echo __tr('Actions') ?></th>
+      </tr>
+      <?php foreach($Assoc as $k=>$v): ?>
+      <tr>
+        <td><?php echo $actions[$v] ?></td>
+        <td><?php echo $Ztamps[$k] . " - " . $k; ?></td>
+        <td><a href="bunny_plugin.php?p=messages&rtag=<?php echo $k ?>" class="btn btn-danger btn-sm"><i class="icon-trash icon-large"></i> <?php echo __tr('Remove') ?></a></td>
+      </tr>
+      <?php endforeach; ?>
+    </table>
+    <?php endif; ?>
+  </div>
+</div>
