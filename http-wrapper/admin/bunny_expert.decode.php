@@ -53,7 +53,7 @@ for($i = 0; $i < $length; $i++)
 	}
 	$globalsettings[$_name] = $c;
 }
-var_dump($globalsettings);
+//var_dump($globalsettings);
 
 /*
 
@@ -92,7 +92,7 @@ $settings = substr($settings, 4);
 for($i = 0; $i<$nbr; $i++)
 	$rights[$i] = getsize(substr($settings, 4 * $i, 4));
 $settings = substr($settings, 4 * $i);
-	
+
 
 $nbr = getSize(substr($settings, 0, 4));
 if($nbr > $max)
