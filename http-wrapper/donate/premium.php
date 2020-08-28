@@ -115,7 +115,18 @@ sort($list);
   </div>
 </div>
 <div class="row">
-  <?php if(!isset($_SESSION['login'])): ?>
+  <?php if(!ENABLE_PREMIUM): ?>
+  <div class="col-md-12">
+    <div class="card">
+      <h5 class="card-header">
+        <i class="icon-list-alt"></i> <?php echo __tr("Premium status and gift codes"); ?>
+      </h5>
+      <div class="card-body">
+        <div class="alert alert-success"><?php echo __tr('Disabled for now'); ?></div>
+      </div>
+    </div>
+  </div>
+  <?php elseif(!isset($_SESSION['login'])): ?>
   <div class="col-md-12">
     <div class="card">
       <h5 class="card-header">
@@ -124,6 +135,7 @@ sort($list);
       <div class="card-body">
         <p><?php echo __tr("You need to be connected to apply for a premium status") ?></p>
       </div>
+    </div>
   </div>
   <?php else: ?>
   <div class="col-md-6">

@@ -10,9 +10,11 @@ require_once "../include/common.php";
       <div class="card-body">
         <p><?php echo __tr('openJabNab exists thanks to volunteers, who are giving a lot of time, and even money, for this project and servers') ?>.</p>
         <p><?php echo __tr('You can contribute to the project with a donations, that is going to pay a part of the server rental, or that will motivate developers') ?>.</p>
+        <?php if(ENABLE_DONATE): ?>
         <div class="text-center">
           <?php include_once('paypal.inc.php') ?>
         </div>
+        <?php endif; ?>
       </div>
     </div>
   </div>

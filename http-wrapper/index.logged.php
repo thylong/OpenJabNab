@@ -111,10 +111,14 @@ if(isset($_GET['addmac'])) {
         <?php endif; ?>
         <?php echo __tr('If you have missing bunnies or ztamps since the new version, click on the link below, and fill all fields') ?>.<br /><br /><center><a class="btn btn-primary" href="/help/index.php?pb=5"><?php echo __tr('I have some missing bunnies or ztamps') ?></a></center>
         <br />
-        <p><?php echo __tr('openJabNab exists thanks to volunteers, who are giving a lot of time, and even money, for this project and servers') ?>. <?php echo __tr('You can contribute to the project with a donations, that is going to pay a part of the server rental, or that will motivate developers') ?>.</p>
-        <center>
-          <?php include_once('donate/paypal.inc.php') ?>
-        </center>
+        <p>
+          <?php echo __tr('openJabNab exists thanks to volunteers, who are giving a lot of time, and even money, for this project and servers') ?>. <?php echo __tr('You can contribute to the project with a donations, that is going to pay a part of the server rental, or that will motivate developers') ?>.
+          <br />
+          <?php if(ENABLE_DONATE): ?>
+          <div class="text-center">
+            <?php include_once('donate/paypal.inc.php') ?>
+          </div>
+          <?php endif; ?>
       </div>
     </div>
   </div>
@@ -185,7 +189,7 @@ $silence_survey = false;
             <td><?php echo isset($online[$mac]) ? __tr('Connected') : __tr('Disconnected') ?></td>
             <td class="text-center">
               <a class="btn btn-secondary btn-sm" href="/bunny/index.php?b=<?php echo $mac ?>"><i class="icon-cog"></i></a>
-              <?php  if($silence_survey): 
+              <?php  if($silence_survey):
               ?>&nbsp; <a class="btn btn-primary btn-sm" href="/bunny/index.php?bSilent=1&b=<?php echo $mac ?>"><i class="icon-volume-off"></i></a>
               <?php endif; ?>
             </td>
