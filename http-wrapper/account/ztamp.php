@@ -90,11 +90,16 @@ $title = empty($_SESSION['ztamp']) ? __tr("Choose your Ztamp") : __tr("Setup of 
     foreach($q as $it)
       if(!empty($it))
         $ownersList[] = (string)($it);
+    $assocList = array();
+    $assocList = $ojnAPI->getAPIMapped('ztamp/'.$_SESSION['ztamp'].'/plugin?action=association&'.$ojnAPI->getToken());
+
     $reload=true;
     if(!empty($_GET['add_owner']))
       Message::AddFromApi($ojnAPI->getApiString('ztamp/'.$_SESSION['ztamp'].'/owner?action=add&login='.$_GET['add_owner'].'&'.$ojnAPI->getToken()));
     else if(!empty($_GET['rm_owner']))
       Message::AddFromApi($ojnAPI->getApiString('ztamp/'.$_SESSION['ztamp'].'/owner?action=del&login='.$_GET['rm_owner'].'&'.$ojnAPI->getToken()));
+    else if(isset($_GET['rm_assoc']))
+      Message::AddFromApi($ojnAPI->getApiString('ztamp/'.$_SESSION['ztamp'].'/plugin?action=deassociate&bunny='.$_GET['b'].'&'.$ojnAPI->getToken()));
     else
       $reload=false;
 
@@ -127,13 +132,13 @@ $title = empty($_SESSION['ztamp']) ? __tr("Choose your Ztamp") : __tr("Setup of 
       <div class="card-body">
         <form method="get">
           <div class="form-group row">
-            <label class="col-sm-1 col-form-label">Ztamp ID</label>
+            <label class="col-sm-2 col-form-label">Ztamp ID</label>
             <div class="col-sm-7">
               <?php echo $_SESSION['ztamp']; ?>
             </div>
           </div>
           <div class="form-group row">
-            <label class="col-sm-1 col-form-label">Owner(s):</label>
+            <label class="col-sm-2 col-form-label">Owner(s):</label>
             <div class="col-sm-7">
             <ul>
               <?php foreach($ownersList as $login): ?>
@@ -146,7 +151,20 @@ $title = empty($_SESSION['ztamp']) ? __tr("Choose your Ztamp") : __tr("Setup of 
             </div>
           </div>
           <div class="form-group row">
-            <label class="col-sm-1 col-form-label" for="add_owner"><?php echo __tr('Add owner') ?></label>
+            <label class="col-sm-2 col-form-label">Association(s):</label>
+            <div class="col-sm-7">
+            <ul>
+              <?php foreach($assocList as $b => $p): ?>
+              <li>
+                <?php echo $b; ?> => <?php echo $p; ?>
+                <a class="btn btn-sm btn-danger m-1" href="?rm_assoc&b=<?php echo $b; ?>">Supprimer</a>
+              </li>
+              <?php endforeach; ?>
+            </ul>
+            </div>
+          </div>
+          <div class="form-group row">
+            <label class="col-sm-2 col-form-label" for="add_owner"><?php echo __tr('Add owner') ?></label>
             <div class="col-sm-3">
               <input type="text" class="form-control" name="add_owner" value="" placeholder="<?php echo __tr('Login'); ?>">
             </div>
