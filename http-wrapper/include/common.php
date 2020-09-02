@@ -100,7 +100,7 @@ if(isset($_SESSION['token']) && !strpos($_SERVER['REQUEST_URI'],"logout")) {
 		foreach($bFix as $k)
 			if(isset($Infos[$k]))
 			$Infos[$k] = $Infos[$k] != 'false' ? true : false;
-		
+
 		$iFix = array('lastBanStart','lastBanEnd','abuseCount','loginCount');
 		foreach($iFix as $k)
 			if(empty($Infos[$k]))
@@ -183,7 +183,7 @@ function sendMail($body, $subject, $to = MAIL_SENDER, $from = MAIL_SENDER) {
 	$smtp = Mail::factory('smtp', array ('host' => MAIL_SERVER, 'username'=> MAIL_USER, 'password'=> MAIL_PASS,'port'=>465,'auth'=>'PLAIN'));
 
 	$mail = $smtp->send($to.', '.MAIL_SENDER, $headers, $body);
-	
+
 	//var_dump($mail->getMessage());
 
   return !PEAR::isError($mail);
@@ -289,6 +289,61 @@ function bunnyVersion($mac)
 		}
 	}
 	return 2;
+}
+
+function getServerFeesFullfilment()
+{
+	$TargetPerMonth = 10.0;
+	$link = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+	if (!$link)
+			die('Connexion impossible : ' . mysqli_error());
+
+	$sql = 'SELECT SUM(txn_gross-txn_fee) AS txn_sum,
+								DATE_FORMAT(date, \'%m/%Y\') as txn_month
+						FROM paypal_txn
+						/* WHERE */
+						GROUP BY txn_month';
+	$res = mysqli_query($link, $sql) or die(mysqli_error($link));
+	mysqli_close($link);
+	$months = array();
+	$ret = array();
+	$st = date_create('now');                                     // Start date is now
+	$ey = $st->format('Y'); $em = $st->format('m');               // Extract Year and Month as end values
+	while($row = mysqli_fetch_assoc($res))
+	{
+		$date = date_create_from_format('m/Y',$row['txn_month']);   // Get date fom SQL result
+		if($date < $st) $st = $date;                                // Use as start date if older
+		$months[$row['txn_month']] = $row['txn_sum'];               // Store this month value in array
+	}
+	$carry = 0;                                                   // Leftover money goes in here
+	for($y=$st->format('Y');$y<=$ey;$y++)
+	{
+		$dm = $y == $st->format('Y') ? $st->format('m') : 1;        // Start month from start date if year match, or January
+		$fm = $y == $ey ? $em : 12;                                 // Final month from end date (now) if year match, or December
+		for($m=$dm;$m<=$fm;$m++)
+		{
+			$k = sprintf('%02d/%04d',$m,$y);                          // Forge array key as MM/YYYY
+			$mv = (isset($months[$k]) ? $months[$k] : 0);
+			$v = $mv + $carry;     // Get current sum for this month (from SQL and leftover money from previous months)
+			$p = min($v/$TargetPerMonth,1.0);                         // Compute percentage, max at 1
+
+			$ret[$k] = array(
+												'p'     		=> round($p*100),						// Percentage
+												'month' 		=> $mv,											// This month earnings
+												'sum' 			=> $v												// Total (this month + carry)
+											);
+
+			$carry = max($v-$TargetPerMonth,0);                       // Compute new leftover money
+			//var_dump($k.' v='.$v.' p='.$p.' c='.$carry);
+			if($m == $fm && $carry > 0)                               // If there's leftover money, add a month
+				$fm = min(12,$fm+1);                                    // Cap at December, of cource
+
+		}
+		if($y == $ey && $carry > 0)                                 // If there's leftover money, add a year
+			++$ey;
+	}
+	//var_dump($ret);
+	return $ret;
 }
 
 ob_start(array($ojnTemplate,'display'));

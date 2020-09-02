@@ -3,12 +3,14 @@ if(!file_exists("include/common.php"))
 	header('Location: install.php');
 require_once "include/common.php";
 
+//apcu_clear_cache();
+
 $uptime = $ojnAPI->getUptime();
 if(!$uptime && !Message::IsSet())
 {
 	Message::AddError(__tr('OpenJabNab seems down... Please try again later.'));
 	header('Location: index.php');
-	exit();	
+	exit();
 }
 
 if(isset($_GET['logid']) && isset($Infos['isAdmin'])) {
@@ -27,9 +29,9 @@ if(isset($_GET['logid']) && isset($Infos['isAdmin'])) {
 		$prev_tk  = $_SESSION['token'];
 		$r = $ojnAPI->loginAsAccount($login, false);
 		foreach(array('bunny', 'bunny_name', 'ztamp', 'ztamp_name', 'login', 'token', 'logged_from','token_from') as $key)
-			if(isset($_SESSION[$key])) 
+			if(isset($_SESSION[$key]))
 				unset($_SESSION[$key]);
-		
+
 		if(preg_match("|[0-9a-f]{32}|", $r)) {
 			apcu_delete(APC_PREFIX.'ojn_user_'.$previous);
 			$_SESSION['login'] = $login;

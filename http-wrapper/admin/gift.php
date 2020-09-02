@@ -14,14 +14,12 @@ function generate()
 	    die('Connexion impossible : ' . mysqli_error());
 	}
 
-	$sql = 'SELECT * FROM gift WHERE code="'.addslashes($code).'";';
+	$sql = 'SELECT count(code) as cnt FROM gift WHERE code="'.addslashes($code).'";';
 	$res = mysqli_query($link, $sql);
-	$num = mysqli_num_rows($res);
+	$num = mysqli_fetch_assoc($res);
 	mysqli_close($link);
-	if($num)
-	{
+	if(!empty($num['cnt']))
 		$code = generate();
-	}
 	return $code;
 }
 
@@ -198,4 +196,3 @@ while($row = mysqli_fetch_assoc($res))
 <?php
 require_once "include/append.php";
 ?>
-

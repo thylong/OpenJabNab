@@ -107,8 +107,8 @@ class ojnTemplate {
 		$menu .= '  <li class="nav-item'.($active == 'help/index' ? ' active' : '').'"><a class="nav-link" href="/help/">'.__tr("Help").'</a></li>'."\n";
 		$menu .= '</ul>'."\n";
 		$menu .= '<ul class="navbar-nav donate">'."\n";
-		$menu .= '  <li class="nav-item"><a class="nav-link" href="/donate/index.php">'.__tr("Help the project").'</a></li>'."\n";
-		$menu .= '  <li class="nav-item"><a class="nav-link" href="/donate/premium.php">'.__tr("Premium status").'</a></li>'."\n";
+		$menu .= '  <li class="nav-item"><a class="nav-link" href="/donate/">'.__tr("Help the project").'</a></li>'."\n";
+		$menu .= '  <li class="nav-item"><a class="nav-link" href="/premium/">'.__tr("Premium status").'</a></li>'."\n";
 		$menu .= '</ul>'."\n";
 		return $menu;
 	}

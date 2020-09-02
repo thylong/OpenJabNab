@@ -77,42 +77,27 @@
             </div>
           </div>
         </form>
-  <?php else : ?>
+        <?php else : ?>
         <?php echo __tr("Website under maintenance. Please come back later") ?>
-  <?php endif; ?>
+        <?php endif; ?>
       </div>
     </div>
-  <?php
-  if(!($percent = apcu_fetch(APC_PREFIX.'ojn_stats_server_'.date('Ym')))) {
-  $link = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
-  if (!$link) {
-      die('Connexion impossible : ' . mysqli_error());
-  }
 
-  $sql = "SELECT SUM(remain) AS remain FROM ((SELECT sum(remain) as remain from don as d where MONTH(date) = ".(date('m') + 0)." AND YEAR(date) = ".date('Y').") UNION (SELECT sum(remain) as remain from premium as p where MONTH(date) = ".(date('m') + 0)." AND YEAR(date) = ".date('Y').")) s;";
-  $sql = "SELECT sum(remain) as remain, date FROM ((SELECT sum(remain) as remain, CONCAT(YEAR(date), IF(MONTH(date)<10,CONCAT(\"0\",MONTH(date)),MONTH(date))) as date from don as d GROUP BY CONCAT(YEAR(date), MONTH(date)) ORDER BY date)
-  UNION
-  (SELECT sum(remain) as remain, CONCAT(YEAR(date), IF(MONTH(date)<10,CONCAT(\"0\",MONTH(date)),MONTH(date))) as date from premium as d GROUP BY CONCAT(YEAR(date), MONTH(date)) ORDER BY date)) d GROUP BY date ORDER BY date DESC;";
-  $res = mysqli_query($link, $sql);
+    <?php
+    if(!($this_month = apcu_fetch(APC_PREFIX.'ojn_stats_server_'.date('mY'))))
+    {
+      $srv = getServerFeesFullfilment();
+      $this_month = isset($srv[date('m/Y')]) ? $srv[date('m/Y')]['p'] : 0;
+      apcu_store(APC_PREFIX.'ojn_stats_server_'.date('mY'), $this_month, 3600);
+    }
 
-  $percent = array();
-  $ponder = 0.9;
-  while($row = mysqli_fetch_assoc($res))
-  {
-    $percent[$row['date']] = round(min(($row['remain'] / 50 * 100) * $ponder, 100));
-  }
+    $Stats = $uptime ? $ojnAPI->getStats() : array();
 
-  mysqli_close($link);
-  apcu_store(APC_PREFIX.'ojn_stats_server_'.date('Ym'), $percent, 3600);
-  }
+    $lapins = isset($Stats['connected_bunnies']) ? $Stats['connected_bunnies'] : 0;
+    $plugins = isset($Stats['enabled_plugins']) ? $Stats['enabled_plugins'] : 0;
+    $ztamps = isset($Stats['ztamps']) ? $Stats['ztamps'] : 0;
 
-  $Stats = $uptime ? $ojnAPI->getStats() : array();
-
-  $lapins = isset($Stats['connected_bunnies']) ? $Stats['connected_bunnies'] : 0;
-  $plugins = isset($Stats['enabled_plugins']) ? $Stats['enabled_plugins'] : 0;
-  $ztamps = isset($Stats['ztamps']) ? $Stats['ztamps'] : 0;
-
-  ?>
+    ?>
 
     <div class="card">
       <h6 class="card-header">
@@ -150,12 +135,13 @@
         </div>
         <div class="stats">
           <div class="stat stat-time">
-            <?php $Spercent = isset($percent[date('Ym')]) ? $percent[date('Ym')] : 0; ?>
-            <?php echo __tr('Participation in financing the server for the current month') ?> : <?php echo $Spercent ?>%
-            <?php if($Spercent > 80): ?><br />
-            <?php echo __tr('Many thanks to all donators') ?><?php endif; ?>
-            <div class="progress" style="margin-right: 20px">
-              <div class="bar" style="width: <?php echo $Spercent ?>%;"></div>
+            <?php echo __tr('Participation in financing the server for the current month') ?> : <?php echo $this_month; ?>%
+            <div class="progress mt-1">
+              <div class="progress-bar<?php echo $this_month > 80 ? ' bg-success text-light' :'';?>" style="width: <?php echo $this_month ?>%;">
+                <?php if($this_month > 80): ?>
+                <?php echo __tr('Many thanks to all donators') ?> !
+                <?php endif; ?>
+              </div>
             </div>
           </div>
         </div>

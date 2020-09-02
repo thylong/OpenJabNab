@@ -153,7 +153,7 @@ require('../include/message.php');
             <div class="form-group row">
               <label class="col-sm-2 col-form-label" for="bmac"><?php echo __tr('MAC address') ?></label>
               <div class="col-sm-2">
-                <input type="text" class="input-medium" name="bmac" value="">
+                <input type="text" class="form-control" name="bmac" value="">
               </div>
               <div class="col-sm-8">
                 <p class="help-block"><?php echo __tr('Will only work if the server allows it') ?></p>
@@ -201,7 +201,7 @@ require('../include/message.php');
           </fieldset>
         </form>
       </div>
-      
+
       <div class="tab-pane<?php echo $_SESSION['tab'] == 'account_ztamps' ? ' active' : '' ?>" id="ztamps">
         <form method="post">
           <fieldset class="border p-3">
@@ -214,7 +214,7 @@ require('../include/message.php');
                   <?php
                   $ztamps = $ojnAPI->getListOfZtamps(true);
                   if(!empty($ztamps))
-                      foreach($ztamps as $id => $ztamp): 
+                      foreach($ztamps as $id => $ztamp):
                   ?><option value="<?php echo $id; ?>"><?php echo $ztamp; ?> (<?php echo $id; ?>)</option>
                   <?php endforeach; ?>
                 </select>

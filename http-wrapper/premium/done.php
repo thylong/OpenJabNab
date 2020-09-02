@@ -5,11 +5,12 @@ require_once "../include/common.php";
 if(!empty($_GET['tx']))
 {
   $_SESSION['paypal'] = $_GET;
-  header('Location: /donate/thanks.php');
+  header('Location: /premium/done.php');
+  die;
 }
 if(empty($_SESSION['paypal']))
 {
-  header('Location: /donate/');
+  header('Location: /premium/');
   die;
 }
 //echo'<pre>'; var_dump($_SESSION['paypal']); echo '</pre>';
@@ -20,11 +21,8 @@ if(empty($_SESSION['paypal']))
   </h5>
   <div class="card-body">
     <div class="widget-content">
-		  <p><?php echo __tr('Thank you very much for your donation') ?></p>
-      <?php if(!empty($Infos['token'])): ?>
-		  <p><?php echo __tr('Your account will shortly become VIP as a reward. Otherwise, please contact an administrator so they can look into it.') ?>.</p>
-		  <p><?php echo __tr('It allows to use more plugins, and the voice recognition') ?>.</p>
-      <?php endif; ?>
+		  <p><?php echo __tr('Thank you very much for your payment') ?> (<?php echo __tr('Transaction <b>#%1</b>',$_SESSION['paypal']['tx']); ?>).</p>
+		  <p><?php echo __tr('You will receive your premium status and/or gift codes in a few minutes. Otherwise, please contact an administrator so they can look into it.') ?></p>
       <p><?php echo __tr('Your contribution really help us stay motivated and keep the server running, so thank you for your help.') ?></p>
     </div>
   </div>

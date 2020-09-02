@@ -116,7 +116,7 @@ if(isset($_GET['addmac'])) {
           <br />
           <?php if(ENABLE_DONATE): ?>
           <div class="text-center">
-            <?php include_once('donate/paypal.inc.php') ?>
+            <?php include_once('donate/form.inc.php') ?>
           </div>
           <?php endif; ?>
       </div>
