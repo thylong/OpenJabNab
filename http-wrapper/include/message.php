@@ -4,7 +4,7 @@ if(isset($_SESSION['login']))
 {
 	if(isset($Infos['email']) && trim($Infos['email']) == '')
 	{
-		Message::AddError(__tr("Your profile doesn't have an email. Please complete your personal informations.") . " &nbsp; <a href='account.php'>".__tr("Your account")."</a>");
+		Message::AddError(__tr("Your profile doesn't have an email. Please complete your personal informations.") . " &nbsp; <a href='/account/'>".__tr("Your account")."</a>");
 		$link = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
 		if (!$link) {
 		    die('Connexion impossible : ' . mysqli_error());

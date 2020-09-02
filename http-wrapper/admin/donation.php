@@ -86,13 +86,11 @@ if($reload)
 }
 require(ROOT_SITE.'include/message.php');
 ?>
-	<div class="row">
-		<div class="span12">
-			<div class="widget">
-			<div class="widget-header">
-			    <h3><?php echo __tr("Donations") ?></h3>
-			</div>
-			<div class="widget-content">
+<div class="card">
+  <h5 class="card-header">
+    <i class="icon-gift"></i> <?php echo __tr("Donations") ?>
+  </h5>
+  <div class="card-body">
 <?php
 function displaySearch($row)
 {
@@ -435,4 +433,3 @@ mysqli_close($link);
 <?php
 require_once "include/append.php";
 ?>
-

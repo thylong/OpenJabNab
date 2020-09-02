@@ -1,5 +1,8 @@
 <?php
-include '../../include/config.php';
+if(!defined('DB_HOST'))
+	require_once realpath(dirname(__FILE__)).'/../../include/config.php';
+
+require_once ROOT_SITE.'/include/tools.inc.php';
 
 function generateGiftCode()
 {
@@ -21,19 +24,6 @@ function generateGiftCode()
 	if(!empty($num['cnt']))
 		$code = generate();
 	return $code;
-}
-
-function date_add_days($date, $days,$start=0)
-{
-  $date = date_create($date);
-  if($start != 0)
-  {
-    $d = date_create($start);
-    if($d > $date)
-    $date = $d;
-  }
-  date_add($date, date_interval_create_from_date_string(($days).' day'));
-  return date_format($date, 'Y-m-d');
 }
 
 ?>

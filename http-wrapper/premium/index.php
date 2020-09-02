@@ -1,5 +1,6 @@
 <?php
 $reload = false;
+require_once '../include/tools.inc.php';
 require_once "../include/common.php";
 
 $user = $Infos['login'];
