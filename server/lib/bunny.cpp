@@ -825,6 +825,9 @@ void Bunny::LoadConfig()
 
 void Bunny::SaveConfig()
 {
+	if(!needSave)
+		return;
+
 	//Log::LogInfo("SaveBunny " + GetBunnyName());
 	if(trafficCount & 1) // Xmpp
 	{
@@ -846,41 +849,40 @@ void Bunny::SaveConfig()
 			SetGlobalSetting("outHttpTraffic", outHttpTraffic);
 		}
 	}
-	if(needSave)
+
+	//Log::LogInfo("Really SaveBunny " + GetBunnyName());
+	SetGlobalSetting("apiChorCount", apiChorCount);
+	SetGlobalSetting("lastApiChorCount", lastApiChorCount);
+
+	QByteArray settings;
+	QDataStream out(&settings, QIODevice::WriteOnly);
+	out.setVersion(QDataStream::Qt_4_3);
+	out << GlobalSettings << PluginsSettings << listOfPlugins << knownRFIDTags;// << messages;
+
+				QSqlDatabase db = DbManager::getDb();
+	bool close = DbManager::openDbIfNeeded();
+	QSqlQuery *query = new QSqlQuery(db);
+	query->prepare("INSERT INTO bunny SET `mac`=:mac, `settings`=:settings, `server_id`=:server, `account_id`=(SELECT `id` FROM account WHERE `username`=:username) ON DUPLICATE KEY UPDATE `settings`=:settings_up, `server_id`=:server_up, `account_id`=(SELECT `id` FROM account WHERE `username`=:username_up)");
+	query->bindValue(":mac", GetID());
+	query->bindValue(":username", GetGlobalSetting("OwnerAccount"));
+	query->bindValue(":username_up", GetGlobalSetting("OwnerAccount"));
+	query->bindValue(":settings", settings);
+	query->bindValue(":settings_up", settings);
+	query->bindValue(":server", GlobalSettings::GetInt("Database/ServerId"));
+	query->bindValue(":server_up", GlobalSettings::GetString("Database/ServerId"));
+	bool ret = query->exec();
+	if(!ret)
 	{
-		//Log::LogInfo("Really SaveBunny " + GetBunnyName());
-	        GlobalSettings.insert("apiChorCount", apiChorCount);
-	        GlobalSettings.insert("lastApiChorCount", lastApiChorCount);
-
-		QByteArray settings;
-		QDataStream out(&settings, QIODevice::WriteOnly);
-		out.setVersion(QDataStream::Qt_4_3);
-		out << GlobalSettings << PluginsSettings << listOfPlugins << knownRFIDTags;// << messages;
-
-        	QSqlDatabase db = DbManager::getDb();
-		bool close = DbManager::openDbIfNeeded();
-		QSqlQuery *query = new QSqlQuery(db);
-		query->prepare("INSERT INTO bunny SET `mac`=:mac, `settings`=:settings, `server_id`=:server, `account_id`=(SELECT `id` FROM account WHERE `username`=:username) ON DUPLICATE KEY UPDATE `settings`=:settings_up, `server_id`=:server_up, `account_id`=(SELECT `id` FROM account WHERE `username`=:username_up)");
-		query->bindValue(":mac", GetID());
-		query->bindValue(":username", GetGlobalSetting("OwnerAccount"));
-		query->bindValue(":username_up", GetGlobalSetting("OwnerAccount"));
-		query->bindValue(":settings", settings);
-		query->bindValue(":settings_up", settings);
-		query->bindValue(":server", GlobalSettings::GetInt("Database/ServerId"));
-		query->bindValue(":server_up", GlobalSettings::GetString("Database/ServerId"));
-		bool ret = query->exec();
-		if(!ret)
-		{
-			LogError(QString("Impossible to save bunny in DB : %1").arg(query->lastError().driverText()));
-		}
-		else
-		{
-			needSave = false;
-		}
-		delete query;
-		if(close)
-			DbManager::releaseDb();
+		LogError(QString("Impossible to save bunny in DB : %1").arg(query->lastError().driverText()));
 	}
+	else
+	{
+		needSave = false;
+	}
+	delete query;
+	if(close)
+		DbManager::releaseDb();
+
 	//Log::LogInfo("End SaveBunny " + GetBunnyName());
 }
 
@@ -1497,9 +1499,24 @@ void Bunny::InitApiCalls()
 	DECLARE_API_CALL("getnextcrons()", &Bunny::Api_getNextCronList);
 
 	DECLARE_API_CALL("voice()", &Bunny::Api_Voice);
+	DECLARE_API_CALL("config()", &Bunny::Api_Config);
 
 	DECLARE_API_CALL("resource()", &Bunny::Api_Resource);
 	DECLARE_API_CALL("traffic()", &Bunny::Api_Traffic);
+}
+
+API_CALL(Bunny::Api_Config)
+{
+	if(!hRequest.HasArg("action"))
+		return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("action"));
+
+	QString action = hRequest.GetArg("action");
+	if(action == "save")
+	{
+		SaveConfig();
+		return new ApiManager::ApiOk(Translator::tr("Bunny config has been saved", account));
+	}
+	return new ApiManager::ApiError(Translator::tr("Bad argument action='%1'", account).arg(action));
 }
 
 API_CALL(Bunny::Api_DeletePluginSettings)

@@ -199,6 +199,7 @@ private:
 	API_CALL(Api_Traffic);
 
   API_CALL(Api_DeletePluginSettings);
+	API_CALL(Api_Config);
 
 	//API_CALL(Api_Language);
 	API_CALL(Api_Voice);
