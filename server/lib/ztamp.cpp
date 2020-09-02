@@ -381,10 +381,7 @@ API_CALL(Ztamp::Api_Config)
 			SetZtampName( name );
 			return new ApiManager::ApiOk(Translator::tr("Ztamp '%1' is now named '%2'", account).arg(GetID(), name));
 		}
-		else
-		{
-			return new ApiManager::ApiString( GetZtampName() );
-		}
+		return new ApiManager::ApiString( GetZtampName() );
 	}
 	else
 	{
@@ -402,6 +399,16 @@ API_CALL(Ztamp::Api_Plugin)
 	if(action == "association")
 	{
 		return new ApiManager::ApiMappedList(GetGlobalSetting("Associations", QMap<QString, QVariant>()).toMap());
+	}
+	else if(action == "deassociate")
+	{
+		if(!hRequest.HasArg("bunny"))
+			return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("bunny"));
+
+		QString bunny = hRequest.GetArg("bunny");
+		Dissociate(bunny);
+
+		return new ApiManager::ApiOk(Translator::tr("Removed association for bunny '%1'", account).arg(bunny));
 	}
 	else if(action == "register")
 	{
