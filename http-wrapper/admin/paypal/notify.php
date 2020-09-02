@@ -59,8 +59,8 @@ if (strcmp ($res, "VERIFIED") != 0)
   die('Invalid IPN');
 
 // Start parsing !
-function getKey($a,$k,$v) { return isset($a[$k]) ? $a[$k] : $v; }
-function cleanKey($link,$a,$k,$v) { return mysqli_real_escape_string($link,getKey($a,$k,$v)); }
+function getKey($a,$k,$v,$ch) { return isset($a[$k]) ? mb_convert_encoding($a[$k],'utf-8',$ch) : $v; }
+function cleanKey($link,$a,$k,$v,$ch) { return mysqli_real_escape_string($link,getKey($a,$k,$v,$ch)); }
 
 parse_str($post,$raw);
 if(isset($_GET['verbose']))
@@ -69,27 +69,28 @@ if(isset($_GET['verbose']))
 $link = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
 if (!$link)
   die('Connexion SQL impossible : ' . mysqli_error());
-$txn_id = cleanKey($link,$raw,'txn_id','');
-$txn_type = cleanKey($link,$raw,'txn_type','');
-$txn_date = cleanKey($link,$raw,'payment_date','');
-$txn_gross = (float)cleanKey($link,$raw,'mc_gross',0.0);
-$txn_fee = (float)cleanKey($link,$raw,'mc_fee',0.0);
-$txn_currency = cleanKey($link,$raw,'mc_currency','');
-$pay_email = cleanKey($link,$raw,'payer_email','');
-$pay_id = cleanKey($link,$raw,'payer_id','');
-$fname = cleanKey($link,$raw,'first_name','');
-$lname = cleanKey($link,$raw,'last_name','Unknown');
+$charset = cleanKey($link,$raw,'charset','utf-8','utf-8');
+$txn_id = cleanKey($link,$raw,'txn_id','',$charset);
+$txn_type = cleanKey($link,$raw,'txn_type','',$charset);
+$txn_date = cleanKey($link,$raw,'payment_date','',$charset);
+$txn_gross = (float)cleanKey($link,$raw,'mc_gross',0.0,$charset);
+$txn_fee = (float)cleanKey($link,$raw,'mc_fee',0.0,$charset);
+$txn_currency = cleanKey($link,$raw,'mc_currency','',$charset);
+$pay_email = cleanKey($link,$raw,'payer_email','',$charset);
+$pay_id = cleanKey($link,$raw,'payer_id','',$charset);
+$fname = cleanKey($link,$raw,'first_name','',$charset);
+$lname = cleanKey($link,$raw,'last_name','Unknown',$charset);
 $name = trim($fname.' '.$lname);
-$t = explode('/',cleanKey($link,$raw,'custom',''));
-$type = cleanKey($link,$t,0,'donation');
-$username = cleanKey($link,$t,1,'guest');
-$note = cleanKey($link,$raw,'memo','');
+$t = explode('/',cleanKey($link,$raw,'custom','',$charset));
+$type = cleanKey($link,$t,0,'donation',$charset);
+$username = cleanKey($link,$t,1,'guest',$charset);
+$note = cleanKey($link,$raw,'memo','',$charset);
 $raw_str = mysqli_real_escape_string($link, $post);
 
 $r = 'SELECT count(id) as cnt FROM paypal_txn WHERE txn_id=\''.$txn_id.'\'';
 $rx = mysqli_query($link,$r);
 $res = mysqli_fetch_assoc($rx);
-if(!empty($res['cnt']))
+if(!empty($res['cnt']) && !isset($_GET['nocheck']))
 {
   // FIXME: Log error
   die('Paypal Transaction already registered in database');
@@ -107,19 +108,19 @@ if(!in_array($txn_type, array('web_accept','cart')))
   die('Unsupported Paypal transaction');
 
 // Premium
-$nb = (int)getKey($raw,'num_cart_items',0);
+$nb = (int)getKey($raw,'num_cart_items',0,$charset);
 for($i=0;$i<$nb;$i++)
 {
   echo 'Item '.$i."\n";
   $a = array();
   for($j=0;$j<3;$j++)
   {
-    $name = (string)getKey($raw,'option_name'.($j+1).'_'.($i+1),'');
-    $value = (string)getKey($raw,'option_selection'.($j+1).'_'.($i+1),'');
+    $name = (string)getKey($raw,'option_name'.($j+1).'_'.($i+1),'',$charset);
+    $value = (string)getKey($raw,'option_selection'.($j+1).'_'.($i+1),'',$charset);
     $a[strtolower($name)] = $value;
     //echo '  Option: '.$name.': '.$value."\n";
   }
-  $a['quantity'] = (int)getKey($raw,'quantity'.($i+1),0);
+  $a['quantity'] = (int)getKey($raw,'quantity'.($i+1),0,$charset);
   if(empty($a['duration']) || empty($a['type']) || empty($a['user']) || empty($a['quantity']))
   {
     // FIXME: Log error
@@ -193,7 +194,7 @@ if(!empty($items['donation']))
   $sql = rtrim(trim($sql),',');
   if(isset($_GET['verbose'])) var_dump($sql);
   if(!isset($_GET['nosql']))
-    $res = mysqli_query($link, $sql);
+    $res = mysqli_query($link, $sql) or die(mysqli_error($link));
   if(!$res)
   {
     // FIXME Log error
@@ -209,7 +210,7 @@ if(!empty($items['gift']))
   $sql = rtrim(trim($sql),',');
   if(isset($_GET['verbose'])) var_dump($sql);
   if(!isset($_GET['nosql']))
-    $res = mysqli_query($link, $sql);
+    $res = mysqli_query($link, $sql) or die(mysqli_error($link));
   if(!$res)
   {
     // FIXME Log error
@@ -225,7 +226,7 @@ if(!empty($items['premium']))
   $sql = rtrim(trim($sql),',');
   if(isset($_GET['verbose'])) var_dump($sql);
   if(!isset($_GET['nosql']))
-    $res = mysqli_query($link, $sql);
+    $res = mysqli_query($link, $sql) or die(mysqli_error($link));
   if(!$res)
   {
     // FIXME Log error
