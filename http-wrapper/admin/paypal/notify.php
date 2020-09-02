@@ -19,6 +19,9 @@ if(!empty($_GET['fake']))
     case 'donation2':
       $post = 'mc_gross=5.00&protection_eligibility=Eligible&payer_id=8LRDCJBPGQMEC&payment_date=10%3A03%3A28+Sep+01%2C+2020+PDT&payment_status=Completed&charset=windows-1252&first_name=John&mc_fee=0.42&notify_version=3.9&custom=donation/redox&payer_status=verified&business=sb-1zfzm208771%40business.example.com&quantity=1&verify_sign=AeuoCIASNPq7VbNrPe2EKC3fpdemAlMKYKrfM4TFTRSb4msIAr1xTYhu&payer_email=sb-gwlfv207075%40personal.example.com&txn_id=6L470442SM039453B&payment_type=instant&last_name=Doe&receiver_email=sb-1zfzm208771%40business.example.com&payment_fee=&shipping_discount=0.00&receiver_id=P63XNLWK2A8CG&insurance_amount=0.00&txn_type=web_accept&item_name=DEV+OpenJabNab+donations+DEV&discount=0.00&mc_currency=EUR&item_number=&residence_country=FR&test_ipn=1&shipping_method=Default&transaction_subject=donation/redox&payment_gross=&ipn_track_id=18aabc543db53';
       break;
+    case 'gift':
+      $post = 'mc_gross=10.00&protection_eligibility=Eligible&item_number1=&payer_id=8LRDCJBPGQMEC&payment_date=13%3A36%3A21+Sep+02%2C+2020+PDT&option_name2_1=Type&option_selection1_1=6+months&payment_status=Completed&option_selection3_1=redox&charset=windows-1252&first_name=John&mc_fee=0.59&notify_version=3.9&custom=premium/redox&payer_status=verified&business=sb-1zfzm208771%40business.example.com&num_cart_items=1&mc_handling1=0.00&verify_sign=AEsmu0l-0hGZo0Pxvzk5AWMRKN4sA-Lt2a1Lz6h.h-KesKk551VCzQNJ&payer_email=sb-gwlfv207075%40personal.example.com&btn_id1=4145726&option_name1_1=Duration&txn_id=6TE66557FP623004K&payment_type=instant&option_name3_1=User&option_selection2_1=Gift+code&last_name=Doe&item_name1=DEV+OpenJabNab+Premium+PROD&receiver_email=sb-1zfzm208771%40business.example.com&payment_fee=&shipping_discount=0.00&quantity1=2&insurance_amount=0.00&receiver_id=P63XNLWK2A8CG&txn_type=cart&discount=0.00&mc_gross_1=10.00&mc_currency=EUR&residence_country=FR&test_ipn=1&shipping_method=Default&transaction_subject=&payment_gross=&ipn_track_id=dbbf47ab1c4d8';
+      break;
     default:
       $post = '';
   }
@@ -60,7 +63,8 @@ function getKey($a,$k,$v) { return isset($a[$k]) ? $a[$k] : $v; }
 function cleanKey($link,$a,$k,$v) { return mysqli_real_escape_string($link,getKey($a,$k,$v)); }
 
 parse_str($post,$raw);
-//var_dump($raw);
+if(isset($_GET['verbose']))
+  var_dump($raw);
 
 $link = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
 if (!$link)
@@ -90,11 +94,12 @@ if(!empty($res['cnt']))
   // FIXME: Log error
   die('Paypal Transaction already registered in database');
 }
-
 $r = 'INSERT INTO paypal_txn(date,txn_id,txn_date,txn_gross,txn_fee,txn_currency,pay_email,pay_id,type,username,note,raw) VALUES(NOW(),'
 .'"'.$txn_id.'","'.$txn_date.'",'.$txn_gross.','.$txn_fee.',"'.$txn_currency.'",'
 .'"'.$pay_email.'","'.$pay_id.'","'.$type.'","'.$username.'","'.$note.'","'.$raw_str.'");';
-mysqli_query($link,$r) or die('SQL Error'.mysqli_error($link));
+if(isset($_GET['verbose'])) var_dump($r);
+if(!isset($_GET['nosql']))
+  mysqli_query($link,$r) or die('SQL Error'.mysqli_error($link));
 
 $items = array();
 
@@ -166,7 +171,7 @@ for($i=0;$i<$nb;$i++)
 
 // Donations
 // 20200901: Handle everything not premium or gift codes as donations...
-if(empty($items['donation']) && empty($items['premium']))
+if(empty($items['donation']) && empty($items['premium']) && empty($items['gift']) )
 {
   $items['donation'][] = array(
     'name' => $name,
@@ -176,7 +181,8 @@ if(empty($items['donation']) && empty($items['premium']))
     'quantity' => 1
   );
 }
-var_dump($items);
+if(isset($_GET['verbose']))
+  var_dump($items);
 
 if(!empty($items['donation']))
 {
@@ -185,7 +191,9 @@ if(!empty($items['donation']))
     for($i=0;$i<$a['quantity'];$i++)
       $sql .= '    VALUES(NULL,NOW(),\''.$a['name'].'\',\''.$a['email'].'\',\''.$a['user'].'\','.$a['value'].',\''.$txn_id.'\'),'."\n";
   $sql = rtrim(trim($sql),',');
-  $res = mysqli_query($link, $sql);
+  if(isset($_GET['verbose'])) var_dump($sql);
+  if(!isset($_GET['nosql']))
+    $res = mysqli_query($link, $sql);
   if(!$res)
   {
     // FIXME Log error
@@ -199,7 +207,9 @@ if(!empty($items['gift']))
     for($i=0;$i<$a['quantity'];$i++)
       $sql .= '    VALUES(NULL,NOW(),\''.generateGiftCode().'\',NULL,'.$a['duration'].',NULL,\''.$a['user'].'\',\''.$txn_id.'\'),'."\n";
   $sql = rtrim(trim($sql),',');
-  $res = mysqli_query($link, $sql);
+  if(isset($_GET['verbose'])) var_dump($sql);
+  if(!isset($_GET['nosql']))
+    $res = mysqli_query($link, $sql);
   if(!$res)
   {
     // FIXME Log error
@@ -213,12 +223,16 @@ if(!empty($items['premium']))
     for($i=0;$i<$a['quantity'];$i++)
       $sql .= '    VALUES(NULL,NOW(),\''.$a['user'].'\','.$a['duration'].',\''.$txn_id.'\'),'."\n";
   $sql = rtrim(trim($sql),',');
-  $res = mysqli_query($link, $sql);
+  if(isset($_GET['verbose'])) var_dump($sql);
+  if(!isset($_GET['nosql']))
+    $res = mysqli_query($link, $sql);
   if(!$res)
   {
     // FIXME Log error
   }
 }
+
+include('../include/update_status.inc.php');
 
 mysqli_close($link);
 ?>

@@ -29,7 +29,7 @@ if(!empty($_GET['gift']))
                       start_date=NOW()
                 WHERE code='".$gift_code."'";
         $res = mysqli_query($link, $sql);
-        //include("include/update_status.inc.php");
+        include("../admin/include/update_status.inc.php");
         if($res)
           Message::AddSuccess(__tr("Gift code used with success"));
         else
