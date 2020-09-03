@@ -264,7 +264,7 @@ QList<SleepTime> PluginSleep::compactSleepTime(QList<SleepTime> sleeplist)
 {
 	if(sleeplist.size() > 1)
 	{
-		qSort(sleeplist);
+		std::sort(sleeplist.begin(), sleeplist.end());
 		QList<SleepTime> sleeplistcompact;
 		for(int k = 0; k < sleeplist.size(); k++)
 		{

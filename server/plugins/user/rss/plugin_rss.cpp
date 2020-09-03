@@ -2,7 +2,6 @@
 #include <QRegExp>
 #include <QMapIterator>
 #include <QXmlStreamReader>
-#include <QTimer>
 #include <memory>
 #include "bunny.h"
 #include "bunnymanager.h"

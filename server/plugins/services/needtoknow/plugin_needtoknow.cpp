@@ -1,6 +1,5 @@
 #include <QDateTime>
 #include <QRegExp>
-#include <QTimer>
 #include <QCryptographicHash>
 #include <QNetworkRequest>
 #include <QNetworkReply>
