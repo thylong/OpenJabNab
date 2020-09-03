@@ -884,6 +884,8 @@ void Bunny::SaveConfig()
 
 void Bunny::SetXmppHandler(XmppHandler * x)
 {
+	if (xmppHandler == 0)
+		LogInfo(QString("%1 (%2) joined the server").arg(GetBunnyName(), QString(GetID())));
 	xmppHandler = x;
 }
 

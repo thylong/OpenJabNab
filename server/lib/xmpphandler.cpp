@@ -36,12 +36,11 @@ XmppHandler::XmppHandler(QTcpSocket * s)
 
 	timeoutTimer = new QTimer(this);
 	timeoutTimer->setSingleShot(true);
-	connect(timeoutTimer, SIGNAL(timeout()), this, SLOT(Timeout()));
-	timeoutTimer->start(120*1000);
+	QObject::connect(timeoutTimer, &QTimer::timeout, this, &XmppHandler::Timeout);
 
 	bindTimer = new QTimer(this);
 	bindTimer->setSingleShot(true);
-	connect(bindTimer, SIGNAL(timeout()), this, SLOT(Bind()));
+	QObject::connect(bindTimer, &QTimer::timeout, this, &XmppHandler::Bind);
 
 	OjnXmppDomain = GlobalSettings::GetString("OpenJabNabServers/XmppServer").toLatin1();
 	lastQueryResource = "streaming";
@@ -56,25 +55,17 @@ void XmppHandler::Bind()
 {
 	if(bunny)
 	{
-		LogInfo("Bind process failed for " + QString(bunny->GetID()));
+		LogInfo("Bind process failed for " + bunny->GetBunnyName() + " ("+bunny->GetID()+")");
 		bunny->SetXmppResource("idle");
 	}
 	else
-	{
 		LogInfo("Bind process failed for unknow bunny");
-	}
 }
 
 void XmppHandler::Timeout()
 {
 	if(bunny)
-	{
-		LogInfo("Xmpp timeout for " + bunny->GetBunnyName());
-	}
-	else
-	{
-		//LogInfo("Xmpp timeout for unknow bunny");
-	}
+		LogInfo("Xmpp timeout for " + bunny->GetBunnyName() + " ("+bunny->GetID()+")");
 	Disconnect();
 }
 
@@ -92,7 +83,7 @@ void XmppHandler::Disconnect()
 
 void XmppHandler::HandleBunnyXmppMessage()
 {
-	timeoutTimer->start(120*1000);
+	timeoutTimer->start(GlobalSettings::GetInt("Timeout/Xmpp",120)*1000);
 
 	QByteArray data = incomingXmppSocket->readAll().trimmed();
 	bool handled = false;
