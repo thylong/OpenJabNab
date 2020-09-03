@@ -220,7 +220,7 @@ unsigned int Cron::Register(PluginInterface * p, unsigned int interval, unsigned
 	// Compute next run
 	QDateTime now = QDateTime::currentDateTime();
 	QDateTime time = now;
-	time.addDays(-1);
+	//time.addDays(-1);
 	if(b != NULL)
 	{
 		time.setTime(Translator::MakeServerTime(b->GetGlobalSetting("TimeZone","UTC").toString(), QTime(offsetH, offsetM)));
@@ -572,4 +572,3 @@ API_CALL(Cron::Api_cron)
 		return new ApiManager::ApiError(Translator::tr("Bad argument '%1'", account).arg("action"));
 	}
 }
-

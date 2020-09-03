@@ -3,6 +3,7 @@
 
 #include <QCoreApplication>
 #include <QTcpServer>
+#include <QTimer>
 #include "apimanager.h"
 #include "pluginmanager.h"
 
@@ -20,13 +21,13 @@ signals:
 
 private slots:
 //	void RotateLog();
-	void NabaztagStatus();
-	void SaveAccounts();
 	void NewHTTPConnection();
 	void NewXMPPConnection();
 //	void SendStatsToSense();
 
 private:
+	QTimer autoSaveTmr,
+				 nabStatusTmr;
 	void insertServerInDb();
 
 	QTcpServer * httpListener;

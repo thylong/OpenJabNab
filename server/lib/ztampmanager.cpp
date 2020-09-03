@@ -17,9 +17,15 @@ ZtampManager & ZtampManager::Instance()
   return z;
 }
 
+void ZtampManager::SaveAllZtamps()
+{
+	foreach(Ztamp * z, listOfZtamps)
+		z->SaveConfig();
+}
+
 void ZtampManager::LoadAllZtamps()
 {
-        QSqlDatabase db = DbManager::getOpenDb();
+	QSqlDatabase db = DbManager::getOpenDb();
 	QSqlQuery *query = new QSqlQuery(db);
 	query->prepare("SELECT serial FROM ztamp");
 	query->exec();

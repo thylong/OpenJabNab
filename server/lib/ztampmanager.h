@@ -24,6 +24,7 @@ public:
 	static void PluginStateChanged(PluginInterface *);
 	static inline void Init() { InitApiCalls(); };
 	static void LoadZtamps();
+	static void SaveZtamps();
 	static void Close();
 
 	// API
@@ -44,6 +45,7 @@ protected:
 private:
 	ZtampManager();
 	void LoadAllZtamps();
+	void SaveAllZtamps();
 	QDir ztampsDir;
 	static QHash<QByteArray, Ztamp *> listOfZtamps;
 };
@@ -51,6 +53,12 @@ private:
 inline void ZtampManager::LoadZtamps()
 {
 	Instance().LoadAllZtamps();
+}
+
+
+inline void ZtampManager::SaveZtamps()
+{
+	Instance().SaveAllZtamps();
 }
 
 #endif

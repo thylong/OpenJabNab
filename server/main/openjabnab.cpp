@@ -70,11 +70,6 @@ OpenJabNab::OpenJabNab(int argc, char ** argv)
 	PluginManager::Init();
 	BunnyManager::LoadBunnies();
 	ZtampManager::LoadZtamps();
-/*
-	int now = QDateTime::currentDateTime().toTime_t();
-	int next = QDateTime(QDate::currentDate().addDays(1)).toTime_t();
-	QTimer::singleShot(1000 * (next - now), this, SLOT(RotateLog()));
-*/
 
 	if(GlobalSettings::Get("Config/HttpListener", true) == true)
 	{
@@ -101,39 +96,25 @@ OpenJabNab::OpenJabNab(int argc, char ** argv)
 	httpVioletApi = GlobalSettings::Get("Config/HttpVioletApi", true).toBool();
 	LogInfo(QString("Parsing of HTTP Api is ").append((httpApi == true)?"enabled":"disabled"));
 
-	QTimer::singleShot(5 * 60 * 1000, this, SLOT(SaveAccounts()));
-	QTimer::singleShot(60 * 1000, this, SLOT(NabaztagStatus()));
-
-/*
-	if(GlobalSettings::Get("Config/SendToSense", false) == true)
+	autoSaveTmr.setInterval(5 * 60 * 1000);	// 5min
+	QObject::connect(&autoSaveTmr,&QTimer::timeout, [&](void)
 	{
-		int now = QDateTime::currentDateTime().toTime_t();
-		QTimer::singleShot(1000 * (60 - (now%60)), this, SLOT(SendStatsToSense()));
-	}
-*/
+		AccountManager::Instance().SaveAccounts();
+		BunnyManager::SaveBunnies();
+		ZtampManager::SaveZtamps();
+	});
+
+
+	nabStatusTmr.setInterval(60 * 1000);	// 1min
+	QObject::connect(&autoSaveTmr,&QTimer::timeout, [&](void)
+	{
+		NabaztagManager::Instance().UpdateStatus();
+	});
+
+	autoSaveTmr.start();
+	nabStatusTmr.start();
 }
 
-void OpenJabNab::NabaztagStatus()
-{
-	NabaztagManager::Instance().UpdateStatus();
-	QTimer::singleShot(60 * 1000, this, SLOT(NabaztagStatus()));
-}
-
-void OpenJabNab::SaveAccounts()
-{
-	AccountManager::Instance().SaveAccounts();
-	QTimer::singleShot(5 * 60 * 1000, this, SLOT(SaveAccounts()));
-}
-/*
-void OpenJabNab::RotateLog()
-{
-	//NetworkDump::Log("LogRotate", "", true);
-	LogRotate();
-	int now = QDateTime::currentDateTime().toTime_t();
-	int next = QDateTime(QDate::currentDate().addDays(1)).toTime_t();
-	QTimer::singleShot(1000 * (next - now), this, SLOT(RotateLog()));
-}
-*/
 void OpenJabNab::insertServerInDb()
 {
 	QSqlDatabase db = DbManager::getOpenDb();

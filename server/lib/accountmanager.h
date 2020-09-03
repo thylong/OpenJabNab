@@ -6,7 +6,6 @@
 #include <QList>
 #include <QHash>
 #include <QDir>
-#include <QTimer>
 #include <QSettings>
 #include "global.h"
 #include "account.h"

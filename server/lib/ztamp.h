@@ -4,7 +4,6 @@
 #include <QByteArray>
 #include <QHash>
 #include <QString>
-#include <QTimer>
 #include <QVariant>
 #include "apihandler.h"
 #include "apimanager.h"
@@ -86,7 +85,6 @@ private:
 	QHash<QString, QHash<QString, QVariant> > PluginsSettings;
 	QList<QString> listOfPlugins;
 	QList<PluginInterface*> listOfPluginsPtr;
-	QTimer * saveTimer;
 	bool needSave;
 
 	// RFID Tags

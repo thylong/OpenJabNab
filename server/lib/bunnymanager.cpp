@@ -20,9 +20,15 @@ BunnyManager & BunnyManager::Instance()
   return b;
 }
 
+void BunnyManager::SaveAllBunnies()
+{
+	foreach(Bunny * b, listOfBunnies)
+		b->SaveConfig();
+}
+
 void BunnyManager::LoadAllBunnies()
 {
-        QSqlDatabase db = DbManager::getOpenDb();
+  QSqlDatabase db = DbManager::getOpenDb();
 	QSqlQuery *query = new QSqlQuery(db);
 	query->prepare("SELECT mac FROM bunny");
 	query->exec();
@@ -327,7 +333,7 @@ API_CALL(BunnyManager::Api_SettingsForBunnies)
 
 		}
 		return new ApiManager::ApiOk(Translator::tr("Great success", account));
-    
+
   }
 	else
 	{
@@ -355,11 +361,11 @@ API_CALL(BunnyManager::Api_RemoveBunny)
                 owner->SetSaveNeeded(true);
 	}
 */
-        b->OnDisconnect();
-        delete b;
-        listOfBunnies.remove(hexSerial);
+	b->OnDisconnect();
+	delete b;
+	listOfBunnies.remove(hexSerial);
 
-        QSqlDatabase db = DbManager::getDb();
+	QSqlDatabase db = DbManager::getDb();
 	bool close = DbManager::openDbIfNeeded();
 	QSqlQuery *query = new QSqlQuery(db);
 	query->prepare("DELETE FROM bunny WHERE mac=:mac");

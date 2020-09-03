@@ -4,7 +4,6 @@
 #include <QLibrary>
 #include <QString>
 #include <QUuid>
-#include <QTimer>
 #include <QDebug>
 #include "account.h"
 #include "accountmanager.h"
@@ -127,7 +126,7 @@ void AccountManager::LoadAccount(QString usr)
 
 void AccountManager::SaveAccounts()
 {
-        QSqlDatabase db = DbManager::getOpenDb();
+	QSqlDatabase db = DbManager::getOpenDb();
 	foreach(Account * a, listOfAccounts)
 	{
 		if(a->GetLogin() != "admin" && a->SaveNeeded())
@@ -663,7 +662,7 @@ API_CALL(AccountManager::Api_SetUserInfos)
 	} else if(setting == "abuse") {
 		ac->SetAbuse();					// Update abuse date
 		ac->SetAbuseCount(value);		// Clear abuse count
-	} 
+	}
 
 	QMap<QString, QVariant> list;
 	list.insert("login",ac->GetLogin());
@@ -1125,5 +1124,3 @@ API_CALL(AccountManager::Api_User)
 	user->SetSaveNeeded(true);
 	return new ApiManager::ApiString(Translator::tr("User informations updated", account));
 }
-
-

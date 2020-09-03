@@ -25,6 +25,7 @@ public:
 	static void PluginStateChanged(PluginInterface *);
 	static void Init();
 	static void LoadBunnies();
+	static void SaveBunnies();
 	static void Close();
 
 	static QList<QByteArray> GetConnectedBunniesList(void);
@@ -65,6 +66,7 @@ protected:
 private:
 	BunnyManager();
 	void LoadAllBunnies();
+	void SaveAllBunnies();
 	QDir bunniesDir;
 	static QHash<QByteArray, Bunny *> listOfBunnies;
 	static QHash<QByteArray, Bunny *> allBunnies;
@@ -78,6 +80,11 @@ inline void BunnyManager::Init()
 inline void BunnyManager::LoadBunnies()
 {
 	Instance().LoadAllBunnies();
+}
+
+inline void BunnyManager::SaveBunnies()
+{
+	Instance().SaveAllBunnies();
 }
 
 #endif

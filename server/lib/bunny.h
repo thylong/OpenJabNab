@@ -5,7 +5,6 @@
 #include <QDateTime>
 #include <QHash>
 #include <QString>
-#include <QTimer>
 #include <QVariant>
 #include <QRegExp>
 #include "apihandler.h"
@@ -147,7 +146,6 @@ public:
 	void OnNewPing();
 	void OnNoPing();
 
-private slots:
 	void SaveConfig();
 
 private:
@@ -213,7 +211,6 @@ private:
 	QHash<QString, QHash<QString, QVariant> > PluginsSettings;
 	QList<QString> listOfPlugins;
 	QList<PluginInterface*> listOfPluginsPtr;
-	QTimer * saveTimer;
 	XmppHandler * xmppHandler;
 	bool needSave;
 

@@ -55,10 +55,6 @@ Bunny::Bunny(QByteArray const& bunnyID)
 		SetGlobalSetting("TimeZoneAlias", timezoneName);
 	}
 
-	saveTimer = new QTimer(this);
-	connect(saveTimer, SIGNAL(timeout()), this, SLOT(SaveConfig()));
-	saveTimer->start(15*60*1000); // 5min
-
 	messages.clear();
 
 	lastTTSTime = QDateTime::currentDateTime();
@@ -828,7 +824,7 @@ void Bunny::SaveConfig()
 	if(!needSave)
 		return;
 
-	//Log::LogInfo("SaveBunny " + GetBunnyName());
+	Log::LogDebug("Saving Bunny " + GetBunnyName());
 	if(trafficCount & 1) // Xmpp
 	{
 		unsigned long long _inXmppTraffic = GetGlobalSetting("inXmppTraffic", 0).toLongLong();
@@ -859,7 +855,7 @@ void Bunny::SaveConfig()
 	out.setVersion(QDataStream::Qt_4_3);
 	out << GlobalSettings << PluginsSettings << listOfPlugins << knownRFIDTags;// << messages;
 
-				QSqlDatabase db = DbManager::getDb();
+	QSqlDatabase db = DbManager::getDb();
 	bool close = DbManager::openDbIfNeeded();
 	QSqlQuery *query = new QSqlQuery(db);
 	query->prepare("INSERT INTO bunny SET `mac`=:mac, `settings`=:settings, `server_id`=:server, `account_id`=(SELECT `id` FROM account WHERE `username`=:username) ON DUPLICATE KEY UPDATE `settings`=:settings_up, `server_id`=:server_up, `account_id`=(SELECT `id` FROM account WHERE `username`=:username_up)");
@@ -2191,4 +2187,3 @@ bool Bunny::IsLimited() const
 	}
 	return true;
 }
-

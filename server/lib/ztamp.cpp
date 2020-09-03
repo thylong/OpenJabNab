@@ -19,10 +19,6 @@ Ztamp::Ztamp(QByteArray const& ztampID)
 	needSave = false;
 	id = ztampID;
 	LoadConfig();
-
-	saveTimer = new QTimer(this);
-	connect(saveTimer, SIGNAL(timeout()), this, SLOT(SaveConfig()));
-	saveTimer->start(5*60*1000); // 5min
 }
 
 Ztamp::~Ztamp()
@@ -49,7 +45,7 @@ QString Ztamp::CheckPlugin(PluginInterface * plugin, bool isAssociated)
 
 void Ztamp::LoadConfig()
 {
-        QSqlDatabase db = DbManager::getDb();
+	QSqlDatabase db = DbManager::getDb();
 	bool close = DbManager::openDbIfNeeded();
 	QSqlQuery *query = new QSqlQuery(db);
 	query->prepare("SELECT serial, settings FROM ztamp WHERE serial=:serial");
@@ -91,54 +87,54 @@ void Ztamp::LoadConfig()
 
 void Ztamp::SaveConfig()
 {
-	if(needSave)
+	if(!needSave)
+		return;
+	Log::LogDebug("Saving Ztamp " + GetZtampName());
+	QByteArray settings;
+	QDataStream out(&settings, QIODevice::WriteOnly);
+	out.setVersion(QDataStream::Qt_4_3);
+	out << GlobalSettings << PluginsSettings << listOfPlugins;// << knownRFIDTags;
+
+	QSqlDatabase db = DbManager::getDb();
+	bool close = DbManager::openDbIfNeeded();
+	QSqlQuery *query = new QSqlQuery(db);
+
+	QStringList owners = GlobalSettings.contains("OwnerAccounts") ? GlobalSettings.value("OwnerAccounts").toStringList() : QStringList();
+	QStringList ownerList;
+	foreach(QString o, owners)
 	{
-		QByteArray settings;
-		QDataStream out(&settings, QIODevice::WriteOnly);
-		out.setVersion(QDataStream::Qt_4_3);
-		out << GlobalSettings << PluginsSettings << listOfPlugins;// << knownRFIDTags;
-
-	        QSqlDatabase db = DbManager::getDb();
-		bool close = DbManager::openDbIfNeeded();
-		QSqlQuery *query = new QSqlQuery(db);
-
-		QStringList owners = GlobalSettings.contains("OwnerAccounts") ? GlobalSettings.value("OwnerAccounts").toStringList() : QStringList();
-		QStringList ownerList;
-		foreach(QString o, owners)
+		query->prepare("SELECT id FROM account WHERE `username`=:username");
+		query->bindValue(":username", o);
+		query->exec();
+		if(query->size() == 1)
 		{
-			query->prepare("SELECT id FROM acount WHERE `username`=:username");
-			query->bindValue(":username", o);
-			query->exec();
-			if(query->size() == 1)
-			{
-				query->first();
-				ownerList << query->value(0).toString();
-			}
-			query->finish();
+			query->first();
+			ownerList << query->value(0).toString();
 		}
-
-		query->prepare("INSERT INTO ztamp SET `serial`=:serial, `settings`=:settings, `server_id`=(SELECT `id` FROM server WHERE `hostname`=:host), `accounts`=:accounts ON DUPLICATE KEY UPDATE `settings`=:settings_up, `server_id`=(SELECT `id` FROM server WHERE `hostname`=:host_up), `accounts`=:accounts_up");
-	//	query->bindValue(":user", a->GetLogin());
-		query->bindValue(":serial", GetID());
-		query->bindValue(":accounts", ownerList.join(","));
-		query->bindValue(":accounts_up", ownerList.join(","));
-		query->bindValue(":settings", settings);
-		query->bindValue(":settings_up", settings);
-		query->bindValue(":host", GlobalSettings::GetString("OpenJabNabServers/PingServer"));
-		query->bindValue(":host_up", GlobalSettings::GetString("OpenJabNabServers/PingServer"));
-		bool ret = query->exec();
-		if(!ret)
-		{
-			LogError(QString("Impossible to save ztamp in DB : %1").arg(query->lastError().driverText()));
-		}
-		else
-		{
-			needSave = false;
-		}
-		delete query;
-		if(close)
-			DbManager::releaseDb();
+		query->finish();
 	}
+
+	query->prepare("INSERT INTO ztamp SET `serial`=:serial, `settings`=:settings, `server_id`=(SELECT `id` FROM server WHERE `hostname`=:host), `accounts`=:accounts ON DUPLICATE KEY UPDATE `settings`=:settings_up, `server_id`=(SELECT `id` FROM server WHERE `hostname`=:host_up), `accounts`=:accounts_up");
+//	query->bindValue(":user", a->GetLogin());
+	query->bindValue(":serial", GetID());
+	query->bindValue(":accounts", ownerList.join(","));
+	query->bindValue(":accounts_up", ownerList.join(","));
+	query->bindValue(":settings", settings);
+	query->bindValue(":settings_up", settings);
+	query->bindValue(":host", GlobalSettings::GetString("OpenJabNabServers/PingServer"));
+	query->bindValue(":host_up", GlobalSettings::GetString("OpenJabNabServers/PingServer"));
+	bool ret = query->exec();
+	if(!ret)
+	{
+		LogError(QString("Impossible to save ztamp in DB : %1").arg(query->lastError().driverText()));
+	}
+	else
+	{
+		needSave = false;
+	}
+	delete query;
+	if(close)
+		DbManager::releaseDb();
 }
 
 QMap<QString, QVariant> Ztamp::Associations()
@@ -478,7 +474,7 @@ API_CALL(Ztamp::Api_Owner)
 		QStringList owners = GetGlobalSetting("OwnerAccounts",QStringList()).toStringList();
 		if(owners.contains(owner))
 			return new ApiManager::ApiError(Translator::tr("'%1' is not an owner", account).arg(owner));
-		
+
 		owners.append(owner);
 		SetGlobalSetting("OwnerAccounts", owners);
 		return new ApiManager::ApiOk(Translator::tr("Owner '%1' added", account).arg(owner));
