@@ -106,7 +106,7 @@ OpenJabNab::OpenJabNab(int argc, char ** argv)
 
 
 	nabStatusTmr.setInterval(60 * 1000);	// 1min
-	QObject::connect(&autoSaveTmr,&QTimer::timeout, [&](void)
+	QObject::connect(&nabStatusTmr,&QTimer::timeout, [&](void)
 	{
 		NabaztagManager::Instance().UpdateStatus();
 	});
