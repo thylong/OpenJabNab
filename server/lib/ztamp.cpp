@@ -89,7 +89,7 @@ void Ztamp::SaveConfig()
 {
 	if(!needSave)
 		return;
-	Log::LogDebug("Saving Ztamp " + GetZtampName());
+	//Log::LogDebug("Saving Ztamp " + GetZtampName());
 	QByteArray settings;
 	QDataStream out(&settings, QIODevice::WriteOnly);
 	out.setVersion(QDataStream::Qt_4_3);

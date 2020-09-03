@@ -824,7 +824,7 @@ void Bunny::SaveConfig()
 	if(!needSave)
 		return;
 
-	Log::LogDebug("Saving Bunny " + GetBunnyName());
+	//Log::LogDebug("Saving Bunny " + GetBunnyName());
 	if(trafficCount & 1) // Xmpp
 	{
 		unsigned long long _inXmppTraffic = GetGlobalSetting("inXmppTraffic", 0).toLongLong();
