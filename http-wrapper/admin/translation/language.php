@@ -1,5 +1,5 @@
 <?php
-require_once 'include/common.php';
+require_once '../include/common.php';
 
 $reload = false;
 if(isset($_GET['ixid'])) {
@@ -97,28 +97,24 @@ if($reload) {
 }
 include(ROOT_SITE.'include/message.php');
 ?>
-	      <div class="row">
-	      	<div class="span12">
-	      		<div class="widget">
-					<div class="widget-header">
-						<i class="icon-th-large"></i>
-						<h3><?php echo __tr("Languages available") ?></h3>
-					</div> <!-- /widget-header -->
-					<div class="widget-content">
-<a href="language.php?manual=add" class="btn btn-primary"><?php echo __tr("Add a language") ?></a>
-<br /><br />
-<?php
-if(isset($_GET['eid'])) {
-	$link = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
-	if (!$link) {
-	    die('Connexion impossible : ' . mysqli_error());
-	}
+<div class="card">
+	<h5 class="card-header">
+		<i class="icon icon-th"></i> <?php echo __tr("Languages available") ?>
+		<a href="?manual=add" class="btn btn-sm btn-primary float-right"><?php echo __tr("Add a language") ?></a>
+	</h5>
+	<div class="card-body">
+		<?php
+		if(isset($_GET['eid'])) {
+			$link = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+			if (!$link) {
+					die('Connexion impossible : ' . mysqli_error());
+			}
 
-	$sql = "SELECT * FROM language WHERE code='".$_GET['eid']."'";
-	$res = mysqli_query($link, $sql);
-	if($row = mysqli_fetch_assoc($res))
-	{
-?>
+			$sql = "SELECT * FROM language WHERE code='".$_GET['eid']."'";
+			$res = mysqli_query($link, $sql);
+			if($row = mysqli_fetch_assoc($res))
+			{
+		?>
 								<form id="edit-profile" class="form-horizontal" method="post">
 												<input type="hidden" name="sid" value="<?php echo $row['code'] ?>">
 										<div class="control-group">
@@ -235,50 +231,50 @@ else if(isset($_GET['ixid'])) {
 }
 else {
 ?>
-<table class="table table-bordered table-striped span11">
-	<thead>
-	<tr>
-		<th class="span1"><?php echo __tr('Code') ?></th>
-		<th class="span3"><?php echo __tr('Language') ?></th>
-		<th class="span2"><?php echo __tr('Completion') ?></th>
-		<th class="span1"><?php echo __tr('Public') ?></th>
-		<th class="span5"><?php echo __tr('Actions') ?></th>
-	</tr>
-	</thead>
-<tbody>
-<?php
-	$i = 0;
-	$link = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
-	if (!$link) {
-	    die('Connexion impossible : ' . mysqli_error());
-	}
+		<table class="table table-bordered table-striped span11">
+			<thead>
+				<tr>
+					<th class="col-md-1"><?php echo __tr('Code') ?></th>
+					<th class="col-md-2"><?php echo __tr('Language') ?></th>
+					<th class="col-md-1"><?php echo __tr('Public') ?></th>
+					<th class="col-md-1"><?php echo __tr('Completion') ?></th>
+					<th class="col-md-7"><?php echo __tr('Actions') ?></th>
+				</tr>
+			</thead>
+			<tbody>
+				<?php
+					$link = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+					if (!$link) {
+							die('Connexion impossible : ' . mysqli_error());
+					}
 
-	$sql = "SELECT *, (SELECT COUNT(*) FROM sentence) as total, (SELECT COUNT(*) FROM translation WHERE translation.language=language.code) as translated FROM language;";
-	$res = mysqli_query($link, $sql);
-	while($row = mysqli_fetch_assoc($res))
-	{
-		$percent = round(($row['code'] == 'en' ? $row['total'] : $row['translated']) / $row['total'] * 100, 1);
-?>
-	<tr<?php echo $i++ % 2 ? " class='l2'" : "" ?>>
-		<td><?php echo $row['code']; ?></td>
-		<td><?php echo $row['language']; ?></td>
-		<td><?php echo $row['public']; ?></td>
-		<td><?php echo __tr("%1 %", $percent); ?></td>
-		<td><a href="language.php?eid=<?php echo $row['code']; ?>" class="btn btn-primary"><?php echo __tr('Edit') ?></a> &nbsp;<a  href="translation.php?elanguage=<?php echo $row['code']; ?>" class="btn btn-primary"><?php echo __tr('Translate') ?></a>&nbsp;<a  href="language.php?did=<?php echo $row['code']; ?>" class="btn btn-danger"><?php echo __tr('Remove') ?></a> &nbsp;<a href="language.php?ixid=<?php echo $row['code']; ?>" class="btn btn-success"><?php echo __tr('Import / Export') ?></a></td>
-	</tr>
+					$sql = "SELECT *, (SELECT COUNT(*) FROM sentence) as total, (SELECT COUNT(*) FROM translation WHERE translation.language=language.code) as translated FROM language;";
+					$res = mysqli_query($link, $sql);
+					while($row = mysqli_fetch_assoc($res))
+					{
+						$percent = round(($row['code'] == 'en' ? $row['total'] : $row['translated']) / $row['total'] * 100, 1);
+				?>
+				<tr>
+					<td><?php echo $row['code']; ?></td>
+					<td><?php echo $row['language']; ?></td>
+					<td><?php echo $row['public']; ?></td>
+					<td><?php echo __tr("%1 %", $percent); ?></td>
+					<td>
+						<a href="?eid=<?php echo $row['code']; ?>" class="btn btn-sm btn-primary"><i class="icon icon-edit"></i> <?php echo __tr('Edit') ?></a>
+						<a href="?ixid=<?php echo $row['code']; ?>" class="btn btn-sm btn-success"><i class="icon icon-file"></i> <?php echo __tr('Import / Export') ?></a>
+						<a href="translation.php?elanguage=<?php echo $row['code']; ?>" class="btn btn-sm btn-warning"><i class="icon icon-cog"></i> <?php echo __tr('Translate') ?></a>
+						<a href="?did=<?php echo $row['code']; ?>" class="btn btn-sm btn-danger"><i class="icon icon-trash"></i> <?php echo __tr('Remove') ?></a>
+					</td>
+				</tr>
+				<?php
+					}
+					mysqli_close($link);
+				?>
+			</tbody>
+		</table>
+		<?php } ?>
+	</div>
+</div>
 <?php
-	}
-	mysqli_close($link);
-?>
-</tbody>
-</table>
-<?php
-}
-?>
-					</div> <!-- /widget-content -->
-				</div> <!-- /widget -->
-		    </div> <!-- /span12 -->
-	      </div> <!-- /row -->
-<?php
-require_once 'include/append.php';
+require_once '../include/append.php';
 ?>

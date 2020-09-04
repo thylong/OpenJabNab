@@ -34,28 +34,36 @@ if((!empty($_GET['plug']) && !empty($_GET['stat'])) || (!empty($_POST['plug']) &
 	$reload = true;
 	header('Location: server.php');
 }
+
+if(!empty($_GET['tab']))
+{
+	$_SESSION['tab'] = 'server_'.$_GET['tab'];
+	$reload = true;
+}
+elseif(!isset($_SESSION['tab']) || !preg_match("|^server_|", $_SESSION['tab']))
+	$_SESSION['tab'] = 'server_plugins';
+
+$tab = $_SESSION['tab'];
+
 if($reload) {
 	header('Location: /admin/server/index.php');
 	exit;
 }
 
-?>
-<?php
-  require_once(ROOT_SITE.'/include/message.php');
-?>
+require_once(ROOT_SITE.'/include/message.php'); ?>
 <div class="card">
   <h5 class="card-header">
     <i class="icon-cog"></i> <?php echo __tr('Server settings') ?>
   </h5>
   <div class="card-body">
     <ul class="nav nav-tabs">
-      <li class="nav-item"><a class="nav-link active" href="#plugins" data-toggle="tab"><?php echo __tr('Plugins') ?></a></li>
-      <li class="nav-item"><a class="nav-link" href="#bunnies" data-toggle="tab"><?php echo __tr('Bunnies') ?></a></li>
-      <li class="nav-item"><a class="nav-link" href="#ztamps" data-toggle="tab"><?php echo __tr('Ztamps') ?></a></li>
-      <li class="nav-item"><a class="nav-link" href="#accounts" data-toggle="tab"><?php echo __tr('Accounts') ?></a></li>
+      <li class="nav-item"><a class="nav-link<?php echo $tab == 'server_plugins' ? ' active' : ''?>" href="#plugins" data-toggle="tab"><?php echo __tr('Plugins') ?></a></li>
+      <li class="nav-item"><a class="nav-link<?php echo $tab == 'server_bunnies' ? ' active' : ''?>" href="#bunnies" data-toggle="tab"><?php echo __tr('Bunnies') ?></a></li>
+      <li class="nav-item"><a class="nav-link<?php echo $tab == 'server_ztamps' ? ' active' : ''?>" href="#ztamps" data-toggle="tab"><?php echo __tr('Ztamps') ?></a></li>
+      <li class="nav-item"><a class="nav-link<?php echo $tab == 'server_accounts' ? ' active' : ''?>" href="#accounts" data-toggle="tab"><?php echo __tr('Accounts') ?></a></li>
     </ul>
 		<div class="tab-content pt-4">
-      <div class="tab-pane active" id="plugins">
+      <div class="tab-pane <?php echo $tab == 'server_plugins' ? ' active' : ''?>" id="plugins">
         <?php
         $Plugins = $ojnAPI->getListOfPlugins(false, $ojnTemplate->getLanguage());
         asort($Plugins);
@@ -137,8 +145,8 @@ if($reload) {
         <?php endforeach; ?>
       </table>
 		</div>
-		
-    <div class="tab-pane" id="bunnies">
+
+    <div class="tab-pane<?php echo $tab == 'server_bunnies' ? ' active' : ''?>" id="bunnies">
 <h3 id="bunnies"><?php echo __tr('List of bunnies') ?></h3>
 <center>
 <table class="table table-bordered table-striped span10" id="btable">
@@ -203,7 +211,7 @@ function updateBTable(p)
 }
 
 </script>
-								<div class="tab-pane" id="ztamps">
+								<div class="tab-pane<?php echo $tab == 'server_ztamps' ? ' active' : ''?>" id="ztamps">
 									<fieldset>
 <h1 id="ztamps">Liste des Ztamps</h1>
 <p>Voici la liste des ztamps enregistr&eacute;s sur ce serveur.</p>
@@ -240,7 +248,7 @@ function updateBTable(p)
 
 						</fieldset>
 						</div>
-								<div class="tab-pane" id="accounts">
+								<div class="tab-pane<?php echo $tab == 'server_accounts' ? ' active' : ''?>" id="accounts">
 									<fieldset>
 <h1 id="userlist">Liste des Utilisateurs</h1>
 <p>Voici la liste des comptes enregistr&eacute;s sur ce serveur.</p>

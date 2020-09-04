@@ -1,7 +1,5 @@
 <?php
-require_once 'include/common.php';
-if(!isset($_SESSION['token']) || !$Infos['isAdmin'])
-	header('Location: index.php');
+require_once '../include/common.php';
 
 function slugify($text) {
 	$text = preg_replace('#[^\\pL\d]+#u', '-', $text);
@@ -292,5 +290,5 @@ else {
 	bkLib.onDomLoaded(function() { nicEditors.allTextAreas() });
 </script>
 <?php
-require_once 'include/append.php';
+require_once '../include/append.php';
 ?>

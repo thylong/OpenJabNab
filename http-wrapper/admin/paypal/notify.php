@@ -54,9 +54,13 @@ if ( !($res = curl_exec($ch)) ) {
 }
 curl_close($ch);
 
-// IPN invalid, log for manual investigation
+if(PAYPAL_LOG_NOTIFY)
+  file_put_contents('pay.txt',file_get_contents('pay.txt').' '.$res);
+
+  // IPN invalid, log for manual investigation
 if (strcmp ($res, "VERIFIED") != 0)
   die('Invalid IPN');
+
 
 // Start parsing !
 function getKey($a,$k,$v,$ch) { return isset($a[$k]) ? mb_convert_encoding($a[$k],'utf-8',$ch) : $v; }
@@ -234,6 +238,6 @@ if(!empty($items['premium']))
 }
 
 include('../include/update_status.inc.php');
-
-mysqli_close($link);
+if($link)
+  mysqli_close($link);
 ?>

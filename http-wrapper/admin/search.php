@@ -125,7 +125,7 @@ if(empty($bunnies))
 				<tr>
 					<th class="col-sm-2"><?php echo __tr('MAC') ?></th>
 					<th class="col-sm-2"><?php echo __tr('Status') ?></th>
-					<th><?php echo __tr('Actions') ?></th>
+					<th class="col-sm-8"><?php echo __tr('Actions') ?></th>
 				</tr>
 			</thead>
 			<tbody>
@@ -154,7 +154,7 @@ if(empty($bunnies))
 			<thead>
 				<tr>
 					<th class="col-sm-4"><?php echo __tr('Username') ?></th>
-					<th><?php echo __tr('Actions') ?></th>
+					<th class="col-sm-8"><?php echo __tr('Actions') ?></th>
 				</tr>
 			</thead>
 			<tbody>

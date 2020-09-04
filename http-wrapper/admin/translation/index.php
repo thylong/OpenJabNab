@@ -107,20 +107,18 @@ if($reload) {
 }
 include(ROOT_SITE.'include/message.php');
 ?>
-	      <div class="row">
-	      	<div class="span12">
-	      		<div class="widget">
-					<div class="widget-header">
-						<i class="icon-th-large"></i>
-						<h3><?php echo __tr("Translate openJabNab") ?></h3>
-					</div> <!-- /widget-header -->
-					<div class="widget-content">
-<a href="?clear=cache" class="btn btn-primary"><?php echo __tr("Clear translation cache") ?></a>
-<a href="?scan=files" class="btn btn-primary"><?php echo __tr("Scan files") ?></a>
-<a href="?scan=server" class="btn btn-primary"><?php echo __tr("Scan server files") ?></a>
-<a href="?auto=google" class="btn btn-primary"><?php echo __tr("Auto translate") ?></a>
-<a href="?manual=add" class="btn btn-primary"><?php echo __tr("Manually add a sentence") ?></a>
-<a style="float:right" href="?generate=tr" class="btn btn-success"><?php echo __tr("Generate translations") ?></a>
+<div class="card">
+	<h5 class="card-header">
+		<?php /*<a href="?lng=<?php echo $_GET['lng'] ?>" class="btn btn-sm btn-secondary">&lt; <?php echo __tr("Back") ?></a>*/?>
+		<i class="icon icon-edit"></i> <?php echo __tr("Translate openJabNab") ?>
+		<a href="?lng=<?php echo $_GET['lng'] ?>&generate=tr" class="btn btn-sm btn-success float-right "><?php echo __tr("Generate translations") ?></a>
+	</h5>
+	<div class="card-body">
+<a href="?clear=cache" class="btn btn-sm btn-primary"><?php echo __tr("Clear translation cache") ?></a>
+<a href="?scan=files" class="btn btn-sm btn-primary"><?php echo __tr("Scan files") ?></a>
+<a href="?scan=server" class="btn btn-sm btn-primary"><?php echo __tr("Scan server files") ?></a>
+<a href="?auto=google" class="btn btn-sm btn-primary"><?php echo __tr("Auto translate") ?></a>
+<a href="?manual=add" class="btn btn-sm btn-primary"><?php echo __tr("Manually add a sentence") ?></a>
 <br /><br />
 	<form id="edit-profile" method="get" class="well form-inline">
 				<label class="control-label" for="sentence"><?php echo __tr('Language to edit') ?> : </label>
@@ -143,7 +141,7 @@ include(ROOT_SITE.'include/message.php');
 	mysqli_close($link);
 ?>
 				</select>
-				<button type="submit" class="btn btn-primary"><?php echo __tr('Apply') ?></button>
+				<button type="submit" class="btn btn-sm btn-primary"><?php echo __tr('Apply') ?></button>
 	</form>
 <?php
 if(isset($_GET['eid']) && is_numeric($_GET['eid'])) {
@@ -220,10 +218,10 @@ else {
 <table class="table table-bordered table-striped span11">
 	<thead>
 	<tr>
-		<th class="span4"><?php echo __tr('Original sentence') ?></th>
-		<th class="span4"><?php echo __tr('Translations') ?></th>
-		<th class="span2"><?php echo __tr('Type') ?></th>
-		<th class="span2"><?php echo __tr('Actions') ?></th>
+		<th class="col-sm-4"><?php echo __tr('Original sentence') ?></th>
+		<th class="col-sm-4"><?php echo __tr('Translation') ?></th>
+		<th class="col-auto"><?php echo __tr('Type') ?></th>
+		<th class="col-auto"><?php echo __tr('Actions') ?></th>
 	</tr>
 	</thead>
 <tbody>
@@ -244,7 +242,10 @@ else {
 		<td><?php echo $row['sentence']; ?></td>
 		<td><?php echo $row['translation']; ?></td>
 		<td><?php echo $type[$row['web']]; ?></td>
-		<td><a  href="?eid=<?php echo $row['id']; ?>" class="btn btn-primary"><?php echo __tr('Edit') ?></a> &nbsp;<a  href="?did=<?php echo $row['id']; ?>" class="btn btn-danger"><?php echo __tr('Remove') ?></a></td>
+		<td>
+			<a href="?eid=<?php echo $row['id']; ?>" class="btn btn-sm btn-primary"><i class="icon icon-edit"></i> <?php echo __tr('Edit') ?></a>
+			<a href="?did=<?php echo $row['id']; ?>" class="btn btn-sm btn-danger"><i class="icon icon-trash"></i> <?php echo __tr('Remove') ?></a>
+		</td>
 	</tr>
 <?php
 	}

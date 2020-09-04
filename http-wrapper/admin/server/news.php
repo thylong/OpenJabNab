@@ -1,5 +1,5 @@
 <?php
-require_once 'include/common.php';
+require_once '../include/common.php';
 $ojnTemplate->setTitle(__tr('News setup'));
 
 $statuses = array(
@@ -383,5 +383,5 @@ else
 		</div>
 	</div>
 <?php
-require_once 'include/append.php';
+require_once '../include/append.php';
 ?>

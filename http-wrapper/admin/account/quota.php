@@ -1,7 +1,7 @@
 <?php
 $reload = false;
 
-require_once 'include/common.php';
+require_once '../include/common.php';
 
 require(ROOT_SITE.'include/message.php');
 ?>
@@ -117,6 +117,5 @@ if (is_dir($user_dir)) {
 		</div>
 	</div>
 <?php
-require_once "include/append.php";
+require_once "../include/append.php";
 ?>
-

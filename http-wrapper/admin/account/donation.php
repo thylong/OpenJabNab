@@ -1,7 +1,7 @@
 <?php
 $reload = false;
 
-require_once "include/common.php";
+require_once "../include/common.php";
 
 if(isset($_GET['insert']) && $_GET['insert'] == 'demo' && count($_POST))
 {
@@ -336,10 +336,10 @@ else
 		<table class="table table-bordered table-striped span11">
 			<thead>
 				<tr>
-					<th class="col-sm-3"><?php echo __tr('Email') ?></th>
-					<th class="col-sm-2"><?php echo __tr('Username') ?></th>
+					<th class="col-sm-4"><?php echo __tr('Email') ?></th>
+					<th class="col-auto"><?php echo __tr('Username') ?></th>
 					<th class="col-sm-2"><?php echo __tr('Date') ?></th>
-					<th class="col-sm-1"><?php echo __tr('Donation') ?></th>
+					<th class="col-auto"><?php echo __tr('Donation') ?></th>
 					<th class="col-sm-4"><?php echo __tr('Actions') ?></th>
 				</tr>
 			</thead>
@@ -359,12 +359,12 @@ else
 				<tr>
 					<td><?php echo $row['email']; ?></td>
 					<td><?php echo $row['username'].(strlen($row['status']) ? " <i>(".__tr($row['status']).")</i>" : ''); ?></td>
-					<td><?php echo date('d/m/Y', strtotime($row['date'])) ?></td>
+					<td><?php echo date('d/m/Y H:i', strtotime($row['date'])) ?></td>
 					<td><?php echo round($row['value'], 2); ?></td>
 					<td>
 						<a class="btn btn-sm btn-success" href="donation.php?search=<?php echo base64_encode($row['email']) ?>"><?php echo __tr('Search user') ?></a>
-						&nbsp;<a class="btn btn-sm btn-primary" href="donation.php?edit=<?php echo $row['id'] ?>"><?php echo __tr('Edit') ?></a>
-						&nbsp;<a class="btn btn-sm btn-primary" href="donation.php?convert=<?php echo $row['id'] ?>"><?php echo __tr('Convert') ?></a>
+						<a class="btn btn-sm btn-primary" href="donation.php?edit=<?php echo $row['id'] ?>"><?php echo __tr('Edit') ?></a>
+						<a class="btn btn-sm btn-primary" href="donation.php?convert=<?php echo $row['id'] ?>"><?php echo __tr('Convert') ?></a>
 					</td>
 				</tr>
 				<?php endwhile; ?>
@@ -375,40 +375,13 @@ else
 			</tbody>
 		</table>
 		<hr />
-		<h5>Demo</h5>
-		<table class="table table-bordered table-striped span10">
-			<thead>
-				<tr>
-					<th class="span3"><?php echo __tr('Username') ?></th>
-					<th class="span2"><?php echo __tr('Date') ?></th>
-					<th class="span2"><?php echo __tr('End') ?></th>
-				</tr>
-			</thead>
-			<tbody>
-				<?php
-				$sql = "SELECT demo.*, DATE_ADD(demo.date, INTERVAL 7 DAY) as end, account.status FROM demo LEFT JOIN account ON account.username=demo.username ORDER BY date DESC LIMIT 20;";
-				$res = mysqli_query($link, $sql);
-				while($row = mysqli_fetch_assoc($res)): ?>
-					<tr>
-						<td><?php echo $row['username'].(strlen($row['status']) ? " <i>(".__tr($row['status']).")</i>" : ''); ?></td>
-						<td><?php echo date('d/m/Y', strtotime($row['date'])) ?></td>
-						<td><?php echo date('d/m/Y', strtotime($row['end'])) ?></td>
-					</tr>
-				<?php	endwhile;
-				mysqli_close($link);
-				?>
-			</tbody>
-		</table>
-		<br style="clear:both"/>
 		<form method="get" class="form-horizontal">
 							<div class="form-actions">
 								<button class="btn btn-primary" type="submit" name="insert" value="donation"><?php echo __tr("Insert a donation") ?></button>
-								<button class="btn btn-primary" type="submit" name="insert" value="demo"><?php echo __tr("Set demo") ?></button>
-								<button class="btn btn-primary" type="submit" name="update" value="status"><?php echo __tr("Update status") ?></button>
 								<a class="btn btn-primary" href="listplugins.php"><?php echo __tr("List plugins associated") ?></a>
 							</div>
 		</form>
 		<?php } ?>
 	</div>
 </div>
-<?php require_once "include/append.php"; ?>
+<?php require_once "../include/append.php"; ?>
