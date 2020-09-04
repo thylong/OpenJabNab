@@ -2,6 +2,7 @@
 $reload = false;
 
 require_once "include/common.php";
+
 if(isset($_GET['insert']) && $_GET['insert'] == 'demo' && count($_POST))
 {
 	$link = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
@@ -88,7 +89,7 @@ require(ROOT_SITE.'include/message.php');
 ?>
 <div class="card">
   <h5 class="card-header">
-    <i class="icon-gift"></i> <?php echo __tr("Donations") ?>
+    <i class="icon-cog"></i> <?php echo __tr("Donations") ?>
   </h5>
   <div class="card-body">
 <?php
@@ -98,14 +99,7 @@ function displaySearch($row)
 }
 if(isset($_GET['search']))
 {
-?>
-<style>
-ul li {
-	list-style: none;
 
-}
-</style>
-<?php
 	$link = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
 	if (!$link) {
 	    die('Connexion impossible : ' . mysqli_error());
@@ -339,97 +333,82 @@ else if(isset($_GET['insert']) && $_GET['insert'] == 'donation')
 else
 {
 ?>
+		<table class="table table-bordered table-striped span11">
+			<thead>
+				<tr>
+					<th class="col-sm-3"><?php echo __tr('Email') ?></th>
+					<th class="col-sm-2"><?php echo __tr('Username') ?></th>
+					<th class="col-sm-2"><?php echo __tr('Date') ?></th>
+					<th class="col-sm-1"><?php echo __tr('Donation') ?></th>
+					<th class="col-sm-4"><?php echo __tr('Actions') ?></th>
+				</tr>
+			</thead>
+			<tbody>
+				<?php
+				$link = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+				if (!$link) {
+						die('Connexion impossible : ' . mysqli_error());
+				}
 
-<table class="table table-bordered table-striped span11">
-	<thead>
-	<tr>
-		<th class="span3"><?php echo __tr('Email') ?></th>
-		<th class="span3"><?php echo __tr('Username') ?></th>
-		<th class="span2"><?php echo __tr('Date') ?></th>
-		<th class="span1"><?php echo __tr('Donation') ?></th>
-		<th class="span5"><?php echo __tr('Actions') ?></th>
-	</tr>
-	</thead>
-<tbody>
-<?php
-$link = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
-if (!$link) {
-    die('Connexion impossible : ' . mysqli_error());
-}
-
-$total = 0;
-$sql = "SELECT don.*, account.status FROM don LEFT JOIN account ON account.username=don.username ORDER BY date DESC;";
-$res = mysqli_query($link, $sql);
-while($row = mysqli_fetch_assoc($res))
-{
-	$total += $row['value'];
-?>
-	<tr>
-		<td><?php echo $row['email']; ?></td>
-		<td><?php echo $row['username'].(strlen($row['status']) ? " <i>(".__tr($row['status']).")</i>" : ''); ?></td>
-		<td><?php echo date('d/m/Y', strtotime($row['date'])) ?></td>
-		<td><?php echo round($row['value'], 2); ?></td>
-		<td>
-			<a class="btn btn-success" href="donation.php?search=<?php echo base64_encode($row['email']) ?>"><?php echo __tr('Search user') ?></a>
-			&nbsp;<a class="btn btn-primary" href="donation.php?edit=<?php echo $row['id'] ?>"><?php echo __tr('Edit') ?></a>
-			&nbsp;<a class="btn btn-primary" href="donation.php?convert=<?php echo $row['id'] ?>"><?php echo __tr('Convert') ?></a>
-		</td>
-	</tr>
-<?php
-}
-?>
-	<tr>
-		<th colspan="3"><?php echo __tr('Total'); ?></th>
-		<td colspan="2"><?php echo round($total, 2); ?></td>
-	</tr>
-</tbody>
-</table>
-<br />
-<table class="table table-bordered table-striped span10">
-	<thead>
-	<tr>
-		<th class="span3"><?php echo __tr('Username') ?></th>
-		<th class="span2"><?php echo __tr('Date') ?></th>
-		<th class="span2"><?php echo __tr('End') ?></th>
-	</tr>
-	</thead>
-<tbody>
-<?php
-$sql = "SELECT demo.*, DATE_ADD(demo.date, INTERVAL 7 DAY) as end, account.status FROM demo LEFT JOIN account ON account.username=demo.username ORDER BY date DESC LIMIT 20;";
-$res = mysqli_query($link, $sql);
-while($row = mysqli_fetch_assoc($res))
-{
-?>
-	<tr>
-		<td><?php echo $row['username'].(strlen($row['status']) ? " <i>(".__tr($row['status']).")</i>" : ''); ?></td>
-		<td><?php echo date('d/m/Y', strtotime($row['date'])) ?></td>
-		<td><?php echo date('d/m/Y', strtotime($row['end'])) ?></td>
-	</tr>
-<?php
-}
-mysqli_close($link);
-?>
-</tbody>
-</table>
-<br style="clear:both"/>
-<form method="get" class="form-horizontal">
-          <div class="form-actions">
-            <button class="btn btn-primary" type="submit" name="insert" value="donation"><?php echo __tr("Insert a donation") ?></button>
-            <button class="btn btn-primary" type="submit" name="insert" value="demo"><?php echo __tr("Set demo") ?></button>
-            <button class="btn btn-primary" type="submit" name="update" value="status"><?php echo __tr("Update status") ?></button>
-            <a class="btn btn-primary" href="listplugins.php"><?php echo __tr("List plugins associated") ?></a>
-          </div>
-</form>
-<?php
-}
-?>
-
-</div>
-</div>
-			</div>
-			</div>
-		</div>
+				$total = 0;
+				$sql = "SELECT don.*, account.status FROM don LEFT JOIN account ON account.username=don.username ORDER BY date DESC;";
+				$res = mysqli_query($link, $sql);
+				while($row = mysqli_fetch_assoc($res)):
+					$total += $row['value'];
+				?>
+				<tr>
+					<td><?php echo $row['email']; ?></td>
+					<td><?php echo $row['username'].(strlen($row['status']) ? " <i>(".__tr($row['status']).")</i>" : ''); ?></td>
+					<td><?php echo date('d/m/Y', strtotime($row['date'])) ?></td>
+					<td><?php echo round($row['value'], 2); ?></td>
+					<td>
+						<a class="btn btn-sm btn-success" href="donation.php?search=<?php echo base64_encode($row['email']) ?>"><?php echo __tr('Search user') ?></a>
+						&nbsp;<a class="btn btn-sm btn-primary" href="donation.php?edit=<?php echo $row['id'] ?>"><?php echo __tr('Edit') ?></a>
+						&nbsp;<a class="btn btn-sm btn-primary" href="donation.php?convert=<?php echo $row['id'] ?>"><?php echo __tr('Convert') ?></a>
+					</td>
+				</tr>
+				<?php endwhile; ?>
+				<tr>
+					<th colspan="3"><?php echo __tr('Total'); ?></th>
+					<td><?php echo round($total, 2); ?></td>
+				</tr>
+			</tbody>
+		</table>
+		<hr />
+		<h5>Demo</h5>
+		<table class="table table-bordered table-striped span10">
+			<thead>
+				<tr>
+					<th class="span3"><?php echo __tr('Username') ?></th>
+					<th class="span2"><?php echo __tr('Date') ?></th>
+					<th class="span2"><?php echo __tr('End') ?></th>
+				</tr>
+			</thead>
+			<tbody>
+				<?php
+				$sql = "SELECT demo.*, DATE_ADD(demo.date, INTERVAL 7 DAY) as end, account.status FROM demo LEFT JOIN account ON account.username=demo.username ORDER BY date DESC LIMIT 20;";
+				$res = mysqli_query($link, $sql);
+				while($row = mysqli_fetch_assoc($res)): ?>
+					<tr>
+						<td><?php echo $row['username'].(strlen($row['status']) ? " <i>(".__tr($row['status']).")</i>" : ''); ?></td>
+						<td><?php echo date('d/m/Y', strtotime($row['date'])) ?></td>
+						<td><?php echo date('d/m/Y', strtotime($row['end'])) ?></td>
+					</tr>
+				<?php	endwhile;
+				mysqli_close($link);
+				?>
+			</tbody>
+		</table>
+		<br style="clear:both"/>
+		<form method="get" class="form-horizontal">
+							<div class="form-actions">
+								<button class="btn btn-primary" type="submit" name="insert" value="donation"><?php echo __tr("Insert a donation") ?></button>
+								<button class="btn btn-primary" type="submit" name="insert" value="demo"><?php echo __tr("Set demo") ?></button>
+								<button class="btn btn-primary" type="submit" name="update" value="status"><?php echo __tr("Update status") ?></button>
+								<a class="btn btn-primary" href="listplugins.php"><?php echo __tr("List plugins associated") ?></a>
+							</div>
+		</form>
+		<?php } ?>
 	</div>
-<?php
-require_once "include/append.php";
-?>
+</div>
+<?php require_once "include/append.php"; ?>

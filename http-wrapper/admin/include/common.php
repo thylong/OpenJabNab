@@ -1,10 +1,13 @@
 <?php
 require_once realpath(dirname(__FILE__)).'/../../include/common.php';
 
-if(empty($_SESSION['token']) || (!$Infos['isAdmin'] &&
+if(empty($Infos['token']) || (!$Infos['isAdmin'] &&
    (strpos($_SERVER['DOCUMENT_URI'],'translation') === false))
   )
-    header('Location: /index.php');
+{
+  header('Location: /index.php');
+  die;
+}
 ?>
 <div class="card">
   <h5 class="card-header bg-danger text-light">
