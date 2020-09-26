@@ -9,7 +9,9 @@ $days = array(
 	7 => __tr('Sunday'),
 );
 $reload = false;
-if(count($_POST) >= 4) {
+if(!empty($_POST['s1']) && !empty($_POST['s2']) && !empty($_POST['w1']) && !empty($_POST['w2']))
+{
+  var_dump($_POST); die;
 	Message::AddFromApi($ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/sleep/config?action=add&wakeOn=".$_POST['w2']."&wakeAt=".$_POST['w1']."&sleepOn=".$_POST['s2']."&sleepAt=".$_POST['s1']."&".$ojnAPI->getToken()));
 	$reload = true;
 }
@@ -39,7 +41,7 @@ $lists = $ojnAPI->getApiList("bunny/".$_SESSION['bunny']."/sleep/config?action=l
     <legend><h6><?php echo __tr('Add a new sleep time'); ?></h6></legend>
     <div class="form-group row">
       <label class="col-sm-1 col-form-label" for="s2"><?php echo __tr('Go to sleep') ?></label>
-      <div class="col-sm-4">    
+      <div class="col-sm-4">
         <select name="s2" class="form-control">
           <?php foreach($days as $d => $day): ?>
           <option value="<?php echo $d ?>"><?php echo $day ?></option>
@@ -55,7 +57,7 @@ $lists = $ojnAPI->getApiList("bunny/".$_SESSION['bunny']."/sleep/config?action=l
     </div>
     <div class="form-group row">
       <label class="col-sm-1 col-form-label" for="w2"><?php echo __tr('Wake up') ?></label>
-      <div class="col-sm-4">    
+      <div class="col-sm-4">
         <select name="w2" class="form-control">
           <?php foreach($days as $d => $day): ?>
           <option value="<?php echo $d ?>"><?php echo $day ?></option>
@@ -78,14 +80,24 @@ $lists = $ojnAPI->getApiList("bunny/".$_SESSION['bunny']."/sleep/config?action=l
   </fieldset>
   <div class="form-group row mt-2">
     <label class="col-sm-1 col-form-label" ><?php echo __tr('Actions'); ?></label>
-    <div class="col-sm-6"> 
+    <div class="col-sm-6">
       <a href="bunny_plugin.php?p=sleep&wake=true" class="btn btn-info"><?php echo __tr("Wake up") ?></a>
       <a href="bunny_plugin.php?p=sleep&sleep=true" class="btn btn-info"><?php echo __tr("Go to sleep") ?></a>
     </div>
   </div>
 </form>
 <script type="text/javascript">
-  $(".timepicker").timepicker({minuteStep: 1,showMeridian: false});
+  $(".timepicker").timepicker(
+    {
+      interval:15,
+      timeFormat: 'HH:mm',
+      defaultTime: 'now',
+      dropdown: true,
+      dynamic: true,
+      minTime: '0:00',
+      maxTime: '23:00',
+      startTime: '0:00',
+    });
 </script>
 <?php
 global $size;
@@ -157,7 +169,7 @@ foreach($lists as $s) {
   var canvas = document.getElementById('myCanvas');
   var context = canvas.getContext('2d');
 
-  <?php 
+  <?php
   for($i=1; $i<=7; $i++): ?>
   context.font = "bold 12px sans-serif";
   context.fillStyle = 'black';
@@ -171,8 +183,8 @@ foreach($lists as $s) {
   context.strokeStyle = 'black';
   context.stroke();
   context.closePath();
-  <?php 
-  endfor; 
+  <?php
+  endfor;
 
   foreach($sleeps as $day => $list):
     foreach($list as $sleep): ?>
@@ -184,7 +196,7 @@ foreach($lists as $s) {
   context.strokeStyle = 'black';
   context.stroke();
   context.closePath();
-  <?php 
+  <?php
     endforeach;
   endforeach; ?>
 

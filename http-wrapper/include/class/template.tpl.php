@@ -8,17 +8,17 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
 
     <link href="/media/css/bootstrap.min.css" rel="stylesheet">
-    <link href="/media/css/bootstrap-timepicker.min.css" rel="stylesheet">
+    <link href="/media/css/jquery.timepicker.min.css?<?php echo time(); ?>" rel="stylesheet">
 
     <link href="https://fonts.googleapis.com/css?family=Open+Sans:400italic,600italic,400,600" rel="stylesheet">
     <link href="/media/css/font-awesome.css" rel="stylesheet">
     <link href="/media/fontcustom/fontcustom.css" rel="stylesheet">
 
     <link href="/media/css/<!!CSS!!>" rel="stylesheet">
-    
+
     <script src="/media/js/jquery-3.5.1.min.js"></script>
     <script src="/media/js/bootstrap.min.js"></script>
-    <script src="/media/js/bootstrap-timepicker.min.js"></script>
+    <script src="/media/js/jquery.timepicker.min.js"></script>
     <script src="/media/js/base.js"></script>
     <script src="/media/js/excanvas.min.js"></script>
 
@@ -35,7 +35,7 @@
       })();
     </script>
   </head>
-  
+
   <body>
     <div class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top text-light text-sm">
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarText" aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
@@ -56,7 +56,7 @@
 <!!CONTENT!!>
         </div>
       </div>
-    </div> 
+    </div>
 
     <footer class="page-footer font-small bg-dark text-light pt-4">
       <div class="container-fluid text-md-left">

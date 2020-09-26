@@ -147,31 +147,31 @@ if(!empty($_GET['b'])) {
 }
 
 // Base setup
-if(!empty($_GET['lng'])) {
+if(!empty($_POST['lng'])) {
 	$_SESSION['tab'] = 'bunny_language';
-	Message::AddFromApi($ojnAPI->getApiString(BUNNY_API."/setlanguage?lng=".$_GET['lng']."&".$ojnAPI->getToken()));
+	Message::AddFromApi($ojnAPI->getApiString(BUNNY_API."/setlanguage?lng=".$_POST['lng']."&".$ojnAPI->getToken()));
 	$reload = true;
 }
-if(!empty($_GET['bunny_name'])) {
+if(!empty($_POST['bunny_name'])) {
 	$_SESSION['tab'] = 'bunny_base';
-	Message::AddFromApi($ojnAPI->getApiString(BUNNY_API."/setBunnyName?name=".urlencode($_GET['bunny_name'])."&".$ojnAPI->getToken()));
-	$_SESSION['bunny_name'] = $_GET['bunny_name'];
+	Message::AddFromApi($ojnAPI->getApiString(BUNNY_API."/setBunnyName?name=".urlencode($_POST['bunny_name'])."&".$ojnAPI->getToken()));
+	$_SESSION['bunny_name'] = $_POST['bunny_name'];
 	$reload = true;
 }
-if(isset($_GET['voice']) && $_GET['voice'] != "") {
+if(!empty($_POST['voice'])) {
 	$_SESSION['tab'] = 'bunny_language';
-	Message::AddFromApi($ojnAPI->getApiString(BUNNY_API."/voice?action=set&voice=".$_GET['voice']."&".$ojnAPI->getToken()));
+	Message::AddFromApi($ojnAPI->getApiString(BUNNY_API."/voice?action=set&voice=".$_POST['voice']."&".$ojnAPI->getToken()));
 	$reload = true;
 }
-if(isset($_GET['timezone'])) {
-	$timezone = $_GET['timezone'];
+if(!empty($_POST['timezone'])) {
+	$timezone = $_POST['timezone'];
 	$_SESSION['tab'] = 'bunny_language';
 	Message::AddFromApi($ojnAPI->getApiString(BUNNY_API."/setTimezone?name=".$timezone."&".$ojnAPI->getToken()));
 	$reload = true;
 }
-if(!empty($_GET['aInsomniac'])) {
+if(!empty($_POST['aInsomniac'])) {
 	$_SESSION['tab'] = 'bunny_base';
-	$night = (int)$_GET['aInsomniac'] - 1;
+	$night = (int)$_POST['aInsomniac'] - 1;
 	if($night == 0 || $night == 1)
 		Message::AddFromApi($ojnAPI->getApiString(BUNNY_API."/setInsomniac?insomniac=".$night."&".$ojnAPI->getToken()));
 	else
@@ -287,10 +287,10 @@ if(isset($_GET['resetown'])) {
 }
 
 // Plugins
-if(!empty($_GET['single']) && !empty($_GET['double'])) {
+if(!empty($_POST['single']) && !empty($_POST['double'])) {
 	$_SESSION['tab'] = 'bunny_plugins';
-	$id = Message::AddFromApi($ojnAPI->getApiString(BUNNY_API."/setSingleClickPlugin?name=".$_GET['single']."&".$ojnAPI->getToken()));
-	Message::AddFromApi($ojnAPI->getApiString(BUNNY_API."/setDoubleClickPlugin?name=".$_GET['double']."&".$ojnAPI->getToken()), $id);
+	$id = Message::AddFromApi($ojnAPI->getApiString(BUNNY_API."/setSingleClickPlugin?name=".$_POST['single']."&".$ojnAPI->getToken()));
+	Message::AddFromApi($ojnAPI->getApiString(BUNNY_API."/setDoubleClickPlugin?name=".$_POST['double']."&".$ojnAPI->getToken()), $id);
 	$reload = true;
 }
 if((!empty($_GET['plug']) && !empty($_GET['stat'])) || (!empty($_POST['plug']) && !empty($_POST['stat']))) {
@@ -326,18 +326,18 @@ if(isset($_GET['migrate']) && isset($_GET['from'])) {
 	$_SESSION['tab'] = 'bunny_migrate';
 }
 // API
-if(!empty($_GET['pVAPI'])) {
+if(!empty($_POST['pVAPI'])) {
 	$_SESSION['tab'] = 'bunny_api';
-	$pub = (int)$_GET['pVAPI'] - 1;
+	$pub = (int)$_POST['pVAPI'] - 1;
 	if($pub == 0 || $pub == 1)
 		Message::AddFromApi($ojnAPI->getApiString(BUNNY_API."/setPublicVAPI?public=".$pub."&".$ojnAPI->getToken()));
 	else
 		Message::AddError(__tr("Bad parameters"));
 	$reload = true;
 }
-if(!empty($_GET['aVAPI'])) {
+if(!empty($_POST['aVAPI'])) {
 	$_SESSION['tab'] = 'bunny_api';
-	$st = (string)$_GET['aVAPI'];
+	$st = (string)$_POST['aVAPI'];
 	if($st == "enable" || $st == "disable")
 		Message::AddFromApi($ojnAPI->getApiString(BUNNY_API."/".$st."VAPI?".$ojnAPI->getToken()));
 	else
@@ -345,7 +345,10 @@ if(!empty($_GET['aVAPI'])) {
 	$reload = true;
 }
 
-if(!empty($_POST) && count($_POST) == 6) {
+if(!empty($_POST['pingserver']) && !empty($_POST['broadserver']) && !empty($_POST['xmppserver']) &&
+   !empty($_POST['xmppport']) && !empty($_POST['xmppaltport']) && !empty($_POST['xmpptimeout'])
+  ) 
+{
 	$_SESSION['tab'] = 'bunny_expert';
 	$id = Message::AddFromApi($ojnAPI->getApiString(BUNNY_API."/locate/setcustomlocate?param=PingServer&value=".$_POST['pingserver']."&".$ojnAPI->getToken()));
 	Message::AddFromApi($ojnAPI->getApiString(BUNNY_API."/locate/setcustomlocate?param=BroadServer&value=".$_POST['broadserver']."&".$ojnAPI->getToken()), $id);
@@ -441,30 +444,30 @@ $title = empty($_SESSION['bunny']) ?  __tr("Choose your bunny") :
 
       ?>
       <ul class="nav nav-tabs">
-      <li class="nav-item <?php echo $_SESSION['tab'] == 'bunny_base' ? 'active' : '' ?>">
-        <a class="nav-link" href="#base" data-toggle="tab" role="tab" aria-controls="base" aria-selected="true"><?php echo __tr('Base setup') ?></a>
+      <li class="nav-item">
+        <a class="nav-link <?php echo $_SESSION['tab'] == 'bunny_base' ? 'active' : '' ?>"  href="#base" data-toggle="tab" role="tab" aria-controls="base" aria-selected="true"><?php echo __tr('Base setup') ?></a>
       </li>
-      <li class="nav-item <?php echo $_SESSION['tab'] == 'bunny_language' ? 'active' : '' ?>">
-        <a class="nav-link" href="#language" data-toggle="tab" role="tab" aria-controls="language" aria-selected="false"><?php echo __tr('Language') ?></a>
+      <li class="nav-item">
+        <a class="nav-link <?php echo $_SESSION['tab'] == 'bunny_language' ? 'active' : '' ?>"  href="#language" data-toggle="tab" role="tab" aria-controls="language" aria-selected="false"><?php echo __tr('Language') ?></a>
       </li>
-      <li class="nav-item <?php echo $_SESSION['tab'] == 'bunny_api' ? 'active' : '' ?>">
-        <a class="nav-link" href="#api" data-toggle="tab" role="tab" aria-controls="api" aria-selected="false"><?php echo __tr('API') ?></a>
+      <li class="nav-item">
+        <a class="nav-link <?php echo $_SESSION['tab'] == 'bunny_api' ? 'active' : '' ?>"  href="#api" data-toggle="tab" role="tab" aria-controls="api" aria-selected="false"><?php echo __tr('API') ?></a>
       </li>
-      <li class="nav-item <?php echo $_SESSION['tab'] == 'bunny_plugins' ? 'active' : '' ?>">
-        <a class="nav-link" href="#plugins" data-toggle="tab" role="tab" aria-controls="plugins" aria-selected="false"><?php echo __tr('Plugins') ?></a>
+      <li class="nav-item">
+        <a class="nav-link <?php echo $_SESSION['tab'] == 'bunny_plugins' ? 'active' : '' ?>"  href="#plugins" data-toggle="tab" role="tab" aria-controls="plugins" aria-selected="false"><?php echo __tr('Plugins') ?></a>
       </li>
-      <li class="nav-item <?php echo $_SESSION['tab'] == 'bunny_expert' ? 'active' : '' ?>">
-        <a class="nav-link bg-warning text-secondary" href="#expert" data-toggle="tab" role="tab" aria-controls="expert" aria-selected="false"><?php echo __tr('Expert') ?></a>
+      <li class="nav-item">
+        <a class="nav-link <?php echo $_SESSION['tab'] == 'bunny_expert' ? 'active' : '' ?> bg-warning text-secondary" href="#expert" data-toggle="tab" role="tab" aria-controls="expert" aria-selected="false"><?php echo __tr('Expert') ?></a>
       </li>
       <?php if(!empty($Infos['isAdmin'])): ?>
-      <li class="nav-item <?php echo $_SESSION['tab'] == 'bunny_debug' ? 'active' : '' ?>">
-        <a class="nav-link bg-danger text-light" href="#debug" data-toggle="tab" role="tab" aria-controls="debug" aria-selected="false"><?php echo __tr('Debug') ?></a>
+      <li class="nav-item">
+        <a class="nav-link <?php echo $_SESSION['tab'] == 'bunny_debug' ? 'active' : '' ?> bg-danger text-light" href="#debug" data-toggle="tab" role="tab" aria-controls="debug" aria-selected="false"><?php echo __tr('Debug') ?></a>
       </li>
-      <li class="nav-item <?php echo $_SESSION['tab'] == 'bunny_admin' ? 'active' : '' ?>">
-        <a class="nav-link bg-danger text-light" href="#admin" data-toggle="tab" role="tab" aria-controls="admin" aria-selected="false"><?php echo __tr('Admin') ?></a>
+      <li class="nav-item">
+        <a class="nav-link bg-danger text-light<?php echo $_SESSION['tab'] == 'bunny_admin' ? 'active' : '' ?>" href="#admin" data-toggle="tab" role="tab" aria-controls="admin" aria-selected="false"><?php echo __tr('Admin') ?></a>
       </li>
-      <li class="nav-item <?php echo $_SESSION['tab'] == 'bunny_migrate' ? 'active' : '' ?>">
-        <a class="nav-link bg-danger text-light" href="#migrate" data-toggle="tab" role="tab" aria-controls="migrate" aria-selected="false"><?php echo __tr('Migrate') ?></a>
+      <li class="nav-item">
+        <a class="nav-link <?php echo $_SESSION['tab'] == 'bunny_migrate' ? 'active' : '' ?> bg-danger text-light" href="#migrate" data-toggle="tab" role="tab" aria-controls="migrate" aria-selected="false"><?php echo __tr('Migrate') ?></a>
       </li>
       <?php endif; ?>
     </ul>
