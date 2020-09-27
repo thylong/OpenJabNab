@@ -1,5 +1,5 @@
 <?php
-require_once "include/common.php";
+require_once "../include/common.php";
 if(!isset($_SESSION['token']) || !$Infos['isAdmin'] || !isset($bunny))
 	header('Location: index.php');
 

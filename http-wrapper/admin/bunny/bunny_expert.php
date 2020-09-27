@@ -1,8 +1,5 @@
 <?php
-require_once "include/common.php";
-if(!isset($_SESSION['token']) || !$Infos['isAdmin'])
-	header('Location: index.php');
-
+require_once "../include/common.php";
 $version = 2;
 
 $link = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
@@ -10,7 +7,7 @@ if (!$link) {
     die('Connexion impossible : ' . mysqli_error());
 }
 $max = 50;
-include('encode.functions.php');
+require_once('../include/encode.functions.php');
 
 $sql = "SELECT * FROM bunny ";
 if(isset($_GET['mac']))
@@ -35,8 +32,8 @@ else
 	header("Location: index.php");
 	exit();
 }
-include('bunny_expert.decode.php');
-require('../include/message.php');
+require_once('bunny_expert.decode.php');
+require_once(ROOT_SITE.'/include/message.php');
 ?>
 <?php
 $pattern = "|[\w@\"'_\-,;.:!\? ]|";
@@ -81,5 +78,5 @@ $pattern = "|[\w@\"'_\-,;.:!\? ]|";
 	</div>
 </div>
 <?php
-require_once "include/append.php";
+require_once "../include/append.php";
 ?>

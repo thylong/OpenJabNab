@@ -1,5 +1,5 @@
 <?php
-require_once "include/common.php";
+require_once "../include/common.php";
 if(!isset($_SESSION['token']) || !$Infos['isAdmin'])
   header('Location: index.php');
 
@@ -10,7 +10,7 @@ if (!$link) {
     die('Connexion impossible : ' . mysqli_error());
 }
 $max = 50;
-include('encode.functions.php');
+require_once('../include/encode.functions.php');
 
 $sql = "SELECT account.*, SUM(value) AS don FROM account LEFT JOIN don ON don.username=account.username ";
 if(isset($_GET['accid']))
@@ -39,7 +39,7 @@ else
   header("Location: index.php");
   exit();
 }
-include('account_expert.decode.php');
+require_once('account_expert.decode.php');
 
 
 $reload = true;
@@ -59,7 +59,7 @@ if($reload)
 $disable_edit = true; // 20200826 Not currently tested
 $disable_edit  = $disable_edit ? ' disabled' : ''; // Convert to Html stuff
 
-require('../include/message.php');
+require_once(ROOT_SITE.'/include/message.php');
 ?>
 <div class="row">
   <div class="col-md-6">
@@ -363,5 +363,5 @@ require('../include/message.php');
   </div>
 </div>
 <?php
-require_once "include/append.php";
+require_once "../include/append.php";
 ?>

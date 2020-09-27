@@ -139,7 +139,7 @@ if(empty($bunnies))
 					<td><?php echo $is_try.$bunny['mac'] ?></td>
 					<td><h5><span class="badge badge-<?php echo $is_online ? 'success' : 'secondary'; ?> disabled"><?php echo $is_online ? __tr('Online') : __tr('Offline') ?></span></h5></td>
 					<td>
-						<a target="_blank" class="btn btn-sm btn-warning" href="bunny_expert.php?mac=<?php echo $bunny['mac'] ?>"><i class="icon-large icon-search"></i> <?php echo __tr('Expert view') ?></a>
+						<a target="_blank" class="btn btn-sm btn-warning" href="bunny/bunny_expert.php?mac=<?php echo $bunny['mac'] ?>"><i class="icon-large icon-search"></i> <?php echo __tr('Expert view') ?></a>
 						<a target="_blank" class="btn btn-sm btn-primary" href="/bunny/index.php?b=<?php echo $bunny['mac'] ?>"><i class="icon-large icon-cog"></i> <?php echo __tr('Manage bunny') ?></a>
 						<a target="_blank" class="btn btn-sm btn-danger" href="server/index.php?removeB=<?php echo $bunny['mac'] ?>"><i class="icon-large icon-trash"></i> <?php echo __tr('Remove bunny') ?></a>
 					</td>
@@ -162,7 +162,7 @@ if(empty($bunnies))
 				<tr>
 					<td><?php echo $account['username'] ?></td>
 					<td>
-						<a target="_blank" class="btn btn-sm btn-warning" href="account_expert.php?accid=<?php echo $account['id'] ?>"><i class="icon-large icon-search"></i> <?php echo __tr('Expert view') ?></a>
+						<a target="_blank" class="btn btn-sm btn-warning" href="account/account_expert.php?accid=<?php echo $account['id'] ?>"><i class="icon-large icon-search"></i> <?php echo __tr('Expert view') ?></a>
 						<a target="_blank" class="btn btn-sm btn-primary" href="/account/index.php?a=<?php echo $account['id'] ?>"><i class="icon-large icon-cog"></i> <?php echo __tr('Manage account') ?></a>
 						<a target="_blank" class="btn btn-sm btn-success" href="/index.php?logid=<?php echo $account['id'] ?>"><i class="icon-large icon-user"></i> <?php echo __tr('Connect') ?></a>
 						<a target="_blank" class="btn btn-sm btn-danger" href="server/index.php?removeA=<?php echo urlencode($account['username']) ?>"><i class="icon-large icon-trash"></i> <?php echo __tr('Remove account') ?></a>
