@@ -106,7 +106,7 @@ if(isset($_SESSION['token']) && !strpos($_SERVER['REQUEST_URI'],"logout")) {
 			if(empty($Infos[$k]))
 				$Infos[$k] = 0;
 
-		$sFix = array('email');
+		$sFix = array('email','token');
 		foreach($sFix as $k)
 			if(empty($Infos[$k]))
 				$Infos[$k] = "";

@@ -17,6 +17,7 @@ else
 	$quota = QUOTA;
 
 $user_dir = ROOT_LOCAL . "users/" . md5($_SESSION['login']) . "/";
+$http_user_dir = '/ojn_local/'.'users/'.md5($_SESSION['login']) . '/';
 $user_files = array();
 $size = 0;
 if (is_dir($user_dir)) 
@@ -56,6 +57,7 @@ if(isset($_GET['cancel']))
 	$_SESSION['tab'] = 'files_file';
 	$reload = true;
 }
+
 if(!empty($_FILES['file'])) {
 	if($size +( $_FILES['file']['size'] / 1024/1024) > $quota)
 		Message::AddError(__tr("Not enought space for this file"));
@@ -73,49 +75,49 @@ if(!empty($_FILES['file'])) {
 	$reload = true;
 }
 
-if(isset($_GET['r'])) {
-	$_SESSION['tab'] = 'files_file';
-	if(file_exists($user_dir.$_GET['r'])) {
-		if(unlink($user_dir . $_GET['r'])) {
-			Message::AddSuccess(__tr("File successfuly removed"));
-		} else {
-			Message::AddError(__tr("Error while removing file"));
-		}
-	} else {
-		Message::AddError(__tr("File %1 doesn't exist", $_GET['r']));
-	}
+if(!empty($_GET['file']) && !empty($_GET['action']))
+{
+  $file = $user_dir.$_GET['file'];
+  $action = $_GET['action'];
+  $_SESSION['tab'] = 'files_file';
+  if(file_exists($file))
+  {
+    switch($action)
+    {
+      case 'vup':
+        $cmd = "mv ".$file." ".$file.".tmp && ffmpeg -ac 1 -y -i ".$file.".tmp -vol 512 -ar 44100 ".$file." && rm ".$file.".tmp";
+        //var_dump($cmd); die;
+        exec($cmd, $a, $ret);
+        //exec("sox ".$file." ".$file.".wav remix 1,2 && ffmpeg -ar 44100 -ac 1 -y -i ".$file.".wav -ab 64k ".$file." && rm ".$file.".wav", $a, $ret);
+        if($ret == 0)
+          Message::AddSuccess(__tr("File successfuly converted"));
+        else
+          Message::AddError(__tr("Error while converting file"));
+        break;
+      case 'convert':
+        $cmd = "sox ".$file." ".$file.".wav remix 1,2 && ffmpeg -ac 1 -y -i ".$file.".wav -ab 64k -ar 44100 ".$file." && rm ".$file.".wav";
+        //var_dump($cmd); die;
+        //exec("mv ".$file." ".$file.".tmp && ffmpeg -ar 44100 -ac 1 -y -i ".$file.".tmp -ab 96k ".$file." && rm ".$file.".tmp", $a, $ret);
+        exec($cmd, $a, $ret);
+        if($ret == 0)
+          Message::AddSuccess(__tr("File successfuly converted"));
+        else
+          Message::AddError(__tr("Error while converting file"));
+        break;
+      case 'rm':
+        if(unlink($file))
+          Message::AddSuccess(__tr("File successfuly removed"));
+        else
+          Message::AddError(__tr("Error while removing file"));
+        break;
+      default:
+        Message::AddError(__tr("Invalid action: %1", $action));
+    }
+  } else
+    Message::AddError(__tr("File %1 doesn't exist", $_GET['file']));
 	$reload = true;
 }
-if(isset($_GET['vup'])) {
-	$_SESSION['tab'] = 'files_file';
-	if(file_exists($user_dir.$_GET['vup'])) {
-		exec("mv ".$user_dir.$_GET['vup']." ".$user_dir.$_GET['vup'].".tmp && ffmpeg -ar 44100 -ac 1 -y -i ".$user_dir.$_GET['vup'].".tmp -ab 96k -vol 512 ".$user_dir.$_GET['vup']." && rm ".$user_dir.$_GET['vup'].".tmp", $a, $ret);
-		//exec("sox ".$user_dir.$_GET['c']." ".$user_dir.$_GET['c'].".wav remix 1,2 && ffmpeg -ar 44100 -ac 1 -y -i ".$user_dir.$_GET['c'].".wav -ab 64k ".$user_dir.$_GET['c']." && rm ".$user_dir.$_GET['c'].".wav", $a, $ret);
-		if($ret == 0) {
-			Message::AddSuccess(__tr("File successfuly converted"));
-		} else {
-			Message::AddError(__tr("Error while converting file"));
-		}
-	} else {
-		Message::AddError(__tr("File %1 doesn't exist", $_GET['c']));
-	}
-	$reload = true;
-}
-if(isset($_GET['c'])) {
-	$_SESSION['tab'] = 'files_file';
-	if(file_exists($user_dir.$_GET['c'])) {
-		//exec("mv ".$user_dir.$_GET['c']." ".$user_dir.$_GET['c'].".tmp && ffmpeg -ar 44100 -ac 1 -y -i ".$user_dir.$_GET['c'].".tmp -ab 96k ".$user_dir.$_GET['c']." && rm ".$user_dir.$_GET['c'].".tmp", $a, $ret);
-		exec("sox ".$user_dir.$_GET['c']." ".$user_dir.$_GET['c'].".wav remix 1,2 && ffmpeg -ac 1 -y -i ".$user_dir.$_GET['c'].".wav -ab 64k -ar 44100 ".$user_dir.$_GET['c']." && rm ".$user_dir.$_GET['c'].".wav", $a, $ret);
-		if($ret == 0) {
-			Message::AddSuccess(__tr("File successfuly converted"));
-		} else {
-			Message::AddError(__tr("Error while converting file"));
-		}
-	} else {
-		Message::AddError(__tr("File %1 doesn't exist", $_GET['c']));
-	}
-	$reload = true;
-}
+
 if(isset($_POST['ngroup'])) {
 	$name = trim($_POST['ngroup']);
 	if($name == "")
@@ -229,14 +231,42 @@ require(ROOT_SITE.'include/message.php');
               <td><?php echo __tr("%1 Mb", round($file['size'], 3)); ?></td>
               <td><?php echo round($file['bit_rate']/1000, 0); ?> kbps, <?php echo round($file['sample_rate']/1000,1); ?> kHz, <?php echo $file['channels'] == 2 ? "Stéréo" : "Mono"; ?></td>
               <td>
-                <a href="files.php?r=<?php echo $file['name']; ?>&execute" class="btn btn-small btn-danger"><i class="icon-trash icon-large"></i> <?php echo __tr('Remove') ?></a>&nbsp;
-                <?php if($file['bit_rate']/1000 > 97 || $file['channels'] == 2 || $file['sample_rate']/1000 > 45): ?><a href="files.php?c=<?php echo $file['name']; ?>&execute" class="btn btn-small btn-primary"><i class="icon-trash icon-large"></i> <?php echo __tr('Convert to bunny format') ?></a>&nbsp;<?php endif; ?>
-                <a href="files.php?vup=<?php echo $file['name']; ?>&execute" class="btn btn-small btn-success"><i class="icon-volume-up icon-large"></i> <?php echo __tr('Volume up') ?></a>
+                <a href="?file=<?php echo $file['name']; ?>&action=rm" class="btn btn-sm btn-danger"><i class="icon-trash icon-large"></i> <?php echo __tr('Remove') ?></a>&nbsp;
+                <?php if($file['bit_rate']/1000 > 97 || $file['channels'] == 2 || $file['sample_rate']/1000 > 45): ?><a href="?file=<?php echo $file['name']; ?>&action=convert" class="btn btn-sm btn-primary"><i class="icon-trash icon-large"></i> <?php echo __tr('Convert to bunny format') ?></a>&nbsp;<?php endif; ?>
+                <a href="?file=<?php echo $file['name']; ?>&action=vup" class="btn btn-sm btn-success"><i class="icon-volume-up icon-large"></i> <?php echo __tr('Volume up') ?></a>
+                <div class="audio-preview d-inline">
+                  <audio>
+                    <source src="<?php echo $http_user_dir.$file['name']; ?>" type="audio/mpeg">
+                  </audio>
+                  <a id="play" href="#" class="btn btn-sm btn-primary"><i class="icon-large icon-play-circle"></i> <span class="audio-preview-text"><?php echo __tr('Play'); ?></span></a>
+                </div>
               </td>
             </tr>
             <?php endforeach ?>
           </tbody>
         </table>
+        <script type="text/javascript">
+          $('.audio-preview #play').click(function (e)
+          {
+            e.preventDefault();
+            var media = $(this).siblings('audio')[0];
+            var text = $(this).children('.audio-preview-text')[0];
+            //console.log(media)
+            //console.log($(this));
+            if(media.paused)
+            {
+              media.play();
+              text.innerText = "<?php echo __tr('Pause');?>";
+              $(this).removeClass('btn-primary').addClass('btn-warning');
+            }
+            else
+            {
+              media.pause();
+              text.innerText = "<?php echo __tr('Play');?>";
+              $(this).removeClass('btn-warning').addClass('btn-primary');
+            }
+          });
+        </script>
         <div class="well">
           <?php echo __tr('Quota') ?> : <?php echo __tr('%1 Mb', round($size,2)." / ".$quota) ?>
           <div class="progress progress-<?php echo $size >= 0.9*$quota ? "danger" : ($size >= 0.7*$quota ? "warning" : "success") ?>">
@@ -337,8 +367,8 @@ require(ROOT_SITE.'include/message.php');
                 </ul>
               </td>
               <td>
-                <a href="files.php?rg=<?php echo $group; ?>" class="btn btn-small btn-danger"><i class="icon-trash icon-large"></i> <?php echo __tr('Remove') ?></a>&nbsp;
-                <a href="files.php?edit=<?php echo $group; ?>" class="btn btn-small btn-primary"><i class="icon-trash icon-large"></i> <?php echo __tr('Edit') ?></a>
+                <a href="files.php?rg=<?php echo $group; ?>" class="btn btn-sm btn-danger"><i class="icon-trash icon-large"></i> <?php echo __tr('Remove') ?></a>&nbsp;
+                <a href="files.php?edit=<?php echo $group; ?>" class="btn btn-sm btn-primary"><i class="icon-trash icon-large"></i> <?php echo __tr('Edit') ?></a>
               </td>
             </tr>
             <?php endforeach; ?>
