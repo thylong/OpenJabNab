@@ -138,8 +138,6 @@ if(isset($_SESSION['token']) && !strpos($_SERVER['REQUEST_URI'],"logout")) {
 }
 //var_dump($_SERVER);
 
-
-
 $translations = array();
 if(!isset($Infos['language']))
 {
@@ -164,8 +162,6 @@ if(!($translations = apcu_fetch(APC_PREFIX.'ojn_tr_'.$Infos['language']))) {
 	}
 }
 $ojnTemplate->setUInfos($Infos);
-
-
 
 require_once "Mail.php";
 require_once "Mail/mime.php";
@@ -216,68 +212,49 @@ function getTranslates($nom)
 
 function getBetas()
 {
-	//apcu_delete(APC_PREFIX.'ojn_beta');
-	$success = false;
-	$betas = apcu_fetch(APC_PREFIX.'ojn_betas', $success);
-	if(!$success) {
-		$link = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
-		if (!$link) {
-		    die('Connexion impossible : ' . mysqli_error());
-		}
+  //apcu_delete(APC_PREFIX.'ojn_betas');
+  $success = false;
+  $betas = apcu_fetch(APC_PREFIX.'ojn_betas', $success);
+  if($success) 
+    return $betas;
 
-		$betas = array();
-		$sql = "SELECT * FROM beta;";
-		$res = mysqli_query($link, $sql);
-        if($res)
-            while($row = mysqli_fetch_assoc($res))
-            {
-                if(!isset($betas[$row['plugin']]))
-                    $betas[$row['plugin']] = array();
-                $betas[$row['plugin']] = $row['mac'];
-            }
+  $link = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+  if (!$link)
+    die('Connexion impossible : ' . mysqli_error());
 
-		mysqli_close($link);
-		apcu_store(APC_PREFIX.'ojn_betas', $betas, 7200);
-	}
-	return $betas;
+  $betas = array();
+  $sql = 'SELECT  plugin_name as plugin, 
+                  bunny_mac as bunnies, 
+                  user_name as users
+          FROM beta
+          ORDER BY plugin_name';
+  $res = mysqli_query($link, $sql);
+  while($row = mysqli_fetch_assoc($res))
+  {
+    $ts = array('bunnies','users');
+    if(!isset($betas[$row['plugin']]))
+      foreach($ts as $t)
+        $betas[$row['plugin']][$t] = array();
+    foreach($ts as $t)
+      if(!empty($row[$t]))
+        $betas[$row['plugin']][$t][] = $row[$t];
+  }
+
+  mysqli_close($link);
+  apcu_store(APC_PREFIX.'ojn_betas', $betas, 7200);
+  return $betas;
 }
 
 function isBeta($mac, $plugin)
 {
-	$betas = getBetas();
-	return isset($betas[$plugin]) && isset($betas[$plugin][$mac]);
-}
-
-function getTesters()
-{
-	//apcu_delete(APC_PREFIX.'ojn_testers');
-	$success = false;
-	$testers = apcu_fetch(APC_PREFIX.'ojn_testers', $success);
-	if(!$success) {
-		$link = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
-		if (!$link) {
-		    die('Connexion impossible : ' . mysqli_error());
-		}
-
-		$testers = array();
-		$sql = "SELECT * FROM tester;";
-		$res = mysqli_query($link, $sql);
-		while($row = mysqli_fetch_assoc($res))
-		{
-			if(!isset($testers[$row['plugin']]))
-				$testers[$row['plugin']] = array();
-			$testers[$row['plugin']] = $row['username'];
-		}
-		mysqli_close($link);
-		apcu_store(APC_PREFIX.'ojn_testers', $testers, 7200);
-	}
-	return $testers;
+  $betas = getBetas();
+	return isset($betas[$plugin]) && in_array($mac, $betas[$plugin]['bunnies']);
 }
 
 function isTester($username, $plugin)
 {
-	$testers = getTesters();
-	return isset($testers[$plugin]) && isset($testers[$plugin][$username]);
+	$testers = getBetas();
+	return isset($testers[$plugin]) && in_array($username, $testers[$plugin]['users']);
 }
 
 function bunnyVersion($mac)

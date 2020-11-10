@@ -272,7 +272,13 @@ function updateBTable(p)
 		<td width="20%" <?php echo in_array($l,$Admins) ? 'style="font-weight:bold;"' :''; ?>><?php echo $l; ?></td>
 		<td><?php echo $name; ?></td>
 		<td width="20%"><?php echo in_array($l,$Online) ? "C":"D&eacute;c"; ?>onnect&eacute;</td>
-		<td><a href="?removeA=<?php echo urlencode($l); ?>"><?php echo __tr('Remove') ?></a> &nbsp;<a href="?reloadA=<?php echo urlencode($l); ?>"><?php echo __tr('Reload') ?></a>&nbsp;<a href="account_expert.php?acc=<?php echo urlencode($l); ?>"><?php echo __tr('Expert') ?></a></td>
+		<td>
+			<!--a target="_blank" class="btn btn-sm btn-primary" href="/account/index.php?a=<?php echo $l ?>"><i class="icon-large icon-cog"></i> <?php echo __tr('Manage account') ?></a-->
+			<!--a target="_blank" class="btn btn-sm btn-success" href="/index.php?logid=<?php echo $l ?>"><i class="icon-large icon-user"></i> <?php echo __tr('Connect') ?></a-->
+			<a class="btn btn-sm btn-primary" href="?reloadA=<?php echo urlencode($l); ?>"><i class="icon-refresh"></i> <?php echo __tr('Reload') ?></a> 
+			<a class="btn btn-sm btn-warning" target="_blank" href="/admin/account/account_expert.php?acc=<?php echo urlencode($l); ?>"><i class="icon-search"></i> <?php echo __tr('Expert') ?></a> 
+			<a class="btn btn-sm btn-danger" href="?removeA=<?php echo urlencode($l); ?>"><i class="icon-trash"></i> <?php echo __tr('Remove') ?></a>
+		</td>
 	</tr>
 <?php } ?>
 </table>

@@ -39,7 +39,6 @@ require_once(ROOT_SITE.'/include/message.php');
 $pattern = "|[\w@\"'_\-,;.:!\? ]|";
 ?>
 <div class="row">
-
 	<div class="col-md-6">
 		<div class="card">
 			<h5 class="card-header">
@@ -51,6 +50,15 @@ $pattern = "|[\w@\"'_\-,;.:!\? ]|";
 	</div>
 
 	<div class="col-md-6">
+	  <div class="card">
+			<h5 class="card-header">
+				<i class="icon-cog"></i> <?php echo __tr('Bunny data') ?>
+			</h5>
+			<div class="card-body">
+        <pre><?php var_dump($bunny); ?></pre>
+      </div>
+    </div>
+
 		<div class="card">
 			<h5 class="card-header">
 				<i class="icon-cog"></i> <?php echo __tr('Database raw data') ?>

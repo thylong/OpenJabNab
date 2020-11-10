@@ -303,7 +303,7 @@ if((!empty($_GET['plug']) && !empty($_GET['stat'])) || (!empty($_POST['plug']) &
 		Message::AddWarning("&bull; ".__tr("VIP status is for everyone who already made a donation"), $id);
 		Message::AddWarning("&bull; ".__tr("You could also try all premium plugins for a limited time")." <a href='demo.php'>".__tr("Try plugins")."</a>", $id);
 	}
-	else if(!($Infos['isAdmin'] || isTester($Infos['login'], $plugin)) && $plugins[$plugin]['dev'])
+	else if($plugins[$plugin]['dev'] && !($Infos['isAdmin'] || isTester($Infos['login'], $plugin)))
 	{
 		$id = Message::AddWarning("<b>".__tr("This plugin is currently not available")."</b>");
 	}
@@ -739,7 +739,6 @@ $title = empty($_SESSION['bunny']) ?  __tr("Choose your bunny") :
             </div>
           </fieldset>
 	      </form>
-
         <table class="table table-bordered table-striped mt-2">
 	        <tr>
 		        <th class="col-md-8"><?php echo __tr('Name of plugin') ?></th>
@@ -747,26 +746,28 @@ $title = empty($_SESSION['bunny']) ?  __tr("Choose your bunny") :
 	        </tr>
           <?php
           foreach($plugins as $id => $plugin):
-            if(!($Infos['isAdmin'] || $plugin['display'] || isBeta($_SESSION['bunny'], $id)))
+            $isBeta = isBeta($_SESSION['bunny'], $id) || isTester($Infos['login'], $id);
+            if(!($Infos['isAdmin'] || $plugin['display'] || $isBeta))
               continue;
           ?>
           <tr>
             <td>
               <?php echo $plugin['name'] ?>
               <span class="float-right">
-                <?php if(isBeta($_SESSION['bunny'], $id)): ?><span class="badge badge-info"><?php echo __tr('Beta-test') ?></span> <?php endif; ?>
-                <?php if($plugin['new']): ?><span class="badge badge-info"><?php echo __tr('New plugin') ?></span> <?php endif; ?>
+                <?php if($plugin['new']): ?><span class="badge badge-primary"><?php echo __tr('New plugin') ?></span> <?php endif; ?>
                 <?php if($plugin['updated']): ?><span class="badge badge-success" alt="<?php echo $plugin['version'] ?>" title="<?php echo $plugin['version'] ?>"><?php echo __tr('New version') ?></span> <?php endif; ?>
                 <?php if($plugin['premium']): ?><span class="badge badge-warning"><?php echo __tr("Premium") ?></span> <?php endif; ?>
-                <?php if($plugin['dev']): ?><span class="badge badge-warning"><?php echo __tr("WIP") ?></span><?php endif; ?>
+                <?php if($plugin['dev']): ?><span class="badge badge-info"><?php echo __tr("WIP") ?></span><?php endif; ?>
+                <?php if(!$plugin['display']): ?><span class="badge badge-secondary"><?php echo __tr("Hidden") ?></span><?php endif; ?>
+                <?php if($isBeta): ?><span class="badge badge-danger"><?php echo __tr("Beta") ?></span><?php endif; ?>
                 &nbsp;
               </span>
             </td>
             <td>
               <?php if($plugin['premium'] && !($Infos['isAdmin'] || $Infos['status'] == 'VIP' || $Infos['status'] == 'Premium' || $Infos['status'] == 'Demo')): ?>
               <a class="btn btn-sm btn-warning" href="/bunny/index.php?premium"><?php echo __tr("Premium") ?></a>
-              <?php elseif($plugin['dev'] && !($Infos['isAdmin'] || isTester($Infos['login'], $id))): ?>
-              <span class="badge badge-warning"><?php echo __tr("WIP") ?></span>
+              <?php elseif($plugin['dev'] && !($Infos['isAdmin'] || $isBeta)): ?>
+              <span class="badge badge-info"><?php echo __tr("WIP") ?></span>
               <?php else: ?>
                 <a class="btn btn-sm btn-<?php echo $plugin['actif'] ? "danger" : "success";?>" href="?stat=<?php echo $plugin['actif'] ? "unregister" : "register"; ?>&plug=<?php echo $id ?>"><?php echo $plugin['actif'] ? __tr('Disable plugin') : __tr('Enable plugin') ?></a>
                 <?php if($plugin['actif'] && file_exists("plugins/".$id.".plugin.php")): ?><a href="bunny_plugin.php?p=<?php echo $id; ?>" class="btn btn-sm btn-primary"><i class="icon-cog icon-large"></i> <?php echo __tr('Setup / Use') ?></a> <?php endif; ?>
@@ -784,8 +785,8 @@ $title = empty($_SESSION['bunny']) ?  __tr("Choose your bunny") :
             <legend><h6><?php echo __tr('Actions'); ?></h6></legend>
             <div class="form-group row">
               <div class="col-sm-6">            
-                <input class="btn btn-primary" name="disconnect" type="submit" value="<?php echo __tr("Disconnect the bunny") ?>">
-                <input class="btn btn-primary" name="reboot" type="submit" value="<?php echo __tr("Reboot the bunny") ?>">
+                <a class="btn btn-primary" href="?disconnect"><?php echo __tr("Disconnect the bunny") ?></a>
+                <a class="btn btn-primary" href="?reboot"><?php echo __tr("Reboot the bunny") ?></a>
               <div>
             </div>
           </fieldset>
@@ -977,7 +978,7 @@ $title = empty($_SESSION['bunny']) ?  __tr("Choose your bunny") :
             <?php if(!empty($owner['value'])): ?>
             </div>
             <div class="col-sm-">
-			        <a target="_blank" class="btn btn-sm btn-primary" href="/admin/account_expert.php?acc=<?php echo $owner['value'] ?>"><?php echo __tr('Expert view') ?></a>
+			        <a target="_blank" class="btn btn-sm btn-primary" href="/admin/account/account_expert.php?acc=<?php echo $owner['value'] ?>"><?php echo __tr('Expert view') ?></a>
               <input class="btn btn-primary btn-sm btn-danger" name="resetown" type="submit" value="<?php echo __tr('Reset owner') ?>">
             <?php endif; ?>
 	          </div>
