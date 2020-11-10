@@ -11,35 +11,35 @@ $days = array(
 );
 $reload = false;
 if(isset($_POST['webcastT']) && isset($_POST['webcastV']) && isset($_POST['webcastD'])) {
-	Message::AddFromApi($ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/sound/schedule?action=add&vol=".urlencode($_POST['webcastV'])."&time=".$_POST['webcastT']."&day=".$_POST['webcastD']."&".$ojnAPI->getToken()));
+	Message::AddFromApi($ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/volume/schedule?action=add&vol=".urlencode($_POST['webcastV'])."&time=".$_POST['webcastT']."&day=".$_POST['webcastD']."&".$ojnAPI->getToken()));
 	$reload = true;
 }
 if(isset($_GET['rt']) && isset($_GET['rd'])) {
-	Message::AddFromApi($ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/sound/schedule?action=del&day=".$_GET['rd']."&time=".$_GET['rt']."&".$ojnAPI->getToken()));
+	Message::AddFromApi($ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/volume/schedule?action=del&day=".$_GET['rd']."&time=".$_GET['rt']."&".$ojnAPI->getToken()));
 	$reload = true;
 }
 
 if(isset($_POST['sound'])) {
 	if(isset($_POST['save'])) {
-		Message::AddFromApi($ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/sound/sound?action=set&vol=".$_POST['sound']."&".$ojnAPI->getToken()));
+		Message::AddFromApi($ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/volume/sound?action=set&vol=".$_POST['sound']."&".$ojnAPI->getToken()));
 	} elseif(isset($_POST['test'])) {
 		$_SESSION['sound'] = $_POST['sound'];
-		Message::AddFromApi($ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/sound/sound?action=test&volume=".$_POST['sound']."&".$ojnAPI->getToken()));
+		Message::AddFromApi($ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/volume/sound?action=test&volume=".$_POST['sound']."&".$ojnAPI->getToken()));
 	}
 	$reload = true;
 }
 
 if($reload)
 {
-	header("Location: bunny_plugin.php?p=sound");
+	header("Location: ?p=volume");
 	exit();
 }
-$current = $ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/sound/sound?action=read&".$ojnAPI->getToken());
+$current = $ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/volume/sound?action=read&".$ojnAPI->getToken());
 $current = isset($current['ok']) ? $current['ok'] : __tr("Not available");
-$set = $ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/sound/sound?action=get&".$ojnAPI->getToken());
+$set = $ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/volume/sound?action=get&".$ojnAPI->getToken());
 $set = isset($_SESSION['sound']) ? $_SESSION['sound'] : (isset($set['ok']) ? $set['ok'] : '0');
 unset($_SESSION['sound']);
-$wList = $ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/sound/schedule?action=list&".$ojnAPI->getToken());
+$wList = $ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/volume/schedule?action=list&".$ojnAPI->getToken());
 ?>
 <form method="post" class="form-horizontal">
           <div class="control-group">
@@ -122,9 +122,9 @@ if(isset($wList['list']->item)){
 </form>
 <script>
 function updateSound() {
-$.get('<?php echo ROOT_WWW_EXTAPI."bunny/".$_SESSION['bunny']."/sound/sound?action=poll&".$ojnAPI->getToken() ?>', function(data) {
+$.get('<?php echo ROOT_WWW_EXTAPI."bunny/".$_SESSION['bunny']."/volume/sound?action=poll&".$ojnAPI->getToken() ?>', function(data) {
 });
-$.get('<?php echo ROOT_WWW_EXTAPI."bunny/".$_SESSION['bunny']."/sound/sound?action=read&".$ojnAPI->getToken() ?>', function(data) {
+$.get('<?php echo ROOT_WWW_EXTAPI."bunny/".$_SESSION['bunny']."/volume/sound?action=read&".$ojnAPI->getToken() ?>', function(data) {
   $('#current').val(data.getElementsByTagName("ok")[0].childNodes[0].nodeValue);
 });
 }
