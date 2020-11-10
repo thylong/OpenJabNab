@@ -87,9 +87,11 @@ require_once(ROOT_SITE.'include/class/message.class.php');
 require_once(ROOT_SITE.'include/class/template.class.php');
 $ojnAPI = new ojnApi();
 $ojnTemplate = new ojnTemplate($ojnAPI);
+/*
 if(date("m") == 10 && date('d') >= 28) {
 	$ojnTemplate->setCSS('ojn.halloween.css');
 }
+*/
 $Infos = array('token' => '','login'=>'guest','usename'=>'Guest','isAdmin'=>false,'isValid'=>true);
 if(isset($_SESSION['token']) && !strpos($_SERVER['REQUEST_URI'],"logout")) {
     if(isset($_SESSION['token']) && isset($_SESSION['login'])) {
@@ -268,9 +270,8 @@ function bunnyVersion($mac)
 	return 2;
 }
 
-function getServerFeesFullfilment()
+function getServerFeesFullfilment($TargetPerMonth = SERVER_MONTHLY_FEES)
 {
-	$TargetPerMonth = 10.0;
 	$link = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
 	if (!$link)
 			die('Connexion impossible : ' . mysqli_error());
@@ -313,11 +314,14 @@ function getServerFeesFullfilment()
 			$carry = max($v-$TargetPerMonth,0);                       // Compute new leftover money
 			//var_dump($k.' v='.$v.' p='.$p.' c='.$carry);
 			if($m == $fm && $carry > 0)                               // If there's leftover money, add a month
-				$fm = min(12,$fm+1);                                    // Cap at December, of cource
+				$fm = min(12,$fm+1);                                    // Cap at December, of course
 
 		}
-		if($y == $ey && $carry > 0)                                 // If there's leftover money, add a year
-			++$ey;
+		if($y == $ey && $carry > 0) 																// If there's leftover money, roll over to next year
+		{
+			++$ey;																										// add a year
+			$em = 1;																									// End of January
+		}
 	}
 	//var_dump($ret);
 	return $ret;

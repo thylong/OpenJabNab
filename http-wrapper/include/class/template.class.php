@@ -134,6 +134,7 @@ class ojnTemplate {
 				$menu .= '    <a class="dropdown-item" href="/admin/server/faq.php">'.__tr("FAQ").'</a>'."\n";
 				$menu .= '    <a class="dropdown-item" href="/admin/server/news.php">'.__tr("News").'</a>'."\n";
 				$menu .= '    <a class="dropdown-item" href="/admin/server/rawapi.php">'.__tr("Raw API Call").'</a>'."\n";
+				$menu .= '    <a class="dropdown-item" href="/admin/server/fees.php">'.__tr("Server fees").'</a>'."\n";
 				$menu .= '    <div class="dropdown-divider"></div>'."\n";
 				$menu .= '    <h6 class="dropdown-header">'.__tr('Accounts').'</h6>'."\n";
 				$menu .= '    <a class="dropdown-item" href="/admin/account/logins.php">'.__tr("Logins").'</a>'."\n";

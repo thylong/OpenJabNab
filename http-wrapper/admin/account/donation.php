@@ -15,7 +15,7 @@ if(isset($_GET['insert']) && $_GET['insert'] == 'demo' && count($_POST))
 	mysqli_close($link);
 	$reload = true;
 }
-if(isset($_GET['convert']))
+if(isset($_GET['convert']) && false)
 {
 	$link = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
 	if (!$link) {
@@ -40,17 +40,19 @@ if(isset($_GET['convert']))
 		if($duration)
 		{
 			$sql = "INSERT INTO premium SET date='".$row['date']."', email='".$row['email']."', username='".$row['username']."', value='".$row['value']."', remain='".$row['remain']."', duration='$duration';";
-			$res = mysqli_query($link, $sql);
-			$sql = "DELETE FROM don WHERE id='".$row['id']."';";
-			$res = mysqli_query($link, $sql);
-			Message::AddSuccess("Conversion successfull");
-			header("Location: member.php");
-			exit;
+			if(mysqli_query($link, $sql))
+			{
+				$sql = "DELETE FROM don WHERE id='".$row['id']."';";
+				if(mysqli_query($link, $sql))
+					Message::AddSuccess(__tr("Conversion to premium successful"));
+				else
+					Message::AddSuccess(__tr("Conversion to premium step 2/2 failed"));
+			}
+			else
+				Message::AddSuccess(__tr("Conversion to premium step 1/2 failed"));
 		}
 		else
-		{
 			Message::AddError(__tr("Can't convert this donation to premium registration"));
-		}
 	}
 	mysqli_close($link);
 	$reload = true;
@@ -217,7 +219,7 @@ else if(isset($_GET['edit']))
 	if($row = mysqli_fetch_assoc($res))
 	{
 ?>
-<form method="post" class="form-horizontal" action="donation.php?insert=donation">
+<form method="post" class="form-horizontal" action="?insert=donation">
 	<input type="hidden" name="id" value="<?php echo $_GET['edit'] ?>">
           <div class="control-group">
             <label for="input01" class="control-label"><?php echo __tr("Email") ?></label>
@@ -257,7 +259,7 @@ else if(isset($_GET['edit']))
           </div>
           <div class="form-actions">
             <button class="btn btn-primary" type="submit"><?php echo __tr("Save") ?></button>
-            <a href="donation.php" class="btn"><?php echo __tr("Cancel") ?></a>
+            <a href="?" class="btn"><?php echo __tr("Cancel") ?></a>
           </div>
 </form>
 
@@ -276,7 +278,7 @@ else if(isset($_GET['insert']) && $_GET['insert'] == 'demo')
           </div>
           <div class="form-actions">
             <button class="btn btn-primary" type="submit"><?php echo __tr("Save") ?></button>
-            <a href="donation.php" class="btn"><?php echo __tr("Cancel") ?></a>
+            <a href="?" class="btn"><?php echo __tr("Cancel") ?></a>
           </div>
 </form>
 
@@ -324,7 +326,7 @@ else if(isset($_GET['insert']) && $_GET['insert'] == 'donation')
           </div>
           <div class="form-actions">
             <button class="btn btn-primary" type="submit"><?php echo __tr("Save") ?></button>
-            <a href="donation.php" class="btn"><?php echo __tr("Cancel") ?></a>
+            <a href="?" class="btn"><?php echo __tr("Cancel") ?></a>
           </div>
 </form>
 
@@ -333,13 +335,13 @@ else if(isset($_GET['insert']) && $_GET['insert'] == 'donation')
 else
 {
 ?>
-		<table class="table table-bordered table-striped span11">
+		<table class="table table-bordered table-striped">
 			<thead>
 				<tr>
-					<th class="col-sm-4"><?php echo __tr('Email') ?></th>
-					<th class="col-auto"><?php echo __tr('Username') ?></th>
+					<th class="col-sm-3"><?php echo __tr('Email') ?></th>
+					<th class="col-sm-auto"><?php echo __tr('Username') ?></th>
 					<th class="col-sm-2"><?php echo __tr('Date') ?></th>
-					<th class="col-auto"><?php echo __tr('Donation') ?></th>
+					<th class="col-sm-auto"><?php echo __tr('Donation') ?></th>
 					<th class="col-sm-4"><?php echo __tr('Actions') ?></th>
 				</tr>
 			</thead>
@@ -360,17 +362,17 @@ else
 					<td><?php echo $row['email']; ?></td>
 					<td><?php echo $row['username'].(strlen($row['status']) ? " <i>(".__tr($row['status']).")</i>" : ''); ?></td>
 					<td><?php echo date('d/m/Y H:i', strtotime($row['date'])) ?></td>
-					<td><?php echo round($row['value'], 2); ?></td>
+					<td><?php echo round($row['value'], 2); ?> €</td>
 					<td>
-						<a class="btn btn-sm btn-success" href="donation.php?search=<?php echo base64_encode($row['email']) ?>"><?php echo __tr('Search user') ?></a>
-						<a class="btn btn-sm btn-primary" href="donation.php?edit=<?php echo $row['id'] ?>"><?php echo __tr('Edit') ?></a>
-						<a class="btn btn-sm btn-primary" href="donation.php?convert=<?php echo $row['id'] ?>"><?php echo __tr('Convert') ?></a>
+						<a class="btn btn-sm btn-success" href="?search=<?php echo base64_encode($row['email']) ?>"><?php echo __tr('Search user') ?></a>
+						<a class="btn btn-sm btn-primary" href="?edit=<?php echo $row['id'] ?>"><?php echo __tr('Edit') ?></a>
+						<a class="btn btn-sm btn-primary" href="?convert=<?php echo $row['id'] ?>"><?php echo __tr('Convert') ?></a>
 					</td>
 				</tr>
 				<?php endwhile; ?>
 				<tr>
 					<th colspan="3"><?php echo __tr('Total'); ?></th>
-					<td><?php echo round($total, 2); ?></td>
+					<td><?php echo round($total, 2); ?> €</td>
 				</tr>
 			</tbody>
 		</table>
