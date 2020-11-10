@@ -295,15 +295,28 @@ if(!empty($_POST['single']) && !empty($_POST['double'])) {
 }
 if((!empty($_GET['plug']) && !empty($_GET['stat'])) || (!empty($_POST['plug']) && !empty($_POST['stat']))) {
 	$plugin = !empty($_GET['stat']) ? $_GET['plug'] : $_POST['plug'];
-	$_SESSION['tab'] = 'bunny_plugins';
-	if(!($Infos['isAdmin'] || $Infos['status'] == 'VIP' || $Infos['status'] == 'Premium' || $Infos['status'] == 'Demo') && $plugins[$plugin]['premium'])
+  $_SESSION['tab'] = 'bunny_plugins';
+
+  $isBeta = isTester($Infos['login'], $plugin) || isBeta($_SESSION['bunny'], $plugin);
+  
+  if($plugins[$plugin]['premium'] && 
+      !(   $Infos['isAdmin'] 
+        || $Infos['status'] == 'VIP' 
+        || $Infos['status'] == 'Premium' 
+        || $Infos['status'] == 'Demo'
+        || $isBeta
+      ))
 	{
 		$id = Message::AddWarning("<b>".__tr("This plugin is only available to Premium users, or VIP")."</b>");
 		Message::AddWarning("&bull; ".__tr("Premium status will be available soon"), $id);
 		Message::AddWarning("&bull; ".__tr("VIP status is for everyone who already made a donation"), $id);
 		Message::AddWarning("&bull; ".__tr("You could also try all premium plugins for a limited time")." <a href='demo.php'>".__tr("Try plugins")."</a>", $id);
 	}
-	else if($plugins[$plugin]['dev'] && !($Infos['isAdmin'] || isTester($Infos['login'], $plugin)))
+  else if($plugins[$plugin]['dev'] && 
+          !(   $Infos['isAdmin']
+            || $isBeta
+           )
+         )
 	{
 		$id = Message::AddWarning("<b>".__tr("This plugin is currently not available")."</b>");
 	}
