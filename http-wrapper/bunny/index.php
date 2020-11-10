@@ -297,15 +297,16 @@ if((!empty($_GET['plug']) && !empty($_GET['stat'])) || (!empty($_POST['plug']) &
 	$plugin = !empty($_GET['stat']) ? $_GET['plug'] : $_POST['plug'];
   $_SESSION['tab'] = 'bunny_plugins';
 
-  $isBeta = isTester($Infos['login'], $plugin) || isBeta($_SESSION['bunny'], $plugin);
+  $beta = isBeta($_SESSION['bunny'], $plugin) || isTester($Infos['login'], $plugin);
   
   if($plugins[$plugin]['premium'] && 
       !(   $Infos['isAdmin'] 
         || $Infos['status'] == 'VIP' 
         || $Infos['status'] == 'Premium' 
         || $Infos['status'] == 'Demo'
-        || $isBeta
-      ))
+        || $beta
+       )
+    )
 	{
 		$id = Message::AddWarning("<b>".__tr("This plugin is only available to Premium users, or VIP")."</b>");
 		Message::AddWarning("&bull; ".__tr("Premium status will be available soon"), $id);
@@ -314,7 +315,7 @@ if((!empty($_GET['plug']) && !empty($_GET['stat'])) || (!empty($_POST['plug']) &
 	}
   else if($plugins[$plugin]['dev'] && 
           !(   $Infos['isAdmin']
-            || $isBeta
+            || $beta
            )
          )
 	{
@@ -759,8 +760,8 @@ $title = empty($_SESSION['bunny']) ?  __tr("Choose your bunny") :
 	        </tr>
           <?php
           foreach($plugins as $id => $plugin):
-            $isBeta = isBeta($_SESSION['bunny'], $id) || isTester($Infos['login'], $id);
-            if(!($Infos['isAdmin'] || $plugin['display'] || $isBeta))
+            $beta = isBeta($_SESSION['bunny'], $id) || isTester($Infos['login'], $id);
+            if(!($Infos['isAdmin'] || $plugin['display'] || $beta))
               continue;
           ?>
           <tr>
@@ -772,14 +773,14 @@ $title = empty($_SESSION['bunny']) ?  __tr("Choose your bunny") :
                 <?php if($plugin['premium']): ?><span class="badge badge-warning"><?php echo __tr("Premium") ?></span> <?php endif; ?>
                 <?php if($plugin['dev']): ?><span class="badge badge-info"><?php echo __tr("WIP") ?></span><?php endif; ?>
                 <?php if(!$plugin['display']): ?><span class="badge badge-secondary"><?php echo __tr("Hidden") ?></span><?php endif; ?>
-                <?php if($isBeta): ?><span class="badge badge-danger"><?php echo __tr("Beta") ?></span><?php endif; ?>
+                <?php if($beta): ?><span class="badge badge-danger"><?php echo __tr("Beta") ?></span><?php endif; ?>
                 &nbsp;
               </span>
             </td>
             <td>
               <?php if($plugin['premium'] && !($Infos['isAdmin'] || $Infos['status'] == 'VIP' || $Infos['status'] == 'Premium' || $Infos['status'] == 'Demo')): ?>
               <a class="btn btn-sm btn-warning" href="/bunny/index.php?premium"><?php echo __tr("Premium") ?></a>
-              <?php elseif($plugin['dev'] && !($Infos['isAdmin'] || $isBeta)): ?>
+              <?php elseif($plugin['dev'] && !($Infos['isAdmin'] || $beta)): ?>
               <span class="badge badge-info"><?php echo __tr("WIP") ?></span>
               <?php else: ?>
                 <a class="btn btn-sm btn-<?php echo $plugin['actif'] ? "danger" : "success";?>" href="?stat=<?php echo $plugin['actif'] ? "unregister" : "register"; ?>&plug=<?php echo $id ?>"><?php echo $plugin['actif'] ? __tr('Disable plugin') : __tr('Enable plugin') ?></a>
