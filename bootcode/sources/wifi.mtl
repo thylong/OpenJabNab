@@ -72,10 +72,14 @@ fun scanunserialize s n i0=
 
 
 const IEEE80211_CRYPT_NONE=0;;
-const IEEE80211_CRYPT_WEP64=1;;
+const IEEE80211_CRYPT_WEP64=2;;
 const IEEE80211_CRYPT_WEP128=2;;
 const IEEE80211_CRYPT_WPA=3;;
 const IEEE80211_CRYPT_WPA_UNSUPPORTED=4;;
+const IEEE80211_CRYPT_WEP_RDX=16;;
+const IEEE80211_CRYPT_WPA_RDX=32;;
+const IEEE80211_CRYPT_WPA2_RDX=64;;
+const IEEE80211_CRYPT_WPA_UNSUPPORTED_RDX=255;;
 
 const IEEE80211_AUTH_OPEN=0;;
 const IEEE80211_AUTH_SHARED=1;;
@@ -144,19 +148,36 @@ fun wifiwepkey val=
 	listtostr _wifiwepkey val 0 len<<1;;
 
 fun wificrypttype crypt key=
-	if crypt==1 then if 5==strlen key then IEEE80211_CRYPT_WEP64 else IEEE80211_CRYPT_WEP128
-	else if crypt==2 then IEEE80211_CRYPT_WPA
-	else IEEE80211_CRYPT_NONE;;
+	if crypt >= IEEE80211_CRYPT_WEP_RDX then
+		crypt
+	else if crypt==1 then 
+	(
+		if 5==strlen key then 
+			IEEE80211_CRYPT_WEP64 
+		else 
+			IEEE80211_CRYPT_WEP128
+	)
+	else if crypt==2 then 
+		IEEE80211_CRYPT_WPA
+	else 
+		IEEE80211_CRYPT_NONE
+	;;
 
 fun wifiAuth=
-	if confGetLeds then setleds RGB_AMBER;
+	setleds RGB_AMBER;
 	if wifiscans==nil then 0
 	else
 		let Iecholn confGetWificrypt -> crypt in
-		//let confGetWifiauth -> auth in
-		let if crypt==1 then confGetWifiauth else 0-> auth in
-		let if crypt==1 then wifiwepkey confGetWifikey0
-			else if crypt==2 then confGetWifipmk -> key in
+		let (	if crypt <= IEEE80211_CRYPT_WEP_RDX then
+						confGetWifiauth 
+			   	else
+				 		0
+				)-> auth in
+		let (	if crypt==1 || crypt==IEEE80211_CRYPT_WEP_RDX then 
+						wifiwepkey confGetWifikey0
+			  	else if crypt==2 || crypt==IEEE80211_CRYPT_WPA_RDX || crypt==IEEE80211_CRYPT_WPA2_RDX then 
+						confGetWifipmk
+				) -> key in
 		(
 			dump key;
 			set wifitry=time;
