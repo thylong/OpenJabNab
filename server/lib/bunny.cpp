@@ -1600,7 +1600,7 @@ API_CALL(Bunny::Api_Voice)
 
 	if(action == "list")
 	{
-		return new ApiManager::ApiMappedList(TTSManager::GetVoiceList(GetLanguage(), account.IsPremium() || account.IsAdmin()));
+		return new ApiManager::ApiMappedList(TTSManager::GetVoiceList(GetLanguage(), !IsLimited()));
 	}
 	else if(action == "test")
 	{
@@ -2180,12 +2180,7 @@ QMap<int, int> Bunny::GetServices()
 bool Bunny::IsLimited() const
 {
 	Account * a = AccountManager::GetAccountByLogin(GetGlobalSetting("OwnerAccount").toByteArray());
-	if(a)
-	{
-		if(a->IsPremium() || a->IsAdmin() || a->IsVip())
-		{
-			return false;
-		}
-	}
+	if(a && !a->IsLimited())
+		return false;
 	return true;
 }

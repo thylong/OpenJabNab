@@ -366,10 +366,8 @@ API_CALL(AccountManager::Api_Auth)
 	QString login = hRequest.GetArg("login");
 	Account *ac = listOfAccountsByName.value(login.toLatin1());
 	if(!ac)
-	{
 		return new ApiManager::ApiError(Translator::tr("Login not found"));
-	}
-	if(!ac->IsAdmin() && !ac->IsPremium() && !ac->IsVip() && ac->GetLoginCount() > GlobalSettings::GetInt("User/MaxLogin", 255))
+	if(ac->IsLimited() && ac->GetLoginCount() > GlobalSettings::GetInt("User/MaxLogin", 255))
 		return new ApiManager::ApiError(Translator::tr("Sorry, too many logins today (limit is %1)").arg(QString::number(GlobalSettings::GetInt("User/MaxLogin", 255))));
 	QByteArray retour = GetToken(login, QCryptographicHash::hash(hRequest.GetArg("pass").toLatin1(), QCryptographicHash::Md5));
 	if(retour == QByteArray())

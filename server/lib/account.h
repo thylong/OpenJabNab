@@ -42,6 +42,10 @@ public:
 	void setPremium(bool premium);
 	bool IsVip() const;
 	void setVip(bool vip);
+	inline bool IsLimited(void) const
+	{
+		return !(IsAdmin() || IsPremium() || IsVip());
+	}
 	QDateTime GetLastLogin();
 	int GetLoginCount();
 	void SetLoginCount(int);
