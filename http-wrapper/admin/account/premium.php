@@ -177,7 +177,7 @@ if(!empty($_GET['type']))
 
 if(isset($_GET['update']))
 {
-	include('include/update_status.inc.php');
+	include('../include/update_status.inc.php');
 	Message::AddSuccess(__tr("Statuses successfully updated"));
 	$reload = true;
 }

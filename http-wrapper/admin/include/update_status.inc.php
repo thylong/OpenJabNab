@@ -61,19 +61,24 @@ while($row = mysqli_fetch_assoc($res))
 }
 
 $now = new DateTime("now");
-//echo '<pre>';
+echo '<pre>';
+
+$ojn = new ojnApi();
+$ojn->setToken($ojn->loginAccount(CRON_API_USER, CRON_API_PWD, false));
 foreach($vip as $user => $date)
 {
 	$st = date_create($date) >= $now ? $status[$user] : 'User';
-	//echo 'Set user '.$user.' status to '.$st.'. Status '.$status[$user].' expiration date: '.$date."\n";
+	echo 'Set user '.$user.' status to '.$st.'. Status '.$status[$user].' expiration date: '.$date."\n";
 	$sql = 'UPDATE account
 						SET status="'.$st.'"
 					WHERE username=\''.$user.'\'
 						AND `status` != \'Admin\'';
 	$res = mysqli_query($link, $sql) or die(mysqli_error($link));
+	$ret = $ojn->getApiString('accounts/setvip?user='.$user.'&vip='.($st == 'VIP' ? 'true' : 'false').'&'.$ojnAPI->getToken());
+	$ret = $ojn->getApiString('accounts/setpremium?user='.$user.'&premium='.($st == 'Premium' ? 'true' : 'false').'&'.$ojnAPI->getToken());
 	// FIXME: Log error !
 }
-//echo '</pre>';
+echo '</pre>';
 
 mysqli_close($link);
 ?>
