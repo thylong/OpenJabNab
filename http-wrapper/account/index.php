@@ -101,7 +101,7 @@ require('../include/message.php');
           <div class="form-group row">
             <label class="col-sm-2 col-form-label" for="login"><?php echo __tr('Login') ?></label>
             <div class="col-sm-2">
-              <input type="text" class="form-control" name="login" value="<?php echo !empty($_SESSION['login']) ? $_SESSION['login'] : _tr('Unknown') ?>" disabled>
+              <input type="text" class="form-control" name="login" value="<?php echo !empty($_SESSION['login']) ? $_SESSION['login'] : __tr('Unknown') ?>" disabled>
             </div>
             <div class="col-sm-8">
               <p class="help-block"><?php echo __tr('Your login cannot be changed.') ?></p>

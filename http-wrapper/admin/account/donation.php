@@ -353,7 +353,12 @@ else
 				}
 
 				$total = 0;
-				$sql = "SELECT don.*, account.status FROM don LEFT JOIN account ON account.username=don.username ORDER BY date DESC;";
+				$sql = "SELECT don.*, account.status 
+									FROM don 
+									LEFT JOIN account 
+										ON account.username=don.username
+									GROUP BY don.id
+									ORDER BY date DESC";
 				$res = mysqli_query($link, $sql);
 				while($row = mysqli_fetch_assoc($res)):
 					$total += $row['value'];
