@@ -236,8 +236,9 @@ if(!empty($items['premium']))
     // FIXME Log error
   }
 }
+require_once(ROOT_SITE.'include/class/api.class.php');
+require_once('../include/update_status.inc.php');
 
-include('../include/update_status.inc.php');
 if($link)
   mysqli_close($link);
 ?>
