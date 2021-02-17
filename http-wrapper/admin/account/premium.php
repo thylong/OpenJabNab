@@ -177,7 +177,7 @@ if(!empty($_GET['type']))
 
 if(isset($_GET['update']))
 {
-	include('../include/update_status.inc.php');
+	$res = file_get_contents(HOSTNAME.'/cron/vip_status.php?http_cron');
 	Message::AddSuccess(__tr("Statuses successfully updated"));
 	$reload = true;
 }

@@ -19,6 +19,9 @@ if(!empty($_GET['fake']))
     case 'donation2':
       $post = 'mc_gross=5.00&protection_eligibility=Eligible&payer_id=8LRDCJBPGQMEC&payment_date=10%3A03%3A28+Sep+01%2C+2020+PDT&payment_status=Completed&charset=windows-1252&first_name=John&mc_fee=0.42&notify_version=3.9&custom=donation/redox&payer_status=verified&business=sb-1zfzm208771%40business.example.com&quantity=1&verify_sign=AeuoCIASNPq7VbNrPe2EKC3fpdemAlMKYKrfM4TFTRSb4msIAr1xTYhu&payer_email=sb-gwlfv207075%40personal.example.com&txn_id=6L470442SM039453B&payment_type=instant&last_name=Doe&receiver_email=sb-1zfzm208771%40business.example.com&payment_fee=&shipping_discount=0.00&receiver_id=P63XNLWK2A8CG&insurance_amount=0.00&txn_type=web_accept&item_name=DEV+OpenJabNab+donations+DEV&discount=0.00&mc_currency=EUR&item_number=&residence_country=FR&test_ipn=1&shipping_method=Default&transaction_subject=donation/redox&payment_gross=&ipn_track_id=18aabc543db53';
       break;
+    case 'donation_regular':
+      $post = 'FIXME: Make sandbox data';
+      break;
     case 'gift':
       $post = 'mc_gross=10.00&protection_eligibility=Eligible&item_number1=&payer_id=8LRDCJBPGQMEC&payment_date=13%3A36%3A21+Sep+02%2C+2020+PDT&option_name2_1=Type&option_selection1_1=6+months&payment_status=Completed&option_selection3_1=redox&charset=windows-1252&first_name=John&mc_fee=0.59&notify_version=3.9&custom=premium/redox&payer_status=verified&business=sb-1zfzm208771%40business.example.com&num_cart_items=1&mc_handling1=0.00&verify_sign=AEsmu0l-0hGZo0Pxvzk5AWMRKN4sA-Lt2a1Lz6h.h-KesKk551VCzQNJ&payer_email=sb-gwlfv207075%40personal.example.com&btn_id1=4145726&option_name1_1=Duration&txn_id=6TE66557FP623004K&payment_type=instant&option_name3_1=User&option_selection2_1=Gift+code&last_name=Doe&item_name1=DEV+OpenJabNab+Premium+PROD&receiver_email=sb-1zfzm208771%40business.example.com&payment_fee=&shipping_discount=0.00&quantity1=2&insurance_amount=0.00&receiver_id=P63XNLWK2A8CG&txn_type=cart&discount=0.00&mc_gross_1=10.00&mc_currency=EUR&residence_country=FR&test_ipn=1&shipping_method=Default&transaction_subject=&payment_gross=&ipn_track_id=dbbf47ab1c4d8';
       break;
@@ -33,34 +36,36 @@ if(empty($post))
 if(PAYPAL_LOG_NOTIFY)
   file_put_contents('pay.txt',file_get_contents('pay.txt')."\n".date('Y/m/d H:i:s').' '.$post);
 
-$req = $post.'&cmd=_notify-validate';
-$ch = curl_init('https://ipnpb.'.(USE_PAYPAL_SANDBOX ? 'sandbox.' :'').'paypal.com/cgi-bin/webscr');
-curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
-curl_setopt($ch, CURLOPT_POST, 1);
-curl_setopt($ch, CURLOPT_RETURNTRANSFER,1);
-curl_setopt($ch, CURLOPT_POSTFIELDS, $req);
-curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 1);
-curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
-curl_setopt($ch, CURLOPT_FORBID_REUSE, 1);
-curl_setopt($ch, CURLOPT_HTTPHEADER, array('Connection: Close'));
-// In wamp-like environments that do not come bundled with root authority certificates,
-// please download 'cacert.pem' from "https://curl.haxx.se/docs/caextract.html" and set
-// the directory path of the certificate as shown below:
-// curl_setopt($ch, CURLOPT_CAINFO, dirname(__FILE__) . '/cacert.pem');
-if ( !($res = curl_exec($ch)) ) {
-  // error_log("Got " . curl_error($ch) . " when processing IPN data");
-  die('cURL error: '. curl_error($ch));
+if(PAYPAL_VALIDATE_NOTIFY)
+{
+  $req = $post.'&cmd=_notify-validate';
+  $ch = curl_init('https://ipnpb.'.(USE_PAYPAL_SANDBOX ? 'sandbox.' :'').'paypal.com/cgi-bin/webscr');
+  curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+  curl_setopt($ch, CURLOPT_POST, 1);
+  curl_setopt($ch, CURLOPT_RETURNTRANSFER,1);
+  curl_setopt($ch, CURLOPT_POSTFIELDS, $req);
+  curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 1);
+  curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+  curl_setopt($ch, CURLOPT_FORBID_REUSE, 1);
+  curl_setopt($ch, CURLOPT_HTTPHEADER, array('Connection: Close'));
+  // In wamp-like environments that do not come bundled with root authority certificates,
+  // please download 'cacert.pem' from "https://curl.haxx.se/docs/caextract.html" and set
+  // the directory path of the certificate as shown below:
+  // curl_setopt($ch, CURLOPT_CAINFO, dirname(__FILE__) . '/cacert.pem');
+  if ( !($res = curl_exec($ch)) ) {
+    // error_log("Got " . curl_error($ch) . " when processing IPN data");
+    die('cURL error: '. curl_error($ch));
+    curl_close($ch);
+  }
   curl_close($ch);
+
+  if(PAYPAL_LOG_NOTIFY)
+    file_put_contents('pay.txt',file_get_contents('pay.txt').' '.$res);
+
+    // IPN invalid, log for manual investigation
+  if (strcmp ($res, "VERIFIED") != 0)
+    die('Invalid IPN');
 }
-curl_close($ch);
-
-if(PAYPAL_LOG_NOTIFY)
-  file_put_contents('pay.txt',file_get_contents('pay.txt').' '.$res);
-
-  // IPN invalid, log for manual investigation
-if (strcmp ($res, "VERIFIED") != 0)
-  die('Invalid IPN');
-
 
 // Start parsing !
 function getKey($a,$k,$v,$ch) { return isset($a[$k]) ? mb_convert_encoding($a[$k],'utf-8',$ch) : $v; }
@@ -70,7 +75,7 @@ parse_str($post,$raw);
 if(isset($_GET['verbose']))
   var_dump($raw);
 
-$link = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+$link = getSQL();
 if (!$link)
   die('Connexion SQL impossible : ' . mysqli_error());
 $charset = cleanKey($link,$raw,'charset','utf-8','utf-8');
@@ -97,8 +102,31 @@ $res = mysqli_fetch_assoc($rx);
 if(!empty($res['cnt']) && !isset($_GET['nocheck']))
 {
   // FIXME: Log error
-  die('Paypal Transaction already registered in database');
+  die('Paypal Transaction already registered in database: '.$txn_id);
 }
+
+if($username == "guest")
+{
+  foreach(array('paypal_txn'=>'pay_email','don'=>'email','premium'=>'email') as $table => $field)
+  {
+    if(isset($_GET['verbose'])) echo 'Trying to find username from email in '.$table.' table...'."\n";
+    $r = 'SELECT username, count(username) as nb
+          FROM '.$table.'
+          WHERE '.$field.'=\''.$pay_email.'\'
+            AND username <> \'guest\'
+          GROUP BY username
+          ORDER BY nb DESC';
+    if(isset($_GET['verbose'])) var_dump($r);
+    $rx = mysqli_query($link,$r) or die('SQL Error'.mysqli_error($link));
+    if($res = mysqli_fetch_assoc($rx))
+    {
+      $username = $res['username'];
+      if(isset($_GET['verbose'])) echo 'Found username: '.$username."\n";
+      break;
+    }
+  }
+}
+
 $r = 'INSERT INTO paypal_txn(date,txn_id,txn_date,txn_gross,txn_fee,txn_currency,pay_email,pay_id,type,username,note,raw) VALUES(NOW(),'
 .'"'.$txn_id.'","'.$txn_date.'",'.$txn_gross.','.$txn_fee.',"'.$txn_currency.'",'
 .'"'.$pay_email.'","'.$pay_id.'","'.$type.'","'.$username.'","'.$note.'","'.$raw_str.'");';
@@ -108,14 +136,14 @@ if(!isset($_GET['nosql']))
 
 $items = array();
 
-if(!in_array($txn_type, array('web_accept','cart')))
-  die('Unsupported Paypal transaction');
+if(!in_array($txn_type, array('web_accept','cart','recurring_payment')))
+  die('Unsupported Paypal transaction: '.$txn_type);
 
 // Premium
 $nb = (int)getKey($raw,'num_cart_items',0,$charset);
 for($i=0;$i<$nb;$i++)
 {
-  echo 'Item '.$i."\n";
+  //echo 'Item '.$i."\n";
   $a = array();
   for($j=0;$j<3;$j++)
   {
@@ -128,6 +156,8 @@ for($i=0;$i<$nb;$i++)
   if(empty($a['duration']) || empty($a['type']) || empty($a['user']) || empty($a['quantity']))
   {
     // FIXME: Log error
+    echo '[Error] Missing key: duration/type/user/quantity'."\n";
+    var_dump($a);
     continue;
   }
   // Validate duration
@@ -170,6 +200,7 @@ for($i=0;$i<$nb;$i++)
       break;
     default:
       // FIXME: Log error
+      echo '[Error] Unsupported type: '.$a['type']."\n";
       continue 2;
   }
 }
@@ -236,9 +267,11 @@ if(!empty($items['premium']))
     // FIXME Log error
   }
 }
-require_once(ROOT_SITE.'include/class/api.class.php');
-require_once('../include/update_status.inc.php');
-
 if($link)
   mysqli_close($link);
+
+if(isset($_GET['verbose']))
+  echo '[Info] Updating statuses now...'."\n";
+$res = file_get_contents(HOSTNAME.'/cron/vip_status.php?http_cron');
+var_dump($res);
 ?>
