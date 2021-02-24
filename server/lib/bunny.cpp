@@ -2094,7 +2094,7 @@ QString Bunny::ChooseBytecode()
 	}
 	if(byteCode.length() == 0)
 	{
-		byteCode = "default_violet";
+		byteCode = GlobalSettings::GetString("Nabaztag/DefaultNabfile","default_violet");
 	}
 	return byteCode;
 }
