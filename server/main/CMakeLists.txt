@@ -12,8 +12,6 @@ add_executable(${PROJECT_NAME}
   openjabnab.cpp
 )
 
-QT5_USE_MODULES(${PROJECT_NAME} Core Network Sql)
-
 target_link_libraries(${PROJECT_NAME}
   ${WINLIB}
   ojn

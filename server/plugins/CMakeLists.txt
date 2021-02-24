@@ -6,7 +6,6 @@ function(ojnPlugin)
   add_library(${MY_PLUGIN_NAME} SHARED
     ${MY_PLUGIN_FILES}
   )
-  QT5_USE_MODULES(${MY_PLUGIN_NAME} Core Network ${MY_PLUGIN_QTMODULES})
 
   target_include_directories(${MY_PLUGIN_NAME}
   PRIVATE
@@ -17,6 +16,7 @@ function(ojnPlugin)
   target_link_libraries(${MY_PLUGIN_NAME}
     ${MY_PLUGIN_LIBRARIES}
     ojn
+    ${MY_PLUGIN_QTMODULES}
   )
 
   target_compile_definitions(${MY_PLUGIN_NAME}

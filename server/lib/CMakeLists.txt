@@ -87,16 +87,22 @@ accountmanager.cpp
 account.cpp
 iq.cpp
 )
-QT5_USE_MODULES(${PROJECT_NAME} Core Network Sql)
+
+target_link_libraries(${PROJECT_NAME}
+PUBLIC
+  Qt5::Core
+  Qt5::Network
+  Qt5::Sql
+)
 
 if(WIN32)
-target_compile_definitions(${PROJECT_NAME}
-PUBLIC
-  OJN_MAKEDLL
-)
-target_link_libraries(${PROJECT_NAME}
-  Ws2_32
-)
+  target_compile_definitions(${PROJECT_NAME}
+  PUBLIC
+    OJN_MAKEDLL
+  )
+  target_link_libraries(${PROJECT_NAME}
+    Ws2_32
+  )
 endif()
 
 target_include_directories(${PROJECT_NAME}
