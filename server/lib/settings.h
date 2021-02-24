@@ -22,13 +22,12 @@ public:
 	static QStringList Set(QString const& key, QStringList);
 
 	// Without default value
-	static QVariant Get(QString const& key);
 	static QStringList GetStringList(QString const& key);
 	static QString GetString(QString const& key);
 	static int GetInt(QString const& key);
 
 	// With default value
-	static QVariant Get(QString const& key, QVariant const& defaultValue);
+	static QVariant Get(QString const& key, QVariant const& defaultValue=QVariant());
 	static QString GetString(QString const& key, QString const& defaultValue);
 	static QStringList GetStringList(QString const& key, QStringList const& defaultValue);
 	static int GetInt(QString const& key, int defaultValue);

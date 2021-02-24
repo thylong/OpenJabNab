@@ -44,7 +44,7 @@ function(add_test_target)
   target_include_directories(test_${ARG_NAME}
   PUBLIC
       $<BUILD_INTERFACE:
-          ${CMAKE_CURRENT_SOURCE_DIR}/                      # For "catch.hpp"
+          ${CMAKE_CURRENT_SOURCE_DIR}/catch
           $<TARGET_PROPERTY:ojn,INTERFACE_INCLUDE_DIRECTORIES>
           ${ARG_INCLUDE_DIRS}
       >
@@ -78,10 +78,11 @@ function(add_test_target)
   )
 endfunction(add_test_target)
 
-add_test_target(NAME translator        SRCS  lib/translator.cpp           LIBRARIES ojn)
+add_test_target(NAME translator   SRCS  lib/translator.cpp           LIBRARIES ojn)
+add_test_target(NAME v1_msg       SRCS  lib/v1/msg.cpp               LIBRARIES ojn)
 
+  # A ll
+add_test_target(NAME All          SRCS  test_all.cpp                 ALL)
 
-  # All
-add_test_target(NAME All        SRCS  test_all.cpp                  ALL)
 add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS ${all_tests})
 

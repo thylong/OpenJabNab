@@ -59,44 +59,47 @@ public:
 
   static NabaztagManager & Instance();
 
-  static void PluginStateChanged(PluginInterface *);
+  void PluginStateChanged(PluginInterface *);
   static void Init();
   static void Close();
 
-  static void handlePing(HTTPRequest, QTcpSocket *);
+  void handlePing(HTTPRequest, QTcpSocket *);
 
-  static QList<QByteArray> GetConnectedNabaztagsList(void);
   static void UpdateStatus();
 
   // API
-  static void InitApiCalls();
+  void InitApiCalls();
+
+  bool loadAMsgBytecode(const QString& file);
+  QByteArray getAMsgForADP(const size_t trame, const QString& nadp_file);
+
+  static QByteArray readFile(QString);
+  static QByteArray getSignature();
 
 private:
   NabaztagManager();
-  static QByteArray buildPacket(QList<QByteArray>);
-  static QByteArray buildPacket(QByteArray);
-  static QByteArray readFile(QString);
+  static QByteArray buildPacket(const QList<QByteArray>& list);
+  static QByteArray buildPacket(const QByteArray& msg);
   static QByteArray getAdpBytecode();
   static QByteArray getMidBytecode();
   static QByteArray setDelay(int);
   static QByteArray setServiceData(Bunny *);
-  static QByteArray getSignature();
   static int checksum(QByteArray);
   static QByteArray loadBytecode(QString, Bunny *);
   static QByteArray insertAdpFile(QString, int);
-  static QByteArray insertTest();
   static QByteArray encodeHexInt(int, int);
 
-  static QMap<Bunny *, QString> byteCodes;
-  static QMap<Bunny *, QStringList> soundToSend;
-  static QMap<Bunny *, QDateTime> lastPing;
-  static QMap<Bunny *, QDateTime> previousPing;
-  static QByteArray defaultBytecode;
+  QMap<Bunny *, QString> byteCodes;
+  QMap<Bunny *, QStringList> soundToSend;
+  QMap<Bunny *, QDateTime> lastPing;
+  QMap<Bunny *, QDateTime> previousPing;
+  QByteArray defaultBytecode;
+  QByteArray _amsgBytecode;
 };
 
 inline void NabaztagManager::Init()
 {
-  InitApiCalls();
+  Instance().InitApiCalls();
 }
 
 #endif

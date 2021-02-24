@@ -70,7 +70,7 @@ void HttpHandler::HandleBunnyHTTPRequest()
 	}
 	else if (uri.startsWith("/vl/FR/p3.jsp"))
 	{
-		NabaztagManager::handlePing(request, incomingHttpSocket);
+		NabaztagManager::Instance().handlePing(request, incomingHttpSocket);
 	}
 	else
 	{

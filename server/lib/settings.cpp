@@ -45,20 +45,9 @@ QStringList GlobalSettings::Set(QString const& key, QStringList s)
 	return old;
 }
 
-QVariant GlobalSettings::Get(QString const& key)
-{
-	if (instance->settings->contains(key))
-		return instance->settings->value(key);
-	else
-	{
-		LogWarning(QString("Unknown setting : %1").arg(key));
-		return QVariant();
-	}
-}
-
 QVariant GlobalSettings::Get(QString const& key, QVariant const& defaultValue)
 {
-	if (instance->settings->contains(key))
+	if (instance && instance->settings->contains(key))
 		return instance->settings->value(key);
 	else
 		return defaultValue;

@@ -25,9 +25,59 @@ NabaztagManager::NabaztagManager()
 
   QString nabPath = GlobalSettings::GetString("Nabaztag/NabFilesDir",
                       QCoreApplication::applicationDirPath().append("/nabfiles/"));
-  QString nabFile = GlobalSettings::GetString("Nabaztag/DefaultNabfile","default_violet");
-  QString fileName = QDir(nabPath).absoluteFilePath(nabFile+".nab");
-  defaultBytecode = readFile(fileName);
+  {
+    QString nabFile = GlobalSettings::GetString("Nabaztag/DefaultNabfile","default_violet");
+    QString fileName = QDir(nabPath).absoluteFilePath(nabFile+".nab");
+    defaultBytecode = readFile(fileName);
+  }
+  {
+    // FIXME Changing the template REQUIRES changing the values in the 
+    // "Fix file offset" section of getAMsgForADP()
+    QString nadpFile = "amsg_tpl.nadp";
+    QString fileName = QDir(nabPath).absoluteFilePath(nadpFile);
+    loadAMsgBytecode(fileName);
+  }
+}
+
+bool NabaztagManager::loadAMsgBytecode(const QString& file)
+{
+  //qDebug() << "NabaztagManager::loadAMsgByteCode, filename: " << file;
+  _amsgBytecode = readFile(file);
+  //qDebug() << "Bytecode: " << _amsgBytecode;
+  return !_amsgBytecode.isEmpty();
+}
+
+QByteArray NabaztagManager::getAMsgForADP(const size_t trame, const QString& nadp_file)
+{
+  const QByteArray& payload = readFile(nadp_file);
+  //qDebug() << "AMsg length" << QByteArray::fromHex(encodeHexInt(_amsgBytecode.length(),6));
+  //qDebug() << "Payload length" << QByteArray::fromHex(encodeHexInt(payload.length(),6));
+  //const auto& sz = _amsgBytecode.length() + payload.length();
+  //qDebug() << "Sz            " << QByteArray::fromHex(encodeHexInt(sz,6));
+  QByteArray r  = QByteArray::fromHex("05") 
+                + QByteArray::fromHex(encodeHexInt( 0x000000, 6 ))
+                + "amber"
+                + QByteArray::fromHex(encodeHexInt( trame, 8 ))
+                + QByteArray::fromHex("01")
+                //+ QByteArray::fromHex(encodeHexInt( _amsgBytecode.length(), 8 ))
+                + _amsgBytecode
+                + payload
+                + QByteArray::fromHex("00") // Will fix later
+                + "mind";
+  // Fix file offset
+  const auto foff_off = 0x1E3+1+6+5+8+1-1-6;
+  const auto foff = 0x000000DF + payload.length();
+  r.replace(foff_off,4,QByteArray::fromHex(encodeHexInt(foff,8)));
+  // Fix Size
+  const auto sz = r.length()-4;
+  const auto sz_off=1;
+  r.replace(sz_off,3,QByteArray::fromHex(encodeHexInt(sz,6)));
+  qDebug() << "Sz       :" << QByteArray::fromHex(encodeHexInt(sz,6));
+  //Fix Checksum
+  const auto cs_off=r.length() - 5; // 
+  qDebug() << "Checksum :" << QByteArray::fromHex(encodeHexInt( checksum(r), 2));
+  r.replace(cs_off,1,QByteArray::fromHex(encodeHexInt( checksum(r), 2)));
+  return buildPacket(r);
 }
 
 NabaztagManager & NabaztagManager::Instance()
@@ -140,6 +190,7 @@ QByteArray NabaztagManager::readFile(QString filename)
     LogDebug("Nabaztag: Reading bytecode from "+filename);
     return bootcodeFile.readAll();
   }
+  LogDebug("Nabaztag: Could not find "+filename+" to read bytecode from");
   return QByteArray();
 }
 
@@ -153,7 +204,7 @@ QByteArray NabaztagManager::getAdpBytecode()
   return QByteArray::fromHex("00020500ac00417e02ac0062ac006b0000ac006eac004f7e05c50085009d002801FFc4017e05b80085009e00289c003501ffa8010404a7458004a00047ad00050514ac00417d0500000514ac00417d05ad82000101ae00ae10adb0b2ad01ffb601b1007e01c10085009e00747e01b2ad");
 }
 
-QByteArray NabaztagManager::buildPacket(QList<QByteArray> list)
+QByteArray NabaztagManager::buildPacket(const QList<QByteArray>& list)
 {
   QByteArray ret = QByteArray::fromHex("7F");
   foreach(QByteArray message, list)
@@ -164,7 +215,7 @@ QByteArray NabaztagManager::buildPacket(QList<QByteArray> list)
   return ret;
 }
 
-QByteArray NabaztagManager::buildPacket(QByteArray message)
+QByteArray NabaztagManager::buildPacket(const QByteArray& message)
 {
   QByteArray ret = QByteArray::fromHex("7F");
   ret += message;
@@ -206,64 +257,17 @@ QByteArray NabaztagManager::insertAdpFile(QString filename, int trame)
   return ret;
 }
 
-QByteArray NabaztagManager::insertTest()
-{
-  //LogDebug("Insert test");
-  //TTSAnswer answer = TTSManager::CreateSound("Bienvenue à bord", "google/fr", "fr", TTSManager::Format_Adp, false);
-  //QString file1 = "/home/prod/OpenJabNab/http-wrapper/ojn_local/tts/google/fr/5641c10e70ac87afb7601f70a0e680e1.adp";//answer.file;
-  //QString file1 = "/home/prod/OpenJabNab/http-wrapper/v1ping/sound/clock/hh20.adp";//answer.file;
-  //QString file1 = "/home/prod/OpenJabNab/http-wrapper/v1ping/sound/alexis.adp";//answer.file;
-
-
-        TTSAnswer answer = TTSManager::CreateSound("Bienvenue sur openjabnab", "google/fr", "fr", TTSManager::Format_Adp, false);
-        QString file1 = GlobalSettings::Get("Config/RealHttpRoot", QString()).toString() + answer.filePath;
-        TTSAnswer answer2 = TTSManager::CreateSound("A bientot sur openjabnab", "google/fr", "fr", TTSManager::Format_Adp, false);
-        QString file2 = GlobalSettings::Get("Config/RealHttpRoot", QString()).toString() + answer2.filePath;
-
-  QByteArray ret;
-  ret += insertAdpFile(file1, 1);
-  ret += insertAdpFile(file2, 1);
-  return ret;
-
-
-/*
-  //LogDebug(file1);
-  QByteArray File1 = readFile(file1);
-  QByteArray File2 = readFile(file2);
-  // Header
-  //QByteArray ret = QByteArray::fromHex("7F");
-  // Bytecode to play adp file
-  QByteArray ret;
-  ret = QByteArray::fromHex("05") + QByteArray::fromHex(encodeHexInt( File1.length() + 139, 6 ));
-  ret += "amber";
-  // Trame ID, transition flag
-  ret += QByteArray::fromHex(encodeHexInt( 1, 8 )) + QByteArray::fromHex("01");
-  // Bytecode
-  ret += QByteArray::fromHex(encodeHexInt( getAdpBytecode().length(), 8 )) + getAdpBytecode();
-  // Nbr music
-  ret += QByteArray::fromHex(encodeHexInt( 2, 8 ));
-  // Music
-  ret += QByteArray::fromHex(encodeHexInt( File1.length(), 8 ));
-  ret += File1;
-  ret += QByteArray::fromHex(encodeHexInt( File2.length(), 8 ));
-  ret += File2;
-  ret += QByteArray::fromHex(encodeHexInt( checksum(ret + "mind"), 2)) + "mind";
-  return ret;
-*/
-}
-
 QByteArray NabaztagManager::getSignature()
 {
-  QByteArray ret;
-  ret += "http://";
+  QString ret("http://");
   ret += GlobalSettings::GetString("OpenJabNabServers/PingServer");
-  return ret;
+  return ret.toUtf8();
 }
 
 int NabaztagManager::checksum(QByteArray data)
 {
   int sum = 0;
-  for(int i = 0; i < data.size(); i++)
+  for(size_t i = 0; i < data.size(); i++)
   {
     sum += ((uchar)data.at(i) ) ;
     if(sum >= 256)
@@ -408,7 +412,8 @@ void NabaztagManager::handlePing(HTTPRequest request, QTcpSocket * s)
           if(!n->IsSleeping() || n->GetGlobalSetting("Insomniac",false).toBool())
           {
             LogDebug("Nabaztag " + QString(n->GetID()) + " Play ADP file: " + filePlugin);
-            answer = NabaztagManager::buildPacket( NabaztagManager::insertAdpFile(filePlugin, 1) );
+            //answer = NabaztagManager::buildPacket( NabaztagManager::insertAdpFile(filePlugin, 1) )
+            answer = getAMsgForADP(1,filePlugin);
           }
         }
         if(files.count() > 0)
@@ -504,8 +509,3 @@ void NabaztagManager::Close()
 {
 }
 
-QMap<Bunny *, QString> NabaztagManager::byteCodes;
-QMap<Bunny *, QStringList> NabaztagManager::soundToSend;
-QMap<Bunny *, QDateTime> NabaztagManager::lastPing;
-QMap<Bunny *, QDateTime> NabaztagManager::previousPing;
-QByteArray NabaztagManager::defaultBytecode;
