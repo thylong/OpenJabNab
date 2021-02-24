@@ -71,8 +71,7 @@ public:
   void InitApiCalls();
 
   bool loadAMsgBytecode(const QString& file);
-  QByteArray getAMsgForADP(const size_t trame, const QString& nadp_file);
-
+  QByteArray getAMsgForADP(const size_t trame, QString nadp_file);
   static QByteArray readFile(QString);
   static QByteArray getSignature();
 

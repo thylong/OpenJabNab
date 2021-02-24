@@ -47,9 +47,13 @@ bool NabaztagManager::loadAMsgBytecode(const QString& file)
   return !_amsgBytecode.isEmpty();
 }
 
-QByteArray NabaztagManager::getAMsgForADP(const size_t trame, const QString& nadp_file)
+QByteArray NabaztagManager::getAMsgForADP(const size_t trame, QString filename)
 {
-  const QByteArray& payload = readFile(nadp_file);
+  if(filename.startsWith("broadcast"))
+  {
+    filename.replace("broadcast/ojn_local/", GlobalSettings::Get("Config/RealHttpRoot", QString()).toString());
+  }
+  const QByteArray& payload = readFile(filename);
   //qDebug() << "AMsg length" << QByteArray::fromHex(encodeHexInt(_amsgBytecode.length(),6));
   //qDebug() << "Payload length" << QByteArray::fromHex(encodeHexInt(payload.length(),6));
   //const auto& sz = _amsgBytecode.length() + payload.length();
