@@ -44,7 +44,7 @@ public:
 	bool NeedToSleep(const Bunny *);
 
 //	QString SpecialBytecode(Bunny *);
-	void SetServicesImportant(Bunny *);
+	virtual void SetServices(Bunny *) override;
 
 	void InitApiCalls();
 

@@ -40,6 +40,14 @@ bool PluginSleep::OnRFID(Bunny * b, QByteArray const& tag)
 	return false;
 }
 
+void PluginSleep::SetServices(Bunny * b)
+{
+	bool sleep = NeedToSleep(b);
+	//LogDebug(QString("Nabaztag %1 needs to sleep: %2 !").arg("Bunny").arg(sleep ? "yes" : "no"));
+	b->SetGlobalSetting("asleep", sleep);
+	b->SetService(13, sleep ? 0x02 : 0x00);
+}
+/*
 void PluginSleep::SetServicesImportant(Bunny * b)
 {
 	if(NeedToSleep(b))
@@ -66,6 +74,7 @@ void PluginSleep::SetServicesImportant(Bunny * b)
 		b->SetService(NabaztagManager::RightEar, b->GetRightEar());
 	}
 }
+*/
 /*
 QString PluginSleep::SpecialBytecode(Bunny * b)
 {
@@ -92,12 +101,14 @@ bool PluginSleep::OnEarsMove(Bunny * b, int , int )
 }
 void PluginSleep::OnBunnyConnect(Bunny * b)
 {
+	b->SetGlobalSetting("asleep", false);
 	ConvertConf(b);
 	RegisterCrons(b);
 }
 
 void PluginSleep::OnBunnyDisconnect(Bunny * b)
 {
+	//b->SetGlobalSetting("asleep", b->IsSleeping());
 	CleanCrons(b);
 }
 
@@ -139,15 +150,16 @@ void PluginSleep::ConvertConf(Bunny * b)
 
 bool PluginSleep::NeedToSleep(const Bunny * b)
 {
+	if(b->GetGlobalSetting("asleep", false).toBool())
+		return true;
+
 	QDateTime currentDateTime = Translator::GetCurrentTime(b->GetGlobalSetting("TimeZone","UTC").toString());
 
 	QList<SleepTime> sleeps = getSleepTimes(b->GetPluginSetting(GetName(), QString("SleepList"), QStringList()).toStringList());
 	foreach(SleepTime sleep, sleeps)
 	{
 		if(sleep.IsSleepingAt(currentDateTime))
-		{
 			return true;
-		}
 	}
 	return false;
 }
@@ -511,6 +523,7 @@ PLUGIN_BUNNY_API_CALL(PluginSleep::Api_Sleep)
 			return new ApiManager::ApiError(Translator::tr("Bunny is not idle (%1)", account).arg(QString(bunny->GetXmppResource())));
 
 		bunny->SendPacket(SleepPacket(SleepPacket::Sleep), GetName());
+		bunny->SetGlobalSetting("asleep", true);
 		return new ApiManager::ApiOk(Translator::tr("Bunny is going to sleep.", account));
 	}
 	else if(action == "wakeup")
@@ -519,6 +532,7 @@ PLUGIN_BUNNY_API_CALL(PluginSleep::Api_Sleep)
 			return new ApiManager::ApiError(Translator::tr("Bunny is not sleeping (%1)", account).arg(QString(bunny->GetXmppResource())));
 
 		bunny->SendPacket(SleepPacket(SleepPacket::Wake_Up), GetName());
+		bunny->SetGlobalSetting("asleep", false);
 		return new ApiManager::ApiOk(Translator::tr("Bunny is waking up.", account));
 	}
 	else

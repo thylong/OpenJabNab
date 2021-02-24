@@ -3,7 +3,7 @@
 #include "messagepacket.h"
 #include "bunny.h"
 
-PluginTaichi::PluginTaichi():PluginInterface("taichi", "Manage Bunny's Taichi",BunnyV2Plugin /*| BunnyV1Plugin*/ | RfidPlugin)
+PluginTaichi::PluginTaichi():PluginInterface("taichi", "Manage Bunny's Taichi",BunnyV2Plugin | BunnyV1Plugin | RfidPlugin)
 {
 }
 
@@ -18,6 +18,16 @@ void PluginTaichi::OnBunnyDisconnect(Bunny * b)
 {
 	if(b->IsConnected())
 		b->SendPacket(AmbientPacket(AmbientPacket::Service_TaiChi,0), GetName());
+}
+
+void PluginTaichi::SetServices(Bunny * b)
+{
+	int frequency = b->GetPluginSetting(GetName(), "frequency", 0).toInt();
+	if(frequency < 0)
+		frequency = 0;
+	if(frequency > 255)
+		frequency = 255;
+	b->SetService(14, frequency);
 }
 
 bool PluginTaichi::OnVoiceCommand(Bunny * b, QString const& command, QStringList const&)
@@ -50,6 +60,7 @@ void PluginTaichi::SendTaichiFrequency(Bunny * b)
 		frequency = 255;
 	b->SendPacket(AmbientPacket(AmbientPacket::Service_TaiChi,frequency), GetName());
 }
+
 
 QString PluginTaichi::OnApiTaichi(Bunny * b, QVariant)
 {
