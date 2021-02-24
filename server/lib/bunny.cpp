@@ -1514,6 +1514,23 @@ API_CALL(Bunny::Api_Config)
 		SaveConfig();
 		return new ApiManager::ApiOk(Translator::tr("Bunny config has been saved", account));
 	}
+	else if(action == "get")
+	{
+		if(!hRequest.HasArg("setting"))
+			return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("setting"));
+		QString setting = hRequest.GetArg("setting");
+		return new ApiManager::ApiString(GetGlobalSetting(setting, QString()).toString());
+	}
+	else if(action == "set")
+	{
+		if(!hRequest.HasArg("setting"))
+			return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("setting"));
+		if(!hRequest.HasArg("value"))
+			return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("value"));
+		QString setting = hRequest.GetArg("setting");
+		QVariant val    = hRequest.GetArg("value");
+		return new ApiManager::ApiString(GetGlobalSetting(setting, val).toString());
+	}
 	return new ApiManager::ApiError(Translator::tr("Bad argument action='%1'", account).arg(action));
 }
 
