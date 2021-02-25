@@ -1529,7 +1529,8 @@ API_CALL(Bunny::Api_Config)
 			return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("value"));
 		QString setting = hRequest.GetArg("setting");
 		QVariant val    = hRequest.GetArg("value");
-		return new ApiManager::ApiString(GetGlobalSetting(setting, val).toString());
+		SetGlobalSetting(setting, val);
+		return new ApiManager::ApiString(GetGlobalSetting(setting, QString()).toString());
 	}
 	return new ApiManager::ApiError(Translator::tr("Bad argument action='%1'", account).arg(action));
 }
