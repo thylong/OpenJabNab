@@ -306,7 +306,22 @@ QByteArray NabaztagManager::encodeHexInt(int nbr, int len)
 
 void NabaztagManager::handlePing(HTTPRequest request, QTcpSocket * s)
 {
-  QString sn = request.GetArg("sn");
+  QString sn = request.GetArg("sn");      // Nabaztag MAC Address
+  //size_t  v  = request.GetArg("v");     // Firmware version
+  //size_t ex  = request.GetArg("ex");    // Unknown, always 00
+  //size_t st  = request.GetArg("st");    // 0 for first request, 1 after
+  //size_t sd  = request.GetArg("sd");    // Action type:
+                                          // 0001 Double click
+                                          // 0002 Event finished (eg: audio playback)
+                                          // 0003 Single click
+                                          // 0004 Long click
+                                          // 0005 Playback stopped
+                                          // 01FF Unknown
+                                          // 8XXX or 9XXX Ears movement
+  //size_t ts  = request.GetArg("ts");    // Unknown
+  //size_t tc  = request.GetArg("tc");    // Unknown. Services ? Trame counter ?
+  //size_t tn  = request.GetArg("tn");    // Unknown 
+
   Bunny * n = BunnyManager::GetBunny(sn.toLatin1());
   bool log = n->GetGlobalSetting("DumpLog",false).toBool();
   if(n != NULL)
@@ -362,27 +377,6 @@ void NabaztagManager::handlePing(HTTPRequest request, QTcpSocket * s)
       n->SetVersion(1);
       LogDebug("Nabaztag" + n->GetBunnyName() + " just arrived on the server. Load bytecode: " + bytecode);
       answer = NabaztagManager::buildPacket( NabaztagManager::loadBytecode(bytecode, n) + NabaztagManager::setDelay(10) );
-/*
-      // Services
-      if(true)
-      {
-        answer = answer.left(answer.length() - 1);
-
-        QByteArray services;
-
-        services = QByteArray::fromHex("00000001");
-        // TaiChi
-        services += QByteArray::fromHex(QString::number(AmbientPacket::Service_TaiChi).toLatin1() + "FF");
-
-        // Empty * 7
-        for(int i = 0; i < 7; i++)
-          services += QByteArray::fromHex("0000");
-
-        services += QByteArray::fromHex("000000FF");
-
-        answer += QByteArray::fromHex("04") + QByteArray::fromHex(NabaztagManager::encodeHexInt(services.length() / 2, 6)) + services;
-      }
-*/
     }
     else if(special.length() > 0)
     {
@@ -400,11 +394,6 @@ void NabaztagManager::handlePing(HTTPRequest request, QTcpSocket * s)
     }
     else
     {
-      if(answer.length() == 0)
-      {
-//				answer = NabaztagManager::buildPacket( NabaztagManager::insertTest() );
-      }
-
       if(answer.length() == 0)
       {
         QStringList files = Instance().soundToSend.value(n);
@@ -437,30 +426,32 @@ void NabaztagManager::handlePing(HTTPRequest request, QTcpSocket * s)
           //LogDebug(n->GetBunnyName() + " event change");
           if(request.GetArg("sd") == "0002")
           {
-            answer = NabaztagManager::loadBytecode(bytecode, n) + NabaztagManager::setDelay(10);
+            LogDebug("Nabaztag " + QString(n->GetID()) +"/" + n->GetBunnyName()+ " Event finished");
+            answer = NabaztagManager::buildPacket(NabaztagManager::loadBytecode(bytecode, n));// + NabaztagManager::setDelay(10);
           }
           else if(request.GetArg("sd") == "0001")
           {
-            LogDebug("Nabaztag " + QString(n->GetID()) + " Double click on " + n->GetBunnyName());
+            LogDebug("Nabaztag " + QString(n->GetID()) +"/" + n->GetBunnyName()+ " Double click");
             n->OnClick(PluginInterface::DoubleClick);
           }
           else if(request.GetArg("sd") == "0003")
           {
-            LogDebug("Nabaztag " + QString(n->GetID()) + " Single click on " + n->GetBunnyName());
+            LogDebug("Nabaztag " + QString(n->GetID()) +"/" + n->GetBunnyName()+ " Single click");
             n->OnClick(PluginInterface::SingleClick);
           }
           else if(request.GetArg("sd") == "0004")
           {
-            LogDebug("Nabaztag " + QString(n->GetID()) + " Long click on " + n->GetBunnyName());
+            LogDebug("Nabaztag " + QString(n->GetID()) +"/" + n->GetBunnyName()+ " Long click");
             n->OnClick(PluginInterface::SingleClick);
           }
           else if(request.GetArg("sd") == "01FF")
           {
+            LogDebug("Nabaztag " + QString(n->GetID()) +"/" + n->GetBunnyName()+ " Unknown 01FF");
             answer = NabaztagManager::loadBytecode(bytecode, n) + NabaztagManager::setDelay(10);
           }
           else
           {
-            LogDebug("Nabaztag " + QString(n->GetID()) + " Ears move on " + n->GetBunnyName());
+            LogDebug("Nabaztag " + QString(n->GetID()) +"/" + n->GetBunnyName()+ " Ears move");
           }
           change = true;
         }
