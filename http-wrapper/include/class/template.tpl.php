@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
 
     <link href="/media/css/bootstrap.min.css" rel="stylesheet">
-    <link href="/media/css/jquery.timepicker.min.css?<?php echo time(); ?>" rel="stylesheet">
+    <link href="/media/css/bootstrap-clockpicker.min.css" rel="stylesheet">
 
     <link href="https://fonts.googleapis.com/css?family=Open+Sans:400italic,600italic,400,600" rel="stylesheet">
     <link href="/media/css/font-awesome.css" rel="stylesheet">
@@ -18,7 +18,7 @@
 
     <script src="/media/js/jquery-3.5.1.min.js"></script>
     <script src="/media/js/bootstrap.min.js"></script>
-    <script src="/media/js/jquery.timepicker.min.js"></script>
+    <script src="/media/js/bootstrap-clockpicker.min.js"></script>
     <script src="/media/js/base.js"></script>
     <script src="/media/js/excanvas.min.js"></script>
 

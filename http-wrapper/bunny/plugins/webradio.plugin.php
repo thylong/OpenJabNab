@@ -19,37 +19,33 @@ $days = array(
 6 => __tr("Saturday"),
 7 => __tr("Sunday")
 );
-if(isset($_POST['scheduleT']) && isset($_POST['scheduleP'])) {
+if(!empty($_POST['scheduleT']) && !empty($_POST['scheduleP'])) {
   $_SESSION['subtab'] = "webradio_schedule";
-  if($_POST['scheduleP'] != "")
+  $time = $_POST['scheduleT'];
+  $name = urlencode(preg_replace('/OJN_/', '', $_POST['scheduleP']));
+  $d = $_POST['scheduleD'];
+  if($_POST['scheduleD'] >= 0)
   {
-    if($_POST['scheduleD'] >= 0)
-    {
-      Message::AddFromApi($ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/webradio/schedule?action=add&day=".$_POST['scheduleD']."&time=".$_POST['scheduleT']."&name=".urlencode(preg_replace('/OJN_/', '', $_POST['scheduleP']))."&".$ojnAPI->getToken()));
-    }
-    else
-    {
-      if($_POST['scheduleD'] == -1)
-      {
-        $id = 0;
-        for($d = 1; $d<=5; $d++)
-        {
-          Message::AddFromApi($ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/webradio/schedule?action=add&day=".$d."&time=".$_POST['scheduleT']."&name=".urlencode(preg_replace('/OJN_/', '', $_POST['scheduleP']))."&".$ojnAPI->getToken()), $id);
-        }
-      }
-      if($_POST['scheduleD'] == -2)
-      {
-        $id = 0;
-        for($d = 6; $d<=7; $d++)
-        {
-          Message::AddFromApi($ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/webradio/schedule?action=add&day=".$d."&time=".$_POST['scheduleT']."&name=".urlencode(preg_replace('/OJN_/', '', $_POST['scheduleP']))."&".$ojnAPI->getToken()), $id);
-        }
-      }
-    }
+    Message::AddFromApi($ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/webradio/schedule?action=add&day=".$d."&time=".$time."&name=".$name."&".$ojnAPI->getToken()));
   }
   else
   {
-    Message::AddError(__tr('You must choose a preset'));
+    if($_POST['scheduleD'] == -1)
+    {
+      $id = 0;
+      for($d = 1; $d<=5; $d++)
+      {
+        Message::AddFromApi($ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/webradio/schedule?action=add&day=".$d."&time=".$time."&name=".$name."&".$ojnAPI->getToken()), $id);
+      }
+    }
+    if($_POST['scheduleD'] == -2)
+    {
+      $id = 0;
+      for($d = 6; $d<=7; $d++)
+      {
+        Message::AddFromApi($ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/webradio/schedule?action=add&day=".$d."&time=".$time."&name=".$name."&".$ojnAPI->getToken()), $id);
+      }
+    }
   }
   $reload = true;
 }
@@ -240,14 +236,16 @@ if($reload)
       <div class="form-group row">
         <label class="col-sm-3 col-form-label" for="scheduleT"><?php echo __tr("Add a schedule at (hh:mm)") ?></label>
         <div class="col-sm-2 input-group">
-          <div class="input-group-preprend">
-            <div class="input-group-text"><i class="icon-time"></i></div>
+          <div class="input-group clockpicker" data-autoclose="true">
+            <input type="text" name="scheduleT" class="form-control" value="<?php echo date('H:i'); ?>">
+            <div class="input-group-text input-group-addon">
+              <i class="icon-time"></i>
+            </div>
           </div>
-          <input type="text" name="scheduleT" class="timepicker form-control text-center">
+          <script type="text/javascript">
+            $('.clockpicker').clockpicker({'default': 'now'});
+          </script>
         </div>
-        <script type="text/javascript">
-          $(".timepicker").timepicker({minuteStep: 1,showMeridian: false});
-        </script>
       </div>
       <div class="form-group row">
         <label class="col-sm-3 col-form-label" for="scheduleD"><?php echo __tr("Day") ?></label>

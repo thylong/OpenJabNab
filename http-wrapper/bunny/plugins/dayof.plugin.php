@@ -49,17 +49,19 @@ if($reload) {
 <div class="tab-content pt-3">
 	<div class="tab-pane<?php echo $_SESSION['subtab'] == 'dayof_schedule' ? ' active' : '' ?>" id="schedule">
 		<form method="post">
-			<div class="form-group row">
-				<label class="col-sm-3 col-form-label" for="etime"><?php echo __tr("Add a schedule at (hh:mm)") ?></label>
-				<div class="col-sm-2 input-group">
-					<div class="input-group-preprend">
-						<div class="input-group-text"><i class="icon-time"></i></div>
-					</div>
-					<input type="text" name="etime" class="timepicker form-control text-center">
-				</div>
-				<script type="text/javascript">
-					$(".timepicker").timepicker({minuteStep: 1,showMeridian: false});
-				</script>
+		<div class="form-group row">
+        <label class="col-sm-3 col-form-label" for="scheduleT"><?php echo __tr("Add a schedule at (hh:mm)") ?></label>
+        <div class="col-sm-2 input-group">
+          <div class="input-group clockpicker" data-autoclose="true">
+            <input type="text" name="etime" class="form-control" value="<?php echo date('H:i'); ?>">
+            <div class="input-group-text input-group-addon">
+              <i class="icon-time"></i>
+            </div>
+          </div>
+          <script type="text/javascript">
+            $('.clockpicker').clockpicker({'default': 'now'});
+          </script>
+        </div>
 				<div class="col-sm-1">
 					<button class="btn btn-primary" type="submit"><?php echo __tr("Add") ?></button>
 				</div>

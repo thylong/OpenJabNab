@@ -1,4 +1,4 @@
-<?php 
+<?php
 $days = array(
 0 => __tr("Every day"),
 1 => __tr("Monday"),
@@ -10,8 +10,8 @@ $days = array(
 7 => __tr("Sunday")
 );
 $reload = false;
-if(isset($_POST['webcastT']) && isset($_POST['webcastV']) && isset($_POST['webcastD'])) {
-	Message::AddFromApi($ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/volume/schedule?action=add&vol=".urlencode($_POST['webcastV'])."&time=".$_POST['webcastT']."&day=".$_POST['webcastD']."&".$ojnAPI->getToken()));
+if(isset($_POST['scheduleT']) && isset($_POST['scheduleV']) && isset($_POST['scheduleD'])) {
+	Message::AddFromApi($ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/volume/schedule?action=add&vol=".urlencode($_POST['scheduleV'])."&time=".$_POST['scheduleT']."&day=".$_POST['scheduleD']."&".$ojnAPI->getToken()));
 	$reload = true;
 }
 if(isset($_GET['rt']) && isset($_GET['rd'])) {
@@ -42,53 +42,74 @@ unset($_SESSION['sound']);
 $wList = $ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/volume/schedule?action=list&".$ojnAPI->getToken());
 ?>
 <form method="post" class="form-horizontal">
-          <div class="control-group">
-            <label for="input01" class="control-label"><?php echo __tr("Current sound volume") ?></label>
-            <div class="controls">
-		<input type="text" class="disabled"  id="current" disabled value="<?php echo $current ?>"/>
-            </div>
-          </div>
-          <div class="control-group">
-            <label for="input01" class="control-label"><?php echo __tr("Set volume to") ?></label>
-            <div class="controls">
-		<div class="input-append">
-		<input type="text" name="sound" value="<?php echo $set ?>"/><button name="test" class="btn btn-success" type="submit"><?php echo __tr("Test") ?></button>
-		</div>
-		<p><?php echo __tr("%1 : volume set with button", 0) ?><br />
-		<?php echo __tr("%1 : maximum volume", 1) ?><br />
-		<?php echo __tr("%1 : minimum volume", 255) ?><br />
-		</p>
-            </div>
-          </div>
-          <div class="form-actions">
-            <button name="save" class="btn btn-primary" type="submit"><?php echo __tr("Save") ?></button>
-          </div>
+  <div class="form-group row">
+    <label class="col-sm-3 col-form-label" for="currentV"><?php echo __tr("Current sound volume") ?></label>
+    <div class="col-sm-2 input-group">
+      <input type="text" class="form-control disabled" id="currentV" disabled value="<?php echo $current ?>"/>
+    </div>
+  </div>
+  <div class="form-group row">
+    <label class="col-sm-3 col-form-label" for="sound"><?php echo __tr("Set volume to") ?></label>
+    <div class="col-sm-2 input-group">
+      <input type="text" class="form-control" name="sound" value="<?php echo $set ?>"/>
+    </div>
+    <div class="col-sm-2 input-group">
+      <button name="test" class="btn btn-sm btn-success" type="submit"><?php echo __tr("Test") ?></button>
+    </div>
+  </div>
+  <div class="form-group row">
+    <div class="col-sm-4 offset-sm-3 input-group">
+      <ul>
+        <li><?php echo __tr("%1 : volume set with button", 0) ?></li>
+        <li><?php echo __tr("%1 : maximum volume", 1) ?></li>
+        <li><?php echo __tr("%1 : minimum volume", 255) ?></li>
+      </ul>
+    </div>
+  </div>
+  <div class="form-group row">
+    <div class="col-sm-1 offset-sm-3">
+      <button name="save" class="btn btn-primary" type="submit"><?php echo __tr("Save") ?></button>
+    </div>
+  </div>
 </form>
-<br />
-<form method="post" class="form-horizontal">
-          <div class="control-group">
-            <label for="input01" class="control-label"><?php echo __tr("Automatic change at (hh:mm)") ?></label>
-            <div class="controls">
- <div class="input-append bootstrap-timepicker">
-<input id="timepicker2" type="text" name="webcastT" class="input-small"><span class="add-on">
-<i class="icon-time"></i>
-</span>
-</div>
-<?php $ojnTemplate->setJs('<script type="text/javascript">jQuery("#timepicker2").timepicker({minuteStep: 1,showSeconds: false,showMeridian: false});</script>'); ?>
-		,&nbsp;
-		<select name="webcastD"><?php foreach($days as $d => $day) { ?><option value="<?php echo $d ?>"><?php echo $day ?></option><?php } ?></select>
+    <hr />
+    <form method="post" class="form-horizontal">
+      <div class="form-group row">
+        <label class="col-sm-3 col-form-label" for="scheduleT"><?php echo __tr("Automatic change at (hh:mm)") ?></label>
+        <div class="col-sm-2 input-group">
+          <div class="input-group clockpicker" data-autoclose="true">
+            <input type="text" name="scheduleT" class="form-control" value="<?php echo date('H:i'); ?>">
+            <div class="input-group-text input-group-addon">
+              <i class="icon-time"></i>
             </div>
-            </div>
-          <div class="control-group">
-            <label for="input01" class="control-label"><?php echo __tr("Sound volume") ?></label>
-            <div class="controls">
-		<input type="text" name="webcastV">
-		</div>
           </div>
-          <div class="form-actions">
-            <button class="btn btn-primary" type="submit"><?php echo __tr("Save") ?></button>
-          </div>
-</form>
+          <script type="text/javascript">
+            $('.clockpicker').clockpicker({'default': 'now'});
+          </script>
+        </div>
+      </div>
+      <div class="form-group row">
+        <label class="col-sm-3 col-form-label" for="scheduleD"><?php echo __tr("Day") ?></label>
+        <div class="col-sm-2 input-group">
+          <select name="scheduleD" class="form-control">
+            <?php foreach($days as $d => $day): ?>
+            <option value="<?php echo $d ?>"><?php echo $day ?></option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+      </div>
+      <div class="form-group row">
+        <label class="col-sm-3 col-form-label" for="scheduleV"><?php echo __tr("Sound volume") ?></label>
+        <div class="col-sm-2 input-group">
+          <input class="form-control" type="text" name="scheduleV">
+        </div>
+      </div>
+      <div class="form-group row">
+        <div class="col-sm-1 offset-sm-3">
+          <button class="btn btn-primary" type="submit"><?php echo __tr("Save") ?></button>
+        </div>
+      </div>
+    </form>
 
 <?php
 if(isset($wList['list']->item)){
@@ -118,7 +139,7 @@ if(isset($wList['list']->item)){
 	</tr>
 <?php  } ?>
 </table>
-<?php } ?> 
+<?php } ?>
 </form>
 <script>
 function updateSound() {

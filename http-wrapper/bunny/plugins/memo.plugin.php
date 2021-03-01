@@ -63,18 +63,20 @@ if(isset($_GET['et']) && isset($_GET['ed']))
 ?>
 
 <form method="post">
-	<div class="form-group row">
-		<label class="col-sm-3 col-form-label" for="scheduleT"><?php echo __tr("Add a schedule at (hh:mm)") ?></label>
-		<div class="col-sm-2 input-group">
-			<div class="input-group-preprend">
-				<div class="input-group-text"><i class="icon-time"></i></div>
-			</div>
-			<input type="text" name="scheduleT" class="timepicker form-control text-center" value="<?php echo isset($_GET['et']) ? $_GET['et'] : '' ?>">
-		</div>
-		<script type="text/javascript">
-			$(".timepicker").timepicker({minuteStep: 1,showMeridian: false});
-		</script>
-	</div>
+  <div class="form-group row">
+    <label class="col-sm-3 col-form-label" for="scheduleT"><?php echo __tr("Add a schedule at (hh:mm)") ?></label>
+    <div class="col-sm-2 input-group">
+      <div class="input-group clockpicker" data-autoclose="true">
+        <input type="text" name="scheduleT" class="form-control" value="<?php echo isset($_GET['et']) ? $_GET['et'] : date('H:i'); ?>">
+        <div class="input-group-text input-group-addon">
+          <i class="icon-time"></i>
+        </div>
+      </div>
+      <script type="text/javascript">
+        $('.clockpicker').clockpicker({'default': 'now'});
+      </script>
+    </div>
+  </div>
 	<div class="form-group row">
 		<label class="col-sm-3 col-form-label" for="scheduleD"><?php echo __tr("Day") ?></label>
 		<div class="col-sm-2 input-group">

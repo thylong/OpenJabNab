@@ -66,10 +66,12 @@ if(!empty($_SESSION['sleep']['s1']) && !empty($_SESSION['sleep']['s2']) &&
         </select>
       </div>
       <div class="col-sm-2 input-group">
-        <div class="input-group-preprend">
-          <div class="input-group-text"><i class="icon-time"></i></div>
+        <div class="input-group clockpicker" data-autoclose="true">
+          <input type="text" name="s1" class="form-control" value="<?php echo $s1; ?>">
+          <div class="input-group-text input-group-addon">
+            <i class="icon-time"></i>
+          </div>
         </div>
-        <input type="text" name="s1" value="<?php echo $s1; ?>" class="timepicker form-control  text-center">
       </div>
     </div>
     <div class="form-group row">
@@ -82,10 +84,12 @@ if(!empty($_SESSION['sleep']['s1']) && !empty($_SESSION['sleep']['s2']) &&
         </select>
       </div>
       <div class="col-sm-2 input-group">
-        <div class="input-group-preprend">
-          <div class="input-group-text"><i class="icon-time"></i></div>
+        <div class="input-group clockpicker" data-autoclose="true">
+          <input type="text" name="w1" class="form-control" value="<?php echo $w1; ?>">
+          <div class="input-group-text input-group-addon">
+            <i class="icon-time"></i>
+          </div>
         </div>
-        <input type="text" name="w1" value="<?php echo $w1; ?>" class="timepicker form-control  text-center">
       </div>
     </div>
 
@@ -104,17 +108,7 @@ if(!empty($_SESSION['sleep']['s1']) && !empty($_SESSION['sleep']['s2']) &&
   </div>
 </form>
 <script type="text/javascript">
-  $(".timepicker").timepicker(
-    {
-      interval:30,
-      timeFormat: 'HH:mm',
-      /*defaultTime: 'now',*/
-      dropdown: true,
-      dynamic: false,
-      minTime: '00:00',
-      maxTime: '23:30',
-      startTime: '00:00',
-    });
+  $('.clockpicker').clockpicker();
 </script>
 <?php
 global $size;
