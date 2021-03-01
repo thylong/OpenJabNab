@@ -267,7 +267,7 @@ if(isset($_GET['removeB'])) {
 // Debug
 foreach($asks as $ask)
 {
-  if(isset($_GET['ask'.$ask])) 
+  if(isset($_GET['ask'.$ask]))
   {
 	  $_SESSION['tab'] = 'bunny_debug';
   	Message::AddFromApi($ojnAPI->getApiString(BUNNY_API.'/status/status?action='.$ask.'&'.$ojnAPI->getToken()));
@@ -298,11 +298,11 @@ if((!empty($_GET['plug']) && !empty($_GET['stat'])) || (!empty($_POST['plug']) &
   $_SESSION['tab'] = 'bunny_plugins';
 
   $beta = isBeta($_SESSION['bunny'], $plugin) || isTester($Infos['login'], $plugin);
-  
-  if($plugins[$plugin]['premium'] && 
-      !(   $Infos['isAdmin'] 
-        || $Infos['status'] == 'VIP' 
-        || $Infos['status'] == 'Premium' 
+
+  if($plugins[$plugin]['premium'] &&
+      !(   $Infos['isAdmin']
+        || $Infos['status'] == 'VIP'
+        || $Infos['status'] == 'Premium'
         || $Infos['status'] == 'Demo'
         || $beta
        )
@@ -313,7 +313,7 @@ if((!empty($_GET['plug']) && !empty($_GET['stat'])) || (!empty($_POST['plug']) &
 		Message::AddWarning("&bull; ".__tr("VIP status is for everyone who already made a donation"), $id);
 		Message::AddWarning("&bull; ".__tr("You could also try all premium plugins for a limited time")." <a href='demo.php'>".__tr("Try plugins")."</a>", $id);
 	}
-  else if($plugins[$plugin]['dev'] && 
+  else if($plugins[$plugin]['dev'] &&
           !(   $Infos['isAdmin']
             || $beta
            )
@@ -361,7 +361,7 @@ if(!empty($_POST['aVAPI'])) {
 
 if(!empty($_POST['pingserver']) && !empty($_POST['broadserver']) && !empty($_POST['xmppserver']) &&
    !empty($_POST['xmppport']) && !empty($_POST['xmppaltport']) && !empty($_POST['xmpptimeout'])
-  ) 
+  )
 {
 	$_SESSION['tab'] = 'bunny_expert';
 	$id = Message::AddFromApi($ojnAPI->getApiString(BUNNY_API."/locate/setcustomlocate?param=PingServer&value=".$_POST['pingserver']."&".$ojnAPI->getToken()));
@@ -407,7 +407,7 @@ if(isset($Infos['isAdmin']) && $Infos['isAdmin']) {
 
 require_once(ROOT_SITE.'include/message.php');
 
-$title = empty($_SESSION['bunny']) ?  __tr("Choose your bunny") : 
+$title = empty($_SESSION['bunny']) ?  __tr("Choose your bunny") :
                                       __tr("Setup of bunny '%1'", !empty($_SESSION['bunny_name']) ? $_SESSION['bunny_name'] : $_SESSION['bunny']).
                                         ' ('.__tr(in_array($_SESSION['bunny'], $online) ? 'Connected' : 'Disconnected').')' ;
 ?>
@@ -440,7 +440,7 @@ $title = empty($_SESSION['bunny']) ?  __tr("Choose your bunny") :
       </div>
       <?php endforeach; ?>
     </div>
-    <?php else: 
+    <?php else:
       $ojnTemplate->setTitle(__tr('Bunny setup'));
       if(defined(BUNNY_API))
         define("BUNNY_API", "bunny/" . $_SESSION['bunny']);
@@ -497,7 +497,7 @@ $title = empty($_SESSION['bunny']) ?  __tr("Choose your bunny") :
         foreach($actifs as $actif)
           $plugins[$actif]['actif'] = true;
         $clicks = $ojnAPI->getApiList(BUNNY_API."/getClickPlugins?".$ojnAPI->getToken());
-        $t = $ojnAPI->getApiValue(BUNNY_API."/getTimezone?".$ojnAPI->getToken());
+        $Tz = $ojnAPI->getApiValue(BUNNY_API."/getTimezone?".$ojnAPI->getToken());
         $tzs = $ojnAPI->getApiMapped("translate/listTimezones?".$ojnAPI->getToken());
         ?>
         <form method="post">
@@ -558,7 +558,7 @@ $title = empty($_SESSION['bunny']) ?  __tr("Choose your bunny") :
             <div class="col-sm-4">
               <select name="timezone" class="form-control">
                 <?php foreach($tzs as $tz=>$time): ?>
-                  <option value="<?php echo $tz; ?>" <?php echo ($t == $tz ? ' selected="selected"' : '') ?>>
+                  <option value="<?php echo $tz; ?>" <?php echo ($Tz == $tz ? ' selected="selected"' : '') ?>>
                     <?php echo $tz.' ('.$time.')'; ?>
                   </option>
                 <?php endforeach; ?>
@@ -573,19 +573,19 @@ $title = empty($_SESSION['bunny']) ?  __tr("Choose your bunny") :
             <label class="col-sm-2 col-form-label" for="voice"><?php echo __tr("Voice") ?></label>
             <div class="col-sm-3">
               <select name="voice" id="voiceList" class="form-control">
-                <?php 
+                <?php
                 if(is_array($voices)):
                   foreach($voices as $tts => $vlist):
                     if(preg_match('|^(.*)/(.*)$|', $tts, $match)): ?>
                 <option value="<?php echo $tts; ?>" <?php echo ($Voice == $tts ? ' selected="selected"' : '') ?>><?php echo $vlist." (".$match[0].")"; ?></option>
-                <?php 
-                    else: 
-                      foreach(preg_split("/,/", $vlist) as $voice): 
+                <?php
+                    else:
+                      foreach(preg_split("/,/", $vlist) as $voice):
                 ?>
                 <option value="<?php echo $tts."/".$voice; ?>" <?php echo ($Voice == $tts."/".$voice ? ' selected="selected"' : '') ?>><?php echo $voice." (".$tts.")"; ?></option>
-                <?php 
-                      endforeach; 
-                    endif; 
+                <?php
+                      endforeach;
+                    endif;
                   endforeach;
                 endif; ?>
               </select>
@@ -614,7 +614,7 @@ $title = empty($_SESSION['bunny']) ?  __tr("Choose your bunny") :
           </div>
           <div class="form-group row">
             <div class="col-sm-12 text-left">
-              <button class="btn btn-primary" type="submit"><?php echo __tr("Save") ?></button>            
+              <button class="btn btn-primary" type="submit"><?php echo __tr("Save") ?></button>
             </div>
           </div>
         </form>
@@ -702,7 +702,7 @@ $title = empty($_SESSION['bunny']) ?  __tr("Choose your bunny") :
         {
           global $bunnyPlugins;
           $ret = array();
-          foreach($plugins as $name => $infos) 
+          foreach($plugins as $name => $infos)
           {
             if(in_array($name, $bunnyPlugins) &&
               $infos['v' . $version] == 1
@@ -718,14 +718,14 @@ $title = empty($_SESSION['bunny']) ?  __tr("Choose your bunny") :
             <legend><h6><?php echo __tr('Clic(s) plugins configuration'); ?></h6></legend>
             <div class="form-group row">
               <label class="col-sm-2 col-form-label" for="single"><?php echo __tr("Single click plugin") ?></label>
-              <div class="col-sm-6">          
+              <div class="col-sm-6">
                 <select name="single" class="form-control">
                   <option value="none"><?php echo __tr('None') ?></option>
                   <?php foreach($single as $plugin => $info):
-                    if($info['enabled'] == "1" && isset($plugins[$plugin]) && $plugins[$plugin]['actif']): 
+                    if($info['enabled'] == "1" && isset($plugins[$plugin]) && $plugins[$plugin]['actif']):
                   ?>
                   <option value="<?php echo $plugin; ?>" <?php echo ($plugin == $clicks[0] ? ' selected="selected"' : '') ?>><?php echo __tr($plugins[$plugin]['name']); ?></option>
-                  <?php 
+                  <?php
                     endif;
                   endforeach; ?>
                 </select>
@@ -733,14 +733,14 @@ $title = empty($_SESSION['bunny']) ?  __tr("Choose your bunny") :
             </div>
             <div class="form-group row">
               <label class="col-sm-2 col-form-label" for="double"><?php echo __tr("Double click plugin") ?></label>
-              <div class="col-sm-6">          
+              <div class="col-sm-6">
                 <select name="double" class="form-control">
                   <option value="none"><?php echo __tr('None') ?></option>
                   <?php foreach($double as $plugin => $info):
-                    if($info['enabled'] == "1" && isset($plugins[$plugin]) && $plugins[$plugin]['actif']): 
+                    if($info['enabled'] == "1" && isset($plugins[$plugin]) && $plugins[$plugin]['actif']):
                   ?>
                   <option value="<?php echo $plugin; ?>" <?php echo ($plugin == $clicks[1] ? ' selected="selected"' : '') ?>><?php echo __tr($plugins[$plugin]['name']); ?></option>
-                  <?php 
+                  <?php
                     endif;
                   endforeach; ?>
                 </select>
@@ -798,7 +798,7 @@ $title = empty($_SESSION['bunny']) ?  __tr("Choose your bunny") :
           <fieldset class="border p-3">
             <legend><h6><?php echo __tr('Actions'); ?></h6></legend>
             <div class="form-group row">
-              <div class="col-sm-6">            
+              <div class="col-sm-6">
                 <a class="btn btn-primary" href="?disconnect"><?php echo __tr("Disconnect the bunny") ?></a>
                 <a class="btn btn-primary" href="?reboot"><?php echo __tr("Reboot the bunny") ?></a>
               <div>
@@ -863,7 +863,7 @@ $title = empty($_SESSION['bunny']) ?  __tr("Choose your bunny") :
             </div>
           </fieldset>
 	      </form>
-	    
+
         <?php if($Infos['isAdmin']): ?>
         <div class="card">
           <h6 class="card-header bg-danger text-light">Administration</h6>
@@ -887,7 +887,7 @@ $title = empty($_SESSION['bunny']) ?  __tr("Choose your bunny") :
                 <?php if(!empty($tips[$conf])): ?>
                 <div class="col-sm-3">
                   <?php echo $tips[$conf]; ?>
-                </div>   
+                </div>
                 <?php endif; ?>
               </div>
             </form>
@@ -978,7 +978,7 @@ $title = empty($_SESSION['bunny']) ?  __tr("Choose your bunny") :
           <div class="form-group row">
             <label class="col-sm-3 col-form-label"><?php echo __tr("Crons") ?></label>
             <div class="col-sm-9">
-              <textarea disabled class="form-control disabled" rows="<?php echo max(10, count($crons->crons->cron)); ?>"><?php 
+              <textarea disabled class="form-control disabled" rows="<?php echo max(10, count($crons->crons->cron)); ?>"><?php
                 foreach($crons->crons->cron as $cron):
                 echo $cron->plugin ?>-&gt;<?php echo strlen($cron->callback) ? $cron->callback : 'OnCron' ?>(<?php echo strlen($cron->data_string) ? '"' . $cron->data_string . '"' : ( strlen($cron->data_int) ? $cron->data_int : '') ?>) @ <?php echo date('H:i d/m/Y', $cron->next_run + 0)."\n";
                 endforeach; ?>
@@ -1000,10 +1000,10 @@ $title = empty($_SESSION['bunny']) ?  __tr("Choose your bunny") :
           <div class="form-group row">
             <label class="col-sm-2 col-form-label"><?php echo __tr("Raw configuration") ?></label>
             <div class="col-sm-1">
-              <input class="btn btn-primary" name="rawconf" type="submit" value="<?php echo __tr('RAW Conf') ?>"> 
+              <input class="btn btn-primary" name="rawconf" type="submit" value="<?php echo __tr('RAW Conf') ?>">
             </div>
             <div class="col-sm-9">
-              <textarea disabled class="form-control disabled" rows="10"><?php if(isset($_GET['rawconf']) || isset($_SESSION['rawconf'])) : 
+              <textarea disabled class="form-control disabled" rows="10"><?php if(isset($_GET['rawconf']) || isset($_SESSION['rawconf'])) :
                 unset($_SESSION['rawconf']);
                 function getIp($s) {
                   $ss = array();
@@ -1060,7 +1060,7 @@ $title = empty($_SESSION['bunny']) ?  __tr("Choose your bunny") :
           </div>
         </form>
 
-        <?php 
+        <?php
         $StTitles = array(
           'config' => 'Configuration',
           'shortconfig' => 'ShortConfiguration',
@@ -1077,8 +1077,8 @@ $title = empty($_SESSION['bunny']) ?  __tr("Choose your bunny") :
             </div>
           </div>
         </form>
-        <?php foreach($asks as $ask): 
-          if(isset($StDbg[$ask])): 
+        <?php foreach($asks as $ask):
+          if(isset($StDbg[$ask])):
         ?>
         <div class="form-group row">
           <table class="table table-bordered table-striped span10">
