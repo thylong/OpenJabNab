@@ -17,10 +17,14 @@ PluginAnnuaire::~PluginAnnuaire() {}
 
 void PluginAnnuaire::OnBunnyConnect(Bunny * b)
 {
+	const auto& host = GetSettings("global/URL", "").toString();
+	if(!host.length())
+		return;
+
   QEventLoop loop;
 	QString api = b->GetGlobalSetting("VApiEnable", false).toBool() ? "1" : "0";
 	QString pub = b->GetGlobalSetting("VApiPublic", false).toBool() ? "1" : "0";
-  auto url = GetSettings("global/URL", "").toString() + "/nabconnection.php?m=" + b->GetID() + "&n="+ b->GetBunnyName() + "&s=" + GlobalSettings::GetString("OpenJabNabServers/PingServer") + "&ip=" + b->GetGlobalSetting("LastIP", QString("")).toString() + "&api=" + api + "&public=" + pub;
+  auto url =  host + "/nabconnection.php?m=" + b->GetID() + "&n="+ b->GetBunnyName() + "&s=" + GlobalSettings::GetString("OpenJabNabServers/PingServer") + "&ip=" + b->GetGlobalSetting("LastIP", QString("")).toString() + "&api=" + api + "&public=" + pub;
 
   QNetworkAccessManager http;
   auto* rep = http.get(QNetworkRequest(QUrl(url)));
@@ -32,8 +36,13 @@ void PluginAnnuaire::OnBunnyConnect(Bunny * b)
 
 QList<BunnyInfos> PluginAnnuaire::SearchBunnyByName(QString name)
 {
+	QList<BunnyInfos> whois = QList<BunnyInfos>();
+	const auto& host = GetSettings("global/URL", "").toString();
+	if(!host.length())
+		return whois;
+
 	QEventLoop loop;
-  auto url = GetSettings("global/URL", "").toString() + "/whois.php?n=" + QUrl::toPercentEncoding(name);
+  auto url = host + "/whois.php?n=" + QUrl::toPercentEncoding(name);
   QNetworkAccessManager http;
   auto* rep = http.get(QNetworkRequest(QUrl(url)));
 	QObject::connect(rep, &QNetworkReply::finished, &loop, &QEventLoop::quit);
@@ -44,7 +53,6 @@ QList<BunnyInfos> PluginAnnuaire::SearchBunnyByName(QString name)
 	xml.addData(rep->readAll());
 
 	QString currentTag;
-	QList<BunnyInfos> whois = QList<BunnyInfos>();
 	BunnyInfos currentBunny;
 	while (!xml.atEnd())
 	{
@@ -79,10 +87,15 @@ QList<BunnyInfos> PluginAnnuaire::SearchBunnyByName(QString name)
 
 QList<BunnyInfos> PluginAnnuaire::SearchBunnyByMac(QByteArray ID)
 {
+	QList<BunnyInfos> whois = QList<BunnyInfos>();
+	const auto& host = GetSettings("global/URL", "").toString();
+	if(!host.length())
+		return whois;
+
 	QEventLoop loop;
 
 	BrowserClient http(this);
-  auto url = GetSettings("global/URL", "").toString() + "/whois.php?nm" + QUrl::toPercentEncoding(QString(ID));
+  auto url = host + "/whois.php?nm" + QUrl::toPercentEncoding(QString(ID));
   http.setAge(0);
   auto* rep = http.get(QNetworkRequest(QUrl(url)));
 	QObject::connect(rep, &QNetworkReply::finished, &loop, &QEventLoop::quit);
@@ -93,7 +106,6 @@ QList<BunnyInfos> PluginAnnuaire::SearchBunnyByMac(QByteArray ID)
 	xml.addData(rep->readAll());
 
 	QString currentTag;
-	QList<BunnyInfos> whois = QList<BunnyInfos>();
 	BunnyInfos currentBunny;
 	while (!xml.atEnd())
 	{
