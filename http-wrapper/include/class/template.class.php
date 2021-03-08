@@ -147,6 +147,7 @@ class ojnTemplate {
 				$menu .= '    <a class="dropdown-item" href="/admin/bunny/status.php?online=1">'.__tr("Status").'</a>'."\n";
 				$menu .= '    <a class="dropdown-item" href="/admin/bunny/settings.php">'.__tr("Bunny settings").'</a>'."\n";
 				$menu .= '    <a class="dropdown-item" href="/admin/bunny/silent.php">'.__tr("Silent bunnies").'</a>'."\n";
+				$menu .= '    <a class="dropdown-item" href="/admin/bunny/failing.php">'.__tr("Failing bunnies").'</a>'."\n";
 				$menu .= '    <h6 class="dropdown-header">'.__tr('Translation').'</h6>'."\n";
 				$menu .= '    <a class="dropdown-item" href="/admin/translation/index.php">'.__tr("Translations").'</a>'."\n";
 				$menu .= '    <a class="dropdown-item" href="/admin/translation/sentences.php">'.__tr("Sentences").'</a>'."\n";
