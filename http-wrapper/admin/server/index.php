@@ -201,7 +201,7 @@ function updateBTable(p)
 	result = JSON.parse(result);
 	$('#bpage').html('Page ' + (result.page+1) + ' sur ' + result.pages + ' ('+ result.total+' bunnies) ');
 	$.each(result['data'], function(i, val) {
-	$("#btable tr:last").after('<tr class="btablerow"><td>'+i+'</td><td>'+val.name+'</td><td>'+(val.connected ? '<?php echo __tr('Connected') ?>' : '<?php echo __tr('Disconnected') ?>')+'</td><td><a href="/bunny/index.php?b='+i+'" class="btn btn-sm btn-primary"><i class="icon-cog icon-large"></i> <?php echo __tr('Setup') ?></a>&nbsp;<a class="btn btn-sm btn-warning" href="bunny_expert.php?mac='+i+'"><?php echo __tr('Expert') ?></a>&nbsp;<a class="btn btn-sm btn-danger" href="server.php?removeB='+i+'"><?php echo __tr('Remove') ?></a></td></tr>');
+	$("#btable tr:last").after('<tr class="btablerow"><td>'+i+'</td><td>'+val.name+'</td><td>'+(val.connected ? '<?php echo __tr('Connected') ?>' : '<?php echo __tr('Disconnected') ?>')+'</td><td><a href="/bunny/index.php?b='+i+'" class="btn btn-sm btn-primary"><i class="icon-cog icon-large"></i> <?php echo __tr('Setup') ?></a>&nbsp;<a class="btn btn-sm btn-warning" href="/admin/bunny/bunny_expert.php?mac='+i+'"><?php echo __tr('Expert') ?></a>&nbsp;<a class="btn btn-sm btn-danger" href="server.php?removeB='+i+'"><?php echo __tr('Remove') ?></a></td></tr>');
 //  	alert(i + " / " + val);
 
 });
@@ -275,8 +275,8 @@ function updateBTable(p)
 		<td>
 			<!--a target="_blank" class="btn btn-sm btn-primary" href="/account/index.php?a=<?php echo $l ?>"><i class="icon-large icon-cog"></i> <?php echo __tr('Manage account') ?></a-->
 			<!--a target="_blank" class="btn btn-sm btn-success" href="/index.php?logid=<?php echo $l ?>"><i class="icon-large icon-user"></i> <?php echo __tr('Connect') ?></a-->
-			<a class="btn btn-sm btn-primary" href="?reloadA=<?php echo urlencode($l); ?>"><i class="icon-refresh"></i> <?php echo __tr('Reload') ?></a> 
-			<a class="btn btn-sm btn-warning" target="_blank" href="/admin/account/account_expert.php?acc=<?php echo urlencode($l); ?>"><i class="icon-search"></i> <?php echo __tr('Expert') ?></a> 
+			<a class="btn btn-sm btn-primary" href="?reloadA=<?php echo urlencode($l); ?>"><i class="icon-refresh"></i> <?php echo __tr('Reload') ?></a>
+			<a class="btn btn-sm btn-warning" target="_blank" href="/admin/account/account_expert.php?acc=<?php echo urlencode($l); ?>"><i class="icon-search"></i> <?php echo __tr('Expert') ?></a>
 			<a class="btn btn-sm btn-danger" href="?removeA=<?php echo urlencode($l); ?>"><i class="icon-trash"></i> <?php echo __tr('Remove') ?></a>
 		</td>
 	</tr>

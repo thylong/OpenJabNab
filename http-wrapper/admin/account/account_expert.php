@@ -11,6 +11,7 @@ if (!$link) {
 }
 $max = 50;
 require_once('../include/encode.functions.php');
+require_once('../include/decode.functions.php');
 
 $sql = "SELECT account.*, SUM(value) AS don FROM account LEFT JOIN don ON don.username=account.username ";
 if(isset($_GET['accid']))
@@ -39,8 +40,39 @@ else
   header("Location: index.php");
   exit();
 }
-require_once('account_expert.decode.php');
 
+$settings = $account['settings'];
+// From account.cpp
+// v1: >> login >> username >> passwordHash                      >> isAdmin                                                                            >> UserAccess >> listOfBunnies >> listOfZtamps;
+// v2: >> login >> username >> passwordHash >> language >> email >> isAdmin                                                                            >> UserAccess >> listOfBunnies >> listOfZtamps;
+// v3: >> login >> username >> passwordHash >> language >> email >> isAdmin >> isPremium >> isVip >> loginCount >> lastLogin                           >> UserAccess >> listOfBunnies >> listOfZtamps;
+// v4: >> login >> username >> passwordHash >> language >> email >> isAdmin >> isPremium >> isVip >> loginCount >> lastLogin >> abuseCount >> startBan >> UserAccess >> listOfBunnies >> listOfZtamps;
+$p = 0;
+list($p,$ASettings['version'])  = decodeInt($settings,$p);
+list($p,$ASettings['login'])    = decodeStr($settings,$p);
+list($p,$ASettings['username']) = decodeStr($settings,$p);
+list($p,$ASettings['pwd_hash']) = decodeByteArray($settings,$p); $ASettings['pwd_hash'] = bin2hex($ASettings['pwd_hash']);
+if($ASettings['version'] >= 2)
+{
+  list($p,$ASettings['language']) = decodeStr($settings,$p);
+  list($p,$ASettings['email'])    = decodeStr($settings,$p);
+}
+list($p,$ASettings['isAdmin']) = decodeBool($settings,$p);
+if($ASettings['version'] >= 3)
+{
+  list($p,$ASettings['isPremium'])  = decodeBool($settings,$p);
+  list($p,$ASettings['isVip'])      = decodeBool($settings,$p);
+  list($p,$ASettings['loginCount']) = decodeInt($settings,$p);
+  list($p,$ASettings['lastLogin'])  = decodeDateTime($settings,$p); //$ASettings['lastLogin'] = date("d/m/Y H:i:s", $ASettings['lastLogin']);
+  if($ASettings['version'] >= 4)
+  {
+    list($p,$ASettings['abuseCount']) = decodeInt($settings,$p);
+    list($p,$ASettings['startBan'])   = decodeDateTime($settings,$p); //$ASettings['startBan'] = date("d/m/Y H:i:s", $ASettings['startBan']);
+  }
+}
+list($p,$ASettings['UserAccess'])     = decodeList($settings, $p,'decodeInt');
+list($p,$ASettings['listOfBunnies'])  = decodeList($settings, $p,'decodeByteArray');
+list($p,$ASettings['listOfZtamps'])   = decodeList($settings, $p,'decodeByteArray');
 
 $reload = true;
 if(!empty($_GET['rm_b']))
@@ -78,31 +110,31 @@ require_once(ROOT_SITE.'/include/message.php');
           <div class="form-group row">
             <label class="col-md-4 col-form-label" for="username"><?php echo __tr('Login') ?></label>
             <div class="col-md-5">
-              <input type="text" class="form-control" name="username" value="<?php echo $login ?>"<?php echo $disable_edit; ?> />
+              <input type="text" class="form-control" name="username" value="<?php echo $ASettings['login'] ?>"<?php echo $disable_edit; ?> />
             </div>
           </div>
           <div class="form-group row">
             <label class="col-md-4 col-form-label" for="firstname"><?php echo __tr('Display name') ?></label>
             <div class="col-md-5">
-              <input type="text" class="form-control" name="displayname" value="<?php echo $username ?>"<?php echo $disable_edit; ?> />
+              <input type="text" class="form-control" name="displayname" value="<?php echo $ASettings['username'] ?>"<?php echo $disable_edit; ?> />
             </div>
           </div>
           <div class="form-group row">
             <label class="col-md-4 col-form-label" for="language"><?php echo __tr('Language') ?></label>
             <div class="col-md-5">
-              <input type="text" class="form-control" name="language" value="<?php echo $language ?>"<?php echo $disable_edit; ?> />
+              <input type="text" class="form-control" name="language" value="<?php echo $ASettings['language'] ?>"<?php echo $disable_edit; ?> />
             </div>
           </div>
           <div class="form-group row">
             <label class="col-md-4 col-form-label" for="email"><?php echo __tr('Email address') ?></label>
             <div class="col-md-5">
-              <input type="text" class="form-control" name="email" value="<?php echo $email ?>"<?php echo $disable_edit; ?> />
+              <input type="text" class="form-control" name="email" value="<?php echo $ASettings['email'] ?>"<?php echo $disable_edit; ?> />
             </div>
           </div>
           <div class="form-group row">
             <label class="col-md-4 col-form-label" for="npwd"><?php echo __tr('Password') ?></label>
             <div class="col-md-5">
-              <input type="text" class="form-control" name="npwd" value=""<?php echo $disable_edit; ?> />
+              <input type="text" class="form-control" name="npwd" value="<?php echo $ASettings['pwd_hash']; ?>"<?php echo $disable_edit; ?> />
             </div>
           </div>
           <div class="form-group row">
@@ -115,11 +147,11 @@ require_once(ROOT_SITE.'/include/message.php');
             <label class="col-md-4 col-form-label" for="admin"><?php echo __tr("Status") ?></label>
             <div class="col-md-8">
               <div class="form-check form-check-inline">
-                <input type="radio" name="admin" value="1" id="admin1" class="form-check-input" <?php echo $admin ? ' checked="checked"' : ''; ?><?php echo $disable_edit; ?> />
+                <input type="radio" name="admin" value="1" id="admin1" class="form-check-input" <?php echo $ASettings['isAdmin'] ? ' checked="checked"' : ''; ?><?php echo $disable_edit; ?> />
                 <label class="form-check-label" for="admin1"><?php echo __tr("Administrator") ?></label>
               </div>
               <div class="form-check form-check-inline">
-                <input type="radio" name="admin" value="0" id="admin0" class="form-check-input" <?php echo !$admin ? ' checked="checked"' : ''; ?><?php echo $disable_edit; ?> />
+                <input type="radio" name="admin" value="0" id="admin0" class="form-check-input" <?php echo !$ASettings['isAdmin'] ? ' checked="checked"' : ''; ?><?php echo $disable_edit; ?> />
                 <label class="form-check-label" for="admin0"><?php echo __tr("User") ?></label>
               </div>
             </div>
@@ -128,11 +160,11 @@ require_once(ROOT_SITE.'/include/message.php');
             <label class="col-md-4 col-form-label" for="premium"><?php echo __tr("Premium") ?></label>
             <div class="col-md-8">
               <div class="form-check form-check-inline">
-                <input type="radio" name="premium" value="1" id="premium1" class="form-check-input" <?php echo $premium ? ' checked="checked"' : ''; ?><?php echo $disable_edit; ?> />
+                <input type="radio" name="premium" value="1" id="premium1" class="form-check-input" <?php echo $ASettings['isPremium'] ? ' checked="checked"' : ''; ?><?php echo $disable_edit; ?> />
                 <label class="form-check-label" for="premium1"><?php echo __tr("Yes") ?></label>
               </div>
               <div class="form-check form-check-inline">
-                <input type="radio" name="premium" value="0" id="premium0" class="form-check-input" <?php echo !$premium ? ' checked="checked"' : ''; ?><?php echo $disable_edit; ?> />
+                <input type="radio" name="premium" value="0" id="premium0" class="form-check-input" <?php echo !$ASettings['isPremium'] ? ' checked="checked"' : ''; ?><?php echo $disable_edit; ?> />
                 <label class="form-check-label" for="premium0"><?php echo __tr("No") ?></label>
               </div>
             </div>
@@ -141,11 +173,11 @@ require_once(ROOT_SITE.'/include/message.php');
             <label class="col-md-4 col-form-label" for="vip"><?php echo __tr("VIP") ?></label>
             <div class="col-md-8">
               <div class="form-check form-check-inline">
-                <input type="radio" name="vip" value="1" id="vip1" class="form-check-input" <?php echo $vip ? ' checked="checked"' : ''; ?><?php echo $disable_edit; ?> />
+                <input type="radio" name="vip" value="1" id="vip1" class="form-check-input" <?php echo $ASettings['isVip'] ? ' checked="checked"' : ''; ?><?php echo $disable_edit; ?> />
                 <label class="form-check-label" for="vip1"><?php echo __tr("Yes") ?></label>
               </div>
               <div class="form-check form-check-inline">
-                <input type="radio" name="vip" value="0" id="vip0" class="form-check-input" <?php echo !$vip ? ' checked="checked"' : ''; ?><?php echo $disable_edit; ?> />
+                <input type="radio" name="vip" value="0" id="vip0" class="form-check-input" <?php echo !$ASettings['isVip'] ? ' checked="checked"' : ''; ?><?php echo $disable_edit; ?> />
                 <label class="form-check-label" for="vip0"><?php echo __tr("No") ?></label>
               </div>
             </div>
@@ -153,25 +185,25 @@ require_once(ROOT_SITE.'/include/message.php');
           <div class="form-group row">
             <label class="col-md-4 col-form-label" for="nlogin"><?php echo __tr('Number of login') ?></label>
             <div class="col-md-5">
-              <input type="text" class="form-control" name="nlogin" value="<?php echo $logincount ?>"<?php echo $disable_edit; ?> />
+              <input type="text" class="form-control" name="nlogin" value="<?php echo $ASettings['loginCount'] ?>"<?php echo $disable_edit; ?> />
             </div>
           </div>
           <div class="form-group row">
             <label class="col-md-4 col-form-label" for="lastlogin"><?php echo __tr('Last login') ?></label>
             <div class="col-md-5">
-              <input type="text" class="form-control" name="lastlogin" value="<?php echo date("d/m/Y H:i:s", $lastlogin) ?>"<?php echo $disable_edit; ?> />
+              <input type="text" class="form-control" name="lastlogin" value="<?php echo date("d/m/Y H:i:s", $ASettings['lastLogin']) ?>"<?php echo $disable_edit; ?> />
             </div>
           </div>
           <div class="form-group row">
             <label class="col-md-4 col-form-label" for="nabus"><?php echo __tr('Number of abuses') ?></label>
             <div class="col-md-5">
-              <input type="text" class="form-control" name="nabus" value="<?php echo $abusecount ?>"<?php echo $disable_edit; ?> />
+              <input type="text" class="form-control" name="nabus" value="<?php echo $ASettings['abuseCount'] ?>"<?php echo $disable_edit; ?> />
             </div>
           </div>
           <div class="form-group row">
             <label class="col-md-4 col-form-label" for="lastban"><?php echo __tr('Last ban') ?></label>
             <div class="col-md-5">
-              <input type="text" class="form-control" name="lastban" value="<?php echo date("d/m/Y H:i:s", $ban) ?>"<?php echo $disable_edit; ?> />
+              <input type="text" class="form-control" name="lastban" value="<?php echo date("d/m/Y H:i:s", $ASettings['startBan']) ?>"<?php echo $disable_edit; ?> />
             </div>
           </div>
           <div class="form-group row">
@@ -202,17 +234,17 @@ require_once(ROOT_SITE.'/include/message.php');
           </div>
         </div>
 
-        <?php if(count($bunnies)): ?>
+        <?php if(!empty($ASettings['listOfBunnies'])): ?>
         <table class="table table-bordered table-striped">
           <tr>
-            <th><?php echo __tr('Bunnies (%1)', count($bunnies)) ?>
+            <th><?php echo __tr('Bunnies (%1)', count($ASettings['listOfBunnies'])) ?>
             <th class="col-sm-10"><?php echo __tr("Actions") ?></th>
           </tr>
-          <?php foreach($bunnies as $mac): ?>
+          <?php foreach($ASettings['listOfBunnies'] as $mac): ?>
           <tr>
             <td><?php echo $mac ?></td>
             <td class="text-right">
-              <a class="btn btn-sm btn-warning" href="bunny_expert.php?mac=<?php echo $mac ?>"><i class="icon-large icon-search"></i> <?php echo __tr('Expert') ?></a>
+              <a class="btn btn-sm btn-warning" href="/admin/bunny/bunny_expert.php?mac=<?php echo $mac ?>"><i class="icon-large icon-search"></i> <?php echo __tr('Expert') ?></a>
               <a class="btn btn-sm btn-primary" href="/bunny/index.php?b=<?php echo $mac ?>"><i class="icon-large icon-cog"></i> <?php echo __tr('Manage bunny') ?></a>
               <a class="btn btn-sm btn-danger" href="?accid=<?php echo $account['id']; ?>&rm_b=<?php echo $mac; ?>"><i class="icon-large icon-trash"></i> <?php echo __tr('Free from account'); ?></a>
             </td>
@@ -220,17 +252,17 @@ require_once(ROOT_SITE.'/include/message.php');
           <?php endforeach; ?>
         </table>
         <?php endif; ?>
-        <?php if(count($ztamps)): ?>
+        <?php if(!empty($ASettings['listOfZtamps'])): ?>
         <table class="table table-bordered table-striped">
           <tr>
-            <th><?php echo __tr('Ztamps (%1)', count($ztamps)) ?>
+            <th><?php echo __tr('Ztamps (%1)', count($ASettings['listOfZtamps'])) ?>
             <th class="col-sm-10"><?php echo __tr('Actions'); ?></th>
           </tr>
-          <?php foreach($ztamps as $mac): ?>
+          <?php foreach($ASettings['listOfZtamps'] as $mac): ?>
           <tr>
             <td><?php echo $mac ?></td>
             <td class="text-right">
-              <a class="btn btn-sm btn-warning" href="ztamp_expert.php?mac=<?php echo $mac ?>"><i class="icon-large icon-search"></i> <?php echo __tr('Expert') ?></a>
+              <a class="btn btn-sm btn-warning" href="/admin/account/ztamp_expert.php?mac=<?php echo $mac ?>"><i class="icon-large icon-search"></i> <?php echo __tr('Expert') ?></a>
               <a class="btn btn-sm btn-primary" href="/account/ztamp.php?z=<?php echo $mac ?>"><i class="icon-large icon-cog"></i> <?php echo __tr('Manage ztamp') ?></a>
               <a class="btn btn-sm btn-danger" href="?accid=<?php echo $account['id']; ?>&rm_z=<?php echo $mac; ?>"><i class="icon-large icon-trash"></i> <?php echo __tr('Free from account'); ?></a>
             </td>
@@ -243,16 +275,26 @@ require_once(ROOT_SITE.'/include/message.php');
   </div>
 
   <div class="col-md-6">
-	  <div class="card">
-			<h5 class="card-header">
-				<i class="icon-cog"></i> <?php echo __tr('Account data') ?>
-			</h5>
-			<div class="card-body">
+    <div class="card">
+      <h5 class="card-header">
+        <i class="icon-cog"></i> <?php echo __tr('Account data') ?>
+      </h5>
+      <div class="card-body">
         <pre><?php var_dump($account); ?></pre>
       </div>
     </div>
 
+    <div class="card">
+      <h5 class="card-header">
+        <i class="icon-cog"></i> <?php echo __tr('Account settings') ?>
+      </h5>
+      <div class="card-body">
+        <pre><?php var_dump($ASettings); ?></pre>
+      </div>
+    </div>
+
     <?php
+    /* FIXME !!
     $settings = "";
     $settings .= echoInt($version);
     $settings .= echoString($login);
@@ -261,8 +303,8 @@ require_once(ROOT_SITE.'/include/message.php');
     $settings .= echoString($language);
     $settings .= echoString($email);
     $settings .= echoBool($admin);
-    $settings .= echoBool($premium);
-    $settings .= echoBool($vip);
+    $settings .= echoBool($ASettings['isPremium']);
+    $settings .= echoBool($ASettings['isVip']);
     $settings .= echoInt($logincount);
     $settings .= echoInt($lastlogindate);
     $settings .= echoInt($lastlogintime);
@@ -293,7 +335,6 @@ require_once(ROOT_SITE.'/include/message.php');
         exit;
     }
 
-    ?>
 		<div class="card">
 			<h5 class="card-header">
 				<i class="icon-cog"></i> <?php echo __tr('Cleaned raw data') ?>
@@ -323,7 +364,7 @@ require_once(ROOT_SITE.'/include/message.php');
               }
               if($offset == 7)
                 $hex .= "</span>";
-          */
+          //* /
               $hex .= str_pad(dechex(ord($chr)), 2, "0", STR_PAD_LEFT)." ";
               if($k == 7)
                 $hex .= "  ";
@@ -336,6 +377,7 @@ require_once(ROOT_SITE.'/include/message.php');
           ?></pre>
       </div>
     </div>
+    <?php */ ?>
 		<div class="card">
 			<h5 class="card-header">
 				<i class="icon-cog"></i> <?php echo __tr('Database raw data') ?>
@@ -343,6 +385,8 @@ require_once(ROOT_SITE.'/include/message.php');
 			<div class="card-body text-center">
         <pre><?php
           $add = 0;
+          $offset = 0;
+          $pattern = "|[\w@\"'_\-,;.:!\?]|";
           foreach(str_split($account['settings'], 16) as $i => $line)
           {
             $hex = $str = "";

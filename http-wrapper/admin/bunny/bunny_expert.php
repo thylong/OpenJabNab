@@ -38,14 +38,14 @@ require_once(ROOT_SITE.'/include/message.php');
 $settings = $bunny['settings'];
 $Sets = $settings;
 
+// From bunny.cpp
 // GlobalSettings << PluginsSettings << listOfPlugins << knownRFIDTags
 $p = 0;
-list($p, $globalsettings) = decodeSettings($settings, $p);
-list($p, $pluginssettings) = decodeSettings($settings, $p, true);
-list($p, $listOfPlugins) = decodeList($settings, $p);
-list($p, $knownRFIDTags) = decodeList($settings, $p);
-?>
-<?php
+$BunSettings = array();
+list($p, $BSettings['GlobalSettings'])  = decodeSettings($settings, $p);
+list($p, $BSettings['PluginsSettings']) = decodeSettings($settings, $p, true);
+list($p, $BSettings['listOfPlugins'])   = decodeList($settings, $p,'decodeStr');
+list($p, $BSettings['knownRFIDTags'])   = decodeList($settings, $p,'decodeByteArray');
 
 $disable_edit = true; // 20200826 Not currently tested
 $disable_edit  = $disable_edit ? ' disabled' : ''; // Convert to Html stuff
@@ -60,21 +60,19 @@ $pattern = "|[\w@\"'_\-,;.:!\? ]|";
       </h5>
       <div class="card-body">
         <form class="form-horizontal" method="post">
-          <?php foreach($globalsettings as $k => $v): ?>
+          <?php foreach($BSettings['GlobalSettings'] as $k => $v): ?>
           <div class="form-group row">
-            <label class="col-md-4 col-form-label" for="<?php echo $plugin.'_'.$k; ?>"><?php echo $k; ?></label>
+            <label class="col-md-4 col-form-label" for="<?php echo $k; ?>"><?php echo $k; ?></label>
             <div class="col-md-8">
             <?php if(is_array($v)): ?>
-              <textarea class="form-control" name="<?php echo $plugin.'_'.$k; ?>"><?php if(!empty($v)) var_dump($v); ?></textarea>
+              <textarea class="form-control" name="<?php echo $k; ?>"><?php if(!empty($v)) var_dump($v); ?></textarea>
             <?php else: ?>
-              <input type="text" class="form-control" name="<?php echo $plugin.'_'.$k; ?>" value="<?php echo $v; ?>"<?php echo $disable_edit; ?> />
+              <input type="text" class="form-control" name="<?php echo $k; ?>" value="<?php echo $v; ?>"<?php echo $disable_edit; ?> />
             <?php endif; ?>
             </div>
           </div>
           <?php endforeach; ?>
         </form>
-        <!--hr />
-        <pre><?php var_dump($globalsettings); ?></pre-->
       </div>
     </div>
 
@@ -83,8 +81,8 @@ $pattern = "|[\w@\"'_\-,;.:!\? ]|";
         <i class="icon-search"></i> <?php echo __tr('Plugins config for').' '.$bunny['mac'] ?>
       </h5>
       <div class="card-body">
-        <?php foreach($pluginssettings as $plugin => $conf): ?>
-        <h5><?php echo ucfirst($plugin); if(in_array($plugin,$listOfPlugins)): ?> <span class="badge badge-success"><?php echo __tr('Enabled'); ?></span><?php endif; ?></h5>
+        <?php foreach($BSettings['PluginsSettings'] as $plugin => $conf): ?>
+        <h5><?php echo ucfirst($plugin); if(in_array($plugin,$BSettings['listOfPlugins'])): ?> <span class="badge badge-success"><?php echo __tr('Enabled'); ?></span><?php endif; ?></h5>
         <form class="form-horizontal" method="post">
             <?php foreach($conf as $k => $v): ?>
             <div class="form-group row">
@@ -101,7 +99,6 @@ $pattern = "|[\w@\"'_\-,;.:!\? ]|";
                   </div>
                 <?php endforeach; ?>
                 </div>
-                <!--textarea class="form-control" name="<?php echo $plugin.'_'.$k; ?>"><?php if(!empty($v)) var_dump($v); ?></textarea-->
               <?php else: ?>
                 <input type="text" class="form-control" name="<?php echo $plugin.'_'.$k; ?>" value="<?php echo $v; ?>"<?php echo $disable_edit; ?> />
               <?php endif; ?>
@@ -111,8 +108,6 @@ $pattern = "|[\w@\"'_\-,;.:!\? ]|";
         </form>
         <hr />
         <?php endforeach; ?>
-        <!--hr />
-        <pre><?php var_dump($pluginssettings); ?></pre-->
       </div>
     </div>
 
@@ -122,7 +117,7 @@ $pattern = "|[\w@\"'_\-,;.:!\? ]|";
       </h5>
       <div class="card-body">
         <ul>
-          <?php foreach($listOfPlugins as $p): ?>
+          <?php foreach($BSettings['listOfPlugins'] as $p): ?>
           <li><?php echo ucfirst($p); ?></li>
           <?php endforeach; ?>
         </ul>
@@ -135,7 +130,7 @@ $pattern = "|[\w@\"'_\-,;.:!\? ]|";
       </h5>
       <div class="card-body">
         <ul>
-          <?php foreach($knownRFIDTags as $z): if(empty($z)) continue; ?>
+          <?php foreach($BSettings['knownRFIDTags'] as $z): if(empty($z)) continue; ?>
           <li><?php echo bin2hex($z); ?></li>
           <?php endforeach; ?>
         </ul>
@@ -143,14 +138,22 @@ $pattern = "|[\w@\"'_\-,;.:!\? ]|";
     </div>
 
   </div>
-
-	<div class="col-md-6">
-	  <div class="card">
-			<h5 class="card-header">
-				<i class="icon-cog"></i> <?php echo __tr('Bunny data') ?>
-			</h5>
-			<div class="card-body">
+  <div class="col-md-6">
+    <div class="card">
+      <h5 class="card-header">
+        <i class="icon-cog"></i> <?php echo __tr('Bunny data') ?>
+      </h5>
+      <div class="card-body">
         <pre><?php var_dump($bunny); ?></pre>
+      </div>
+    </div>
+
+    <div class="card">
+      <h5 class="card-header">
+        <i class="icon-cog"></i> <?php echo __tr('Bunny settings') ?>
+      </h5>
+      <div class="card-body">
+        <pre><?php var_dump($BSettings); ?></pre>
       </div>
     </div>
 
