@@ -35,17 +35,7 @@ else
 }
 require_once(ROOT_SITE.'/include/message.php');
 
-$settings = $bunny['settings'];
-$Sets = $settings;
-
-// From bunny.cpp
-// GlobalSettings << PluginsSettings << listOfPlugins << knownRFIDTags
-$p = 0;
-$BunSettings = array();
-list($p, $BSettings['GlobalSettings'])  = decodeSettings($settings, $p);
-list($p, $BSettings['PluginsSettings']) = decodeSettings($settings, $p, true);
-list($p, $BSettings['listOfPlugins'])   = decodeList($settings, $p,'decodeStr');
-list($p, $BSettings['knownRFIDTags'])   = decodeList($settings, $p,'decodeByteArray');
+$BSettings = decodeBunnySettings($bunny['settings']);
 
 $disable_edit = true; // 20200826 Not currently tested
 $disable_edit  = $disable_edit ? ' disabled' : ''; // Convert to Html stuff

@@ -41,38 +41,7 @@ else
   exit();
 }
 
-$settings = $account['settings'];
-// From account.cpp
-// v1: >> login >> username >> passwordHash                      >> isAdmin                                                                            >> UserAccess >> listOfBunnies >> listOfZtamps;
-// v2: >> login >> username >> passwordHash >> language >> email >> isAdmin                                                                            >> UserAccess >> listOfBunnies >> listOfZtamps;
-// v3: >> login >> username >> passwordHash >> language >> email >> isAdmin >> isPremium >> isVip >> loginCount >> lastLogin                           >> UserAccess >> listOfBunnies >> listOfZtamps;
-// v4: >> login >> username >> passwordHash >> language >> email >> isAdmin >> isPremium >> isVip >> loginCount >> lastLogin >> abuseCount >> startBan >> UserAccess >> listOfBunnies >> listOfZtamps;
-$p = 0;
-list($p,$ASettings['version'])  = decodeInt($settings,$p);
-list($p,$ASettings['login'])    = decodeStr($settings,$p);
-list($p,$ASettings['username']) = decodeStr($settings,$p);
-list($p,$ASettings['pwd_hash']) = decodeByteArray($settings,$p); $ASettings['pwd_hash'] = bin2hex($ASettings['pwd_hash']);
-if($ASettings['version'] >= 2)
-{
-  list($p,$ASettings['language']) = decodeStr($settings,$p);
-  list($p,$ASettings['email'])    = decodeStr($settings,$p);
-}
-list($p,$ASettings['isAdmin']) = decodeBool($settings,$p);
-if($ASettings['version'] >= 3)
-{
-  list($p,$ASettings['isPremium'])  = decodeBool($settings,$p);
-  list($p,$ASettings['isVip'])      = decodeBool($settings,$p);
-  list($p,$ASettings['loginCount']) = decodeInt($settings,$p);
-  list($p,$ASettings['lastLogin'])  = decodeDateTime($settings,$p); //$ASettings['lastLogin'] = date("d/m/Y H:i:s", $ASettings['lastLogin']);
-  if($ASettings['version'] >= 4)
-  {
-    list($p,$ASettings['abuseCount']) = decodeInt($settings,$p);
-    list($p,$ASettings['startBan'])   = decodeDateTime($settings,$p); //$ASettings['startBan'] = date("d/m/Y H:i:s", $ASettings['startBan']);
-  }
-}
-list($p,$ASettings['UserAccess'])     = decodeList($settings, $p,'decodeInt');
-list($p,$ASettings['listOfBunnies'])  = decodeList($settings, $p,'decodeByteArray');
-list($p,$ASettings['listOfZtamps'])   = decodeList($settings, $p,'decodeByteArray');
+$ASettings = decodeAccountSettings($account['settings']);
 
 $reload = true;
 if(!empty($_GET['rm_b']))

@@ -134,4 +134,72 @@ function decodeSettings($settings, $p, $recurse=false)
   }
   return array($p, $out);
 }
+
+function decodeBunnySettings($settings)
+{
+  // From bunny.cpp
+  // GlobalSettings << PluginsSettings << listOfPlugins << knownRFIDTags
+  $p = 0;
+  $out = array();
+  list($p, $out['GlobalSettings'])  = decodeSettings($settings, $p);
+  list($p, $out['PluginsSettings']) = decodeSettings($settings, $p, true);
+  list($p, $out['listOfPlugins'])   = decodeList($settings, $p,'decodeStr');
+  list($p, $out['knownRFIDTags'])   = decodeList($settings, $p,'decodeByteArray');
+  return $out;
+}
+
+function decodeAccountSettings($settings)
+{
+  // From account.cpp
+  // v1: >> login >> username >> passwordHash                      >> isAdmin                                                                            >> UserAccess >> listOfBunnies >> listOfZtamps;
+  // v2: >> login >> username >> passwordHash >> language >> email >> isAdmin                                                                            >> UserAccess >> listOfBunnies >> listOfZtamps;
+  // v3: >> login >> username >> passwordHash >> language >> email >> isAdmin >> isPremium >> isVip >> loginCount >> lastLogin                           >> UserAccess >> listOfBunnies >> listOfZtamps;
+  // v4: >> login >> username >> passwordHash >> language >> email >> isAdmin >> isPremium >> isVip >> loginCount >> lastLogin >> abuseCount >> startBan >> UserAccess >> listOfBunnies >> listOfZtamps;
+  $p = 0;
+  $out = array();
+  list($p,$out['version'])  = decodeInt($settings,$p);
+  list($p,$out['login'])    = decodeStr($settings,$p);
+  list($p,$out['username']) = decodeStr($settings,$p);
+  list($p,$out['pwd_hash']) = decodeByteArray($settings,$p); $out['pwd_hash'] = bin2hex($out['pwd_hash']);
+  if($out['version'] >= 2)
+  {
+    list($p,$out['language']) = decodeStr($settings,$p);
+    list($p,$out['email'])    = decodeStr($settings,$p);
+  }
+  list($p,$out['isAdmin']) = decodeBool($settings,$p);
+  if($out['version'] >= 3)
+  {
+    list($p,$out['isPremium'])  = decodeBool($settings,$p);
+    list($p,$out['isVip'])      = decodeBool($settings,$p);
+    list($p,$out['loginCount']) = decodeInt($settings,$p);
+    list($p,$out['lastLogin'])  = decodeDateTime($settings,$p); //$out['lastLogin'] = date("d/m/Y H:i:s", $out['lastLogin']);
+    if($out['version'] >= 4)
+    {
+      list($p,$out['abuseCount']) = decodeInt($settings,$p);
+      list($p,$out['startBan'])   = decodeDateTime($settings,$p); //$out['startBan'] = date("d/m/Y H:i:s", $out['startBan']);
+    }
+  }
+  list($p,$out['UserAccess'])     = decodeList($settings, $p,'decodeInt');
+  list($p,$out['listOfBunnies'])  = decodeList($settings, $p,'decodeByteArray');
+  list($p,$out['listOfZtamps'])   = decodeList($settings, $p,'decodeByteArray');
+  return $out;
+}
+
+if (http_response_code()===false) 
+{
+  if(count($argv) != 3) die('Incorrect args');
+  $data = file_get_contents($argv[2]);
+  switch($argv[1])
+  {
+    case 'bunny':
+      var_dump(decodeBunnySettings($data));
+      break;
+    case 'account':
+      var_dump(decodeAccountSettings($data));
+      break;
+    default:
+      die('Unknown settings');
+  };
+}
+
 ?>
