@@ -131,27 +131,50 @@ void AccountManager::SaveAccounts()
 	{
 		if(a->GetLogin() != "admin" && a->SaveNeeded())
 		{
-			QSqlQuery *query = new QSqlQuery(db);
-			QByteArray byteArray;
-			QDataStream stream(&byteArray, QIODevice::WriteOnly);
-			stream.setVersion(QDataStream::Qt_4_3);
-			stream << Account::Version();
-			stream << *a;
-			query->prepare("INSERT INTO account SET `username`=:user, `settings`=:settings ON DUPLICATE KEY UPDATE `settings`=:settings2");
-			query->bindValue(":user", a->GetLogin());
-			query->bindValue(":settings", byteArray);
-			query->bindValue(":settings2", byteArray);
-			bool ret = query->exec();
-			if(ret)
+			QSqlQuery query(db);
+			query.prepare("SELECT count(id) as nb FROM account where `username`=:username");
+			query.bindValue(":username", a->GetLogin());
+			if(!query.exec())
 			{
-				a->SetSaveNeeded(false);
+				LogError(QString("1/2 Impossible to save account in DB : %1").arg(query.lastError().driverText()));
 			}
 			else
 			{
-				LogError(QString("Impossible to insert account in DB : %1").arg(query->lastError().driverText()));
-				continue;
+				query.first();
+				const auto nb = query.value(0).toInt();
+				QString q("");
+				if(nb == 1)
+				{
+					LogDebug(QString("Updating Account %1 in DB").arg(a->GetLogin()));
+					q = "UPDATE account SET`settings`=:settings WHERE `username`=:username";
+				} 
+				else if(nb == 0)
+				{
+					LogDebug(QString("Adding new Account in DB for %2").arg(a->GetLogin()));
+					q = "INSERT INTO account SET `id`=NULL, `settings`=:settings, `username`=:username,  `lastlogin`=NULL";
+				}
+				else
+					LogError(QString("Invalid number of Accounts %2 in DB for %1. Skip").arg(a->GetLogin())																																				.arg(nb)
+													);
+				if(q.length())
+				{
+					QSqlQuery query2(db);
+					query2.prepare(q);
+					query2.bindValue(":username", a->GetLogin());
+					QByteArray byteArray;
+					QDataStream stream(&byteArray, QIODevice::WriteOnly);
+					stream.setVersion(QDataStream::Qt_4_3);
+					stream << Account::Version();
+					stream << *a;
+					query2.bindValue(":settings", byteArray);
+					if(!query2.exec())
+					{
+						LogError(QString("2/2 Impossible to save Account in DB : %1").arg(query2.lastError().driverText()));
+					}
+					else 
+						a->SetSaveNeeded(false);
+				}
 			}
-			delete query;
 		}
 	}
 	DbManager::releaseDb();

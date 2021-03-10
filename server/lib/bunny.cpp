@@ -857,25 +857,49 @@ void Bunny::SaveConfig()
 
 	QSqlDatabase db = DbManager::getDb();
 	bool close = DbManager::openDbIfNeeded();
-	QSqlQuery *query = new QSqlQuery(db);
-	query->prepare("INSERT INTO bunny SET `mac`=:mac, `settings`=:settings, `server_id`=:server, `account_id`=(SELECT `id` FROM account WHERE `username`=:username) ON DUPLICATE KEY UPDATE `settings`=:settings_up, `server_id`=:server_up, `account_id`=(SELECT `id` FROM account WHERE `username`=:username_up)");
-	query->bindValue(":mac", GetID());
-	query->bindValue(":username", GetGlobalSetting("OwnerAccount"));
-	query->bindValue(":username_up", GetGlobalSetting("OwnerAccount"));
-	query->bindValue(":settings", settings);
-	query->bindValue(":settings_up", settings);
-	query->bindValue(":server", GlobalSettings::GetInt("Database/ServerId"));
-	query->bindValue(":server_up", GlobalSettings::GetString("Database/ServerId"));
-	bool ret = query->exec();
-	if(!ret)
+	QSqlQuery query(db);
+	query.prepare("SELECT count(id) as nb FROM bunny where `mac`=:mac");
+	query.bindValue(":mac", GetID());
+	if(!query.exec())
 	{
-		LogError(QString("Impossible to save bunny in DB : %1").arg(query->lastError().driverText()));
+		LogError(QString("1/2 Impossible to save bunny in DB : %1").arg(query.lastError().driverText()));
 	}
 	else
 	{
-		needSave = false;
+		query.first();
+		const auto nb = query.value(0).toInt();
+		QString q("");
+		if(nb == 1)
+		{
+			LogDebug(QString("Updating Bunny %1/%2 in DB").arg(QString(GetID())).arg(GetBunnyName()));
+			q = "UPDATE bunny set`settings`=:settings, `server_id`=:server, `account_id`=(SELECT `id` FROM account WHERE `username`=:username) WHERE `mac`=:mac";
+		} 
+		else if(nb == 0)
+		{
+			LogDebug(QString("Adding new Bunny in DB for %1/%2").arg(QString(GetID())).arg(GetBunnyName()));
+			q = "INSERT INTO bunny SET `id`=NULL, `mac`=:mac, `settings`=:settings, `server_id`=:server, `account_id`=(SELECT `id` FROM account WHERE `username`=:username), `lastlocate`=NULL";
+		}
+		else
+			LogError(QString("Invalid number of Bunnies %2 in DB for MAC %1. Skip").arg(QString(GetID()))
+																																						 .arg(nb)
+							);
+
+		if(q.length())
+		{
+			QSqlQuery query2(db);
+			query2.prepare(q);
+			query2.bindValue(":mac", GetID());
+			query2.bindValue(":username", GetGlobalSetting("OwnerAccount"));
+			query2.bindValue(":settings", settings);
+			query2.bindValue(":server", GlobalSettings::GetInt("Database/ServerId"));
+			if(!query2.exec())
+			{
+				LogError(QString("2/2 Impossible to save bunny in DB : %1").arg(query2.lastError().driverText()));
+			}
+			else 
+				needSave = false;
+		}
 	}
-	delete query;
 	if(close)
 		DbManager::releaseDb();
 

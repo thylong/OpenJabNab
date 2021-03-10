@@ -97,42 +97,61 @@ void Ztamp::SaveConfig()
 
 	QSqlDatabase db = DbManager::getDb();
 	bool close = DbManager::openDbIfNeeded();
-	QSqlQuery *query = new QSqlQuery(db);
-
-	QStringList owners = GlobalSettings.contains("OwnerAccounts") ? GlobalSettings.value("OwnerAccounts").toStringList() : QStringList();
 	QStringList ownerList;
-	foreach(QString o, owners)
 	{
-		query->prepare("SELECT id FROM account WHERE `username`=:username");
-		query->bindValue(":username", o);
-		query->exec();
-		if(query->size() == 1)
+		QStringList owners = GlobalSettings.contains("OwnerAccounts") ? GlobalSettings.value("OwnerAccounts").toStringList() : QStringList();
+		const auto& list = owners.join(',');
+		if(list.length())
 		{
-			query->first();
-			ownerList << query->value(0).toString();
+			QSqlQuery query(db);
+			query.prepare("SELECT id FROM account WHERE `username` IN (:usernames_list)");
+			query.bindValue(":usernames_list", list);
+			query.exec();
+			while(query.next())
+				ownerList << query.value(0).toString();
 		}
-		query->finish();
 	}
-
-	query->prepare("INSERT INTO ztamp SET `serial`=:serial, `settings`=:settings, `server_id`=(SELECT `id` FROM server WHERE `hostname`=:host), `accounts`=:accounts ON DUPLICATE KEY UPDATE `settings`=:settings_up, `server_id`=(SELECT `id` FROM server WHERE `hostname`=:host_up), `accounts`=:accounts_up");
-//	query->bindValue(":user", a->GetLogin());
-	query->bindValue(":serial", GetID());
-	query->bindValue(":accounts", ownerList.join(","));
-	query->bindValue(":accounts_up", ownerList.join(","));
-	query->bindValue(":settings", settings);
-	query->bindValue(":settings_up", settings);
-	query->bindValue(":host", GlobalSettings::GetString("OpenJabNabServers/PingServer"));
-	query->bindValue(":host_up", GlobalSettings::GetString("OpenJabNabServers/PingServer"));
-	bool ret = query->exec();
-	if(!ret)
-	{
-		LogError(QString("Impossible to save ztamp in DB : %1").arg(query->lastError().driverText()));
-	}
+	QSqlQuery query(db);
+	query.prepare("SELECT count(id) as nb FROM ztamp WHERE `serial`=:serial");
+	query.bindValue(":serial", GetID());
+	if(!query.exec())
+		LogError(QString("1/2 Impossible to save Ztamp in DB : %1").arg(query.lastError().driverText()));
 	else
 	{
-		needSave = false;
+		query.first();
+		const auto nb = query.value(0).toInt();
+		QString q("");
+		if(nb == 1)
+		{
+			LogDebug(QString("Updating Ztamp %1/%2 in DB").arg(QString(GetID())).arg(GetZtampName()));
+			q = "UPDATE ztamp set`settings`=:settings, `server_id`=:server, `accounts`=:accounts WHERE `serial`=:serial";
+		} 
+		else if(nb == 0)
+		{
+			LogDebug(QString("Adding new Ztamp in DB for %1/%2").arg(QString(GetID())).arg(GetZtampName()));
+			q = "INSERT INTO ztamp SET `id`=NULL, `serial`=:serial, `settings`=:settings, `server_id`=:server, `accounts`=:accounts, `lastshow`=NULL";
+		}
+		else
+			LogError(QString("Invalid number of Ztamps %2 in DB for Serial %1. Skip").arg(QString(GetID()))
+																																						 .arg(nb)
+							);
+
+		if(q.length())
+		{
+			QSqlQuery query2(db);
+			query2.prepare(q);
+			query2.bindValue(":serial", GetID());
+			query2.bindValue(":accounts", ownerList.join(","));
+			query2.bindValue(":settings", settings);
+			query2.bindValue(":server", GlobalSettings::GetInt("Database/ServerId"));
+			if(!query2.exec())
+			{
+				LogError(QString("2/2 Impossible to save Ztamp in DB : %1").arg(query2.lastError().driverText()));
+			}
+			else 
+				needSave = false;
+		}
 	}
-	delete query;
 	if(close)
 		DbManager::releaseDb();
 }
