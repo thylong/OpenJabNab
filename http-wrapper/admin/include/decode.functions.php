@@ -1,4 +1,6 @@
 <?php
+define('DEBUG_DECODE',false);
+define('DECODE_STR_CHECK',false);
 
 function getSize($str)
 {
@@ -43,7 +45,7 @@ function decodeStr($settings, $p)
   $len  = getSize(substr($settings, $p, 4)); $p += 4;     // Get Key length
   $out = substr($settings, $p, $len); $p += $len;         // Get Key
   $out = str_replace("\0",'', $out);                      // QtChar are on two bytes
-  if($len != 2*strlen($out))
+  if(DECODE_STR_CHECK && $len != 2*strlen($out))
     die('String length ('.$len.') doesn\'t match decoded string length ('.(strlen($out)*2).')');
   return array($p, $len ? $out : NULL);
 }
@@ -65,37 +67,48 @@ function decodeVal($settings,$p)
 {
   $type  = getSize(substr($settings, $p, 4)); $p += 4;      // Get Value type
   $p += 1;                                                  // ???
-  //var_dump('Type: 0x'.dechex($type));
+  if(DEBUG_DECODE)
+    var_dump('Type: 0x'.dechex($type));
   switch($type)
   {
     case 0x00000001:  // BOOL
-      //var_dump("BOOL");
+      if(DEBUG_DECODE)
+        var_dump("BOOL");
       list($p,$v) = decodeBool($settings,$p);
       break;
     case 0x00000002:  // INT
-      //var_dump("INT");
+      if(DEBUG_DECODE)
+        var_dump("INT");
       list($p,$v) = decodeInt($settings,$p);
       break;
     case 0x00000008:  // MAP
-      //var_dump('MAP for key '.$key);
-      //var_dump('  Recurse for: '.$key.' at '.dechex($p));
+      if(DEBUG_DECODE)
+      {
+        var_dump('MAP for key '.$key);
+        var_dump('  Recurse for: '.$key.' at '.dechex($p));
+      }
       list($p,$v) = decodeSettings($settings,$p,false);
-      //var_dump('  End Recurse: '.dechex($p));
+      if(DEBUG_DECODE)
+        var_dump('  End Recurse: '.dechex($p));
       break;
     case 0x0000000A:  // STRING
-      //var_dump("STRING");
+      if(DEBUG_DECODE)
+        var_dump("STRING");
       list($p,$v) = decodeStr($settings,$p);
       break;
     case 0x0000000B:
-      //var_dump("STRLIST");
+      if(DEBUG_DECODE)
+        var_dump("STRLIST");
       list($p,$v) = decodeList($settings,$p,'decodeStr');
       break;
     case 0x0000000C:  // BYTEARRAY
-      //var_dump("BYTEARRAY");
+      if(DEBUG_DECODE)
+        var_dump("BYTEARRAY");
       list($p,$v) = decodeByteArray($settings,$p);
       break;
     case 0x00000010:  // DATETIME
-      //var_dump("DATETIME");
+      if(DEBUG_DECODE)
+        var_dump("DATETIME");
       list($p,$v) = decodeDateTime($settings,$p);
       //$v = date("d/m/Y H:i:s", $v);
       break;
@@ -110,25 +123,33 @@ function decodeSettings($settings, $p, $recurse=false)
 {
   $out = array();
   $nb = getSize(substr($settings, $p, 4)); $p += 4;           // Get config length
-  //var_dump('Config items:'.$nb);
+  if(DEBUG_DECODE)
+    var_dump('Config items:'.$nb);
   for($i=0; $i<$nb; $i++)
   {
-    //echo '<hr />';
-    //var_dump('Pos 0x'.strtoupper(dechex($p)));
+    if(DEBUG_DECODE)
+    {
+      echo '<hr />';
+      var_dump('Pos 0x'.strtoupper(dechex($p)));
+    }
     list($p,$key) = decodeStr($settings,$p);
-    //var_dump('Key: '.$key);
+    if(DEBUG_DECODE)
+      var_dump('Key: '.$key);
     $v = NULL;
     if($recurse)
     {
-      //var_dump('Recurse for: '.$key);
+      if(DEBUG_DECODE)
+        var_dump('Recurse for: '.$key);
       list($p,$v) = decodeSettings($settings, $p, false);
-      //var_dump('End Recurse: '.dechex($p));
+      if(DEBUG_DECODE)
+        var_dump('End Recurse: '.dechex($p));
     }
     else
       list($p,$v) = decodeVal($settings, $p);
     if($v !== NULL)
     {
-      //var_dump($v);
+      if(DEBUG_DECODE)
+        var_dump($v);
       $out[$key] = $v;
     }
   }
