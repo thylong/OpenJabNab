@@ -81,15 +81,20 @@ function decodeVal($settings,$p)
         var_dump("INT");
       list($p,$v) = decodeInt($settings,$p);
       break;
+    case 0x00000003:  // UNSIGNED INT
+      if(DEBUG_DECODE)
+        var_dump("UINT");
+      list($p,$v) = decodeInt($settings,$p);
+      break;
     case 0x00000008:  // MAP
       if(DEBUG_DECODE)
       {
-        var_dump('MAP for key '.$key);
-        var_dump('  Recurse for: '.$key.' at '.dechex($p));
+        var_dump('MAP');
+        var_dump('  Recurse at 0x'.dechex($p));
       }
       list($p,$v) = decodeSettings($settings,$p,false);
       if(DEBUG_DECODE)
-        var_dump('  End Recurse: '.dechex($p));
+        var_dump('  End Recurse: 0x'.dechex($p));
       break;
     case 0x0000000A:  // STRING
       if(DEBUG_DECODE)
@@ -113,7 +118,7 @@ function decodeVal($settings,$p)
       //$v = date("d/m/Y H:i:s", $v);
       break;
     default:
-      var_dump('UNKNOWN TYPE '.$type.' for key '.$key.' at '.$p);
+      var_dump('UNKNOWN TYPE '.$type.' for key '.$key.' at 0x'.dechex($p));
       die;
   };
   return array($p, $v);
@@ -139,10 +144,10 @@ function decodeSettings($settings, $p, $recurse=false)
     if($recurse)
     {
       if(DEBUG_DECODE)
-        var_dump('Recurse for: '.$key);
+        var_dump('Recurse for: '.$key.' starting at 0x'.dechex($p));
       list($p,$v) = decodeSettings($settings, $p, false);
       if(DEBUG_DECODE)
-        var_dump('End Recurse: '.dechex($p));
+        var_dump('End Recurse: 0x'.dechex($p));
     }
     else
       list($p,$v) = decodeVal($settings, $p);
