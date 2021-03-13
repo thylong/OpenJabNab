@@ -1,5 +1,6 @@
 #include <QDateTime>
 #include <QStringList>
+#include <QRandomGenerator>
 #include "plugin_auth.h"
 #include "account.h"
 #include "bunny.h"
@@ -109,7 +110,7 @@ bool PluginAuth::DoAuth(XmppHandler * xmpp, QByteArray const& data, Bunny ** pBu
 					// Send a challenge
 					// <challenge xmlns='urn:ietf:params:xml:ns:xmpp-sasl'>...</challenge>
 					// <challenge xmlns='urn:ietf:params:xml:ns:xmpp-sasl'>nonce="random_number",qop="auth",charset=utf-8,algorithm=md5-sess</challenge>
-					QByteArray nonce = QByteArray::number((unsigned int)qrand());
+					QByteArray nonce = QByteArray::number((unsigned int)QRandomGenerator::global()->generate());
 					QByteArray challenge = "nonce=\"" + nonce + "\",qop=\"auth\",charset=utf-8,algorithm=md5-sess";
 					answer.append("<challenge xmlns='urn:ietf:params:xml:ns:xmpp-sasl'>" + challenge.toBase64() + "</challenge>");
 					xmpp->currentAuthStep = 2;
@@ -275,9 +276,9 @@ bool PluginAuth::HttpRequestHandle(HTTPRequest & request)
 /*******/
 void PluginAuth::InitApiCalls()
 {
-	DECLARE_PLUGIN_API_CALL("setAuthMethod(name)", PluginAuth, Api_SelectAuth);
-	DECLARE_PLUGIN_API_CALL("getListOfAuthMethods()", PluginAuth, Api_GetListOfAuths);
-	DECLARE_PLUGIN_API_CALL("config()", PluginAuth, Api_Config);
+	DECLARE_PLUGIN_API_CALL("setAuthMethod(name)", &PluginAuth::Api_SelectAuth);
+	DECLARE_PLUGIN_API_CALL("getListOfAuthMethods()", &PluginAuth::Api_GetListOfAuths);
+	DECLARE_PLUGIN_API_CALL("config()", &PluginAuth::Api_Config);
 }
 
 PLUGIN_API_CALL(PluginAuth::Api_SelectAuth)

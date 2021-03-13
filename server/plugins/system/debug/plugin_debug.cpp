@@ -96,8 +96,8 @@ bool PluginDebug::XmppBunnyMessage(Bunny * b, QByteArray const& data)
 
 void PluginDebug::InitApiCalls()
 {
-        DECLARE_PLUGIN_BUNNY_API_CALL("info()", PluginDebug, Api_Info);
-        DECLARE_PLUGIN_API_CALL("config()", PluginDebug, Api_Config);
+        DECLARE_PLUGIN_BUNNY_API_CALL("info()", &PluginDebug::Api_Info);
+        DECLARE_PLUGIN_API_CALL("config()", &PluginDebug::Api_Config);
 }
 
 PLUGIN_BUNNY_API_CALL(PluginDebug::Api_Info)

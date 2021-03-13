@@ -1,6 +1,7 @@
 #include <QDateTime>
 #include <QRegExp>
 #include <QCryptographicHash>
+#include <QRandomGenerator>
 #include <QNetworkRequest>
 #include <QNetworkReply>
 #include <QMapIterator>
@@ -49,7 +50,7 @@ int PluginNeedtoknow::GetRandomizedDelay(unsigned int delay)
 		unsigned int maxDeviation = (delay * 2 * RANDOMIZEDRATIO) / 100;
 		if(maxDeviation > 0)
 		{
-			deviation = qrand() % (maxDeviation);
+			deviation = QRandomGenerator::global()->generate() % (maxDeviation);
 		}
 		deviation -= (maxDeviation/2);
 	}
@@ -185,9 +186,9 @@ void PluginNeedtoknow::OnBunnyDisconnect(Bunny * b)
 
 void PluginNeedtoknow::InitApiCalls()
 {
-	DECLARE_PLUGIN_BUNNY_API_CALL("schedule()", PluginNeedtoknow, Api_Schedule);
-	DECLARE_PLUGIN_BUNNY_API_CALL("rfid()", PluginNeedtoknow, Api_RFID);
-	DECLARE_PLUGIN_API_CALL("language()", PluginNeedtoknow, Api_Language);
+	DECLARE_PLUGIN_BUNNY_API_CALL("schedule()", &PluginNeedtoknow::Api_Schedule);
+	DECLARE_PLUGIN_BUNNY_API_CALL("rfid()", &PluginNeedtoknow::Api_RFID);
+	DECLARE_PLUGIN_API_CALL("language()", &PluginNeedtoknow::Api_Language);
 }
 
 PLUGIN_BUNNY_API_CALL(PluginNeedtoknow::Api_RFID)

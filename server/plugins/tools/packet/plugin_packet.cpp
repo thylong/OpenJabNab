@@ -8,11 +8,11 @@ PluginPacket::PluginPacket():PluginInterface("packet", "Send raw packets to bunn
 
 void PluginPacket::InitApiCalls()
 {
-	DECLARE_PLUGIN_BUNNY_API_CALL("sendAmbient(service,value)", PluginPacket, Api_SendAmbient);
-	DECLARE_PLUGIN_BUNNY_API_CALL("sendPacket(data)", PluginPacket, Api_SendPacket);
-	DECLARE_PLUGIN_BUNNY_API_CALL("sendMessage(msg)", PluginPacket, Api_SendMessage);
-	DECLARE_PLUGIN_BUNNY_API_CALL("sendExpert(msg)", PluginPacket, Api_SendExpert);
-	DECLARE_PLUGIN_API_CALL("sendMessage(msg)", PluginPacket, Api_SendServerMessage);
+	DECLARE_PLUGIN_BUNNY_API_CALL("sendAmbient(service,value)", &PluginPacket::Api_SendAmbient);
+	DECLARE_PLUGIN_BUNNY_API_CALL("sendPacket(data)", &PluginPacket::Api_SendPacket);
+	DECLARE_PLUGIN_BUNNY_API_CALL("sendMessage(msg)", &PluginPacket::Api_SendMessage);
+	DECLARE_PLUGIN_BUNNY_API_CALL("sendExpert(msg)", &PluginPacket::Api_SendExpert);
+	DECLARE_PLUGIN_API_CALL("sendMessage(msg)", &PluginPacket::Api_SendServerMessage);
 }
 
 PLUGIN_BUNNY_API_CALL(PluginPacket::Api_SendAmbient)

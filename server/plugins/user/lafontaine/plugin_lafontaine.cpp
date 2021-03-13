@@ -1,6 +1,7 @@
 #include <QMap>
 #include <QMapIterator>
 #include <QTime>
+#include <QRandomGenerator>
 #include "plugin_lafontaine.h"
 #include "account.h"
 #include "bunny.h"
@@ -256,7 +257,7 @@ bool PluginLafontaine::streamRandomLafontaine(Bunny * b, bool plugin, bool owner
 	}
 	if(list.count())
 	{
-		QString random = list.at(qrand() % list.count());
+		QString random = list.at(QRandomGenerator::global()->generate() % list.count());
 		return streamPresetLafontaine(b, random);
 	}
 	return false;
@@ -268,11 +269,11 @@ bool PluginLafontaine::streamRandomLafontaine(Bunny * b, bool plugin, bool owner
 
 void PluginLafontaine::InitApiCalls()
 {
-	DECLARE_PLUGIN_BUNNY_API_CALL("rfid()", PluginLafontaine, Api_RFID);
-	DECLARE_PLUGIN_BUNNY_API_CALL("preset()", PluginLafontaine, Api_Preset);
-	DECLARE_PLUGIN_BUNNY_API_CALL("schedule()", PluginLafontaine, Api_Schedule);
-	DECLARE_PLUGIN_BUNNY_API_CALL("url()", PluginLafontaine, Api_Url);
-	DECLARE_PLUGIN_API_CALL("preset()", PluginLafontaine, Api_PluginPreset);
+	DECLARE_PLUGIN_BUNNY_API_CALL("rfid()", &PluginLafontaine::Api_RFID);
+	DECLARE_PLUGIN_BUNNY_API_CALL("preset()", &PluginLafontaine::Api_Preset);
+	DECLARE_PLUGIN_BUNNY_API_CALL("schedule()", &PluginLafontaine::Api_Schedule);
+	DECLARE_PLUGIN_BUNNY_API_CALL("url()", &PluginLafontaine::Api_Url);
+	DECLARE_PLUGIN_API_CALL("preset()", &PluginLafontaine::Api_PluginPreset);
 }
 
 PLUGIN_BUNNY_API_CALL(PluginLafontaine::Api_RFID)

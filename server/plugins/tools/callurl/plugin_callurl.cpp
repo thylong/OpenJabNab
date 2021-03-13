@@ -435,12 +435,12 @@ void PluginCallURL::OnBunnyDisconnect(Bunny * b)
 
 void PluginCallURL::InitApiCalls()
 {
-	DECLARE_PLUGIN_BUNNY_API_CALL("url()", PluginCallURL, Api_Url);
-	DECLARE_PLUGIN_BUNNY_API_CALL("rfid()", PluginCallURL, Api_RFID);
-	DECLARE_PLUGIN_BUNNY_API_CALL("schedule()", PluginCallURL, Api_Schedule);
-	DECLARE_PLUGIN_BUNNY_API_CALL("voice()", PluginCallURL, Api_Voice);
-	DECLARE_PLUGIN_BUNNY_API_CALL("ear()", PluginCallURL, Api_Ear);
-	DECLARE_PLUGIN_API_CALL("config()", PluginCallURL, Api_Config);
+	DECLARE_PLUGIN_BUNNY_API_CALL("url()", &PluginCallURL::Api_Url);
+	DECLARE_PLUGIN_BUNNY_API_CALL("rfid()", &PluginCallURL::Api_RFID);
+	DECLARE_PLUGIN_BUNNY_API_CALL("schedule()", &PluginCallURL::Api_Schedule);
+	DECLARE_PLUGIN_BUNNY_API_CALL("voice()", &PluginCallURL::Api_Voice);
+	DECLARE_PLUGIN_BUNNY_API_CALL("ear()", &PluginCallURL::Api_Ear);
+	DECLARE_PLUGIN_API_CALL("config()", &PluginCallURL::Api_Config);
 }
 
 PLUGIN_API_CALL(PluginCallURL::Api_Config)

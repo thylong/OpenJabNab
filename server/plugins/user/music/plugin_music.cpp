@@ -119,7 +119,7 @@ bool PluginMusic::playRandomInGroup(Bunny * b, QString group)
 	int index = 0;
 	if(musics.count() > 1)
 	{
-		index = qrand() % musics.count();
+		index = QRandomGenerator::global()->generate() % musics.count();
 		QString music = musics.at(index);
 		return playFile(b, music);
 	}
@@ -132,7 +132,7 @@ bool PluginMusic::playRandomFile(Bunny * b)
 	int index = 0;
 	if(musics.count() > 1)
 	{
-		index = qrand() % musics.count();
+		index = QRandomGenerator::global()->generate() % musics.count();
 		QString music = musics.at(index);
 		return playFile(b, music);
 	}
@@ -198,16 +198,16 @@ QByteArray PluginMusic::GetBroadcastHTTPUserPath(Bunny * b, QString f)
 
 void PluginMusic::InitApiCalls()
 {
-	DECLARE_PLUGIN_BUNNY_API_CALL("rfid()", PluginMusic, Api_RFID);
-	DECLARE_PLUGIN_BUNNY_API_CALL("file()", PluginMusic, Api_File);
-	DECLARE_PLUGIN_BUNNY_API_CALL("library()", PluginMusic, Api_Library);
+	DECLARE_PLUGIN_BUNNY_API_CALL("rfid()", &PluginMusic::Api_RFID);
+	DECLARE_PLUGIN_BUNNY_API_CALL("file()", &PluginMusic::Api_File);
+	DECLARE_PLUGIN_BUNNY_API_CALL("library()", &PluginMusic::Api_Library);
 /*
-	DECLARE_PLUGIN_BUNNY_API_CALL("addrfid(tag,music)", PluginMusic, Api_AddRFID);
-	DECLARE_PLUGIN_BUNNY_API_CALL("removerfid(tag)", PluginMusic, Api_RemoveRFID);
-	DECLARE_PLUGIN_BUNNY_API_CALL("listrfid()", PluginMusic, Api_ListRFID);
-	DECLARE_PLUGIN_BUNNY_API_CALL("getfileslist()", PluginMusic, Api_getFilesList);
-	DECLARE_PLUGIN_BUNNY_API_CALL("play(music)", PluginMusic, Api_Play);
-	DECLARE_PLUGIN_BUNNY_API_CALL("library()", PluginMusic, Api_libraryMode);
+	DECLARE_PLUGIN_BUNNY_API_CALL("addrfid(tag,music)", &PluginMusic::Api_AddRFID);
+	DECLARE_PLUGIN_BUNNY_API_CALL("removerfid(tag)", &PluginMusic::Api_RemoveRFID);
+	DECLARE_PLUGIN_BUNNY_API_CALL("listrfid()", &PluginMusic::Api_ListRFID);
+	DECLARE_PLUGIN_BUNNY_API_CALL("getfileslist()", &PluginMusic::Api_getFilesList);
+	DECLARE_PLUGIN_BUNNY_API_CALL("play(music)", &PluginMusic::Api_Play);
+	DECLARE_PLUGIN_BUNNY_API_CALL("library()", &PluginMusic::Api_libraryMode);
 */
 }
 

@@ -25,7 +25,9 @@ class Packet;
 class MessagePacket;
 class SleepPacket;
 
-class PluginInterface : public QObject, public PluginApiHandler
+class PluginInterface 
+	: public QObject
+	, public PluginApiHandler
 {
 	friend class PluginManager;
 public:

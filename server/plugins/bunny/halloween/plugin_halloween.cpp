@@ -1,4 +1,5 @@
 #include <QMapIterator>
+#include <QRandomGenerator>
 #include "plugin_halloween.h"
 #include "accountmanager.h"
 #include "bunny.h"
@@ -51,7 +52,7 @@ bool PluginHalloween::OnVoiceCommand(Bunny * b, QString const& command, QStringL
 	if (p > 0)
 	{
 		QMap<QString, QVariant> list = b->GetPluginSetting(GetName(), "Sounds", QMap<QString, QVariant>()).toMap();
-		QString folder = list.keys().at( qrand() % list.count() );
+		QString folder = list.keys().at( QRandomGenerator::global()->generate() % list.count() );
 		return PlaySound(b, folder);
 	}
 	return false;
@@ -59,7 +60,7 @@ bool PluginHalloween::OnVoiceCommand(Bunny * b, QString const& command, QStringL
 */
 int PluginHalloween::GetRandomizedDelay(unsigned int min, unsigned int max)
 {
-	int ret = min + (qrand() % ( max - min ));
+	int ret = min + (QRandomGenerator::global()->generate() % ( max - min ));
 	if(ret < 3)
 	{
 		LogDebug("New halloween in less than 3 minutes : " + QString::number(ret));
@@ -100,7 +101,7 @@ bool PluginHalloween::PlaySound(Bunny * b)
 			QStringList list = dir->entryList(QStringList("*.mp3"), QDir::Files|QDir::NoDotAndDotDot);
 			if(list.count())
 			{
-				QString fileName = list.at(qrand()%list.count());
+				QString fileName = list.at(QRandomGenerator::global()->generate()%list.count());
 				file = GetBroadcastHTTPPath(fileName);
 				if(b->GetVersion() == 1)
 				{
@@ -130,9 +131,9 @@ bool PluginHalloween::PlaySound(Bunny * b)
 
 void PluginHalloween::InitApiCalls()
 {
-	//DECLARE_PLUGIN_BUNNY_API_CALL("rfid()", PluginHalloween, Api_RFID);
-	//DECLARE_PLUGIN_BUNNY_API_CALL("folder()", PluginHalloween, Api_Folder);
-	DECLARE_PLUGIN_BUNNY_API_CALL("halloween()", PluginHalloween, Api_Sound);
+	//DECLARE_PLUGIN_BUNNY_API_CALL("rfid()", &PluginHalloween::Api_RFID);
+	//DECLARE_PLUGIN_BUNNY_API_CALL("folder()", &PluginHalloween::Api_Folder);
+	DECLARE_PLUGIN_BUNNY_API_CALL("halloween()", &PluginHalloween::Api_Sound);
 }
 
 PLUGIN_BUNNY_API_CALL(PluginHalloween::Api_Sound)

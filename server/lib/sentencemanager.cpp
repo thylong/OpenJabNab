@@ -2,6 +2,7 @@
 #include <QString>
 #include <QDebug>
 #include <QDir>
+#include <QRandomGenerator>
 #include "sentencemanager.h"
 #include "apimanager.h"
 #include "log.h"
@@ -174,7 +175,7 @@ QString const SentenceManager::getSentence(QString type, QString language, QStri
 	QStringList list = GetSentences(type, language);
 	if(list.count())
 	{
-		return list.at(qrand() % list.count());
+		return list.at(QRandomGenerator::global()->generate() % list.count());
 	}
 	return defaultString;
 }

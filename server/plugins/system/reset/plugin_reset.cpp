@@ -80,7 +80,7 @@ bool PluginReset::OnClick(Bunny * b, PluginInterface::ClickType type)
 
 void PluginReset::InitApiCalls()
 {
-        DECLARE_PLUGIN_API_CALL("reset()", PluginReset, Api_Reset);
+        DECLARE_PLUGIN_API_CALL("reset()", &PluginReset::Api_Reset);
 }
 
 PLUGIN_API_CALL(PluginReset::Api_Reset)

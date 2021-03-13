@@ -127,9 +127,9 @@ bool PluginSignature::Init()
 
 void PluginSignature::InitApiCalls()
 {
-	DECLARE_PLUGIN_BUNNY_API_CALL("config()", PluginSignature, Api_Config);
-	DECLARE_PLUGIN_BUNNY_API_CALL("sound()", PluginSignature, Api_Sound);
-	DECLARE_PLUGIN_API_CALL("sound()", PluginSignature, Api_PluginSound);
+	DECLARE_PLUGIN_BUNNY_API_CALL("config()", &PluginSignature::Api_Config);
+	DECLARE_PLUGIN_BUNNY_API_CALL("sound()", &PluginSignature::Api_Sound);
+	DECLARE_PLUGIN_API_CALL("sound()", &PluginSignature::Api_PluginSound);
 }
 
 PLUGIN_BUNNY_API_CALL(PluginSignature::Api_Config)

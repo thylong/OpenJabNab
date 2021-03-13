@@ -131,8 +131,8 @@ void PluginLedcustom::OnBunnyConnect(Bunny * b)
 
 void PluginLedcustom::InitApiCalls()
 {
-	DECLARE_PLUGIN_BUNNY_API_CALL("service()", PluginLedcustom, Api_Service);
-	DECLARE_PLUGIN_BUNNY_API_CALL("chor()", PluginLedcustom, Api_Chor);
+	DECLARE_PLUGIN_BUNNY_API_CALL("service()", &PluginLedcustom::Api_Service);
+	DECLARE_PLUGIN_BUNNY_API_CALL("chor()", &PluginLedcustom::Api_Chor);
 }
 
 PLUGIN_BUNNY_API_CALL(PluginLedcustom::Api_Chor)

@@ -129,16 +129,16 @@ void PluginVolume::RegisterCrons(Bunny * b)
 void PluginVolume::InitApiCalls()
 {
 /*
-        DECLARE_PLUGIN_BUNNY_API_CALL("setSound(vol)", PluginVolume, Api_SetSound);
-        DECLARE_PLUGIN_BUNNY_API_CALL("getSound()", PluginVolume, Api_GetSound);
-        DECLARE_PLUGIN_BUNNY_API_CALL("getCurrent()", PluginVolume, Api_GetCurrent);
-        DECLARE_PLUGIN_BUNNY_API_CALL("pollCurrent()", PluginVolume, Api_PollCurrent);
-        DECLARE_PLUGIN_BUNNY_API_CALL("addChange(vol,day,time)", PluginVolume, Api_AddChange);
-        DECLARE_PLUGIN_BUNNY_API_CALL("removeChange(day,time)", PluginVolume, Api_RemoveChange);
-        DECLARE_PLUGIN_BUNNY_API_CALL("getChanges()", PluginVolume, Api_GetChanges);
+        DECLARE_PLUGIN_BUNNY_API_CALL("setSound(vol)", &PluginVolume::Api_SetSound);
+        DECLARE_PLUGIN_BUNNY_API_CALL("getSound()", &PluginVolume::Api_GetSound);
+        DECLARE_PLUGIN_BUNNY_API_CALL("getCurrent()", &PluginVolume::Api_GetCurrent);
+        DECLARE_PLUGIN_BUNNY_API_CALL("pollCurrent()", &PluginVolume::Api_PollCurrent);
+        DECLARE_PLUGIN_BUNNY_API_CALL("addChange(vol,day,time)", &PluginVolume::Api_AddChange);
+        DECLARE_PLUGIN_BUNNY_API_CALL("removeChange(day,time)", &PluginVolume::Api_RemoveChange);
+        DECLARE_PLUGIN_BUNNY_API_CALL("getChanges()", &PluginVolume::Api_GetChanges);
 */
-        DECLARE_PLUGIN_BUNNY_API_CALL("sound()", PluginVolume, Api_Sound);
-        DECLARE_PLUGIN_BUNNY_API_CALL("schedule()", PluginVolume, Api_Schedule);
+        DECLARE_PLUGIN_BUNNY_API_CALL("sound()", &PluginVolume::Api_Sound);
+        DECLARE_PLUGIN_BUNNY_API_CALL("schedule()", &PluginVolume::Api_Schedule);
 }
 
 PLUGIN_BUNNY_API_CALL(PluginVolume::Api_Schedule)

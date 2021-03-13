@@ -1,5 +1,6 @@
 #include <QDateTime>
 #include <QMapIterator>
+#include <QRandomGenerator>
 #include "bunny.h"
 #include "bunnymanager.h"
 #include "cron.h"
@@ -233,7 +234,7 @@ void PluginClock::OnCron(Bunny *, QVariant, unsigned int)
 							QStringList list = dir->entryList(QStringList("*.mp3"), QDir::Files|QDir::NoDotAndDotDot);
 							if(list.count())
 							{
-								QByteArray f = GetBroadcastHTTPPath(QString("%1/%2/%3").arg(voice, hour, list.at(qrand()%list.count())));
+								QByteArray f = GetBroadcastHTTPPath(QString("%1/%2/%3").arg(voice, hour, list.at(QRandomGenerator::global()->generate()%list.count())));
 								if(b->GetVersion() == 2)
 								{
 									file = QString(f);
@@ -310,10 +311,10 @@ void PluginClock::OnBunnyDisconnect(Bunny * b)
 
 void PluginClock::InitApiCalls()
 {
-	DECLARE_PLUGIN_BUNNY_API_CALL("setup()", PluginClock, Api_Setup);
-	DECLARE_PLUGIN_BUNNY_API_CALL("voice()", PluginClock, Api_Voice);
-	DECLARE_PLUGIN_BUNNY_API_CALL("setVoice(name)", PluginClock, Api_SetVoice);
-	DECLARE_PLUGIN_BUNNY_API_CALL("getVoiceList()", PluginClock, Api_GetVoiceList);
+	DECLARE_PLUGIN_BUNNY_API_CALL("setup()", &PluginClock::Api_Setup);
+	DECLARE_PLUGIN_BUNNY_API_CALL("voice()", &PluginClock::Api_Voice);
+	DECLARE_PLUGIN_BUNNY_API_CALL("setVoice(name)", &PluginClock::Api_SetVoice);
+	DECLARE_PLUGIN_BUNNY_API_CALL("getVoiceList()", &PluginClock::Api_GetVoiceList);
 }
 
 PLUGIN_BUNNY_API_CALL(PluginClock::Api_Setup)

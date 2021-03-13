@@ -58,46 +58,46 @@ ApiManager::ApiAnswer * ApiManager::ProcessApiCall(QString const& request, HTTPR
 		hRequest.RemoveArg("token");
 
 		if(request.startsWith("global/"))
-			return ProcessGlobalApiCall(account, request.mid(7), hRequest);
+			return ProcessGlobalApiCall(request.mid(7), hRequest, account);
 
 		if(request.startsWith("plugins/"))
-			return PluginManager::Instance().ProcessApiCall(account, request.mid(8), hRequest);
+			return PluginManager::Instance().ProcessApiCall(request.mid(8), hRequest, account);
 
 		if(request.startsWith("tts/"))
-			return TTSManager::Instance().ProcessApiCall(account, request.mid(4), hRequest);
+			return TTSManager::Instance().ProcessApiCall(request.mid(4), hRequest, account);
 
 		if(request.startsWith("cron/"))
-			return Cron::Instance().ProcessApiCall(account, request.mid(5), hRequest);
+			return Cron::Instance().ProcessApiCall(request.mid(5), hRequest, account);
 
 		if(request.startsWith("plugin/"))
-			return ProcessPluginApiCall(account, request.mid(7), hRequest);
+			return ProcessPluginApiCall(request.mid(7), hRequest, account);
 
 		if(request.startsWith("translate/"))
-			return Translator::Instance().ProcessApiCall(account, request.mid(10), hRequest);
+			return Translator::Instance().ProcessApiCall(request.mid(10), hRequest, account);
 
 		if(request.startsWith("sentences/"))
-			return SentenceManager::Instance().ProcessApiCall(account, request.mid(10), hRequest);
+			return SentenceManager::Instance().ProcessApiCall(request.mid(10), hRequest, account);
 
 		if(request.startsWith("bunnies/"))
-			return BunnyManager::Instance().ProcessApiCall(account, request.mid(8), hRequest);
+			return BunnyManager::Instance().ProcessApiCall(request.mid(8), hRequest, account);
 
 		if(request.startsWith("bunny/"))
-			return ProcessBunnyApiCall(account, request.mid(6), hRequest);
+			return ProcessBunnyApiCall(request.mid(6), hRequest, account);
 
 		if(request.startsWith("ztamps/"))
-			return ZtampManager::Instance().ProcessApiCall(account, request.mid(7), hRequest);
+			return ZtampManager::Instance().ProcessApiCall(request.mid(7), hRequest, account);
 
 		if(request.startsWith("ztamp/"))
-			return ProcessZtampApiCall(account, request.mid(6), hRequest);
+			return ProcessZtampApiCall(request.mid(6), hRequest, account);
 
 		if(request.startsWith("accounts/"))
-			return AccountManager::Instance().ProcessApiCall(account, request.mid(9), hRequest);
+			return AccountManager::Instance().ProcessApiCall(request.mid(9), hRequest, account);
 
 		return new ApiManager::ApiError(Translator::tr("Unknown Api Call : %1").arg(hRequest.toString()));
 	}
 }
 
-ApiManager::ApiAnswer * ApiManager::ProcessGlobalApiCall(Account const& account, QString const& request, HTTPRequest const& hRequest)
+ApiManager::ApiAnswer * ApiManager::ProcessGlobalApiCall(QString const& request, HTTPRequest const& hRequest, Account const& account)
 {
 	if(request == "about")
 	{
@@ -171,9 +171,9 @@ ApiManager::ApiAnswer * ApiManager::ProcessGlobalApiCall(Account const& account,
 	return new ApiManager::ApiError(Translator::tr("Unknown Global Api Call : %1", account).arg(hRequest.toString()));
 }
 
-ApiManager::ApiAnswer * ApiManager::ProcessPluginApiCall(Account const& account, QString const& request, HTTPRequest & hRequest)
+ApiManager::ApiAnswer * ApiManager::ProcessPluginApiCall(QString const& request, HTTPRequest const& hRequest, Account const& account)
 {
-	QStringList list = QString(request).split('/', QString::SkipEmptyParts);
+	QStringList list = QString(request).split('/', Qt::SkipEmptyParts);
 
 	if(list.size() != 2)
 		return new ApiManager::ApiError(Translator::tr("Malformed Plugin Api Call : %1", account).arg(hRequest.toString()));
@@ -188,15 +188,12 @@ ApiManager::ApiAnswer * ApiManager::ProcessPluginApiCall(Account const& account,
 	if(!plugin->GetEnable())
 		return new ApiManager::ApiError(Translator::tr("This plugin is disabled", account));
 
-	if(!functionName.contains("remove") && !hRequest.IsValid())
-		return new ApiManager::ApiError(Translator::tr("Time format must be hh:mm", account));
-
-	return plugin->ProcessApiCall(account, functionName, hRequest);
+	return plugin->ProcessApiCall(functionName, hRequest, account);
 }
 
-ApiManager::ApiAnswer * ApiManager::ProcessBunnyApiCall(Account const& account, QString const& request, HTTPRequest & hRequest)
+ApiManager::ApiAnswer * ApiManager::ProcessBunnyApiCall(QString const& request, HTTPRequest const& hRequest, Account const& account)
 {
-	QStringList list = QString(request).split('/', QString::SkipEmptyParts);
+	QStringList list = QString(request).split('/', Qt::SkipEmptyParts);
 
 	if(list.size() < 2)
 		return new ApiManager::ApiError(Translator::tr("Malformed Bunny Api Call : %1", account).arg(hRequest.toString()));
@@ -213,10 +210,7 @@ ApiManager::ApiAnswer * ApiManager::ProcessBunnyApiCall(Account const& account, 
 		if(list.size() == 2)
 		{
 			QByteArray const& functionName = list.at(1).toLatin1();
-			if(!functionName.contains("remove") && !hRequest.IsValid())
-				return new ApiManager::ApiError(Translator::tr("Time format must be hh:mm", account));
-
-			return b->ProcessApiCall(account, functionName, hRequest);
+			return b->ProcessApiCall(functionName, hRequest, account);
 		}
 		else if(list.size() == 3)
 		{
@@ -227,10 +221,8 @@ ApiManager::ApiAnswer * ApiManager::ProcessBunnyApiCall(Account const& account, 
 				if(b->HasPlugin(plugin) || ( (plugin->GetType() & PluginInterface::SystemPlugin || plugin->GetType() & PluginInterface::RequiredPlugin ) && plugin->GetEnable()))
 				{
 					QByteArray const& functionName = list.at(2).toLatin1();
-					if(!functionName.contains("remove") && !hRequest.IsValid())
-						return new ApiManager::ApiError(Translator::tr("Time format must be hh:mm", account));
 
-					return plugin->ProcessBunnyApiCall(b, account, functionName, hRequest);
+					return plugin->ProcessBunnyApiCall(functionName, hRequest, account, b);
 				}
 			else
 				return new ApiManager::ApiError(Translator::tr("This plugin is not enabled for this bunny", account));
@@ -246,7 +238,7 @@ ApiManager::ApiAnswer * ApiManager::ProcessBunnyApiCall(Account const& account, 
 
 ApiManager::ApiAnswer * ApiManager::ProcessBunnyVioletApiCall(QString const& request, HTTPRequest const& hRequest)
 {
-	QStringList list = QString(request).split('/', QString::SkipEmptyParts);
+	QStringList list = QString(request).split('/', Qt::SkipEmptyParts);
 
 	if(list.size() < 3)
 		return new ApiManager::ApiError(QString("Malformed Bunny Api Call : %1").arg(hRequest.toString()));
@@ -270,9 +262,9 @@ ApiManager::ApiAnswer * ApiManager::ProcessBunnyVioletApiCall(QString const& req
 	}
 }
 
-ApiManager::ApiAnswer * ApiManager::ProcessZtampApiCall(Account const& account, QString const& request, HTTPRequest & hRequest)
+ApiManager::ApiAnswer * ApiManager::ProcessZtampApiCall(QString const& request, HTTPRequest const& hRequest, Account const& account)
 {
-	QStringList list = QString(request).split('/', QString::SkipEmptyParts);
+	QStringList list = QString(request).split('/', Qt::SkipEmptyParts);
 
 	if(list.size() < 2)
 		return new ApiManager::ApiError(Translator::tr("Malformed Ztamp Api Call : %1", account).arg(hRequest.toString()));
@@ -287,10 +279,8 @@ ApiManager::ApiAnswer * ApiManager::ProcessZtampApiCall(Account const& account, 
 	if(list.size() == 2)
 	{
 		QByteArray const& functionName = list.at(1).toLatin1();
-		if(!functionName.contains("remove") && !hRequest.IsValid())
-			return new ApiManager::ApiError(Translator::tr("Time format must be hh:mm", account));
 
-		return z->ProcessApiCall(account, functionName, hRequest);
+		return z->ProcessApiCall(functionName, hRequest, account);
 	}
 	else if(list.size() == 3)
 	{
@@ -301,10 +291,8 @@ ApiManager::ApiAnswer * ApiManager::ProcessZtampApiCall(Account const& account, 
 			if(z->HasPlugin(plugin))
 			{
 				QByteArray const& functionName = list.at(2).toLatin1();
-				if(!functionName.contains("remove") && !hRequest.IsValid())
-					return new ApiManager::ApiError(Translator::tr("Time format must be hh:mm", account));
 
-				return plugin->ProcessZtampApiCall(z, account, functionName, hRequest);
+				return plugin->ProcessZtampApiCall(functionName, hRequest, account, z);
 			}
 		else
 			return new ApiManager::ApiError(Translator::tr("This plugin is not enabled for this ztamp", account));

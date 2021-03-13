@@ -1,9 +1,10 @@
 #include <QRegExp>
+#include <QRandomGenerator>
 #include "plugin_choregraphy.h"
 #include "messagepacket.h"
 #include "translator.h"
 
-// P_L "+QString::number(qrand() % 8).toLatin1()
+// P_L "+QString::number(QRandomGenerator::global()->generate() % 8).toLatin1()
 
 PluginChoregraphy::PluginChoregraphy():PluginInterface("choregraphy", "Play choregraphy during sound playback", BunnyV2Plugin | DevPlugin)
 {
@@ -21,7 +22,7 @@ void PluginChoregraphy::BeforeSendMessage(Bunny * b, MessagePacket * m, QString 
 	{
 		if(choregraphy == "random")
 		{
-			choregraphy = QString::number(qrand() % 8);
+			choregraphy = QString::number(QRandomGenerator::global()->generate() % 8);
 		}
 		QRegExp rx("((MU|ST) .*\n)MW");
 		rx.setMinimal(true);
@@ -38,7 +39,7 @@ bool PluginChoregraphy::Init()
 
 void PluginChoregraphy::InitApiCalls()
 {
-	DECLARE_PLUGIN_BUNNY_API_CALL("config()", PluginChoregraphy, Api_Config);
+	DECLARE_PLUGIN_BUNNY_API_CALL("config()", &PluginChoregraphy::Api_Config);
 }
 
 PLUGIN_BUNNY_API_CALL(PluginChoregraphy::Api_Config)

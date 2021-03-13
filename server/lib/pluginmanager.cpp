@@ -86,7 +86,7 @@ bool PluginManager::LoadPlugin(QString const& fileName)
 	QString status = QString("Loading %1 : ").arg(fileName);
 
 	QPluginLoader * loader = new QPluginLoader(file);
-  loader->setLoadHints(0x00); // Clear QLibrary::PreventUnloadHint, allowing library file reload !
+  loader->setLoadHints(QLibrary::LoadHints()); // Clear QLibrary::PreventUnloadHint, allowing library file reload !
 	QObject * p = loader->instance();
 	PluginInterface * plugin = qobject_cast<PluginInterface *>(p);
 	if (plugin)

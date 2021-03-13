@@ -79,7 +79,7 @@ void PluginListen::SendListeningGain(Bunny * b)
 
 void PluginListen::InitApiCalls()
 {
-	DECLARE_PLUGIN_BUNNY_API_CALL("config()", PluginListen, Api_Config);
+	DECLARE_PLUGIN_BUNNY_API_CALL("config()", &PluginListen::Api_Config);
 }
 
 PLUGIN_BUNNY_API_CALL(PluginListen::Api_Config)

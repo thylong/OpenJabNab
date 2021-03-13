@@ -85,11 +85,11 @@ void PluginColorbreathing::OnInitPacket(const Bunny * bunny, AmbientPacket & a, 
 
 void PluginColorbreathing::InitApiCalls()
 {
-        DECLARE_PLUGIN_BUNNY_API_CALL("getColorList()", PluginColorbreathing, Api_GetColorList);
-        DECLARE_PLUGIN_BUNNY_API_CALL("setColor(name)", PluginColorbreathing, Api_SetColor);
-        DECLARE_PLUGIN_BUNNY_API_CALL("getColor()", PluginColorbreathing, Api_GetColor);
+        DECLARE_PLUGIN_BUNNY_API_CALL("getColorList()", &PluginColorbreathing::Api_GetColorList);
+        DECLARE_PLUGIN_BUNNY_API_CALL("setColor(name)", &PluginColorbreathing::Api_SetColor);
+        DECLARE_PLUGIN_BUNNY_API_CALL("getColor()", &PluginColorbreathing::Api_GetColor);
 
-        DECLARE_PLUGIN_BUNNY_API_CALL("color()", PluginColorbreathing, Api_Color);
+        DECLARE_PLUGIN_BUNNY_API_CALL("color()", &PluginColorbreathing::Api_Color);
 }
 
 PLUGIN_BUNNY_API_CALL(PluginColorbreathing::Api_Color)

@@ -134,21 +134,21 @@ void PluginNab2nab::SendMessage(QString)
 
 void PluginNab2nab::InitApiCalls()
 {
-	DECLARE_PLUGIN_BUNNY_API_CALL("setpreference(key,value)", PluginNab2nab, Api_SetPreference);
-	DECLARE_PLUGIN_BUNNY_API_CALL("getpreference(key)", PluginNab2nab, Api_GetPreference);
-	DECLARE_PLUGIN_BUNNY_API_CALL("addfriend(sn,name)", PluginNab2nab, Api_AddFavorite);
-	DECLARE_PLUGIN_BUNNY_API_CALL("removefriend(sn)", PluginNab2nab, Api_RemoveFavorite);
-	DECLARE_PLUGIN_BUNNY_API_CALL("getfriends()", PluginNab2nab, Api_GetFavorites);
-	DECLARE_PLUGIN_BUNNY_API_CALL("setreceiverontag(sn,tag)", PluginNab2nab, Api_SetReceiver);
-	DECLARE_PLUGIN_BUNNY_API_CALL("removereceiverontag(tag)", PluginNab2nab, Api_RemoveReceiver);
-	DECLARE_PLUGIN_BUNNY_API_CALL("getreceiversontags()", PluginNab2nab, Api_GetReceivers);
+	DECLARE_PLUGIN_BUNNY_API_CALL("setpreference(key,value)", &PluginNab2nab::Api_SetPreference);
+	DECLARE_PLUGIN_BUNNY_API_CALL("getpreference(key)", &PluginNab2nab::Api_GetPreference);
+	DECLARE_PLUGIN_BUNNY_API_CALL("addfriend(sn,name)", &PluginNab2nab::Api_AddFavorite);
+	DECLARE_PLUGIN_BUNNY_API_CALL("removefriend(sn)", &PluginNab2nab::Api_RemoveFavorite);
+	DECLARE_PLUGIN_BUNNY_API_CALL("getfriends()", &PluginNab2nab::Api_GetFavorites);
+	DECLARE_PLUGIN_BUNNY_API_CALL("setreceiverontag(sn,tag)", &PluginNab2nab::Api_SetReceiver);
+	DECLARE_PLUGIN_BUNNY_API_CALL("removereceiverontag(tag)", &PluginNab2nab::Api_RemoveReceiver);
+	DECLARE_PLUGIN_BUNNY_API_CALL("getreceiversontags()", &PluginNab2nab::Api_GetReceivers);
 
-	DECLARE_PLUGIN_BUNNY_API_CALL("friend()", PluginNab2nab, Api_Friend);
-	DECLARE_PLUGIN_BUNNY_API_CALL("config()", PluginNab2nab, Api_Config);
+	DECLARE_PLUGIN_BUNNY_API_CALL("friend()", &PluginNab2nab::Api_Friend);
+	DECLARE_PLUGIN_BUNNY_API_CALL("config()", &PluginNab2nab::Api_Config);
 /*
-	DECLARE_PLUGIN_API_CALL("sendmessage(sn,text)", PluginNab2nab, Api_SendMessage);
-	DECLARE_PLUGIN_API_CALL("sendaudio(sn,url)", PluginNab2nab, Api_SendAudio);
-	DECLARE_PLUGIN_API_CALL("receive(sn,url,keep)", PluginNab2nab, Api_ReceiveMessage);
+	DECLARE_PLUGIN_API_CALL("sendmessage(sn,text)", &PluginNab2nab::Api_SendMessage);
+	DECLARE_PLUGIN_API_CALL("sendaudio(sn,url)", &PluginNab2nab::Api_SendAudio);
+	DECLARE_PLUGIN_API_CALL("receive(sn,url,keep)", &PluginNab2nab::Api_ReceiveMessage);
 */
 }
 

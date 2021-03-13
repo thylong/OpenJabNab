@@ -18,7 +18,7 @@ PluginMsgall::~PluginMsgall() {}
 
 void PluginMsgall::InitApiCalls()
 {
-	DECLARE_PLUGIN_API_CALL("say()", PluginMsgall, Api_Say);
+	DECLARE_PLUGIN_API_CALL("say()", &PluginMsgall::Api_Say);
 }
 
 PLUGIN_API_CALL(PluginMsgall::Api_Say)

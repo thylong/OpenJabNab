@@ -133,17 +133,17 @@ void PluginWizzflux::analyse(QNetworkReply* networkReply)
 
 void PluginWizzflux::InitApiCalls()
 {
-	DECLARE_PLUGIN_BUNNY_API_CALL("addrfid(tag,name)", PluginWizzflux, Api_AddRFID);
-	DECLARE_PLUGIN_BUNNY_API_CALL("removerfid(tag)", PluginWizzflux, Api_RemoveRFID);
-	DECLARE_PLUGIN_BUNNY_API_CALL("addwebcast(time,name)", PluginWizzflux, Api_AddWebcast);
-	DECLARE_PLUGIN_BUNNY_API_CALL("removewebcast(time)", PluginWizzflux, Api_RemoveWebcast);
-	DECLARE_PLUGIN_BUNNY_API_CALL("setdefault(name)", PluginWizzflux, Api_SetDefault);
-	DECLARE_PLUGIN_BUNNY_API_CALL("getdefault()", PluginWizzflux, Api_GetDefault);
-	DECLARE_PLUGIN_BUNNY_API_CALL("play(name)", PluginWizzflux, Api_Play);
-	DECLARE_PLUGIN_BUNNY_API_CALL("listwebcast()", PluginWizzflux, Api_ListWebcast);
-	DECLARE_PLUGIN_BUNNY_API_CALL("listflux()", PluginWizzflux, Api_ListFlux);
-	DECLARE_PLUGIN_API_CALL("getflux()", PluginWizzflux, Api_GetFlux);
-	DECLARE_PLUGIN_API_CALL("setflux(list)", PluginWizzflux, Api_SetFlux);
+	DECLARE_PLUGIN_BUNNY_API_CALL("addrfid(tag,name)", &PluginWizzflux::Api_AddRFID);
+	DECLARE_PLUGIN_BUNNY_API_CALL("removerfid(tag)", &PluginWizzflux::Api_RemoveRFID);
+	DECLARE_PLUGIN_BUNNY_API_CALL("addwebcast(time,name)", &PluginWizzflux::Api_AddWebcast);
+	DECLARE_PLUGIN_BUNNY_API_CALL("removewebcast(time)", &PluginWizzflux::Api_RemoveWebcast);
+	DECLARE_PLUGIN_BUNNY_API_CALL("setdefault(name)", &PluginWizzflux::Api_SetDefault);
+	DECLARE_PLUGIN_BUNNY_API_CALL("getdefault()", &PluginWizzflux::Api_GetDefault);
+	DECLARE_PLUGIN_BUNNY_API_CALL("play(name)", &PluginWizzflux::Api_Play);
+	DECLARE_PLUGIN_BUNNY_API_CALL("listwebcast()", &PluginWizzflux::Api_ListWebcast);
+	DECLARE_PLUGIN_BUNNY_API_CALL("listflux()", &PluginWizzflux::Api_ListFlux);
+	DECLARE_PLUGIN_API_CALL("getflux()", &PluginWizzflux::Api_GetFlux);
+	DECLARE_PLUGIN_API_CALL("setflux(list)", &PluginWizzflux::Api_SetFlux);
 }
 
 PLUGIN_BUNNY_API_CALL(PluginWizzflux::Api_AddRFID)

@@ -137,11 +137,11 @@ QList<BunnyInfos> PluginAnnuaire::SearchBunnyByMac(QByteArray ID)
 /*******/
 void PluginAnnuaire::InitApiCalls()
 {
-	DECLARE_PLUGIN_API_CALL("setURL(url)", PluginAnnuaire, Api_setURL);
-	DECLARE_PLUGIN_API_CALL("getURL()", PluginAnnuaire, Api_getURL);
-	DECLARE_PLUGIN_API_CALL("searchbunnybymac(mac)", PluginAnnuaire, Api_SearchBunnyByMac);
-	DECLARE_PLUGIN_API_CALL("searchbunnybyname(name)", PluginAnnuaire, Api_SearchBunnyByName);
-	DECLARE_PLUGIN_API_CALL("verifymactoken(mac,reqtoken)", PluginAnnuaire, Api_VerifyMacToken);
+	DECLARE_PLUGIN_API_CALL("setURL(url)", &PluginAnnuaire::Api_setURL);
+	DECLARE_PLUGIN_API_CALL("getURL()", &PluginAnnuaire::Api_getURL);
+	DECLARE_PLUGIN_API_CALL("searchbunnybymac(mac)", &PluginAnnuaire::Api_SearchBunnyByMac);
+	DECLARE_PLUGIN_API_CALL("searchbunnybyname(name)", &PluginAnnuaire::Api_SearchBunnyByName);
+	DECLARE_PLUGIN_API_CALL("verifymactoken(mac,reqtoken)", &PluginAnnuaire::Api_VerifyMacToken);
 }
 
 PLUGIN_API_CALL(PluginAnnuaire::Api_setURL)

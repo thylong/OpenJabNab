@@ -343,12 +343,12 @@ QList<SleepTime> PluginSleep::compactSleepTime(QList<SleepTime> sleeplist)
 
 void PluginSleep::InitApiCalls()
 {
-	DECLARE_PLUGIN_BUNNY_API_CALL("sleep()", PluginSleep, Api_Sleep);
-//	DECLARE_PLUGIN_BUNNY_API_CALL("wakeup()", PluginSleep, Api_Wakeup);
-//	DECLARE_PLUGIN_BUNNY_API_CALL("setup(wakeupList,sleepList)", PluginSleep, Api_Setup);
-//	DECLARE_PLUGIN_BUNNY_API_CALL("getsetup()", PluginSleep, Api_GetSetup);
-	DECLARE_PLUGIN_BUNNY_API_CALL("config()", PluginSleep, Api_Config);
-	DECLARE_PLUGIN_BUNNY_API_CALL("rfid()", PluginSleep, Api_RFID);
+	DECLARE_PLUGIN_BUNNY_API_CALL("sleep()", &PluginSleep::Api_Sleep);
+//	DECLARE_PLUGIN_BUNNY_API_CALL("wakeup()", &PluginSleep::Api_Wakeup);
+//	DECLARE_PLUGIN_BUNNY_API_CALL("setup(wakeupList,sleepList)", &PluginSleep::Api_Setup);
+//	DECLARE_PLUGIN_BUNNY_API_CALL("getsetup()", &PluginSleep::Api_GetSetup);
+	DECLARE_PLUGIN_BUNNY_API_CALL("config()", &PluginSleep::Api_Config);
+	DECLARE_PLUGIN_BUNNY_API_CALL("rfid()", &PluginSleep::Api_RFID);
 }
 
 PLUGIN_BUNNY_API_CALL(PluginSleep::Api_RFID)

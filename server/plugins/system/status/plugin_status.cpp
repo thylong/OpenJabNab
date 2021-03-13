@@ -134,8 +134,8 @@ void PluginStatus::SendRequestStatus(Bunny * b)
 
 void PluginStatus::InitApiCalls()
 {
-        DECLARE_PLUGIN_BUNNY_API_CALL("status()", PluginStatus, Api_Status);
-        DECLARE_PLUGIN_API_CALL("config()", PluginStatus, Api_Config);
+        DECLARE_PLUGIN_BUNNY_API_CALL("status()", &PluginStatus::Api_Status);
+        DECLARE_PLUGIN_API_CALL("config()", &PluginStatus::Api_Config);
 }
 
 PLUGIN_BUNNY_API_CALL(PluginStatus::Api_Status)

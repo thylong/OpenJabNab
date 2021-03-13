@@ -95,7 +95,7 @@ void PluginMemo::OnBunnyDisconnect(Bunny * b)
 
 void PluginMemo::InitApiCalls()
 {
-	DECLARE_PLUGIN_BUNNY_API_CALL("schedule()", PluginMemo, Api_Schedule);
+	DECLARE_PLUGIN_BUNNY_API_CALL("schedule()", &PluginMemo::Api_Schedule);
 }
 
 PLUGIN_BUNNY_API_CALL(PluginMemo::Api_Schedule)

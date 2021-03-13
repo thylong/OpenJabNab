@@ -419,11 +419,11 @@ void PluginMessages::OnBunnyDisconnect(Bunny * b)
 
 void PluginMessages::InitApiCalls()
 {
-	DECLARE_PLUGIN_BUNNY_API_CALL("schedule()", PluginMessages, Api_Schedule);
-	DECLARE_PLUGIN_BUNNY_API_CALL("option()", PluginMessages, Api_Option);
-	DECLARE_PLUGIN_BUNNY_API_CALL("rfid()", PluginMessages, Api_RFID);
-	DECLARE_PLUGIN_BUNNY_API_CALL("message()", PluginMessages, Api_Message);
-	DECLARE_PLUGIN_API_CALL("config()", PluginMessages, Api_Config);
+	DECLARE_PLUGIN_BUNNY_API_CALL("schedule()", &PluginMessages::Api_Schedule);
+	DECLARE_PLUGIN_BUNNY_API_CALL("option()", &PluginMessages::Api_Option);
+	DECLARE_PLUGIN_BUNNY_API_CALL("rfid()", &PluginMessages::Api_RFID);
+	DECLARE_PLUGIN_BUNNY_API_CALL("message()", &PluginMessages::Api_Message);
+	DECLARE_PLUGIN_API_CALL("config()", &PluginMessages::Api_Config);
 }
 
 PLUGIN_BUNNY_API_CALL(PluginMessages::Api_Schedule)

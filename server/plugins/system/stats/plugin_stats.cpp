@@ -115,15 +115,15 @@ bool PluginStats::OnClick(Bunny * , PluginInterface::ClickType type)
 
 void PluginStats::InitApiCalls()
 {
-	DECLARE_PLUGIN_API_CALL("getcolors()", PluginStats, Api_GetColors);
-	DECLARE_PLUGIN_API_CALL("getplugins()", PluginStats, Api_GetPlugins);
-	DECLARE_PLUGIN_API_CALL("getbunniesip()", PluginStats, Api_GetBunniesIP);
-	DECLARE_PLUGIN_API_CALL("getbunniestimezone()", PluginStats, Api_GetBunniesTimezone);
-	DECLARE_PLUGIN_API_CALL("getbunniesname()", PluginStats, Api_GetBunniesName);
-	DECLARE_PLUGIN_API_CALL("getbunniesstatus()", PluginStats, Api_GetBunniesStatus);
-        DECLARE_PLUGIN_API_CALL("getbunniesinformation()",PluginStats, Api_GetBunniesInformation);
-        DECLARE_PLUGIN_API_CALL("getcounters()",PluginStats, Api_GetCounters);
-        DECLARE_PLUGIN_API_CALL("getwidgetjson()",PluginStats, Api_GetWidgetJson);
+	DECLARE_PLUGIN_API_CALL("getcolors()", &PluginStats::Api_GetColors);
+	DECLARE_PLUGIN_API_CALL("getplugins()", &PluginStats::Api_GetPlugins);
+	DECLARE_PLUGIN_API_CALL("getbunniesip()", &PluginStats::Api_GetBunniesIP);
+	DECLARE_PLUGIN_API_CALL("getbunniestimezone()", &PluginStats::Api_GetBunniesTimezone);
+	DECLARE_PLUGIN_API_CALL("getbunniesname()", &PluginStats::Api_GetBunniesName);
+	DECLARE_PLUGIN_API_CALL("getbunniesstatus()", &PluginStats::Api_GetBunniesStatus);
+        DECLARE_PLUGIN_API_CALL("getbunniesinformation()", &PluginStats:: Api_GetBunniesInformation);
+        DECLARE_PLUGIN_API_CALL("getcounters()", &PluginStats:: Api_GetCounters);
+        DECLARE_PLUGIN_API_CALL("getwidgetjson()", &PluginStats:: Api_GetWidgetJson);
 }
 
 PLUGIN_API_CALL(PluginStats::Api_GetPlugins)

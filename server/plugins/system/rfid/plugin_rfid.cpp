@@ -84,10 +84,10 @@ void PluginRFID::OnInitPacket(const Bunny * bunny, AmbientPacket & a, SleepPacke
 /*******/
 void PluginRFID::InitApiCalls()
 {
-	DECLARE_PLUGIN_API_CALL("getLastTag()", PluginRFID, Api_GetLastTag);
-	DECLARE_PLUGIN_API_CALL("getLastTagForBunny(sn)", PluginRFID, Api_GetLastTagForBunny);
-	DECLARE_PLUGIN_BUNNY_API_CALL("getLastBunnyTag()", PluginRFID, Api_GetLastBunnyTag);
-        DECLARE_PLUGIN_BUNNY_API_CALL("config()", PluginRFID, Api_Config);
+	DECLARE_PLUGIN_API_CALL("getLastTag()", &PluginRFID::Api_GetLastTag);
+	DECLARE_PLUGIN_API_CALL("getLastTagForBunny(sn)", &PluginRFID::Api_GetLastTagForBunny);
+	DECLARE_PLUGIN_BUNNY_API_CALL("getLastBunnyTag()", &PluginRFID::Api_GetLastBunnyTag);
+        DECLARE_PLUGIN_BUNNY_API_CALL("config()", &PluginRFID::Api_Config);
 }
 
 PLUGIN_API_CALL(PluginRFID::Api_GetLastTag)

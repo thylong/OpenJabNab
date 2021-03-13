@@ -332,15 +332,15 @@ PluginVoiceCommand::~PluginVoiceCommand() {}
 
 void PluginVoiceCommand::InitApiCalls()
 {
-	DECLARE_PLUGIN_API_CALL("addbunny(sn)", PluginVoiceCommand, Api_AddAuthorizedBunny);
-	DECLARE_PLUGIN_API_CALL("rmbunny(sn)", PluginVoiceCommand, Api_RemoveAuthorizedBunny);
-	DECLARE_PLUGIN_API_CALL("getbunnies()", PluginVoiceCommand, Api_ListAuthorizedBunnies);
-	DECLARE_PLUGIN_API_CALL("bunny()", PluginVoiceCommand, Api_Bunny);
-	DECLARE_PLUGIN_API_CALL("language()", PluginVoiceCommand, Api_Language);
-	DECLARE_PLUGIN_API_CALL("words()", PluginVoiceCommand, Api_Words);
-	DECLARE_PLUGIN_API_CALL("sentences()", PluginVoiceCommand, Api_Sentences);
-	DECLARE_PLUGIN_API_CALL("key()", PluginVoiceCommand, Api_Key);
-	DECLARE_PLUGIN_BUNNY_API_CALL("key()", PluginVoiceCommand, Api_BunnyKey);
+	DECLARE_PLUGIN_API_CALL("addbunny(sn)", &PluginVoiceCommand::Api_AddAuthorizedBunny);
+	DECLARE_PLUGIN_API_CALL("rmbunny(sn)", &PluginVoiceCommand::Api_RemoveAuthorizedBunny);
+	DECLARE_PLUGIN_API_CALL("getbunnies()", &PluginVoiceCommand::Api_ListAuthorizedBunnies);
+	DECLARE_PLUGIN_API_CALL("bunny()", &PluginVoiceCommand::Api_Bunny);
+	DECLARE_PLUGIN_API_CALL("language()", &PluginVoiceCommand::Api_Language);
+	DECLARE_PLUGIN_API_CALL("words()", &PluginVoiceCommand::Api_Words);
+	DECLARE_PLUGIN_API_CALL("sentences()", &PluginVoiceCommand::Api_Sentences);
+	DECLARE_PLUGIN_API_CALL("key()", &PluginVoiceCommand::Api_Key);
+	DECLARE_PLUGIN_BUNNY_API_CALL("key()", &PluginVoiceCommand::Api_BunnyKey);
 }
 
 PLUGIN_API_CALL(PluginVoiceCommand::Api_AddAuthorizedBunny)

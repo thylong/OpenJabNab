@@ -23,9 +23,10 @@ void Cron::OnTimer()
 	unsigned int now = QDateTime::currentDateTime().toTime_t();
 
 	// Find elements to run
-	while(!CronElements.isEmpty() && (CronElements.first().next_run <= now))
+	while(!CronElements.empty() && (CronElements.front().next_run <= now))
 	{
-		CronElement e = CronElements.takeFirst();
+		CronElement e = CronElements.front();
+		CronElements.pop_front();
 
 		if(e.callback)
 		{
@@ -70,15 +71,15 @@ void Cron::OnTimer()
 	QTimer::singleShot(1000 * (60 - (now%60)), this, SLOT(OnTimer()));
 }
 
-QLinkedList<CronElement> Cron::ListAllCron()
+std::list<CronElement> Cron::ListAllCron()
 {
 	return Instance().CronElements;
 }
 
-QLinkedList<CronElement> Cron::ListAllBunnyCron(Bunny * b)
+std::list<CronElement> Cron::ListAllBunnyCron(Bunny * b)
 {
 /*
-	QLinkedList<CronElement> list;
+	std::list<CronElement> list;
 	QMutableLinkedListIterator<CronElement> i(Instance().CronElements);
 	while(i.hasNext()) // Find position
 	{
@@ -90,8 +91,8 @@ QLinkedList<CronElement> Cron::ListAllBunnyCron(Bunny * b)
 	}
 */
 
-	QLinkedList<CronElement> list = Instance().CronElements;
-	QLinkedList<CronElement>::iterator i = list.begin();
+	std::list<CronElement> list = Instance().CronElements;
+	std::list<CronElement>::iterator i = list.begin();
 	while (i != list.end()) {
 		if((*i).bunny == NULL || b->GetID() != (*i).bunny->GetID())
 			i = list.erase(i);
@@ -99,7 +100,7 @@ QLinkedList<CronElement> Cron::ListAllBunnyCron(Bunny * b)
 			++i;
 	}
 /*
-	QLinkedList<CronElement>::iterator i;
+	std::list<CronElement>::iterator i;
 	for (i = list.begin(); i != list.end(); ++i)
 	{
 		if((*i).bunny == NULL || b->GetID() != (*i).bunny->GetID())
@@ -115,8 +116,7 @@ QLinkedList<CronElement> Cron::ListAllBunnyCron(Bunny * b)
 QMap<PluginInterface *, QDateTime> Cron::ListBunnyCron(Bunny * b)
 {
 	QMap<PluginInterface *, QDateTime> list;
-	QLinkedList<CronElement>::iterator i;
-	for (i = Instance().CronElements.begin(); i != Instance().CronElements.end(); ++i)
+	for (auto i = Instance().CronElements.begin(); i != Instance().CronElements.end(); ++i)
 	{
 		if((*i).bunny != NULL && b->GetID() == (*i).bunny->GetID())
 		{
@@ -176,13 +176,11 @@ void Cron::LogDebugCron(CronElement const& e)
 void Cron::AddCron(CronElement const& e)
 {
 	if(e.bunny != NULL)
-	{
 		LogDebugCron(e);
-	}
-	QMutableLinkedListIterator<CronElement> i(CronElements);
-	while(i.hasNext() && i.peekNext().next_run < e.next_run) // Find position
-		i.next();
-	i.insert(e);
+	auto i = CronElements.begin();
+	while(i != CronElements.end() && i->next_run < e.next_run) // Find position
+		i++;
+	CronElements.insert(i,e);
 }
 
 unsigned int Cron::Register(PluginInterface * p, unsigned int interval, unsigned int offsetH, unsigned int offsetM, Bunny * b, unsigned int type, QVariant data, const char * callback)
@@ -448,42 +446,45 @@ QDateTime Cron::ComputeNextMonthly(int day, QTime const& time, Bunny * b)
 void Cron::Unregister(PluginInterface * p, unsigned int id)
 {
 	Cron & theCron = Instance();
-	QMutableLinkedListIterator<CronElement> i(theCron.CronElements);
-	while(i.hasNext())
+	auto e = theCron.CronElements.begin();
+	while(e != theCron.CronElements.end())
 	{
-		CronElement const& e = i.next();
-		if(e.plugin == p && e.id == id)
+		if(e->plugin == p && e->id == id)
 		{
 			//LogInfo(QString("Cron Unregister : %1 - next %2").arg(p->GetVisualName(),QDateTime::fromTime_t(e.next_run).toString()));
-			i.remove();
+			theCron.CronElements.erase(e);
 		}
+		e++;
 	}
 }
 
 void Cron::UnregisterAllForBunny(PluginInterface * p, Bunny * b)
 {
 	Cron & theCron = Instance();
-	QMutableLinkedListIterator<CronElement> i(theCron.CronElements);
-	while(i.hasNext())
+	auto e = theCron.CronElements.begin();
+	while(e != theCron.CronElements.end())
 	{
-		CronElement const& e = i.next();
-		if(e.plugin == p && e.bunny == b)
+		if(e->plugin == p && e->bunny == b)
 		{
 			//LogInfo(QString("Cron Unregister : %1 - next %2").arg(p->GetVisualName(),QDateTime::fromTime_t(e.next_run).toString()));
-			i.remove();
+			theCron.CronElements.erase(e);
 		}
+		e++;
 	}
 }
 
 void Cron::UnregisterAll(PluginInterface * p)
 {
 	Cron & theCron = Instance();
-	QMutableLinkedListIterator<CronElement> i(theCron.CronElements);
-	while(i.hasNext())
+auto e = theCron.CronElements.begin();
+	while(e != theCron.CronElements.end())
 	{
-		CronElement const& e = i.next();
-		if(e.plugin == p)
-			i.remove();
+		if(e->plugin == p)
+		{
+			//LogInfo(QString("Cron Unregister : %1 - next %2").arg(p->GetVisualName(),QDateTime::fromTime_t(e.next_run).toString()));
+			theCron.CronElements.erase(e);
+		}
+		e++;
 	}
 }
 
@@ -510,8 +511,8 @@ API_CALL(Cron::Api_cron)
 	if(action == "list")
 	{
 		QString crons = "<crons>";
-		QLinkedList<CronElement>::iterator i;
-		QLinkedList<CronElement> list = Cron::ListAllCron();
+		std::list<CronElement>::iterator i;
+		std::list<CronElement> list = Cron::ListAllCron();
 		for (i = list.begin(); i != list.end(); ++i)
 		{
 			if(

@@ -117,10 +117,10 @@ public:
 
 private:
 	ApiManager();
-	ApiAnswer * ProcessGlobalApiCall(Account const&, QString const&, HTTPRequest const&);
-	ApiAnswer * ProcessPluginApiCall(Account const&, QString const&, HTTPRequest &);
-	ApiAnswer * ProcessBunnyApiCall(Account const&, QString const&, HTTPRequest &);
-	ApiAnswer * ProcessZtampApiCall(Account const&, QString const&, HTTPRequest &);
+	ApiAnswer * ProcessGlobalApiCall(QString const&, HTTPRequest const&, Account const&);
+	ApiAnswer * ProcessPluginApiCall(QString const&, HTTPRequest const&,      Account const&);
+	ApiAnswer * ProcessBunnyApiCall( QString const&, HTTPRequest const&,      Account const&);
+	ApiAnswer * ProcessZtampApiCall( QString const&, HTTPRequest const&,      Account const&);
 	ApiAnswer * ProcessBunnyVioletApiCall(QString const&, HTTPRequest const&);
 	int startTime;
 };

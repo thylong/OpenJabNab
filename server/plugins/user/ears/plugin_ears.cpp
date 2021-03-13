@@ -48,11 +48,11 @@ bool PluginEars::OnEarsMove(Bunny * b, int l, int r) {
 void PluginEars::InitApiCalls()
 {
 	/* Basic API calls, Set and Get Friend's ID */
-	DECLARE_PLUGIN_BUNNY_API_CALL("getFriend()", PluginEars, Api_getFriend);
-	DECLARE_PLUGIN_BUNNY_API_CALL("setFriend(id)", PluginEars, Api_setFriend);
-	DECLARE_PLUGIN_BUNNY_API_CALL("checkFriend(id)", PluginEars, Api_checkFriend);
+	DECLARE_PLUGIN_BUNNY_API_CALL("getFriend()", &PluginEars::Api_getFriend);
+	DECLARE_PLUGIN_BUNNY_API_CALL("setFriend(id)", &PluginEars::Api_setFriend);
+	DECLARE_PLUGIN_BUNNY_API_CALL("checkFriend(id)", &PluginEars::Api_checkFriend);
 
-	DECLARE_PLUGIN_BUNNY_API_CALL("friend()", PluginEars, Api_Friend);
+	DECLARE_PLUGIN_BUNNY_API_CALL("friend()", &PluginEars::Api_Friend);
 }
 
 PLUGIN_BUNNY_API_CALL(PluginEars::Api_Friend)

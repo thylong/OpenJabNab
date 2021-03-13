@@ -1,5 +1,6 @@
 #include <QCoreApplication>
 #include <QCryptographicHash>
+
 #include <QUuid>
 #include <QDateTime>
 #include <QtSql/QtSql>
@@ -128,7 +129,7 @@ ApiManager::ApiAnswer * Bunny::ProcessVioletApiCall(HTTPRequest const& hRequest)
 						{
 							if(hRequest.HasArg("urlList"))
 							{
-								QByteArray message = ("ST " + hRequest.GetArg("urlList").split("|", QString::SkipEmptyParts).join("\nMW\nST ") + "\nMW\n").toLatin1();
+								QByteArray message = ("ST " + hRequest.GetArg("urlList").split("|", Qt::SkipEmptyParts).join("\nMW\nST ") + "\nMW\n").toLatin1();
 								SendPacket(MessagePacket(message), "api_stream.jsp");
 								answer->AddMessage("WEBRADIOSENT", "Your webradio has been sent");
 							}
@@ -488,7 +489,7 @@ ApiManager::ApiAnswer * Bunny::ProcessVioletApiCall(HTTPRequest const& hRequest)
 							{
 								if(hRequest.GetArg("autochor").toInt() == -1)
 								{
-									autochor = qrand() % 8;
+									autochor = QRandomGenerator::global()->generate() % 8;
 								}
 								else if(hRequest.GetArg("autochor").toInt() >= 0)
 								{
@@ -555,7 +556,7 @@ ApiManager::ApiAnswer * Bunny::ProcessVioletApiCall(HTTPRequest const& hRequest)
 							{
 								if(GetVersion() == 2)
 								{
-									QByteArray message = ("ST " + hRequest.GetArg("urllist").split("|", QString::SkipEmptyParts).join("\nMW\nST ") + "\nMW\n").toLatin1();
+									QByteArray message = ("ST " + hRequest.GetArg("urllist").split("|", Qt::SkipEmptyParts).join("\nMW\nST ") + "\nMW\n").toLatin1();
 									SendPacket(MessagePacket(message), "api.jsp");
 									answer->AddMessage("WEBRADIOSENT", "Your webradio has been sent");
 								}
@@ -2035,8 +2036,8 @@ API_CALL(Bunny::Api_getAllCronList)
 		return new ApiManager::ApiError(Translator::tr("Access denied", account));
 
 	QString crons = "<crons>";
-	QLinkedList<CronElement>::iterator i;
-	QLinkedList<CronElement> list = Cron::ListAllBunnyCron(this);
+	std::list<CronElement>::iterator i;
+	std::list<CronElement> list = Cron::ListAllBunnyCron(this);
 	for (i = list.begin(); i != list.end(); ++i)
 	{
 		crons += "<cron>";

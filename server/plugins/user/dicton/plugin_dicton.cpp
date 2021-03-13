@@ -117,9 +117,9 @@ void PluginDicton::OnBunnyDisconnect(Bunny * b)
 
 void PluginDicton::InitApiCalls()
 {
-	DECLARE_PLUGIN_BUNNY_API_CALL("schedule()", PluginDicton, Api_Schedule);
-	DECLARE_PLUGIN_BUNNY_API_CALL("language()", PluginDicton, Api_Language);
-	DECLARE_PLUGIN_BUNNY_API_CALL("rfid()", PluginDicton, Api_RFID);
+	DECLARE_PLUGIN_BUNNY_API_CALL("schedule()", &PluginDicton::Api_Schedule);
+	DECLARE_PLUGIN_BUNNY_API_CALL("language()", &PluginDicton::Api_Language);
+	DECLARE_PLUGIN_BUNNY_API_CALL("rfid()", &PluginDicton::Api_RFID);
 }
 
 PLUGIN_BUNNY_API_CALL(PluginDicton::Api_RFID)

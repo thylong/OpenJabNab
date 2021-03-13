@@ -81,7 +81,7 @@ QStringList PluginRecord::GetRecordList(Bunny * b, int offset, int limit)
 
 void PluginRecord::InitApiCalls()
 {
-	DECLARE_PLUGIN_BUNNY_API_CALL("record()", PluginRecord, Api_Record);
+	DECLARE_PLUGIN_BUNNY_API_CALL("record()", &PluginRecord::Api_Record);
 }
 
 PLUGIN_BUNNY_API_CALL(PluginRecord::Api_Record)

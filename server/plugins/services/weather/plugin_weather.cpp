@@ -1,5 +1,6 @@
 #include <QDateTime>
 #include <QCryptographicHash>
+#include <QRandomGenerator>
 #include <QXmlStreamReader>
 #include <QNetworkRequest>
 #include <QNetworkReply>
@@ -227,31 +228,31 @@ void PluginWeather::OnBunnyDisconnect(Bunny * b)
 
 void PluginWeather::InitApiCalls()
 {
-	DECLARE_PLUGIN_BUNNY_API_CALL("addrfid(tag,city)", PluginWeather, Api_AddRFID);
-	DECLARE_PLUGIN_BUNNY_API_CALL("removerfid(tag)", PluginWeather, Api_RemoveRFID);
-	DECLARE_PLUGIN_BUNNY_API_CALL("listrfid()", PluginWeather, Api_ListRFID);
-	DECLARE_PLUGIN_BUNNY_API_CALL("addcity(city,name)", PluginWeather, Api_addCity);
-	DECLARE_PLUGIN_BUNNY_API_CALL("removecity(city)", PluginWeather, Api_removeCity);
-	DECLARE_PLUGIN_BUNNY_API_CALL("getcitieslist()", PluginWeather, Api_getCitiesList);
-	DECLARE_PLUGIN_BUNNY_API_CALL("setdefaultcity(city)", PluginWeather, Api_setDefaultCity);
-	DECLARE_PLUGIN_BUNNY_API_CALL("getdefaultcity()", PluginWeather, Api_getDefaultCity);
-	DECLARE_PLUGIN_BUNNY_API_CALL("addwebcast(time,city)", PluginWeather, Api_AddWebcast);
-	DECLARE_PLUGIN_BUNNY_API_CALL("removewebcast(time)", PluginWeather, Api_RemoveWebcast);
-	DECLARE_PLUGIN_BUNNY_API_CALL("getwebcastslist()", PluginWeather, Api_ListWebcast);
-	DECLARE_PLUGIN_BUNNY_API_CALL("setlang(lg)", PluginWeather, Api_setLang);
-	DECLARE_PLUGIN_BUNNY_API_CALL("getlang()", PluginWeather, Api_getLang);
-	DECLARE_PLUGIN_BUNNY_API_CALL("setfreq(f)", PluginWeather, Api_setFrequency);
-	DECLARE_PLUGIN_BUNNY_API_CALL("getfreq()", PluginWeather, Api_getFrequency);
+	DECLARE_PLUGIN_BUNNY_API_CALL("addrfid(tag,city)", &PluginWeather::Api_AddRFID);
+	DECLARE_PLUGIN_BUNNY_API_CALL("removerfid(tag)", &PluginWeather::Api_RemoveRFID);
+	DECLARE_PLUGIN_BUNNY_API_CALL("listrfid()", &PluginWeather::Api_ListRFID);
+	DECLARE_PLUGIN_BUNNY_API_CALL("addcity(city,name)", &PluginWeather::Api_addCity);
+	DECLARE_PLUGIN_BUNNY_API_CALL("removecity(city)", &PluginWeather::Api_removeCity);
+	DECLARE_PLUGIN_BUNNY_API_CALL("getcitieslist()", &PluginWeather::Api_getCitiesList);
+	DECLARE_PLUGIN_BUNNY_API_CALL("setdefaultcity(city)", &PluginWeather::Api_setDefaultCity);
+	DECLARE_PLUGIN_BUNNY_API_CALL("getdefaultcity()", &PluginWeather::Api_getDefaultCity);
+	DECLARE_PLUGIN_BUNNY_API_CALL("addwebcast(time,city)", &PluginWeather::Api_AddWebcast);
+	DECLARE_PLUGIN_BUNNY_API_CALL("removewebcast(time)", &PluginWeather::Api_RemoveWebcast);
+	DECLARE_PLUGIN_BUNNY_API_CALL("getwebcastslist()", &PluginWeather::Api_ListWebcast);
+	DECLARE_PLUGIN_BUNNY_API_CALL("setlang(lg)", &PluginWeather::Api_setLang);
+	DECLARE_PLUGIN_BUNNY_API_CALL("getlang()", &PluginWeather::Api_getLang);
+	DECLARE_PLUGIN_BUNNY_API_CALL("setfreq(f)", &PluginWeather::Api_setFrequency);
+	DECLARE_PLUGIN_BUNNY_API_CALL("getfreq()", &PluginWeather::Api_getFrequency);
 
-	DECLARE_PLUGIN_API_CALL("setgroup(id,name)", PluginWeather, Api_setConditionGroup);
-	DECLARE_PLUGIN_API_CALL("getgroup()", PluginWeather, Api_getConditionGroup);
-	DECLARE_PLUGIN_API_CALL("setcondition(id,group)", PluginWeather, Api_setCondition);
-	DECLARE_PLUGIN_API_CALL("getcondition(group)", PluginWeather, Api_getCondition);
-	DECLARE_PLUGIN_API_CALL("getconditions()", PluginWeather, Api_getConditions);
-	DECLARE_PLUGIN_API_CALL("settranslation(id,lng,when,tr)", PluginWeather, Api_setTranslation);
-	DECLARE_PLUGIN_API_CALL("gettranslation(id,lng,when)", PluginWeather, Api_getTranslation);
-	DECLARE_PLUGIN_API_CALL("translation()", PluginWeather, Api_Translation);
-  DECLARE_PLUGIN_API_CALL("getCitiesList()", PluginWeather, Api_GetAllCitiesList);
+	DECLARE_PLUGIN_API_CALL("setgroup(id,name)", &PluginWeather::Api_setConditionGroup);
+	DECLARE_PLUGIN_API_CALL("getgroup()", &PluginWeather::Api_getConditionGroup);
+	DECLARE_PLUGIN_API_CALL("setcondition(id,group)", &PluginWeather::Api_setCondition);
+	DECLARE_PLUGIN_API_CALL("getcondition(group)", &PluginWeather::Api_getCondition);
+	DECLARE_PLUGIN_API_CALL("getconditions()", &PluginWeather::Api_getConditions);
+	DECLARE_PLUGIN_API_CALL("settranslation(id,lng,when,tr)", &PluginWeather::Api_setTranslation);
+	DECLARE_PLUGIN_API_CALL("gettranslation(id,lng,when)", &PluginWeather::Api_getTranslation);
+	DECLARE_PLUGIN_API_CALL("translation()", &PluginWeather::Api_Translation);
+  DECLARE_PLUGIN_API_CALL("getCitiesList()", &PluginWeather::Api_GetAllCitiesList);
 }
 
 PLUGIN_API_CALL(PluginWeather::Api_GetAllCitiesList) {
@@ -777,7 +778,7 @@ QString PluginWeather::GetTranslatedWeather(int code, QString time, QString lng)
 
 	if(sentences.count())
 	{
-		return sentences.at( qrand() % sentences.count() );
+		return sentences.at( QRandomGenerator::global()->generate() % sentences.count() );
 	}
 	return "";
 }
@@ -814,7 +815,7 @@ QString PluginWeather::GetTranslatedWind(int code, QString lng)
 	QStringList sentences = GetSettings("Wind" + QString::number(code) + "/" + lng, QStringList()).toStringList();
 	if(sentences.count())
 	{
-		return sentences.at( qrand() % sentences.count() );
+		return sentences.at( QRandomGenerator::global()->generate() % sentences.count() );
 	}
 	return "";
 }

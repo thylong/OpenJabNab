@@ -19,7 +19,7 @@ PluginTTS::PluginTTS():PluginInterface("tts", "TTS Plugin, Send Text to Bunny",B
 
 void PluginTTS::InitApiCalls()
 {
-	DECLARE_PLUGIN_BUNNY_API_CALL("say(text)", PluginTTS, Api_Say);
+	DECLARE_PLUGIN_BUNNY_API_CALL("say(text)", &PluginTTS::Api_Say);
 }
 
 PLUGIN_BUNNY_API_CALL(PluginTTS::Api_Say)

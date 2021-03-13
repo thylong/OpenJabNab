@@ -1,4 +1,5 @@
 #include <QMapIterator>
+#include <QRandomGenerator>
 #include "plugin_surprise.h"
 #include "accountmanager.h"
 #include "bunny.h"
@@ -56,7 +57,7 @@ bool PluginSurprise::OnVoiceCommand(Bunny * b, QString const& command, QStringLi
 	if (p > 0)
 	{
 		QMap<QString, QVariant> list = b->GetPluginSetting(GetName(), "Surprises", QMap<QString, QVariant>()).toMap();
-		QString folder = list.keys().at( qrand() % list.count() );
+		QString folder = list.keys().at( QRandomGenerator::global()->generate() % list.count() );
 		return PlaySurprise(b, folder);
 	}
 	return false;
@@ -114,7 +115,7 @@ int PluginSurprise::GetRandomizedFrequency(unsigned int freq)
 		unsigned int maxDeviation = (meanTimeInSec * 2 * RANDOMIZEDRATIO) / 100;
 		if(maxDeviation > 0)
 		{
-			deviation = qrand() % (maxDeviation);
+			deviation = QRandomGenerator::global()->generate() % (maxDeviation);
 		}
 		deviation -= (maxDeviation/2);
 	}
@@ -163,7 +164,7 @@ bool PluginSurprise::PlaySurprise(Bunny * b, QString folder)
 					QStringList list = dir->entryList(QStringList("*.mp3"), QDir::Files|QDir::NoDotAndDotDot);
 					if(list.count())
 					{
-						QString fileName = list.at(qrand()%list.count());
+						QString fileName = list.at(QRandomGenerator::global()->generate()%list.count());
 						file = GetBroadcastHTTPPath(QString("%1/%3").arg(folder, fileName));
 						if(b->GetVersion() == 1)
 						{
@@ -183,7 +184,7 @@ bool PluginSurprise::PlaySurprise(Bunny * b, QString folder)
 					QStringList list = AccountManager::ListSoundsInGroup(accountName, folder);
 					if(list.count())
 					{
-						QString fileName = list.at(qrand()%list.count());
+						QString fileName = list.at(QRandomGenerator::global()->generate()%list.count());
 						file = b->GetBroadcastHTTPUserPath(fileName);
 						if(b->GetVersion() == 1)
 						{
@@ -227,14 +228,14 @@ bool PluginSurprise::PlaySurprise(Bunny * b, QString folder)
 
 void PluginSurprise::InitApiCalls()
 {
-	DECLARE_PLUGIN_BUNNY_API_CALL("setSurprise(name,frequency)", PluginSurprise, Api_SetSurprise);
-	DECLARE_PLUGIN_BUNNY_API_CALL("delSurprise(name)", PluginSurprise, Api_DelSurprise);
-	DECLARE_PLUGIN_BUNNY_API_CALL("getSurprises()", PluginSurprise, Api_GetSurprises);
-	DECLARE_PLUGIN_BUNNY_API_CALL("getFolderList()", PluginSurprise, Api_GetFolderList);
+	DECLARE_PLUGIN_BUNNY_API_CALL("setSurprise(name,frequency)", &PluginSurprise::Api_SetSurprise);
+	DECLARE_PLUGIN_BUNNY_API_CALL("delSurprise(name)", &PluginSurprise::Api_DelSurprise);
+	DECLARE_PLUGIN_BUNNY_API_CALL("getSurprises()", &PluginSurprise::Api_GetSurprises);
+	DECLARE_PLUGIN_BUNNY_API_CALL("getFolderList()", &PluginSurprise::Api_GetFolderList);
 
-	DECLARE_PLUGIN_BUNNY_API_CALL("rfid()", PluginSurprise, Api_RFID);
-	DECLARE_PLUGIN_BUNNY_API_CALL("folder()", PluginSurprise, Api_Folder);
-	DECLARE_PLUGIN_BUNNY_API_CALL("surprise()", PluginSurprise, Api_Surprise);
+	DECLARE_PLUGIN_BUNNY_API_CALL("rfid()", &PluginSurprise::Api_RFID);
+	DECLARE_PLUGIN_BUNNY_API_CALL("folder()", &PluginSurprise::Api_Folder);
+	DECLARE_PLUGIN_BUNNY_API_CALL("surprise()", &PluginSurprise::Api_Surprise);
 }
 
 PLUGIN_BUNNY_API_CALL(PluginSurprise::Api_Surprise)

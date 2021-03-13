@@ -58,6 +58,7 @@ function(add_test_target)
   set_target_properties(test_${ARG_NAME}
   PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/tests
+    COMPILE_FLAGS -fPIC
   )
 
   setup_target_for_coverage(
@@ -78,8 +79,9 @@ function(add_test_target)
   )
 endfunction(add_test_target)
 
-add_test_target(NAME translator   SRCS  lib/translator.cpp           LIBRARIES ojn)
-add_test_target(NAME v1_msg       SRCS  lib/v1/msg.cpp               LIBRARIES ojn)
+add_test_target(NAME api          SRCS  lib/api.cpp                              )
+add_test_target(NAME translator   SRCS  lib/translator.cpp          LIBRARIES ojn)
+add_test_target(NAME v1_msg       SRCS  lib/v1/msg.cpp              LIBRARIES ojn)
 
   # A ll
 add_test_target(NAME All          SRCS  test_all.cpp                 ALL)

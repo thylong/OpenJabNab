@@ -230,11 +230,11 @@ bool PluginWebradio::streamPresetWebradio(Bunny * b, QString preset)
 
 void PluginWebradio::InitApiCalls()
 {
-	DECLARE_PLUGIN_BUNNY_API_CALL("rfid()", PluginWebradio, Api_RFID);
-	DECLARE_PLUGIN_BUNNY_API_CALL("preset()", PluginWebradio, Api_Preset);
-	DECLARE_PLUGIN_BUNNY_API_CALL("schedule()", PluginWebradio, Api_Schedule);
-	DECLARE_PLUGIN_BUNNY_API_CALL("url()", PluginWebradio, Api_Url);
-	DECLARE_PLUGIN_API_CALL("preset()", PluginWebradio, Api_PluginPreset);
+	DECLARE_PLUGIN_BUNNY_API_CALL("rfid()", &PluginWebradio::Api_RFID);
+	DECLARE_PLUGIN_BUNNY_API_CALL("preset()", &PluginWebradio::Api_Preset);
+	DECLARE_PLUGIN_BUNNY_API_CALL("schedule()", &PluginWebradio::Api_Schedule);
+	DECLARE_PLUGIN_BUNNY_API_CALL("url()", &PluginWebradio::Api_Url);
+	DECLARE_PLUGIN_API_CALL("preset()", &PluginWebradio::Api_PluginPreset);
 }
 
 PLUGIN_BUNNY_API_CALL(PluginWebradio::Api_RFID)

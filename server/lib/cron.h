@@ -1,7 +1,7 @@
 #ifndef _CRON_H_
 #define _CRON_H_
 
-#include <QLinkedList>
+#include <list>
 #include <QObject>
 #include <QVariant>
 #include "global.h"
@@ -49,8 +49,8 @@ public:
 	static QTime mkTime(QString);
 
 	static QMap<PluginInterface *, QDateTime> ListBunnyCron(Bunny *);
-	static QLinkedList<CronElement> ListAllBunnyCron(Bunny *);
-	static QLinkedList<CronElement> ListAllCron();
+	static std::list<CronElement> ListAllBunnyCron(Bunny *);
+	static std::list<CronElement> ListAllCron();
 
 	static void Init();
 	//static void Close();
@@ -65,7 +65,7 @@ private:
 	virtual ~Cron() {};
 	void AddCron(CronElement const&);
 	unsigned int lastGivenID;
-	QLinkedList<CronElement> CronElements;
+	std::list<CronElement> CronElements;
 
 	QDateTime ComputeNextMonthly(int day, QTime const& time, Bunny * b);
 	QDateTime ComputeNextYearly(int month, int day, QTime const& time, Bunny * b);

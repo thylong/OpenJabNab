@@ -88,9 +88,9 @@ bool PluginTaichi::OnRFID(Bunny * b, QByteArray const& tag)
 
 void PluginTaichi::InitApiCalls()
 {
-	DECLARE_PLUGIN_BUNNY_API_CALL("setFrequency(value)", PluginTaichi, Api_SetFrequency);
-	DECLARE_PLUGIN_BUNNY_API_CALL("getFrequency()", PluginTaichi, Api_GetFrequency);
-	DECLARE_PLUGIN_BUNNY_API_CALL("setRfid(tag)", PluginTaichi, Api_SetRFID);
+	DECLARE_PLUGIN_BUNNY_API_CALL("setFrequency(value)", &PluginTaichi::Api_SetFrequency);
+	DECLARE_PLUGIN_BUNNY_API_CALL("getFrequency()", &PluginTaichi::Api_GetFrequency);
+	DECLARE_PLUGIN_BUNNY_API_CALL("setRfid(tag)", &PluginTaichi::Api_SetRFID);
 }
 
 PLUGIN_BUNNY_API_CALL(PluginTaichi::Api_SetFrequency)

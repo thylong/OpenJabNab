@@ -1,5 +1,6 @@
 #include <QMap>
 #include <QMapIterator>
+#include <QRandomGenerator>
 #include <QTime>
 #include "plugin_fairytales.h"
 #include "account.h"
@@ -216,7 +217,7 @@ bool PluginFairytale::streamRandomFairytale(Bunny * b, bool plugin, bool owner)
 	}
 	if(list.count())
 	{
-		QString random = list.at(qrand() % list.count());
+		QString random = list.at(QRandomGenerator::global()->generate() % list.count());
 		return streamPresetFairytale(b, random);
 	}
 	return false;
@@ -228,11 +229,11 @@ bool PluginFairytale::streamRandomFairytale(Bunny * b, bool plugin, bool owner)
 
 void PluginFairytale::InitApiCalls()
 {
-	DECLARE_PLUGIN_BUNNY_API_CALL("rfid()", PluginFairytale, Api_RFID);
-	DECLARE_PLUGIN_BUNNY_API_CALL("preset()", PluginFairytale, Api_Preset);
-	DECLARE_PLUGIN_BUNNY_API_CALL("schedule()", PluginFairytale, Api_Schedule);
-	DECLARE_PLUGIN_BUNNY_API_CALL("url()", PluginFairytale, Api_Url);
-	DECLARE_PLUGIN_API_CALL("preset()", PluginFairytale, Api_PluginPreset);
+	DECLARE_PLUGIN_BUNNY_API_CALL("rfid()", &PluginFairytale::Api_RFID);
+	DECLARE_PLUGIN_BUNNY_API_CALL("preset()", &PluginFairytale::Api_Preset);
+	DECLARE_PLUGIN_BUNNY_API_CALL("schedule()", &PluginFairytale::Api_Schedule);
+	DECLARE_PLUGIN_BUNNY_API_CALL("url()", &PluginFairytale::Api_Url);
+	DECLARE_PLUGIN_API_CALL("preset()", &PluginFairytale::Api_PluginPreset);
 }
 
 PLUGIN_BUNNY_API_CALL(PluginFairytale::Api_RFID)

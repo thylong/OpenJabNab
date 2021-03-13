@@ -1,5 +1,6 @@
 #include <QDateTime>
 #include <QCryptographicHash>
+#include <QRandomGenerator>
 #include <QXmlStreamReader>
 #include <QMapIterator>
 #include <QRegExp>
@@ -113,7 +114,7 @@ bool PluginNabcast::playRandomFile(Bunny * b)
 	int index = 0;
 	if(nabcasts.count() > 1)
 	{
-		index = qrand() % nabcasts.count();
+		index = QRandomGenerator::global()->generate() % nabcasts.count();
 		QString nabcast = nabcasts.at(index);
 		return playFile(b, nabcast);
 	}
@@ -179,16 +180,16 @@ QByteArray PluginNabcast::GetBroadcastHTTPUserPath(Bunny * b, QString f)
 
 void PluginNabcast::InitApiCalls()
 {
-	DECLARE_PLUGIN_BUNNY_API_CALL("rfid()", PluginNabcast, Api_RFID);
-	DECLARE_PLUGIN_BUNNY_API_CALL("file()", PluginNabcast, Api_File);
-	DECLARE_PLUGIN_BUNNY_API_CALL("library()", PluginNabcast, Api_Library);
+	DECLARE_PLUGIN_BUNNY_API_CALL("rfid()", &PluginNabcast::Api_RFID);
+	DECLARE_PLUGIN_BUNNY_API_CALL("file()", &PluginNabcast::Api_File);
+	DECLARE_PLUGIN_BUNNY_API_CALL("library()", &PluginNabcast::Api_Library);
 /*
-	DECLARE_PLUGIN_BUNNY_API_CALL("addrfid(tag,nabcast)", PluginNabcast, Api_AddRFID);
-	DECLARE_PLUGIN_BUNNY_API_CALL("removerfid(tag)", PluginNabcast, Api_RemoveRFID);
-	DECLARE_PLUGIN_BUNNY_API_CALL("listrfid()", PluginNabcast, Api_ListRFID);
-	DECLARE_PLUGIN_BUNNY_API_CALL("getfileslist()", PluginNabcast, Api_getFilesList);
-	DECLARE_PLUGIN_BUNNY_API_CALL("play(nabcast)", PluginNabcast, Api_Play);
-	DECLARE_PLUGIN_BUNNY_API_CALL("library()", PluginNabcast, Api_libraryMode);
+	DECLARE_PLUGIN_BUNNY_API_CALL("addrfid(tag,nabcast)", &PluginNabcast::Api_AddRFID);
+	DECLARE_PLUGIN_BUNNY_API_CALL("removerfid(tag)", &PluginNabcast::Api_RemoveRFID);
+	DECLARE_PLUGIN_BUNNY_API_CALL("listrfid()", &PluginNabcast::Api_ListRFID);
+	DECLARE_PLUGIN_BUNNY_API_CALL("getfileslist()", &PluginNabcast::Api_getFilesList);
+	DECLARE_PLUGIN_BUNNY_API_CALL("play(nabcast)", &PluginNabcast::Api_Play);
+	DECLARE_PLUGIN_BUNNY_API_CALL("library()", &PluginNabcast::Api_libraryMode);
 */
 }
 

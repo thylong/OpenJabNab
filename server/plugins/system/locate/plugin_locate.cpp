@@ -188,12 +188,12 @@ bool PluginLocate::HttpRequestHandle(HTTPRequest & request)
 
 void PluginLocate::InitApiCalls()
 {
-	DECLARE_PLUGIN_BUNNY_API_CALL("setcustomlocate(param,value)", PluginLocate, Api_SetCustomLocateSetting);
-	DECLARE_PLUGIN_BUNNY_API_CALL("getcustomlocate(param)", PluginLocate, Api_GetCustomLocateSetting);
-	DECLARE_PLUGIN_BUNNY_API_CALL("server()", PluginLocate, Api_BunnyServer);
-	DECLARE_PLUGIN_BUNNY_API_CALL("config()", PluginLocate, Api_BunnyConfig);
-	DECLARE_PLUGIN_BUNNY_API_CALL("custom()", PluginLocate, Api_BunnyCustom);
-	DECLARE_PLUGIN_API_CALL("server()", PluginLocate, Api_Server);
+	DECLARE_PLUGIN_BUNNY_API_CALL("setcustomlocate(param,value)", &PluginLocate::Api_SetCustomLocateSetting);
+	DECLARE_PLUGIN_BUNNY_API_CALL("getcustomlocate(param)", &PluginLocate::Api_GetCustomLocateSetting);
+	DECLARE_PLUGIN_BUNNY_API_CALL("server()", &PluginLocate::Api_BunnyServer);
+	DECLARE_PLUGIN_BUNNY_API_CALL("config()", &PluginLocate::Api_BunnyConfig);
+	DECLARE_PLUGIN_BUNNY_API_CALL("custom()", &PluginLocate::Api_BunnyCustom);
+	DECLARE_PLUGIN_API_CALL("server()", &PluginLocate::Api_Server);
 }
 
 PLUGIN_BUNNY_API_CALL(PluginLocate::Api_BunnyConfig)

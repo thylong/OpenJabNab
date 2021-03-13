@@ -219,11 +219,11 @@ void PluginRss::OnBunnyDisconnect(Bunny * b)
 
 void PluginRss::InitApiCalls()
 {
-	DECLARE_PLUGIN_BUNNY_API_CALL("schedule()", PluginRss, Api_Schedule);
-	DECLARE_PLUGIN_BUNNY_API_CALL("rfid()", PluginRss, Api_RFID);
-	DECLARE_PLUGIN_BUNNY_API_CALL("feed()", PluginRss, Api_Feed);
-	DECLARE_PLUGIN_BUNNY_API_CALL("custom()", PluginRss, Api_Custom);
-	DECLARE_PLUGIN_BUNNY_API_CALL("language()", PluginRss, Api_Language);
+	DECLARE_PLUGIN_BUNNY_API_CALL("schedule()", &PluginRss::Api_Schedule);
+	DECLARE_PLUGIN_BUNNY_API_CALL("rfid()", &PluginRss::Api_RFID);
+	DECLARE_PLUGIN_BUNNY_API_CALL("feed()", &PluginRss::Api_Feed);
+	DECLARE_PLUGIN_BUNNY_API_CALL("custom()", &PluginRss::Api_Custom);
+	DECLARE_PLUGIN_BUNNY_API_CALL("language()", &PluginRss::Api_Language);
 }
 
 PLUGIN_BUNNY_API_CALL(PluginRss::Api_Custom)
