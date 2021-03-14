@@ -304,7 +304,7 @@ QByteArray NabaztagManager::encodeHexInt(int nbr, int len)
   return QString::number(nbr, 16).rightJustified(len, '0').toLatin1();
 }
 
-void NabaztagManager::handlePing(HTTPRequest request, QTcpSocket * s)
+void NabaztagManager::handlePing(const HTTPRequest& request, QTcpSocket * s)
 {
   QString sn = request.GetArg("sn");      // Nabaztag MAC Address
   //size_t  v  = request.GetArg("v");     // Firmware version

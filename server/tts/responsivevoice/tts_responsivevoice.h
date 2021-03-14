@@ -1,23 +1,24 @@
 #ifndef _TTSACAPELA_H_
 #define _TTSACAPELA_H_
 
-#include <QMultiMap>
-#include <QTextStream>
-#include <QThread>
+#include <QNetworkAccessManager>
+
 #include "ttsinterface.h"
 
-class TTSresponsivevoice : public TTSInterface
+class TTSresponsivevoice 
+  : public TTSInterface
 {
-	Q_OBJECT
-	Q_INTERFACES(TTSInterface)
-    Q_PLUGIN_METADATA(IID "ojn.plugin.tts.responsivevoice" )
+  Q_OBJECT
+  Q_INTERFACES(TTSInterface)
+  Q_PLUGIN_METADATA(IID "ojn.plugin.tts.responsivevoice" )
 
 public:
-	TTSresponsivevoice();
-	virtual ~TTSresponsivevoice();
-	QString CreateNewSound(QString, QString, bool);
+  TTSresponsivevoice();
+  virtual ~TTSresponsivevoice();
+  QString CreateNewSound(QString, QString, bool);
 
 private:
+  QNetworkAccessManager _http;
 };
 
 #endif

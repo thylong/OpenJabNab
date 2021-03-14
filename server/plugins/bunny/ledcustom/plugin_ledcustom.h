@@ -1,8 +1,6 @@
 #ifndef _PLUGINLEDC_H_
 #define _PLUGINLEDC_H_
 
-#include <QUrl>
-#include <QNetworkAccessManager>
 #include <QMultiMap>
 #include <QTextStream>
 #include <QDateTime>

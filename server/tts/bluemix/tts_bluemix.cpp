@@ -1,7 +1,6 @@
 #include <QDateTime>
 #include <QCryptographicHash>
 #include <QMapIterator>
-#include <QNetworkAccessManager>
 #include <QUrl>
 #include <QNetworkRequest>
 #include <QNetworkReply>
@@ -125,12 +124,12 @@ QString TTSbluemix::CreateNewSound(QString text, QString voice, bool forceOverwr
 
   // Check (and create if needed) output folder
   QDir outputFolder = ttsFolder;
-if(!outputFolder.exists(voice))
+  if(!outputFolder.exists(voice))
     outputFolder.mkdir(voice);
 
   if(!outputFolder.cd(voice))
   {
-  LogError(QString("TTS Bluemix: Cant create TTS Folder : %1").arg(ttsFolder.absoluteFilePath(voice)));
+    LogError(QString("TTS Bluemix: Cant create TTS Folder : %1").arg(ttsFolder.absoluteFilePath(voice)));
     return QString();
   }
 
@@ -147,32 +146,31 @@ if(!outputFolder.exists(voice))
   //https://text-to-speech-demo.ng.bluemix.net/api/v1/synthesize?text=Bonsoir%2C%20il%20est%2020h35&voice=fr-FR_ReneeV3Voice&download=true&accept=audio%2Fmp3
 
   // Fetch MP3
-  QNetworkAccessManager http;
   QNetworkRequest req(QUrl("https://text-to-speech-demo.ng.bluemix.net/api/v1/synthesize?voice="+voice+"&download=true&accept=audio%2Fmp3&text="+QUrl::toPercentEncoding(text)));
 
-  QNetworkReply* rep = http.get(req);
-  QObject::connect(rep, SIGNAL(finished()), &loop, SLOT(quit()));
-  QObject::connect(rep, SIGNAL(error(QNetworkReply::NetworkError)), &loop, SLOT(quit()));
+  QNetworkReply* rep = _http.get(req);
+  QObject::connect(rep, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+  QObject::connect(rep, qOverload<QNetworkReply::NetworkError>(&QNetworkReply::error), &loop, &QEventLoop::quit);
   loop.exec();
 
   const auto& answer = rep->readAll();
   if(answer.size() == 0)
   {
-      LogError("TTS Bluemix: Empty file =(");
-      delete rep;
-  return QString();
+    LogError("TTS Bluemix: Empty file =(");
+    delete rep;
+    return QString();
   }
 
   QFile file(filePath);
   if (!file.open(QIODevice::WriteOnly))
   {
     LogError("TTS Bluemix: Cannot open sound file for writing");
-        delete rep;
+    delete rep;
     return QString();
   }
   file.write(answer);
   file.close();
-    delete rep;
+  delete rep;
   return ttsHTTPUrl.arg(voice, fileName).toLatin1();
 }
 

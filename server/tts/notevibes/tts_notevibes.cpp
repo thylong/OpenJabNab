@@ -182,15 +182,15 @@ QString TTSNotevibes::CreateNewSound(QString text, QString voice, bool forceOver
 		return "FROM_CACHE" + ttsHTTPUrl.arg(voice, fileName);
 
 	// Fetch MP3
-  QNetworkAccessManager http;
+  
   QNetworkRequest req(QUrl("http://notevibes.com/"));
   req.setRawHeader("Content-type","application/x-www-form-urlencoded");
   QByteArray ContentData;
   ContentData += "content=" + QUrl::toPercentEncoding(text) + "&voice=" + voice;
 
-  QNetworkReply* rep = http.post(req,ContentData);
-  QObject::connect(rep, SIGNAL(finished()), &loop, SLOT(quit()));
-  QObject::connect(rep, SIGNAL(error(QNetworkReply::NetworkError)), &loop, SLOT(quit()));
+  auto* rep = _http.post(req,ContentData);
+  QObject::connect(rep, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+  QObject::connect(rep, qOverload<QNetworkReply::NetworkError>(&QNetworkReply::error), &loop, &QEventLoop::quit);
   loop.exec();
 
   const auto& answer = rep->readAll();
@@ -205,34 +205,37 @@ QString TTSNotevibes::CreateNewSound(QString text, QString voice, bool forceOver
     // Get MP3
     QNetworkRequest req2(QUrl(rx.cap(1)));
     req2.setRawHeader("X-Cloud-Trace-Context", traceCtx.toLatin1());
-    rep = http.get(req2);
-    QObject::connect(rep, SIGNAL(finished()), &loop, SLOT(quit()));
-    QObject::connect(rep, SIGNAL(error(QNetworkReply::NetworkError)), &loop, SLOT(quit()));
+    auto* rep2 = _http.get(req2);
+    QObject::connect(rep2, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+    QObject::connect(rep2, qOverload<QNetworkReply::NetworkError>(&QNetworkReply::error), &loop, &QEventLoop::quit);
     loop.exec();
-    const auto& mp3 = rep->readAll();
-    if( rep->error() != QNetworkReply::NoError ||
-        rep->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() != 200 ||
-        mp3.size() == 0
+    const auto& mp3 = rep2->readAll();
+    if( rep->error() == QNetworkReply::NoError &&
+        rep->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 200 &&
+        mp3.size() != 0
       )
     {
-        LogError("TTS Notevibes: Network error or Empty file =(");
-        delete rep;
-        return QString();
-    }
-    // Save to File !
-    QFile file(filePath);
-    if (!file.open(QIODevice::WriteOnly))
-    {
-      LogError("Cannot open sound file for writing");
-      return QString();
-    }
+      // Save to File !
+      QFile file(filePath);
+      if (file.open(QIODevice::WriteOnly))
+      {
         file.write(mp3);
-    file.close();
-    return ttsHTTPUrl.arg(voice, fileName);
+        file.close();
+        delete rep2;
+        return ttsHTTPUrl.arg(voice, fileName);
+      }
+      else
+        LogError("Cannot open sound file for writing");
+    }
+    else
+      LogError("TTS Notevibes: Network error or Empty file =(");
+
+    delete rep2;
+    return QString();
   }
-LogError("Notevibes demo did not return a sound file");
-LogDebug(QString("Notevibes answer %1: %1").arg(rep->error()).arg(QString(answer)));
+  LogError("Notevibes demo did not return a sound file");
+  LogDebug(QString("Notevibes answer %1: %1").arg(rep->error()).arg(QString(answer)));
   delete rep;
-return QString();
+  return QString();
 }
 

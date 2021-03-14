@@ -1,7 +1,6 @@
 #include <QDateTime>
 #include <QCryptographicHash>
 #include <QMapIterator>
-#include <QNetworkAccessManager>
 #include <QUrl>
 #include <QNetworkRequest>
 #include <QNetworkReply>
@@ -10,7 +9,6 @@
 
 #include <QJsonDocument>
 
-#include <iostream>
 TTSacapela::TTSacapela():TTSInterface("acapela", "acapela")
 {
   Voice v;
@@ -135,12 +133,11 @@ QString TTSacapela::CreateNewSound(QString text, QString voice, bool forceOverwr
   }
 
   // Get Authentication IDs ids
-  QNetworkAccessManager http;
   QNetworkRequest req(QUrl("https://www.acapela-group.com/www/static/website/demoOptionsDef.php"));
 
-  QNetworkReply* rep = http.get(req);
-  QObject::connect(rep, SIGNAL(finished()), &loop, SLOT(quit()));
-  QObject::connect(rep, SIGNAL(error(QNetworkReply::NetworkError)), &loop, SLOT(quit()));
+  auto* rep = _http.get(req);
+  QObject::connect(rep, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+  QObject::connect(rep, qOverload<QNetworkReply::NetworkError>(&QNetworkReply::error), &loop, &QEventLoop::quit);
   loop.exec();
 
   const auto& answer = rep->readAll();
@@ -195,9 +192,9 @@ QString TTSacapela::CreateNewSound(QString text, QString voice, bool forceOverwr
   ContentData += "&req_voice="+voice+"&req_text="+QUrl::toPercentEncoding(text);
   //LogDebug(QString("ContentData: %1").arg(QString(ContentData)));
 
-  QNetworkReply* rep2 = http.post(req2,ContentData);
-  QObject::connect(rep2, SIGNAL(finished()), &loop, SLOT(quit()));
-  QObject::connect(rep2, SIGNAL(error(QNetworkReply::NetworkError)), &loop, SLOT(quit()));
+  auto* rep2 = _http.post(req2,ContentData);
+  QObject::connect(rep2, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+  QObject::connect(rep2, qOverload<QNetworkReply::NetworkError>(&QNetworkReply::error), &loop, &QEventLoop::quit);
   loop.exec();
 
   const auto& answer2 = rep2->readAll();
@@ -227,9 +224,9 @@ QString TTSacapela::CreateNewSound(QString text, QString voice, bool forceOverwr
   // Get the MP3 !
   QNetworkRequest req3(QUrl(snd_url.toStdString().c_str()));
 
-  QNetworkReply* rep3 = http.get(req3);
-  QObject::connect(rep3, SIGNAL(finished()), &loop, SLOT(quit()));
-  QObject::connect(rep3, SIGNAL(error(QNetworkReply::NetworkError)), &loop, SLOT(quit()));
+  QNetworkReply* rep3 = _http.get(req3);
+  QObject::connect(rep3, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+  QObject::connect(rep3, qOverload<QNetworkReply::NetworkError>(&QNetworkReply::error), &loop, &QEventLoop::quit);
   loop.exec();
 
   const auto& answer3 = rep3->readAll();

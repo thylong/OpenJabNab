@@ -21,9 +21,9 @@
 
 PluginVoiceCommand::PluginVoiceCommand()
   : PluginInterface("voicecommand", "Voice recognition", SystemPlugin | SystemAfterPlugin)
-  , http(this)
+  , _http(this)
 {
-  QObject::connect(&http, &QNetworkAccessManager::finished, this, &PluginVoiceCommand::recognitionFinished);
+  QObject::connect(&_http, &QNetworkAccessManager::finished, this, &PluginVoiceCommand::recognitionFinished);
 }
 
 bool PluginVoiceCommand::OnRecord(Bunny * b, QString const& filename)
@@ -125,7 +125,7 @@ bool PluginVoiceCommand::OnRecord(Bunny * b, QString const& filename)
 							req.setRawHeader("Keep-Alive", "300");
 							req.setRawHeader("Connection", "keep-alive");
 							//req.setRawHeader("User-Agent", "speech2text");
-							http.post(req, flac);
+							_http.post(req, flac);
 							return true;
 						}
 						else

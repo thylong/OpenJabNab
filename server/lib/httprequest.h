@@ -1,6 +1,7 @@
 #ifndef _HTTPREQUEST_H_
 #define _HTTPREQUEST_H_
 
+#include <QNetworkAccessManager>
 #include <QHash>
 #include <QString>
 #include <QStringList>
@@ -42,6 +43,7 @@ private:
 	QHash<QString, QString> getData;
 	QHash<QString, QString> formPostData;
 	RequestType type;
+	QNetworkAccessManager _http;
 };
 
 inline QString const& HTTPRequest::GetURI() const

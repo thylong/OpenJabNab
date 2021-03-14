@@ -6,7 +6,6 @@
 #include <QMapIterator>
 #include <QRegExp>
 #include <memory>
-#include "browserclient.h"
 #include "bunny.h"
 #include "bunnymanager.h"
 #include "httprequest.h"
@@ -22,6 +21,7 @@
 
 PluginNeedtoknow::PluginNeedtoknow()
 : PluginInterface("needtoknow", "Need to know", BunnyV2Plugin | SingleClickPlugin | DoubleClickPlugin | CronPlugin | RfidPlugin | MessagePlugin | ApiPlugin)
+, _http(this)
 {
 }
 
@@ -127,13 +127,12 @@ void PluginNeedtoknow::getNTKPage(Bunny * b, QString language, bool save)
 {
 	QUrl url("https://www.savoir-inutile.com/");
 	QsLogging::Logger::DebugLog(QString("GET %1").arg(url.toString()), GetName());
-	BrowserClient *manager = new BrowserClient(this);
   PluginNTK_WORKER *p = new PluginNTK_WORKER(this, b, language, save);
   QObject::connect(p, &PluginNTK_WORKER::done, this, &PluginNeedtoknow::analyseDone);
-  QObject::connect(manager, &BrowserClient::finished, p, &PluginNTK_WORKER::requestFinished);
+  QObject::connect(&_http, &BrowserClient::finished, p, &PluginNTK_WORKER::requestFinished);
   p->start();
 
-	manager->get(QNetworkRequest(url));
+	_http.get(QNetworkRequest(url));
 }
 
 
@@ -417,7 +416,6 @@ void PluginNTK_WORKER::requestFinished(QNetworkReply* rep)
       emit done(false, bunny, QStringList(), save);
     }
 	}
-	rep->deleteLater();
-	rep->parent()->deleteLater();
+	delete rep;
   this->quit();
 }

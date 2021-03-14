@@ -5,6 +5,8 @@
 #include <QDateTime>
 #include <QMap>
 #include <QTranslator>
+#include <QNetworkAccessManager>
+
 #include "apihandler.h"
 #include "apimanager.h"
 #include "global.h"
@@ -90,6 +92,7 @@ protected:
 
 	virtual ~Translator();
 private:
+	Translator();
 	void loadTranslations();
 
 	static int getLastDayOfMonth(int, int);
@@ -99,7 +102,7 @@ private:
 	QMap< QString, QTranslator * > translators;
 	QStringList days;
 	QStringList months;
-	Translator();
+  QNetworkAccessManager _http;
 };
 
 inline void Translator::Init()

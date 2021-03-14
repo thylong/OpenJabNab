@@ -1,7 +1,6 @@
 #include <QDateTime>
 #include <QCryptographicHash>
 #include <QXmlStreamReader>
-#include <QNetworkAccessManager>
 #include <QNetworkRequest>
 #include <QNetworkReply>
 #include <QMapIterator>

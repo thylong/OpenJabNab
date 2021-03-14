@@ -63,7 +63,7 @@ public:
   static void Init();
   static void Close();
 
-  void handlePing(HTTPRequest, QTcpSocket *);
+  void handlePing(const HTTPRequest&, QTcpSocket *);
 
   static void UpdateStatus();
 

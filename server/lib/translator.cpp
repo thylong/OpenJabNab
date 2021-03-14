@@ -55,41 +55,39 @@ QString Translator::googleTranslate(QString text, QString language)
 	// http://translate.google.fr/translate_a/t?client=t&sl=en&tl=fr&hl=fr&sc=2&ie=UTF-8&oe=UTF-8&oc=1&prev=conf&psl=en&ptl=de&otf=1&it=sel.1591&ssel=0&tsel=3&q=Germany
 	QEventLoop loop;
 
-	QNetworkAccessManager http;
-    QNetworkRequest req(QUrl("translate.google.fr/translate_a/t?client=t&sl=en&tl="+language+"&hl="+language+"&sc=2&ie=UTF-8&oe=UTF-8&oc=1&prev=conf&psl=en&ptl=de&otf=1&it=sel.1591&ssel=0&tsel=3&q=" + QUrl::toPercentEncoding(text)));
+	QNetworkRequest req(QUrl("translate.google.fr/translate_a/t?client=t&sl=en&tl="+language+"&hl="+language+"&sc=2&ie=UTF-8&oe=UTF-8&oc=1&prev=conf&psl=en&ptl=de&otf=1&it=sel.1591&ssel=0&tsel=3&q=" + QUrl::toPercentEncoding(text)));
 
 	req.setRawHeader("Host", "translate.google.fr");
 	req.setRawHeader("Referer", "http://translate.google.fr/");
 	req.setRawHeader("User-Agent", GlobalSettings::GetString("Config/UserAgent").toLatin1());
-    QNetworkReply* rep = http.get(req);
-    QObject::connect(rep, SIGNAL(finished()), &loop, SLOT(quit()));
-    QObject::connect(rep, SIGNAL(error(QNetworkReply::NetworkError)), &loop, SLOT(quit()));
+	QNetworkAccessManager http;
+	auto* rep = http.get(req);
+  QObject::connect(rep, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+  QObject::connect(rep, qOverload<QNetworkReply::NetworkError>(&QNetworkReply::error), &loop, &QEventLoop::quit);
 	loop.exec();
 
 	QString content = rep->readAll();
+	delete rep;
 	QString translation = text;
-        QRegExp rx("^\\[\\[\\[\"(.*)\",\"(.*)\",\"\",\"\"\\]\\]");
-        if(rx.indexIn(content) != -1)
-        {
-                translation = rx.cap(1).trimmed();
-	}
-    delete rep;
+	QRegExp rx("^\\[\\[\\[\"(.*)\",\"(.*)\",\"\",\"\"\\]\\]");
+	if(rx.indexIn(content) != -1)
+		translation = rx.cap(1).trimmed();
 	return translation;
 }
 
 QDate Translator::extractDate(QString date)
 {
-        QRegExp rx("(\\d\\d?/\\d\\d?/\\d\\d\\d\\d)");
-        if(rx.indexIn(date) != -1)
-        {
-                date = rx.cap(1).trimmed();
-                return QDate::fromString(date, "d/M/yyyy");
-        }
-        else if(rx.setPattern("(\\d\\d\\d\\d-\\d\\d?-\\d\\d?)"), rx.indexIn(date) != -1)
-        {
-                date = rx.cap(1).trimmed();
-                return QDate::fromString(date, "yyyy-M-d");
-        }
+	QRegExp rx("(\\d\\d?/\\d\\d?/\\d\\d\\d\\d)");
+	if(rx.indexIn(date) != -1)
+	{
+					date = rx.cap(1).trimmed();
+					return QDate::fromString(date, "d/M/yyyy");
+	}
+	else if(rx.setPattern("(\\d\\d\\d\\d-\\d\\d?-\\d\\d?)"), rx.indexIn(date) != -1)
+	{
+					date = rx.cap(1).trimmed();
+					return QDate::fromString(date, "yyyy-M-d");
+	}
 	return QDate();
 }
 
@@ -97,9 +95,7 @@ QString Translator::makeDate(QString date, QString lng, bool year)
 {
 	QDate d = Translator::extractDate(date);
 	if(!d.isNull())
-	{
 		return Translator::makeDate(d, lng, year);
-	}
 	return date;
 }
 

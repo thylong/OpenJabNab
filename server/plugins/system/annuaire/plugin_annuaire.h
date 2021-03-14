@@ -1,8 +1,9 @@
 #ifndef _PLUGINANNUAIRE_H_
 #define _PLUGINANNUAIRE_H_
 
-#include "plugininterface.h"
+#include "browserclient.h"
 #include "bunny.h"
+#include "plugininterface.h"
 
 typedef struct {
 	QString name;
@@ -30,7 +31,8 @@ public:
 	PLUGIN_API_CALL(Api_SearchBunnyByName);
 	PLUGIN_API_CALL(Api_SearchBunnyByMac);
 	PLUGIN_API_CALL(Api_VerifyMacToken);
-
+private:
+  BrowserClient _http;
 };
 
 #endif

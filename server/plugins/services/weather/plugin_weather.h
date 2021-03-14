@@ -2,7 +2,6 @@
 #define _PLUGINWEATHER_H_
 
 #include <QUrl>
-#include <QNetworkAccessManager>
 #include <QMultiMap>
 #include <QTextStream>
 #include <QThread>

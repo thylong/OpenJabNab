@@ -1,9 +1,9 @@
 #ifndef _PluginWizzflux_H_
 #define _PluginWizzflux_H_
 
-#include <QUrl>
-#include <QNetworkAccessManager>
 #include "plugininterface.h"
+
+class QNetworkReply;
 
 class PluginWizzflux : public PluginInterface
 {

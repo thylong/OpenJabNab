@@ -5,20 +5,20 @@
 #include <QNetworkAccessManager>
 #include "global.h"
 
-class OJN_EXPORT BrowserClient:
- public QNetworkAccessManager
+class OJN_EXPORT BrowserClient
+	: public QNetworkAccessManager
 {
     Q_OBJECT
 public:
 	BrowserClient(QObject * parent = 0 );
-	void setAge(int age = 3600);
+	inline void setAge(int a = 3600) { _age = a; };
 
 protected:
-	QNetworkReply *createRequest(Operation operation, const QNetworkRequest &request, QIODevice *device);
+	QNetworkReply* createRequest(Operation operation, const QNetworkRequest &request, QIODevice *device);
 
 private:
-	int age;
-	QNetworkDiskCache * diskCache;
+	int _age;
+	QNetworkDiskCache _diskCache;
 };
 
 #endif

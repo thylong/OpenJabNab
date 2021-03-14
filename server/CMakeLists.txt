@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.7)
 project(OpenJabNab)
 
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 set(QT_VERSION 5.7.1)
 
 if(WIN32)

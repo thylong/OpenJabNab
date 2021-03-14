@@ -7,10 +7,10 @@
 #include "bunny.h"
 #include "account.h"
 #include "plugin_annuaire.h"
-#include "browserclient.h"
 
 PluginAnnuaire::PluginAnnuaire():PluginInterface("annuaire", "Register the bunny on the central directory", SystemPlugin)
 {
+	_http.setAge(0);
 }
 
 PluginAnnuaire::~PluginAnnuaire() {}
@@ -26,8 +26,7 @@ void PluginAnnuaire::OnBunnyConnect(Bunny * b)
 	QString pub = b->GetGlobalSetting("VApiPublic", false).toBool() ? "1" : "0";
   auto url =  host + "/nabconnection.php?m=" + b->GetID() + "&n="+ b->GetBunnyName() + "&s=" + GlobalSettings::GetString("OpenJabNabServers/PingServer") + "&ip=" + b->GetGlobalSetting("LastIP", QString("")).toString() + "&api=" + api + "&public=" + pub;
 
-  QNetworkAccessManager http;
-  auto* rep = http.get(QNetworkRequest(QUrl(url)));
+  auto* rep = _http.get(QNetworkRequest(QUrl(url)));
 	QObject::connect(rep, &QNetworkReply::finished, &loop, &QEventLoop::quit);
   loop.exec();
   if(rep)
@@ -43,14 +42,14 @@ QList<BunnyInfos> PluginAnnuaire::SearchBunnyByName(QString name)
 
 	QEventLoop loop;
   auto url = host + "/whois.php?n=" + QUrl::toPercentEncoding(name);
-  QNetworkAccessManager http;
-  auto* rep = http.get(QNetworkRequest(QUrl(url)));
+  auto* rep = _http.get(QNetworkRequest(QUrl(url)));
 	QObject::connect(rep, &QNetworkReply::finished, &loop, &QEventLoop::quit);
   loop.exec();
 
 	QXmlStreamReader xml;
 	xml.clear();
 	xml.addData(rep->readAll());
+  delete rep;
 
 	QString currentTag;
 	BunnyInfos currentBunny;
@@ -81,7 +80,6 @@ QList<BunnyInfos> PluginAnnuaire::SearchBunnyByName(QString name)
 			whois.append(currentBunny);
 		}
 	}
-  delete rep;
 	return whois;
 }
 
@@ -93,11 +91,8 @@ QList<BunnyInfos> PluginAnnuaire::SearchBunnyByMac(QByteArray ID)
 		return whois;
 
 	QEventLoop loop;
-
-	BrowserClient http(this);
   auto url = host + "/whois.php?nm" + QUrl::toPercentEncoding(QString(ID));
-  http.setAge(0);
-  auto* rep = http.get(QNetworkRequest(QUrl(url)));
+  auto* rep = _http.get(QNetworkRequest(QUrl(url)));
 	QObject::connect(rep, &QNetworkReply::finished, &loop, &QEventLoop::quit);
 	loop.exec();
 
