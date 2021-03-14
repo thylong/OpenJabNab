@@ -20,9 +20,12 @@ unsigned short XmppHandler::msgStreamNb = 0;
 #define DEFAULT_BIND_TIMEOUT_S 10
 #define DEFAULT_XMPP_TIMEOUT_S 10
 
+constexpr auto __minTime = std::chrono::system_clock::time_point::min();
+
 XmppHandler::XmppHandler(QTcpSocket * s)
 	: pluginManager(PluginManager::Instance())
 	, _lastMsgTime(std::chrono::system_clock::now())
+	, _lastBindTime(__minTime)
 {
 	tempInXmppTraffic = 0;
 	tempOutXmppTraffic = 0;
@@ -53,7 +56,7 @@ bool XmppHandler::shouldDelete(void)
 	if(!incomingXmppSocket)
 		return true;
 	auto now = std::chrono::system_clock::now();
-	if(bindingResource != "")
+	if(_lastBindTime > __minTime)	// _lastBindTime has been set
 	{
 		auto dt = std::chrono::duration_cast<std::chrono::seconds>(now - _lastBindTime).count();
 		auto maxDt = GlobalSettings::GetInt("Timeout/Bind",DEFAULT_BIND_TIMEOUT_S);
@@ -66,7 +69,7 @@ bool XmppHandler::shouldDelete(void)
 			}
 			else
 				LogInfo("Bind process failed for unknow bunny");
-				bindingResource.clear();
+			_lastBindTime = __minTime;
 		}
 	}
 	auto dt = std::chrono::duration_cast<std::chrono::seconds>(now - _lastMsgTime).count();
@@ -247,20 +250,6 @@ void XmppHandler::HandleBunnyXmppMessage()
 					else
 						LogWarning(QString("Unable to parse ears message : %1").arg(QString(data)));
 				}
-/*
-				else if (message.startsWith("<sound"))
-				{
-					// <sound xmlns="violet:nabaztag:sound:idle"><volume>0</volume></sound>
-					QRegExp rx("<volume>([0-9]+)</volume>");
-					if (rx.indexIn(message) != -1)
-					{
-						known = true;
-						handled = bunny->OnListen(rx.cap(1).toInt());
-					}
-					else
-						LogWarning(QString("Unable to parse sound message : %1").arg(QString(data)));
-				}
-*/
 				else if (!handled && !known)
 					LogWarning(QString("Unknown message from bunny : %1").arg(QString(data)));
 			}
@@ -269,6 +258,8 @@ void XmppHandler::HandleBunnyXmppMessage()
 				IQ iq(data);
 				if(iq.IsValid())
 				{
+					//bindTimer->stop();
+					_lastBindTime = __minTime;
 					if(iq.Content() == "")
 					{
 						known = true;
@@ -276,6 +267,7 @@ void XmppHandler::HandleBunnyXmppMessage()
 					else if(rx.setPattern("<bind[^>]*><resource>([^<]*)</resource></bind>"), rx.indexIn(iq.Content()) != -1)
 					{
 						bindingResource = rx.cap(1).toLatin1();
+						//LogDebug(QString("BindingResource: %1").arg(QString(bindingResource)));
 						bunny->SetXmppResource(bindingResource);
 
 						//bindTimer->start(GlobalSettings::GetInt("Timeout/Bind")*1000);
@@ -315,7 +307,6 @@ void XmppHandler::HandleBunnyXmppMessage()
 						{
 							// Boot process finished
 							bunny->Ready();
-							bindingResource.clear();
 						}
 						WriteToBunnyAndLog(iq.Reply(IQ::Iq_Result, "%1 %4", QByteArray()));
 						handled = true;
