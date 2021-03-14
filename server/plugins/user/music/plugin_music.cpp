@@ -214,18 +214,18 @@ void PluginMusic::InitApiCalls()
 PLUGIN_BUNNY_API_CALL(PluginMusic::Api_RFID)
 {
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
 
 	QString action = hRequest.GetArg("action");
 
 	if(action == "list")
 	{
-		return new ApiManager::ApiMappedList(bunny->GetPluginSetting(GetName(), "RFID", QMap<QString, QVariant>()).toMap());
+		return new ApiAnswers::MappedList(bunny->GetPluginSetting(GetName(), "RFID", QMap<QString, QVariant>()).toMap());
 	}
 	else if(action == "add")
 	{
 		if(!hRequest.HasArg("tag"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("tag", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("tag", GetName()));
 
 		QString tag = hRequest.GetArg("tag");
 
@@ -243,14 +243,14 @@ PLUGIN_BUNNY_API_CALL(PluginMusic::Api_RFID)
 			bunny->SetPluginSetting(GetName(), "RFID", list);
 			Ztamp * z = ZtampManager::GetZtamp(tag.toLatin1());
 			z->Associate(bunny, this);
-			return new ApiManager::ApiOk(Translator::tr("Add RFID '%1' for bunny '%2'", account).arg(tag, QString(bunny->GetID())));
+			return new ApiAnswers::Ok(Translator::tr("Add RFID '%1' for bunny '%2'", account).arg(tag, QString(bunny->GetID())));
 		}
-		return new ApiManager::ApiError(Translator::tr("RFID '%1' already assigned to bunny '%2'", account).arg(tag, QString(bunny->GetID())));
+		return new ApiAnswers::Error(Translator::tr("RFID '%1' already assigned to bunny '%2'", account).arg(tag, QString(bunny->GetID())));
 	}
 	else if(action == "del")
 	{
 		if(!hRequest.HasArg("tag"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("tag", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("tag", GetName()));
 
 		QString tag = hRequest.GetArg("tag");
 
@@ -262,20 +262,20 @@ PLUGIN_BUNNY_API_CALL(PluginMusic::Api_RFID)
 			Ztamp * z = ZtampManager::GetZtamp(tag.toLatin1());
 			z->Dissociate(bunny);
 
-			return new ApiManager::ApiOk(Translator::tr("RFID '%1' removed for bunny '%2'", account).arg(tag, QString(bunny->GetID())));
+			return new ApiAnswers::Ok(Translator::tr("RFID '%1' removed for bunny '%2'", account).arg(tag, QString(bunny->GetID())));
 		}
-		return new ApiManager::ApiError(Translator::tr("RFID '%1' is not assign to bunny '%2'", account).arg(tag, QString(bunny->GetID())));
+		return new ApiAnswers::Error(Translator::tr("RFID '%1' is not assign to bunny '%2'", account).arg(tag, QString(bunny->GetID())));
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }
 
 PLUGIN_BUNNY_API_CALL(PluginMusic::Api_File)
 {
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
 
 	QString action = hRequest.GetArg("action");
 
@@ -283,34 +283,34 @@ PLUGIN_BUNNY_API_CALL(PluginMusic::Api_File)
 	{
 		int libraryMode = bunny->GetPluginSetting(GetName(), QString("library"), (int)(MixedLibrary | PrivateLibrary)).toInt();
 		if(libraryMode & MixedLibrary)
-			return new ApiManager::ApiList(GetUserDir(bunny)->entryList(QStringList("*.mp3")) + musicFolder.entryList(QStringList("*.mp3")));
-		return new ApiManager::ApiList(GetUserDir(bunny)->entryList(QStringList("*.mp3")));
+			return new ApiAnswers::List(GetUserDir(bunny)->entryList(QStringList("*.mp3")) + musicFolder.entryList(QStringList("*.mp3")));
+		return new ApiAnswers::List(GetUserDir(bunny)->entryList(QStringList("*.mp3")));
 	}
 	else if(action == "listgroup")
 	{
 		QString accountName = bunny->GetGlobalSetting("OwnerAccount").toString();
 		QStringList groups = AccountManager::ListSoundGroup(accountName);
-		return new ApiManager::ApiList(groups);
+		return new ApiAnswers::List(groups);
 	}
 	else if(action == "play")
 	{
 		if(!hRequest.HasArg("file"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("file", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("file", GetName()));
 
 		QString file = hRequest.GetArg("file");
 		playFile(bunny, file);
-		return new ApiManager::ApiOk(Translator::tr("Will now play '%1' for bunny '%2'").arg(file, QString(bunny->GetID())));
+		return new ApiAnswers::Ok(Translator::tr("Will now play '%1' for bunny '%2'").arg(file, QString(bunny->GetID())));
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }
 
 PLUGIN_BUNNY_API_CALL(PluginMusic::Api_Library)
 {
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
 
 	QString action = hRequest.GetArg("action");
 
@@ -325,16 +325,16 @@ PLUGIN_BUNNY_API_CALL(PluginMusic::Api_Library)
 		list.insert("shared", libraryMode & SharedLibrary);
 		list.insert("private", libraryMode & PrivateLibrary);
 
-		return new ApiManager::ApiMappedList(list);
+		return new ApiAnswers::MappedList(list);
 	}
 	else if(action == "set")
 	{
 		if(!hRequest.HasArg("mode"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("mode", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("mode", GetName()));
 
 		QString mode = hRequest.GetArg("mode");
 		if(!hRequest.HasArg("share"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("share", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("share", GetName()));
 
 		QString share = hRequest.GetArg("share");
 
@@ -350,11 +350,11 @@ PLUGIN_BUNNY_API_CALL(PluginMusic::Api_Library)
 			libraryMode |= PrivateLibrary;
 
 		bunny->SetPluginSetting(GetName(), QString("library"), (int)libraryMode);
-		return new ApiManager::ApiOk(Translator::tr("Library setup updated", account));
+		return new ApiAnswers::Ok(Translator::tr("Library setup updated", account));
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }
 /*
@@ -364,7 +364,7 @@ PLUGIN_BUNNY_API_CALL(PluginMusic::Api_Play)
 
 	playFile(bunny, hRequest.GetArg("music"));
 
-	return new ApiManager::ApiOk(QString("Will now play '%1' for bunny '%3'").arg(hRequest.GetArg("music"), QString(bunny->GetID())));
+	return new ApiAnswers::Ok(QString("Will now play '%1' for bunny '%3'").arg(hRequest.GetArg("music"), QString(bunny->GetID())));
 }
 
 PLUGIN_BUNNY_API_CALL(PluginMusic::Api_AddRFID)
@@ -373,7 +373,7 @@ PLUGIN_BUNNY_API_CALL(PluginMusic::Api_AddRFID)
 
 	bunny->SetPluginSetting(GetName(), QString("RFIDPlay/%1").arg(hRequest.GetArg("tag")), hRequest.GetArg("music"));
 
-	return new ApiManager::ApiOk(QString("Add '%1' for RFID '%2', bunny '%3'").arg(hRequest.GetArg("music"), hRequest.GetArg("tag"), QString(bunny->GetID())));
+	return new ApiAnswers::Ok(QString("Add '%1' for RFID '%2', bunny '%3'").arg(hRequest.GetArg("music"), hRequest.GetArg("tag"), QString(bunny->GetID())));
 }
 
 PLUGIN_BUNNY_API_CALL(PluginMusic::Api_RemoveRFID)
@@ -382,7 +382,7 @@ PLUGIN_BUNNY_API_CALL(PluginMusic::Api_RemoveRFID)
 
 	bunny->RemovePluginSetting(GetName(), QString("RFIDPlay/%1").arg(hRequest.GetArg("tag")));
 
-	return new ApiManager::ApiOk(QString("Remove RFID '%2' for bunny '%3'").arg(hRequest.GetArg("tag"), QString(bunny->GetID())));
+	return new ApiAnswers::Ok(QString("Remove RFID '%2' for bunny '%3'").arg(hRequest.GetArg("tag"), QString(bunny->GetID())));
 }
 
 PLUGIN_BUNNY_API_CALL(PluginMusic::Api_ListRFID)
@@ -413,7 +413,7 @@ PLUGIN_BUNNY_API_CALL(PluginMusic::Api_ListRFID)
 
 	//list.insert("mixed", libraryMode & MixedLibrary);
 
-	return new ApiManager::ApiMappedList(list);
+	return new ApiAnswers::MappedList(list);
 }
 
 PLUGIN_BUNNY_API_CALL(PluginMusic::Api_libraryMode)
@@ -431,7 +431,7 @@ PLUGIN_BUNNY_API_CALL(PluginMusic::Api_libraryMode)
 		else
 			libraryMode |= PrivateLibrary;
 		bunny->SetPluginSetting(GetName(), QString("library"), (int)libraryMode);
-		return new ApiManager::ApiOk(Translator::tr("Library setup updated", account));
+		return new ApiAnswers::Ok(Translator::tr("Library setup updated", account));
 	}
 	else
 	{
@@ -443,7 +443,7 @@ PLUGIN_BUNNY_API_CALL(PluginMusic::Api_libraryMode)
 		list.insert("shared", libraryMode & SharedLibrary);
 		list.insert("private", libraryMode & PrivateLibrary);
 
-		return new ApiManager::ApiMappedList(list);
+		return new ApiAnswers::MappedList(list);
 	}
 }
 
@@ -454,7 +454,7 @@ PLUGIN_BUNNY_API_CALL(PluginMusic::Api_getFilesList)
 
 	int libraryMode = bunny->GetPluginSetting(GetName(), QString("library"), (int)(MixedLibrary | PrivateLibrary)).toInt();
 	if(libraryMode & MixedLibrary)
-		return new ApiManager::ApiList(GetUserDir(bunny)->entryList() + musicFolder.entryList());
-	return new ApiManager::ApiList(GetUserDir(bunny)->entryList());
+		return new ApiAnswers::List(GetUserDir(bunny)->entryList() + musicFolder.entryList());
+	return new ApiAnswers::List(GetUserDir(bunny)->entryList());
 }
 */

@@ -4,9 +4,8 @@
 #include <QDir>
 #include <QRandomGenerator>
 #include "sentencemanager.h"
-#include "apimanager.h"
+
 #include "log.h"
-#include "QsLog.h"
 #include "settings.h"
 #include "translator.h"
 
@@ -121,7 +120,7 @@ QString const SentenceManager::GetSentence(QString type, int number, QString lan
 
 	if(!string.length())
 	{
-		QsLogging::Logger::SentenceLog(QString("No sentence for key '%1' nor '%2'").arg(type, wishedType), language, lng);
+		LogSentence(QString("No sentence for key '%1' nor '%2'").arg(type, wishedType), language, lng);
 	}
 	return string;
 }
@@ -145,7 +144,7 @@ QString const SentenceManager::GetSentence(QString type, QString language, bool 
 	}
 	if(!string.length())
 	{
-		QsLogging::Logger::SentenceLog(QString("No sentence for key '%1'").arg(type), language, lng);
+		LogSentence(QString("No sentence for key '%1'").arg(type), language, lng);
 	}
 	return string;
 }
@@ -252,62 +251,62 @@ void SentenceManager::InitApiCalls()
 API_CALL(SentenceManager::Api_Language)
 {
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("action"));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("action"));
 
 	QString action = hRequest.GetArg("action");
 
 	if(action == "list")
 	{
-		return new ApiManager::ApiList(settings->value("List/Languages", QStringList()).toStringList());
+		return new ApiAnswers::List(settings->value("List/Languages", QStringList()).toStringList());
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1'", account).arg("action"));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1'", account).arg("action"));
 	}
 }
 
 API_CALL(SentenceManager::Api_Type)
 {
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("action"));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("action"));
 
 	QString action = hRequest.GetArg("action");
 
 	if(action == "list")
 	{
-		return new ApiManager::ApiList(settings->value("List/Types", QStringList()).toStringList());
+		return new ApiAnswers::List(settings->value("List/Types", QStringList()).toStringList());
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1'", account).arg("action"));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1'", account).arg("action"));
 	}
 }
 
 API_CALL(SentenceManager::Api_Sentence)
 {
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("action"));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("action"));
 
 	QString action = hRequest.GetArg("action");
 
 	if(!hRequest.HasArg("type"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("type"));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("type"));
 
 	QString type = hRequest.GetArg("type");
 
 	if(!hRequest.HasArg("language"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("language"));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("language"));
 
 	QString language = hRequest.GetArg("language");
 
 	if(action == "list")
 	{
-		return new ApiManager::ApiList(GetSentences(type, language));
+		return new ApiAnswers::List(GetSentences(type, language));
 	}
 	else if(action == "save")
 	{
 		SaveSentences();
-		return new ApiManager::ApiOk(Translator::tr("Sentences saved", account));
+		return new ApiAnswers::Ok(Translator::tr("Sentences saved", account));
 	}
 	else if(action == "get")
 	{
@@ -317,47 +316,47 @@ API_CALL(SentenceManager::Api_Sentence)
 			QString string = SentenceManager::GetSentence(type, number, language);
 			if(string.length())
 			{
-				return new ApiManager::ApiString(string);
+				return new ApiAnswers::String(string);
 			}
-			return new ApiManager::ApiError(Translator::tr("No sentence for '%1' (%3) in '%2'", account).arg(type, language, QString::number(number)));
+			return new ApiAnswers::Error(Translator::tr("No sentence for '%1' (%3) in '%2'", account).arg(type, language, QString::number(number)));
 		}
 		else
 		{
 			QString string = SentenceManager::GetSentence(type, language);
 			if(string.length())
 			{
-				return new ApiManager::ApiString(string);
+				return new ApiAnswers::String(string);
 			}
-			return new ApiManager::ApiError(Translator::tr("No sentence for '%1' in '%2'", account).arg(type, language));
+			return new ApiAnswers::Error(Translator::tr("No sentence for '%1' in '%2'", account).arg(type, language));
 		}
 	}
 	else if(action == "add")
 	{
 		if(!hRequest.HasArg("sentence"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("sentence"));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("sentence"));
 
 		QString sentence = hRequest.GetArg("sentence");
 		if(AddSentence(type, language, sentence))
 		{
-			return new ApiManager::ApiOk(Translator::tr("Sentences added to list", account));
+			return new ApiAnswers::Ok(Translator::tr("Sentences added to list", account));
 		}
-		return new ApiManager::ApiError(Translator::tr("Sentence already in list", account));
+		return new ApiAnswers::Error(Translator::tr("Sentence already in list", account));
 	}
 	else if(action == "remove")
 	{
 		if(!hRequest.HasArg("sentence"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("sentence"));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("sentence"));
 
 		QString sentence = hRequest.GetArg("sentence");
 		QStringList list = GetSentences(type, language);
 		if(RemoveSentence(type, language, sentence))
 		{
-			return new ApiManager::ApiOk(Translator::tr("Sentences removed from list", account));
+			return new ApiAnswers::Ok(Translator::tr("Sentences removed from list", account));
 		}
-		return new ApiManager::ApiError(Translator::tr("Sentence is not in list", account));
+		return new ApiAnswers::Error(Translator::tr("Sentence is not in list", account));
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1'", account).arg("action"));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1'", account).arg("action"));
 	}
 }

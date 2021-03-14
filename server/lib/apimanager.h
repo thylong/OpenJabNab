@@ -9,119 +9,35 @@
 #include <QString>
 #include <QVariant>
 #include "global.h"
+#include "apihandler.h"
 
 class Account;
 class AccountManager;
 class HTTPRequest;
 class PluginManager;
+
 class OJN_EXPORT ApiManager
+	: public ApiHandler<ApiManager>
 {
 public:
-	class OJN_EXPORT ApiAnswer
-	{
-		public:
-			virtual ~ApiAnswer() {}
-			virtual QByteArray GetData(); // UTF8
-			virtual QString GetInternalData() = 0;
-
-		protected:
-			QString SanitizeXML(QString const&);
-	};
-
 	static ApiManager & Instance();
-	ApiAnswer * ProcessApiCall(QString const&, HTTPRequest &);
+	static void InitApiCalls(void);
+	ApiAnswers::Answer* ProcessApiCall(QString const&, HTTPRequest &);
 	static int getUptime();
-
-	// Internal classes
-	class OJN_EXPORT ApiClear : public ApiAnswer
-	{
-		public:
-			QByteArray GetData(); // UTF8
-			ApiClear():string(QString()) {}
-			ApiClear(QString s):string(s) {}
-			QString GetInternalData() { return string; }
-		private:
-			QString string;
-	};
-
-	class OJN_EXPORT ApiError : public ApiAnswer
-	{
-		public:
-			ApiError(QString s):error(s) {}
-			QString GetInternalData();
-		private:
-			QString error;
-	};
-
-	class OJN_EXPORT ApiXml : public ApiAnswer
-	{
-		public:
-			ApiXml():string(QString()) {}
-			ApiXml(QString s):string(s) {}
-			QString GetInternalData() { return string; }
-		private:
-			QString string;
-	};
-
-	class OJN_EXPORT ApiOk : public ApiAnswer
-	{
-		public:
-			ApiOk():string(QString()) {}
-			ApiOk(QString s):string(s) {}
-			QString GetInternalData();
-		private:
-			QString string;
-	};
-
-	class OJN_EXPORT ApiString : public ApiAnswer
-	{
-		public:
-			ApiString(QString s):string(s) {}
-			QString GetInternalData();
-		private:
-			QString string;
-	};
-
-	class OJN_EXPORT ApiList : public ApiAnswer
-	{
-		public:
-			ApiList(QList<QString> l):list(l) {}
-			QString GetInternalData();
-		private:
-			QList<QString> list;
-	};
-
-	class OJN_EXPORT ApiMappedList : public ApiAnswer
-	{
-		public:
-			ApiMappedList(QMap<QString, QVariant> l):list(l) {}
-			QString GetInternalData();
-		private:
-			QMap<QString, QVariant> list;
-	};
-
-	class OJN_EXPORT ApiViolet : public ApiAnswer
-	{
-		public:
-			ApiViolet(QString m, QString c) { AddMessage(m, c); }
-			ApiViolet():string(QString()) {}
-			ApiViolet(QString s):string(s) {}
-			QByteArray GetData();
-			void AddMessage(QString, QString);
-			void AddEarPosition(int, int);
-			void AddXml(QString s) { string += s; }
-			QString GetInternalData() { return string; }
-		private:
-			QString string;
-	};
 
 private:
 	ApiManager();
-	ApiAnswer * ProcessGlobalApiCall(QString const&, HTTPRequest const&, Account const&);
-	ApiAnswer * ProcessPluginApiCall(QString const&, HTTPRequest const&,      Account const&);
-	ApiAnswer * ProcessBunnyApiCall( QString const&, HTTPRequest const&,      Account const&);
-	ApiAnswer * ProcessZtampApiCall( QString const&, HTTPRequest const&,      Account const&);
-	ApiAnswer * ProcessBunnyVioletApiCall(QString const&, HTTPRequest const&);
+	ApiAnswers::Answer* ProcessPluginApiCall(QString const&, HTTPRequest const&, Account const&);
+	ApiAnswers::Answer* ProcessBunnyApiCall( QString const&, HTTPRequest const&, Account const&);
+	ApiAnswers::Answer* ProcessZtampApiCall( QString const&, HTTPRequest const&, Account const&);
+	ApiAnswers::Answer* ProcessBunnyVioletApiCall(QString const&, HTTPRequest const&);
 	int startTime;
+
+	API_CALL(Api_About);
+	API_CALL(Api_Config);
+	API_CALL(Api_Ping);
+	API_CALL(Api_Stats);
+	API_CALL(Api_System);
+	API_CALL(Api_Uptime);
 };
 #endif

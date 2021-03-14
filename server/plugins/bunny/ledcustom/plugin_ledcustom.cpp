@@ -138,18 +138,18 @@ void PluginLedcustom::InitApiCalls()
 PLUGIN_BUNNY_API_CALL(PluginLedcustom::Api_Chor)
 {
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
 
 	QString action = hRequest.GetArg("action");
 
 	if(action == "list")
 	{
-		return new ApiManager::ApiMappedList(bunny->GetPluginSetting(GetName(), "Chors", QMap<QString, QVariant>()).toMap());
+		return new ApiAnswers::MappedList(bunny->GetPluginSetting(GetName(), "Chors", QMap<QString, QVariant>()).toMap());
 	}
 	else if(action == "request")
 	{
 		SendChoregraphiesRequest(bunny);
-		return new ApiManager::ApiOk(Translator::tr("Choregraphies requested for bunny '%1'", account).arg(QString(bunny->GetID())));
+		return new ApiAnswers::Ok(Translator::tr("Choregraphies requested for bunny '%1'", account).arg(QString(bunny->GetID())));
 	}
 	else if(action == "fetch")
 	{
@@ -163,28 +163,28 @@ PLUGIN_BUNNY_API_CALL(PluginLedcustom::Api_Chor)
 			chors += "</chor>";
 		}
 		chors += "</chors>";
-		return new ApiManager::ApiXml(chors);
+		return new ApiAnswers::Xml(chors);
 
 	}
 	else if(action == "add")
 	{
 		if(!hRequest.HasArg("value"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("value", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("value", GetName()));
 
 		int value = hRequest.GetArg("value").toInt();
 
 		if(!hRequest.HasArg("service"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("service", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("service", GetName()));
 
 		QString service = hRequest.GetArg("service");
 
 		if(!hRequest.HasArg("tempo"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("tempo", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("tempo", GetName()));
 
 		QString tempo = hRequest.GetArg("tempo");
 
 		if(!hRequest.HasArg("leds"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("leds", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("leds", GetName()));
 
 		QString leds = hRequest.GetArg("leds");
 
@@ -206,17 +206,17 @@ PLUGIN_BUNNY_API_CALL(PluginLedcustom::Api_Chor)
 		bunny->SetPluginSetting(GetName(), "Chors", list);
 
 		updateChoregraphies(bunny);
-		return new ApiManager::ApiOk(Translator::tr("Choregraphy '%1' defined for bunny '%2'", account).arg(service, QString(bunny->GetID())));
+		return new ApiAnswers::Ok(Translator::tr("Choregraphy '%1' defined for bunny '%2'", account).arg(service, QString(bunny->GetID())));
 	}
 	else if(action == "del")
 	{
 		if(!hRequest.HasArg("value"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("value", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("value", GetName()));
 
 		int value = hRequest.GetArg("value").toInt();
 
 		if(!hRequest.HasArg("service"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("service", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("service", GetName()));
 
 		QString service = hRequest.GetArg("service");
 
@@ -231,7 +231,7 @@ PLUGIN_BUNNY_API_CALL(PluginLedcustom::Api_Chor)
 			}
 			if(value > chors.length())
 			{
-				return new ApiManager::ApiError(Translator::tr("Choregraphy '%1' is not defined for bunny '%2'", account).arg(service + "." + QString::number(value), QString(bunny->GetID())));
+				return new ApiAnswers::Error(Translator::tr("Choregraphy '%1' is not defined for bunny '%2'", account).arg(service + "." + QString::number(value), QString(bunny->GetID())));
 			}
 			chors.removeAt(value);
 			chor = chors.join("|");
@@ -247,14 +247,14 @@ PLUGIN_BUNNY_API_CALL(PluginLedcustom::Api_Chor)
 			bunny->SetPluginSetting(GetName(), "Chors", list);
 
 			updateChoregraphies(bunny);
-			return new ApiManager::ApiOk(Translator::tr("Choregraphy '%1' removed for bunny '%2'", account).arg(service + "." + QString::number(value), QString(bunny->GetID())));
+			return new ApiAnswers::Ok(Translator::tr("Choregraphy '%1' removed for bunny '%2'", account).arg(service + "." + QString::number(value), QString(bunny->GetID())));
 		}
-		return new ApiManager::ApiError(Translator::tr("Choregraphy '%1' is not defined for bunny '%2'", account).arg(service + "." + QString::number(value), QString(bunny->GetID())));
+		return new ApiAnswers::Error(Translator::tr("Choregraphy '%1' is not defined for bunny '%2'", account).arg(service + "." + QString::number(value), QString(bunny->GetID())));
 	}
 	else if(action == "remove")
 	{
 		if(!hRequest.HasArg("service"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("service", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("service", GetName()));
 
 		QString service = hRequest.GetArg("service");
 
@@ -265,36 +265,36 @@ PLUGIN_BUNNY_API_CALL(PluginLedcustom::Api_Chor)
 			bunny->SetPluginSetting(GetName(), "Chors", list);
 
 			updateChoregraphies(bunny);
-			return new ApiManager::ApiOk(Translator::tr("Choregraphy '%1' removed for bunny '%2'", account).arg(service, QString(bunny->GetID())));
+			return new ApiAnswers::Ok(Translator::tr("Choregraphy '%1' removed for bunny '%2'", account).arg(service, QString(bunny->GetID())));
 		}
-		return new ApiManager::ApiError(Translator::tr("Choregraphy '%1' is not defined for bunny '%2'", account).arg(service, QString(bunny->GetID())));
+		return new ApiAnswers::Error(Translator::tr("Choregraphy '%1' is not defined for bunny '%2'", account).arg(service, QString(bunny->GetID())));
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }
 
 PLUGIN_BUNNY_API_CALL(PluginLedcustom::Api_Service)
 {
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
 
 	QString action = hRequest.GetArg("action");
 
 	if(action == "list")
 	{
-		return new ApiManager::ApiMappedList(bunny->GetPluginSetting(GetName(), "Services", QMap<QString, QVariant>()).toMap());
+		return new ApiAnswers::MappedList(bunny->GetPluginSetting(GetName(), "Services", QMap<QString, QVariant>()).toMap());
 	}
 	else if(action == "add")
 	{
 		if(!hRequest.HasArg("service"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("service", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("service", GetName()));
 
 		QString service = hRequest.GetArg("service");
 
 		if(!hRequest.HasArg("url"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("url", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("url", GetName()));
 
 		QString url = hRequest.GetArg("url");
 
@@ -307,12 +307,12 @@ PLUGIN_BUNNY_API_CALL(PluginLedcustom::Api_Service)
 		bunny->SetPluginSetting(GetName(), "Services", list);
 
 		updateBunny(bunny);
-		return new ApiManager::ApiOk(Translator::tr("Service '%1' defined for bunny '%2'", account).arg(service, QString(bunny->GetID())));
+		return new ApiAnswers::Ok(Translator::tr("Service '%1' defined for bunny '%2'", account).arg(service, QString(bunny->GetID())));
 	}
 	else if(action == "remove")
 	{
 		if(!hRequest.HasArg("service"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("service", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("service", GetName()));
 
 		QString service = hRequest.GetArg("service");
 
@@ -323,13 +323,13 @@ PLUGIN_BUNNY_API_CALL(PluginLedcustom::Api_Service)
 			bunny->SetPluginSetting(GetName(), "Services", list);
 
 			updateBunny(bunny);
-			return new ApiManager::ApiOk(Translator::tr("Service '%1' removed for bunny '%2'", account).arg(service, QString(bunny->GetID())));
+			return new ApiAnswers::Ok(Translator::tr("Service '%1' removed for bunny '%2'", account).arg(service, QString(bunny->GetID())));
 		}
-		return new ApiManager::ApiError(Translator::tr("Service '%1' is not defined for bunny '%2'", account).arg(service, QString(bunny->GetID())));
+		return new ApiAnswers::Error(Translator::tr("Service '%1' is not defined for bunny '%2'", account).arg(service, QString(bunny->GetID())));
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }
 

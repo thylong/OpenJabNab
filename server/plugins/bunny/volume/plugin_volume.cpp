@@ -144,28 +144,28 @@ void PluginVolume::InitApiCalls()
 PLUGIN_BUNNY_API_CALL(PluginVolume::Api_Schedule)
 {
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
 
 	QString action = hRequest.GetArg("action");
 
 	if(action == "list")
 	{
-		return new ApiManager::ApiMappedList(bunny->GetPluginSetting(GetName(), "Schedules", QMap<QString, QVariant>()).toMap());
+		return new ApiAnswers::MappedList(bunny->GetPluginSetting(GetName(), "Schedules", QMap<QString, QVariant>()).toMap());
 	}
 	else if(action == "add")
 	{
 		if(!hRequest.HasArg("time"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("time", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("time", GetName()));
 
 		QString time = hRequest.GetArg("time");
 
 		if(!hRequest.HasArg("vol"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("vol", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("vol", GetName()));
 
 		QString sound = hRequest.GetArg("vol");
 
 		if(!hRequest.HasArg("day"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("day", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("day", GetName()));
 
 		int day = hRequest.GetArg("day").toInt();
 
@@ -183,19 +183,19 @@ PLUGIN_BUNNY_API_CALL(PluginVolume::Api_Schedule)
 			bunny->SetPluginSetting(GetName(), "Schedules", list);
 			CleanCrons(bunny);
 			RegisterCrons(bunny);
-			return new ApiManager::ApiOk(Translator::tr("Add schedule at '%1' to bunny '%2'", account).arg(time, QString(bunny->GetID())));
+			return new ApiAnswers::Ok(Translator::tr("Add schedule at '%1' to bunny '%2'", account).arg(time, QString(bunny->GetID())));
 		}	
-		return new ApiManager::ApiError(Translator::tr("Schedule at '%1' already exists for bunny '%2'", account).arg(time, QString(bunny->GetID())));
+		return new ApiAnswers::Error(Translator::tr("Schedule at '%1' already exists for bunny '%2'", account).arg(time, QString(bunny->GetID())));
 	}
 	else if(action == "del")
 	{
 		if(!hRequest.HasArg("time"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("time", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("time", GetName()));
 
 		QString time = hRequest.GetArg("time");
 
 		if(!hRequest.HasArg("day"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("day", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("day", GetName()));
 
 		int day = hRequest.GetArg("day").toInt();
 
@@ -210,27 +210,27 @@ PLUGIN_BUNNY_API_CALL(PluginVolume::Api_Schedule)
         		OnBunnyDisconnect(bunny);
         		OnBunnyConnect(bunny);
 
-			return new ApiManager::ApiOk(Translator::tr("Schedule at '%1' removed for bunny '%2'", account).arg(time, QString(bunny->GetID())));
+			return new ApiAnswers::Ok(Translator::tr("Schedule at '%1' removed for bunny '%2'", account).arg(time, QString(bunny->GetID())));
 		}
-		return new ApiManager::ApiError(Translator::tr("No schedule at '%1' for bunny '%2'", account).arg(time, QString(bunny->GetID())));
+		return new ApiAnswers::Error(Translator::tr("No schedule at '%1' for bunny '%2'", account).arg(time, QString(bunny->GetID())));
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }
 
 PLUGIN_BUNNY_API_CALL(PluginVolume::Api_Sound)
 {
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
 
 	QString action = hRequest.GetArg("action");
 
 	if(action == "poll")
 	{
 		bunny->SendPacket(MessagePacket("GV\n"), GetName());
-        	return new ApiManager::ApiOk(Translator::tr("Volume asked to bunny, waiting answer", account));
+        	return new ApiAnswers::Ok(Translator::tr("Volume asked to bunny, waiting answer", account));
 	}
 	else if(action == "test")
 	{
@@ -250,37 +250,37 @@ PLUGIN_BUNNY_API_CALL(PluginVolume::Api_Sound)
 				QString volume = hRequest.GetArg("volume");
 				QString previous = bunny->GetPluginSetting(GetName(), "currentsound", 0).toString();
 				bunny->SendPacket(MessagePacket("FV " + volume.toLatin1() + "\nMW\nMU " + sound.file.toLatin1() + "\nMW\nFV " + previous.toLatin1() + "\nMW\n"), GetName());
-				return new ApiManager::ApiOk(Translator::tr("Sending test volume at '%1' to bunny '%2'", account).arg(volume, QString(bunny->GetID())));
+				return new ApiAnswers::Ok(Translator::tr("Sending test volume at '%1' to bunny '%2'", account).arg(volume, QString(bunny->GetID())));
 			}
 			else
 			{
 				bunny->SendPacket(MessagePacket("MU " + sound.file.toLatin1() + "\nMW\n"), GetName());
 			}
 		}
-		return new ApiManager::ApiOk(Translator::tr("Sending test volume at '%1' to bunny '%2'", account).arg(bunny->GetPluginSetting(GetName(), "currentsound", 0).toString(), QString(bunny->GetID())));
+		return new ApiAnswers::Ok(Translator::tr("Sending test volume at '%1' to bunny '%2'", account).arg(bunny->GetPluginSetting(GetName(), "currentsound", 0).toString(), QString(bunny->GetID())));
 	}
 	else if(action == "read")
 	{
-        	return new ApiManager::ApiOk(bunny->GetPluginSetting(GetName(), "currentsound", 0).toString());
+        	return new ApiAnswers::Ok(bunny->GetPluginSetting(GetName(), "currentsound", 0).toString());
 	}
 	else if(action == "get")
 	{
-        	return new ApiManager::ApiOk(bunny->GetPluginSetting(GetName(), "sound", 0).toString());
+        	return new ApiAnswers::Ok(bunny->GetPluginSetting(GetName(), "sound", 0).toString());
 	}
 	else if(action == "set")
 	{
 		if(!hRequest.HasArg("vol"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("vol", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("vol", GetName()));
 
 		QString sound = hRequest.GetArg("vol");
 		bunny->SetPluginSetting(GetName(), "sound", sound);
 		bunny->SendPacket(AmbientPacket(AmbientPacket::Service_SoundVol, sound.toInt()), GetName());
 
-		return new ApiManager::ApiOk(Translator::tr("Sound volume set to '%1'", account).arg(sound));
+		return new ApiAnswers::Ok(Translator::tr("Sound volume set to '%1'", account).arg(sound));
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }
 
@@ -290,7 +290,7 @@ PLUGIN_BUNNY_API_CALL(PluginVolume::Api_GetCurrent)
         Q_UNUSED(account);
 	Q_UNUSED(hRequest);
 
-        return new ApiManager::ApiOk(bunny->GetPluginSetting(GetName(), "currentsound", 0).toString());
+        return new ApiAnswers::Ok(bunny->GetPluginSetting(GetName(), "currentsound", 0).toString());
 }
 
 PLUGIN_BUNNY_API_CALL(PluginVolume::Api_PollCurrent)
@@ -299,7 +299,7 @@ PLUGIN_BUNNY_API_CALL(PluginVolume::Api_PollCurrent)
 	Q_UNUSED(hRequest);
 
 	bunny->SendPacket(MessagePacket("GV\n"), GetName());
-        return new ApiManager::ApiOk("Volume asked to bunny, waiting answer");
+        return new ApiAnswers::Ok("Volume asked to bunny, waiting answer");
 }
 
 PLUGIN_BUNNY_API_CALL(PluginVolume::Api_GetSound)
@@ -307,7 +307,7 @@ PLUGIN_BUNNY_API_CALL(PluginVolume::Api_GetSound)
         Q_UNUSED(account);
 	Q_UNUSED(hRequest);
 
-        return new ApiManager::ApiOk(bunny->GetPluginSetting(GetName(), "sound", 0).toString());
+        return new ApiAnswers::Ok(bunny->GetPluginSetting(GetName(), "sound", 0).toString());
 }
 
 PLUGIN_BUNNY_API_CALL(PluginVolume::Api_SetSound)
@@ -321,7 +321,7 @@ PLUGIN_BUNNY_API_CALL(PluginVolume::Api_SetSound)
 	// Send sound to bunny
 	bunny->SendPacket(AmbientPacket(AmbientPacket::Service_SoundVol, sound.toInt()), GetName());
 
-	return new ApiManager::ApiOk(QString("Sound volume set to '%1'").arg(sound));
+	return new ApiAnswers::Ok(QString("Sound volume set to '%1'").arg(sound));
 }
 
 PLUGIN_BUNNY_API_CALL(PluginVolume::Api_AddChange)
@@ -332,7 +332,7 @@ PLUGIN_BUNNY_API_CALL(PluginVolume::Api_AddChange)
 	QString hTime = hRequest.GetArg("time");
 	QTime w = Cron::mkTime(hTime);
 	if(!w.isValid())
-		return new ApiManager::ApiError(QString("Bad time '%1'").arg(hRequest.GetArg("time")));
+		return new ApiAnswers::Error(QString("Bad time '%1'").arg(hRequest.GetArg("time")));
 	int day = hRequest.GetArg("day").toInt();
 	QString key = QString::number(day) + "|" + hTime;
 
@@ -348,9 +348,9 @@ PLUGIN_BUNNY_API_CALL(PluginVolume::Api_AddChange)
 		CleanCrons(bunny);
 		RegisterCrons(bunny);
 		//UpdateState(bunny);
-        	return new ApiManager::ApiOk(QString("Add sound change at '%1' to bunny '%2'").arg(hRequest.GetArg("time"), QString(bunny->GetID())));
+        	return new ApiAnswers::Ok(QString("Add sound change at '%1' to bunny '%2'").arg(hRequest.GetArg("time"), QString(bunny->GetID())));
     	}	
-    	return new ApiManager::ApiError(QString("Webcast at '%1' already exists for bunny '%2'").arg(hRequest.GetArg("time"), QString(bunny->GetID())));
+    	return new ApiAnswers::Error(QString("Webcast at '%1' already exists for bunny '%2'").arg(hRequest.GetArg("time"), QString(bunny->GetID())));
 }
 
 PLUGIN_BUNNY_API_CALL(PluginVolume::Api_RemoveChange)
@@ -359,7 +359,7 @@ PLUGIN_BUNNY_API_CALL(PluginVolume::Api_RemoveChange)
 
 	int hDay = hRequest.GetArg("day").toInt();
 	if(!hRequest.HasArg("time"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("time", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("time", GetName()));
 
 	QMap<QString, QVariant> list = bunny->GetPluginSetting(GetName(), "SoundChange", QMap<QString, QVariant>()).toMap();
 	QString time = hRequest.GetArg("time");
@@ -372,15 +372,15 @@ PLUGIN_BUNNY_API_CALL(PluginVolume::Api_RemoveChange)
 
 		CleanCrons(bunny);
 		RegisterCrons(bunny);
-		return new ApiManager::ApiOk(Translator::tr("Remove sound change at '%1' for bunny '%2'", account).arg(hRequest.GetArg("time"), QString(bunny->GetID())));
+		return new ApiAnswers::Ok(Translator::tr("Remove sound change at '%1' for bunny '%2'", account).arg(hRequest.GetArg("time"), QString(bunny->GetID())));
 	}
-	return new ApiManager::ApiError(Translator::tr("No sound change at '%1' for bunny '%2'", account).arg(hRequest.GetArg("time"), QString(bunny->GetID())));
+	return new ApiAnswers::Error(Translator::tr("No sound change at '%1' for bunny '%2'", account).arg(hRequest.GetArg("time"), QString(bunny->GetID())));
 }
 
 PLUGIN_BUNNY_API_CALL(PluginVolume::Api_GetChanges)
 {
 	Q_UNUSED(account);
 	Q_UNUSED(hRequest);
-	return new ApiManager::ApiMappedList(bunny->GetPluginSetting(GetName(), "SoundChange", QMap<QString, QVariant>()).toMap());
+	return new ApiAnswers::MappedList(bunny->GetPluginSetting(GetName(), "SoundChange", QMap<QString, QVariant>()).toMap());
 }
 */

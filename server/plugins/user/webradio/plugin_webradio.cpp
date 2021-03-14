@@ -240,23 +240,23 @@ void PluginWebradio::InitApiCalls()
 PLUGIN_BUNNY_API_CALL(PluginWebradio::Api_RFID)
 {
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
 
 	QString action = hRequest.GetArg("action");
 
 	if(action == "list")
 	{
-		return new ApiManager::ApiMappedList(bunny->GetPluginSetting(GetName(), "RFID", QMap<QString, QVariant>()).toMap());
+		return new ApiAnswers::MappedList(bunny->GetPluginSetting(GetName(), "RFID", QMap<QString, QVariant>()).toMap());
 	}
 	else if(action == "add")
 	{
 		if(!hRequest.HasArg("tag"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("tag", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("tag", GetName()));
 
 		QString tag = hRequest.GetArg("tag");
 
 		if(!hRequest.HasArg("preset"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("preset", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("preset", GetName()));
 
 		QString preset = hRequest.GetArg("preset");
 
@@ -267,14 +267,14 @@ PLUGIN_BUNNY_API_CALL(PluginWebradio::Api_RFID)
 			bunny->SetPluginSetting(GetName(), "RFID", list);
 			Ztamp * z = ZtampManager::GetZtamp(tag.toLatin1());
 			z->Associate(bunny, this);
-			return new ApiManager::ApiOk(Translator::tr("Add RFID '%1' for bunny '%2'").arg(tag, QString(bunny->GetID())));
+			return new ApiAnswers::Ok(Translator::tr("Add RFID '%1' for bunny '%2'").arg(tag, QString(bunny->GetID())));
 		}
-		return new ApiManager::ApiError(Translator::tr("RFID '%1' already assigned to bunny '%2'", account).arg(tag, QString(bunny->GetID())));
+		return new ApiAnswers::Error(Translator::tr("RFID '%1' already assigned to bunny '%2'", account).arg(tag, QString(bunny->GetID())));
 	}
 	else if(action == "del")
 	{
 		if(!hRequest.HasArg("tag"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("tag", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("tag", GetName()));
 
 		QString tag = hRequest.GetArg("tag");
 
@@ -286,31 +286,31 @@ PLUGIN_BUNNY_API_CALL(PluginWebradio::Api_RFID)
 			Ztamp * z = ZtampManager::GetZtamp(tag.toLatin1());
 			z->Dissociate(bunny);
 
-			return new ApiManager::ApiOk(Translator::tr("RFID '%1' removed for bunny '%2'", account).arg(tag, QString(bunny->GetID())));
+			return new ApiAnswers::Ok(Translator::tr("RFID '%1' removed for bunny '%2'", account).arg(tag, QString(bunny->GetID())));
 		}
-		return new ApiManager::ApiError(Translator::tr("RFID '%1' is not assign to bunny '%2'", account).arg(tag, QString(bunny->GetID())));
+		return new ApiAnswers::Error(Translator::tr("RFID '%1' is not assign to bunny '%2'", account).arg(tag, QString(bunny->GetID())));
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }
 
 PLUGIN_BUNNY_API_CALL(PluginWebradio::Api_Schedule)
 {
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
 
 	QString action = hRequest.GetArg("action");
 
 	if(action == "list")
 	{
-		return new ApiManager::ApiMappedList(bunny->GetPluginSetting(GetName(), "Schedules", QMap<QString, QVariant>()).toMap());
+		return new ApiAnswers::MappedList(bunny->GetPluginSetting(GetName(), "Schedules", QMap<QString, QVariant>()).toMap());
 	}
 	else if(action == "add")
 	{
 		if(!hRequest.HasArg("time"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("time", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("time", GetName()));
 
 		QString time = hRequest.GetArg("time");
 
@@ -319,7 +319,7 @@ PLUGIN_BUNNY_API_CALL(PluginWebradio::Api_Schedule)
 			day = hRequest.GetArg("day").toInt();
 
 		if(!hRequest.HasArg("name"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("name", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("name", GetName()));
 
 		QString name = hRequest.GetArg("name");
 
@@ -337,16 +337,16 @@ PLUGIN_BUNNY_API_CALL(PluginWebradio::Api_Schedule)
 
 			list.insert(QString::number(day) + "|" + time, name);
 			bunny->SetPluginSetting(GetName(), "Schedules", list);
-			return new ApiManager::ApiOk(Translator::tr("Add schedule at '%1' to bunny '%2'", account).arg(time, QString(bunny->GetID())));
+			return new ApiAnswers::Ok(Translator::tr("Add schedule at '%1' to bunny '%2'", account).arg(time, QString(bunny->GetID())));
 		}
 		if(day == 0)
-			return new ApiManager::ApiError(Translator::tr("Schedule at '%1' already exists for bunny '%2'", account).arg(time, QString(bunny->GetID())));
-		return new ApiManager::ApiError(Translator::tr("Schedule on '%1', at '%2' already exists for bunny '%3'", account).arg(QString::number(day), time, QString(bunny->GetID())));
+			return new ApiAnswers::Error(Translator::tr("Schedule at '%1' already exists for bunny '%2'", account).arg(time, QString(bunny->GetID())));
+		return new ApiAnswers::Error(Translator::tr("Schedule on '%1', at '%2' already exists for bunny '%3'", account).arg(QString::number(day), time, QString(bunny->GetID())));
 	}
 	else if(action == "del")
 	{
 		if(!hRequest.HasArg("time"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("time", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("time", GetName()));
 
 		QString time = hRequest.GetArg("time");
 
@@ -365,20 +365,20 @@ PLUGIN_BUNNY_API_CALL(PluginWebradio::Api_Schedule)
         		OnBunnyDisconnect(bunny);
         		OnBunnyConnect(bunny);
 
-			return new ApiManager::ApiOk(Translator::tr("Schedule at '%1' removed for bunny '%2'", account).arg(time, QString(bunny->GetID())));
+			return new ApiAnswers::Ok(Translator::tr("Schedule at '%1' removed for bunny '%2'", account).arg(time, QString(bunny->GetID())));
 		}
-		return new ApiManager::ApiError(Translator::tr("No schedule at '%1' for bunny '%2'", account).arg(time, QString(bunny->GetID())));
+		return new ApiAnswers::Error(Translator::tr("No schedule at '%1' for bunny '%2'", account).arg(time, QString(bunny->GetID())));
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }
 
 PLUGIN_BUNNY_API_CALL(PluginWebradio::Api_Preset)
 {
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
 
 	QString action = hRequest.GetArg("action");
 
@@ -389,7 +389,7 @@ PLUGIN_BUNNY_API_CALL(PluginWebradio::Api_Preset)
 		for (i = presets.begin(); i != presets.end(); ++i)
 			list.insert("OJN_" + i.key(), i.value());
 
-		return new ApiManager::ApiMappedList(list);
+		return new ApiAnswers::MappedList(list);
 	}
 	else if(action == "add")
 	{
@@ -397,7 +397,7 @@ PLUGIN_BUNNY_API_CALL(PluginWebradio::Api_Preset)
 		list.insert(hRequest.GetArg("name"), hRequest.GetArg("url"));
 		bunny->SetPluginSetting(GetName(), "Presets", list);
 
-		return new ApiManager::ApiOk(Translator::tr("Add preset '%1' for radio '%2', bunny '%3'", account).arg(hRequest.GetArg("name"), hRequest.GetArg("url"), QString(bunny->GetID())));
+		return new ApiAnswers::Ok(Translator::tr("Add preset '%1' for radio '%2', bunny '%3'", account).arg(hRequest.GetArg("name"), hRequest.GetArg("url"), QString(bunny->GetID())));
 	}
 	else if(action == "del")
 	{
@@ -405,10 +405,10 @@ PLUGIN_BUNNY_API_CALL(PluginWebradio::Api_Preset)
 		if(list.contains(hRequest.GetArg("name")))
 			list.remove(hRequest.GetArg("name"));
 		else
-			return new ApiManager::ApiError(Translator::tr("Cannot remove this default preset", account));
+			return new ApiAnswers::Error(Translator::tr("Cannot remove this default preset", account));
 		bunny->SetPluginSetting(GetName(), "Presets", list);
 
-		return new ApiManager::ApiOk(Translator::tr("Remove preset '%1' for bunny '%2'", account).arg(hRequest.GetArg("name"), QString(bunny->GetID())));
+		return new ApiAnswers::Ok(Translator::tr("Remove preset '%1' for bunny '%2'", account).arg(hRequest.GetArg("name"), QString(bunny->GetID())));
 	}
 	else if(action == "getdefault")
 	{
@@ -421,7 +421,7 @@ PLUGIN_BUNNY_API_CALL(PluginWebradio::Api_Preset)
 			name = bunny->GetPluginSetting(GetName(), "OtherWebradio", QString()).toString();
 		if(type == "both")
 			name += "|" + bunny->GetPluginSetting(GetName(), "OtherWebradio", QString()).toString();
-		return new ApiManager::ApiString(name);
+		return new ApiAnswers::String(name);
 	}
 	else if(action == "setdefault")
 	{
@@ -433,58 +433,58 @@ PLUGIN_BUNNY_API_CALL(PluginWebradio::Api_Preset)
 			bunny->SetPluginSetting(GetName(), "OtherWebradio", hRequest.GetArg("name"));
 		else
 			bunny->SetPluginSetting(GetName(), "DefaultWebradio", hRequest.GetArg("name"));
-		return new ApiManager::ApiOk(Translator::tr("Define '%1' preset webradio as default for bunny '%2'", account).arg(hRequest.GetArg("name"), QString(bunny->GetID())));
+		return new ApiAnswers::Ok(Translator::tr("Define '%1' preset webradio as default for bunny '%2'", account).arg(hRequest.GetArg("name"), QString(bunny->GetID())));
 	}
 	else if(action == "play")
 	{
 		if(!bunny->IsConnected())
-			return new ApiManager::ApiError(Translator::tr("Bunny '%1' is not connected", account).arg(hRequest.GetArg("to")));
+			return new ApiAnswers::Error(Translator::tr("Bunny '%1' is not connected", account).arg(hRequest.GetArg("to")));
 
 		if(streamPresetWebradio(bunny, hRequest.GetArg("name")))
-			return new ApiManager::ApiOk(Translator::tr("Now streaming '%1' on bunny '%2'", account).arg(hRequest.GetArg("name"), QString(bunny->GetID())));
-		return new ApiManager::ApiError(Translator::tr("Can't stream '%1' on bunny '%2'", account).arg(hRequest.GetArg("name"), QString(bunny->GetID())));
+			return new ApiAnswers::Ok(Translator::tr("Now streaming '%1' on bunny '%2'", account).arg(hRequest.GetArg("name"), QString(bunny->GetID())));
+		return new ApiAnswers::Error(Translator::tr("Can't stream '%1' on bunny '%2'", account).arg(hRequest.GetArg("name"), QString(bunny->GetID())));
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }
 
 PLUGIN_BUNNY_API_CALL(PluginWebradio::Api_Url)
 {
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
 
 	QString action = hRequest.GetArg("action");
 
 	if(action == "play")
 	{
 		if(!bunny->IsConnected())
-			return new ApiManager::ApiError(Translator::tr("Bunny '%1' is not connected", account).arg(QString(bunny->GetID())));
+			return new ApiAnswers::Error(Translator::tr("Bunny '%1' is not connected", account).arg(QString(bunny->GetID())));
 
 		if(!hRequest.HasArg("url"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("url", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("url", GetName()));
 
 		QString url = hRequest.GetArg("url");
 
 		if(streamWebradio(bunny, url))
-			return new ApiManager::ApiOk(Translator::tr("Now streaming '%1' on bunny '%2'", account).arg(url, QString(bunny->GetID())));
+			return new ApiAnswers::Ok(Translator::tr("Now streaming '%1' on bunny '%2'", account).arg(url, QString(bunny->GetID())));
 
-		return new ApiManager::ApiError(Translator::tr("Can't stream '%1' on bunny '%2'", account).arg(url, QString(bunny->GetID())));
+		return new ApiAnswers::Error(Translator::tr("Can't stream '%1' on bunny '%2'", account).arg(url, QString(bunny->GetID())));
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }
 
 PLUGIN_API_CALL(PluginWebradio::Api_PluginPreset)
 {
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
 
 	QString action = hRequest.GetArg("action");
 
@@ -496,7 +496,7 @@ PLUGIN_API_CALL(PluginWebradio::Api_PluginPreset)
 		for (i = pluginPresets.begin(); i != pluginPresets.end(); ++i)
 			list.insert("OJN_" + i.key(), i.value());
 
-		return new ApiManager::ApiMappedList(list);
+		return new ApiAnswers::MappedList(list);
 	}
 	else if(action == "add")
 	{
@@ -505,7 +505,7 @@ PLUGIN_API_CALL(PluginWebradio::Api_PluginPreset)
 		SetSettings("Presets", list);
 		Init();
 
-		return new ApiManager::ApiOk(Translator::tr("Add preset '%1' for radio '%2'", account).arg(hRequest.GetArg("name"), hRequest.GetArg("url")));
+		return new ApiAnswers::Ok(Translator::tr("Add preset '%1' for radio '%2'", account).arg(hRequest.GetArg("name"), hRequest.GetArg("url")));
 	}
 	else if(action == "del")
 	{
@@ -514,16 +514,16 @@ PLUGIN_API_CALL(PluginWebradio::Api_PluginPreset)
 		if(list.contains(hRequest.GetArg("name")))
 			list.remove(hRequest.GetArg("name"));
 		else
-			return new ApiManager::ApiError(Translator::tr("Cannot remove this default preset", account));
+			return new ApiAnswers::Error(Translator::tr("Cannot remove this default preset", account));
 
 		SetSettings("Presets", list);
 		Init();
 
-		return new ApiManager::ApiOk(Translator::tr("Remove preset '%1'", account).arg(hRequest.GetArg("name")));
+		return new ApiAnswers::Ok(Translator::tr("Remove preset '%1'", account).arg(hRequest.GetArg("name")));
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }
 /*
@@ -533,7 +533,7 @@ PLUGIN_BUNNY_API_CALL(PluginWebradio::Api_AddRFID)
 
 	bunny->SetPluginSetting(GetName(), QString("RFIDPlay/%1").arg(hRequest.GetArg("tag")), hRequest.GetArg("name"));
 
-	return new ApiManager::ApiOk(Translator::tr("Add '%1' for RFID '%2', bunny '%3'", account).arg(hRequest.GetArg("name"), hRequest.GetArg("tag"), QString(bunny->GetID())));
+	return new ApiAnswers::Ok(Translator::tr("Add '%1' for RFID '%2', bunny '%3'", account).arg(hRequest.GetArg("name"), hRequest.GetArg("tag"), QString(bunny->GetID())));
 }
 
 PLUGIN_BUNNY_API_CALL(PluginWebradio::Api_RemoveRFID)
@@ -542,7 +542,7 @@ PLUGIN_BUNNY_API_CALL(PluginWebradio::Api_RemoveRFID)
 
 	bunny->RemovePluginSetting(GetName(), QString("RFIDPlay/%1").arg(hRequest.GetArg("tag")));
 
-	return new ApiManager::ApiOk(Translator::tr("Remove RFID '%2' for bunny '%3'", account).arg(hRequest.GetArg("tag"), QString(bunny->GetID())));
+	return new ApiAnswers::Ok(Translator::tr("Remove RFID '%2' for bunny '%3'", account).arg(hRequest.GetArg("tag"), QString(bunny->GetID())));
 }
 
 PLUGIN_BUNNY_API_CALL(PluginWebradio::Api_AddPreset)
@@ -553,7 +553,7 @@ PLUGIN_BUNNY_API_CALL(PluginWebradio::Api_AddPreset)
 	list.insert(hRequest.GetArg("name"), hRequest.GetArg("url"));
 	bunny->SetPluginSetting(GetName(), "Presets", list);
 
-	return new ApiManager::ApiOk(Translator::tr("Add preset '%1' for radio '%2', bunny '%3'", account).arg(hRequest.GetArg("name"), hRequest.GetArg("url"), QString(bunny->GetID())));
+	return new ApiAnswers::Ok(Translator::tr("Add preset '%1' for radio '%2', bunny '%3'", account).arg(hRequest.GetArg("name"), hRequest.GetArg("url"), QString(bunny->GetID())));
 }
 
 PLUGIN_BUNNY_API_CALL(PluginWebradio::Api_RemovePreset)
@@ -564,10 +564,10 @@ PLUGIN_BUNNY_API_CALL(PluginWebradio::Api_RemovePreset)
 	if(list.contains(hRequest.GetArg("name")))
 		list.remove(hRequest.GetArg("name"));
 	else
-		return new ApiManager::ApiError(Translator::tr("Cannot remove this default preset", account));
+		return new ApiAnswers::Error(Translator::tr("Cannot remove this default preset", account));
 	bunny->SetPluginSetting(GetName(), "Presets", list);
 
-	return new ApiManager::ApiOk(Translator::tr("Remove preset '%1' for bunny '%2'", account).arg(hRequest.GetArg("name"), QString(bunny->GetID())));
+	return new ApiAnswers::Ok(Translator::tr("Remove preset '%1' for bunny '%2'", account).arg(hRequest.GetArg("name"), QString(bunny->GetID())));
 }
 
 PLUGIN_BUNNY_API_CALL(PluginWebradio::Api_GetDefault)
@@ -583,7 +583,7 @@ PLUGIN_BUNNY_API_CALL(PluginWebradio::Api_GetDefault)
 		name = bunny->GetPluginSetting(GetName(), "OtherWebradio", QString()).toString();
 	if(type == "both")
 		name += "|" + bunny->GetPluginSetting(GetName(), "OtherWebradio", QString()).toString();
-	return new ApiManager::ApiString(name);
+	return new ApiAnswers::String(name);
 }
 
 PLUGIN_BUNNY_API_CALL(PluginWebradio::Api_SetDefault)
@@ -598,7 +598,7 @@ PLUGIN_BUNNY_API_CALL(PluginWebradio::Api_SetDefault)
 		bunny->SetPluginSetting(GetName(), "OtherWebradio", hRequest.GetArg("name"));
 	else
 		bunny->SetPluginSetting(GetName(), "DefaultWebradio", hRequest.GetArg("name"));
-	return new ApiManager::ApiOk(Translator::tr("Define '%1' preset webradio as default for bunny '%2'", account).arg(hRequest.GetArg("name"), QString(bunny->GetID())));
+	return new ApiAnswers::Ok(Translator::tr("Define '%1' preset webradio as default for bunny '%2'", account).arg(hRequest.GetArg("name"), QString(bunny->GetID())));
 }
 
 PLUGIN_BUNNY_API_CALL(PluginWebradio::Api_Play)
@@ -606,11 +606,11 @@ PLUGIN_BUNNY_API_CALL(PluginWebradio::Api_Play)
 	Q_UNUSED(account);
 
 	if(!bunny->IsConnected())
-		return new ApiManager::ApiError(Translator::tr("Bunny '%1' is not connected", account).arg(hRequest.GetArg("to")));
+		return new ApiAnswers::Error(Translator::tr("Bunny '%1' is not connected", account).arg(hRequest.GetArg("to")));
 
     	if(streamPresetWebradio(bunny, hRequest.GetArg("name")))
-    		return new ApiManager::ApiOk(Translator::tr("Now streaming '%1' on bunny '%2'", account).arg(hRequest.GetArg("name"), QString(bunny->GetID())));
-	return new ApiManager::ApiError(Translator::tr("Can't stream '%1' on bunny '%2'", account).arg(hRequest.GetArg("name"), QString(bunny->GetID())));
+    		return new ApiAnswers::Ok(Translator::tr("Now streaming '%1' on bunny '%2'", account).arg(hRequest.GetArg("name"), QString(bunny->GetID())));
+	return new ApiAnswers::Error(Translator::tr("Can't stream '%1' on bunny '%2'", account).arg(hRequest.GetArg("name"), QString(bunny->GetID())));
 }
 
 PLUGIN_BUNNY_API_CALL(PluginWebradio::Api_PlayUrl)
@@ -618,11 +618,11 @@ PLUGIN_BUNNY_API_CALL(PluginWebradio::Api_PlayUrl)
 	Q_UNUSED(account);
 
 	if(!bunny->IsConnected())
-		return new ApiManager::ApiError(Translator::tr("Bunny '%1' is not connected", account).arg(hRequest.GetArg("to")));
+		return new ApiAnswers::Error(Translator::tr("Bunny '%1' is not connected", account).arg(hRequest.GetArg("to")));
 
 	if(streamWebradio(bunny, hRequest.GetArg("url")))
-		return new ApiManager::ApiOk(Translator::tr("Now streaming '%1' on bunny '%2'", account).arg(hRequest.GetArg("url"), QString(bunny->GetID())));
-	return new ApiManager::ApiError(Translator::tr("Can't stream '%1' on bunny '%2'", account).arg(hRequest.GetArg("url"), QString(bunny->GetID())));
+		return new ApiAnswers::Ok(Translator::tr("Now streaming '%1' on bunny '%2'", account).arg(hRequest.GetArg("url"), QString(bunny->GetID())));
+	return new ApiAnswers::Error(Translator::tr("Can't stream '%1' on bunny '%2'", account).arg(hRequest.GetArg("url"), QString(bunny->GetID())));
 }
 
 PLUGIN_BUNNY_API_CALL(PluginWebradio::Api_AddWebcast)
@@ -636,9 +636,9 @@ PLUGIN_BUNNY_API_CALL(PluginWebradio::Api_AddWebcast)
 		QMap<QString, QVariant> list = bunny->GetPluginSetting(GetName(), "Schedules", QMap<QString, QVariant>()).toMap();
 		list.insert(hTime, hRequest.GetArg("name"));
 		bunny->SetPluginSetting(GetName(), "Schedules", list);
-		return new ApiManager::ApiOk(Translator::tr("Add schedule at '%1' to bunny '%2'", account).arg(hRequest.GetArg("time"), QString(bunny->GetID())));
+		return new ApiAnswers::Ok(Translator::tr("Add schedule at '%1' to bunny '%2'", account).arg(hRequest.GetArg("time"), QString(bunny->GetID())));
 	}
-	return new ApiManager::ApiError(Translator::tr("Schedule at '%1' already exists for bunny '%2'", account).arg(hRequest.GetArg("time"), QString(bunny->GetID())));
+	return new ApiAnswers::Error(Translator::tr("Schedule at '%1' already exists for bunny '%2'", account).arg(hRequest.GetArg("time"), QString(bunny->GetID())));
 }
 
 PLUGIN_BUNNY_API_CALL(PluginWebradio::Api_RemoveWebcast)
@@ -656,9 +656,9 @@ PLUGIN_BUNNY_API_CALL(PluginWebradio::Api_RemoveWebcast)
 		OnBunnyDisconnect(bunny);
 		OnBunnyConnect(bunny);
 
-		return new ApiManager::ApiOk(Translator::tr("Remove schedule at '%1' for bunny '%2'", account).arg(hRequest.GetArg("time"), QString(bunny->GetID())));
+		return new ApiAnswers::Ok(Translator::tr("Remove schedule at '%1' for bunny '%2'", account).arg(hRequest.GetArg("time"), QString(bunny->GetID())));
 	}
-	return new ApiManager::ApiError(Translator::tr("No schedule at '%1' for bunny '%2'", account).arg(hRequest.GetArg("time"), QString(bunny->GetID())));
+	return new ApiAnswers::Error(Translator::tr("No schedule at '%1' for bunny '%2'", account).arg(hRequest.GetArg("time"), QString(bunny->GetID())));
 }
 
 PLUGIN_BUNNY_API_CALL(PluginWebradio::Api_ListWebcast)
@@ -669,7 +669,7 @@ PLUGIN_BUNNY_API_CALL(PluginWebradio::Api_ListWebcast)
 
 	QMap<QString, QVariant> list = bunny->GetPluginSetting(GetName(), "Schedules", QMap<QString, QVariant>()).toMap();
 
-	return new ApiManager::ApiMappedList(list);
+	return new ApiAnswers::MappedList(list);
 }
 
 PLUGIN_BUNNY_API_CALL(PluginWebradio::Api_ListPreset)
@@ -683,14 +683,14 @@ PLUGIN_BUNNY_API_CALL(PluginWebradio::Api_ListPreset)
 	for (i = presets.begin(); i != presets.end(); ++i)
 		list.insert("OJN_" + i.key(), i.value());
 
-	return new ApiManager::ApiMappedList(list);
+	return new ApiAnswers::MappedList(list);
 }
 
 PLUGIN_API_CALL(PluginWebradio::Api_ListPluginPreset)
 {
 	Q_UNUSED(hRequest);
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	QMap<QString, QVariant> pluginPresets = GetSettings("Presets", QMap<QString, QVariant>()).toMap();
 	QMap<QString, QVariant> list;
@@ -698,36 +698,36 @@ PLUGIN_API_CALL(PluginWebradio::Api_ListPluginPreset)
 	for (i = pluginPresets.begin(); i != pluginPresets.end(); ++i)
 		list.insert("OJN_" + i.key(), i.value());
 
-	return new ApiManager::ApiMappedList(list);
+	return new ApiAnswers::MappedList(list);
 }
 
 PLUGIN_API_CALL(PluginWebradio::Api_AddPluginPreset)
 {
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	QMap<QString, QVariant> list = GetSettings("Presets", QMap<QString, QVariant>()).toMap();
 	list.insert(hRequest.GetArg("name"), hRequest.GetArg("url"));
 	SetSettings("Presets", list);
 	Init();
 
-	return new ApiManager::ApiOk(Translator::tr("Add preset '%1' for radio '%2'", account).arg(hRequest.GetArg("name"), hRequest.GetArg("url")));
+	return new ApiAnswers::Ok(Translator::tr("Add preset '%1' for radio '%2'", account).arg(hRequest.GetArg("name"), hRequest.GetArg("url")));
 }
 
 PLUGIN_API_CALL(PluginWebradio::Api_RemovePluginPreset)
 {
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	QMap<QString, QVariant> list = GetSettings("Presets", QMap<QString, QVariant>()).toMap();
 	if(list.contains(hRequest.GetArg("name")))
 		list.remove(hRequest.GetArg("name"));
 	else
-		return new ApiManager::ApiError(Translator::tr("Cannot remove this default preset", account));
+		return new ApiAnswers::Error(Translator::tr("Cannot remove this default preset", account));
 	SetSettings("Presets", list);
 	Init();
 
-	return new ApiManager::ApiOk(Translator::tr("Remove preset '%1'", account).arg(hRequest.GetArg("name")));
+	return new ApiAnswers::Ok(Translator::tr("Remove preset '%1'", account).arg(hRequest.GetArg("name")));
 }
 */
 

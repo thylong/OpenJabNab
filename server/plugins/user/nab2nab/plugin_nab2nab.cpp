@@ -155,7 +155,7 @@ void PluginNab2nab::InitApiCalls()
 PLUGIN_BUNNY_API_CALL(PluginNab2nab::Api_Config)
 {
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
 
 	QString action = hRequest.GetArg("action");
 
@@ -165,38 +165,38 @@ PLUGIN_BUNNY_API_CALL(PluginNab2nab::Api_Config)
 		{
 			int set = hRequest.GetArg("set").toInt();
 			if(set != None && set != Repeat && set != Always)
-				return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("set", GetName()));
+				return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("set", GetName()));
 
 			bunny->SetPluginSetting(GetName(), "Config/Announce", set);
 
-			return new ApiManager::ApiOk(Translator::tr("Bunny '%1' will announce message : %2", account).arg(QString(bunny->GetID()), announceText.at(set)));
+			return new ApiAnswers::Ok(Translator::tr("Bunny '%1' will announce message : %2", account).arg(QString(bunny->GetID()), announceText.at(set)));
 		}
 		else
 		{
-			return new ApiManager::ApiString(bunny->GetPluginSetting(GetName(), "Config/Announce", QString()).toString());
+			return new ApiAnswers::String(bunny->GetPluginSetting(GetName(), "Config/Announce", QString()).toString());
 		}
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }
 
 PLUGIN_BUNNY_API_CALL(PluginNab2nab::Api_Friend)
 {
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
 
 	QString action = hRequest.GetArg("action");
 
 	if(action == "list")
 	{
-		return new ApiManager::ApiMappedList(bunny->GetPluginSetting(GetName(), "Friends", QMap<QString, QVariant>()).toMap());
+		return new ApiAnswers::MappedList(bunny->GetPluginSetting(GetName(), "Friends", QMap<QString, QVariant>()).toMap());
 	}
 	else if(action == "add")
 	{
 		if(!hRequest.HasArg("sn"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("sn", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("sn", GetName()));
 
 		QString sn = hRequest.GetArg("sn");
 
@@ -209,14 +209,14 @@ PLUGIN_BUNNY_API_CALL(PluginNab2nab::Api_Friend)
 		{
 			list.insert(sn, name);
 			bunny->SetPluginSetting(GetName(), "Friends", list);
-			return new ApiManager::ApiOk(Translator::tr("Add bunny '%1' as friend named '%2'", account).arg(sn, name));
+			return new ApiAnswers::Ok(Translator::tr("Add bunny '%1' as friend named '%2'", account).arg(sn, name));
 		}
-		return new ApiManager::ApiError(Translator::tr("Bunny '%1' is already a friend", account).arg(sn));
+		return new ApiAnswers::Error(Translator::tr("Bunny '%1' is already a friend", account).arg(sn));
 	}
 	else if(action == "del")
 	{
 		if(!hRequest.HasArg("sn"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("sn", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("sn", GetName()));
 
 		QString sn = hRequest.GetArg("sn");
 		QMap<QString, QVariant> list = bunny->GetPluginSetting(GetName(), "Friends", QMap<QString, QVariant>()).toMap();
@@ -224,13 +224,13 @@ PLUGIN_BUNNY_API_CALL(PluginNab2nab::Api_Friend)
 		{
 			list.remove(sn);
 			bunny->SetPluginSetting(GetName(), "Friends", list);
-			return new ApiManager::ApiOk(Translator::tr("Remove bunny '%1' from friends", account).arg(sn));
+			return new ApiAnswers::Ok(Translator::tr("Remove bunny '%1' from friends", account).arg(sn));
 		}
-		return new ApiManager::ApiError(Translator::tr("Bunny '%1' is not a friend", account).arg(sn));
+		return new ApiAnswers::Error(Translator::tr("Bunny '%1' is not a friend", account).arg(sn));
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 	Q_UNUSED(account);
 }
@@ -246,9 +246,9 @@ PLUGIN_BUNNY_API_CALL(PluginNab2nab::Api_AddFavorite)
 		QMap<QString, QVariant> list = bunny->GetPluginSetting(GetName(), "Friends", QMap<QString, QVariant>()).toMap();
 		list.insert(b, name);
 		bunny->SetPluginSetting(GetName(), "Friends", list);
-		return new ApiManager::ApiOk(Translator::tr("Add bunny '%1' as friend named '%2'", account).arg(b, name));
+		return new ApiAnswers::Ok(Translator::tr("Add bunny '%1' as friend named '%2'", account).arg(b, name));
 	}
-	return new ApiManager::ApiError(QString("Bunny '%1' is already a friend").arg(b));
+	return new ApiAnswers::Error(QString("Bunny '%1' is already a friend").arg(b));
 }
 
 PLUGIN_BUNNY_API_CALL(PluginNab2nab::Api_RemoveFavorite)
@@ -261,9 +261,9 @@ PLUGIN_BUNNY_API_CALL(PluginNab2nab::Api_RemoveFavorite)
 		QMap<QString, QVariant> list = bunny->GetPluginSetting(GetName(), "Friends", QMap<QString, QVariant>()).toMap();
 		list.remove(b);
 		bunny->SetPluginSetting(GetName(), "Friends", list);
-		return new ApiManager::ApiOk(QString("Remove bunny '%1' from friends").arg(b));
+		return new ApiAnswers::Ok(QString("Remove bunny '%1' from friends").arg(b));
 	}
-	return new ApiManager::ApiError(QString("Bunny '%1' is not a friend").arg(b));
+	return new ApiAnswers::Error(QString("Bunny '%1' is not a friend").arg(b));
 }
 
 PLUGIN_BUNNY_API_CALL(PluginNab2nab::Api_SetPreference)
@@ -271,13 +271,13 @@ PLUGIN_BUNNY_API_CALL(PluginNab2nab::Api_SetPreference)
 	Q_UNUSED(account);
 
 	bunny->SetPluginSetting(GetName(), hRequest.GetArg("key"), hRequest.GetArg("value"));
-	return new ApiManager::ApiOk(QString("Preference updated"));
+	return new ApiAnswers::Ok(QString("Preference updated"));
 }
 
 PLUGIN_BUNNY_API_CALL(PluginNab2nab::Api_GetPreference)
 {
 	Q_UNUSED(account);
-	return new ApiManager::ApiString(bunny->GetPluginSetting(GetName(), hRequest.GetArg("key"), QString()).toString());
+	return new ApiAnswers::String(bunny->GetPluginSetting(GetName(), hRequest.GetArg("key"), QString()).toString());
 }
 
 PLUGIN_BUNNY_API_CALL(PluginNab2nab::Api_GetFavorites)
@@ -285,23 +285,23 @@ PLUGIN_BUNNY_API_CALL(PluginNab2nab::Api_GetFavorites)
 	Q_UNUSED(account);
 	Q_UNUSED(hRequest);
 
-	return new ApiManager::ApiMappedList(bunny->GetPluginSetting(GetName(), "Friends", QMap<QString, QVariant>()).toMap());
+	return new ApiAnswers::MappedList(bunny->GetPluginSetting(GetName(), "Friends", QMap<QString, QVariant>()).toMap());
 }
 
 PLUGIN_BUNNY_API_CALL(PluginNab2nab::Api_SetReceiver)
 {
 	if(!hRequest.HasArg("sn"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("sn", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("sn", GetName()));
 	QString sn = hRequest.GetArg("sn");
 
 	if(!hRequest.HasArg("tag"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("tag", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("tag", GetName()));
 	QString tag = hRequest.GetArg("tag");
 
 	QMap<QString, QVariant> receivers = bunny->GetPluginSetting(GetName(), "RFID", QMap<QString, QVariant>()).toMap();
 	if(receivers.contains(tag))
 	{
-		return new ApiManager::ApiError(Translator::tr("Receiver is already defined for Ztamp '%1'", account).arg(tag));
+		return new ApiAnswers::Error(Translator::tr("Receiver is already defined for Ztamp '%1'", account).arg(tag));
 	}
 	else
 	{
@@ -309,10 +309,10 @@ PLUGIN_BUNNY_API_CALL(PluginNab2nab::Api_SetReceiver)
 		{
 			receivers.insert(tag, sn);
 			bunny->SetPluginSetting(GetName(), "RFID", receivers);
-			return new ApiManager::ApiOk(Translator::tr("Add bunny '%1' as friend for RFID '%2'", account).arg(sn, tag));
+			return new ApiAnswers::Ok(Translator::tr("Add bunny '%1' as friend for RFID '%2'", account).arg(sn, tag));
 		}
 		else
-			return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("sn", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("sn", GetName()));
 	}
 }
 
@@ -323,13 +323,13 @@ PLUGIN_BUNNY_API_CALL(PluginNab2nab::Api_RemoveReceiver)
 	QMap<QString, QVariant> receivers = bunny->GetPluginSetting(GetName(), "RFID", QMap<QString, QVariant>()).toMap();
 	if(!receivers.contains(tag))
 	{
-		return new ApiManager::ApiError(Translator::tr("No receiver for Ztamp '%1'", account).arg(tag));
+		return new ApiAnswers::Error(Translator::tr("No receiver for Ztamp '%1'", account).arg(tag));
 	}
 	else
 	{
 		receivers.remove(tag);
 		bunny->SetPluginSetting(GetName(), "RFID", receivers);
-		return new ApiManager::ApiOk(Translator::tr("Remove receiver for Ztamp '%1'", account).arg(tag));
+		return new ApiAnswers::Ok(Translator::tr("Remove receiver for Ztamp '%1'", account).arg(tag));
 	}
 }
 
@@ -337,7 +337,7 @@ PLUGIN_BUNNY_API_CALL(PluginNab2nab::Api_GetReceivers)
 {
 	Q_UNUSED(account);
 	Q_UNUSED(hRequest);
-	return new ApiManager::ApiMappedList(bunny->GetPluginSetting(GetName(), "RFID", QMap<QString, QVariant>()).toMap());
+	return new ApiAnswers::MappedList(bunny->GetPluginSetting(GetName(), "RFID", QMap<QString, QVariant>()).toMap());
 }
 
 /*
@@ -345,20 +345,20 @@ PLUGIN_API_CALL(PluginNab2nab::Api_SendMessage)
 {
 	Q_UNUSED(account);
 	Q_UNUSED(hRequest);
-	return new ApiManager::ApiOk("ok");
+	return new ApiAnswers::Ok("ok");
 }
 
 PLUGIN_API_CALL(PluginNab2nab::Api_SendAudio)
 {
 	Q_UNUSED(account);
 	Q_UNUSED(hRequest);
-	return new ApiManager::ApiOk("ok");
+	return new ApiAnswers::Ok("ok");
 }
 
 PLUGIN_API_CALL(PluginNab2nab::Api_ReceiveMessage)
 {
 	Q_UNUSED(account);
 	Q_UNUSED(hRequest);
-	return new ApiManager::ApiOk("ok");
+	return new ApiAnswers::Ok("ok");
 }
 */

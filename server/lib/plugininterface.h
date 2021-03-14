@@ -7,12 +7,12 @@
 #include <QSettings>
 #include <QString>
 #include <QtPlugin>
-#include "apimanager.h"
+
 #include "bunnymanager.h"
 #include "ztampmanager.h"
 //#include "debuglog.h"
 #include "log.h"
-#include "QsLog.h"
+
 #include "pluginapihandler.h"
 #include "settings.h"
 #include "ttsanswer.h"

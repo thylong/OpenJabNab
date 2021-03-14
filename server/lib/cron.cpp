@@ -1,7 +1,7 @@
 #include <QDateTime>
 #include <QTime>
 #include <QTimer>
-#include "QsLog.h"
+
 #include "cron.h"
 #include "plugininterface.h"
 //#include "cronlog.h"
@@ -32,13 +32,13 @@ void Cron::OnTimer()
 		{
 			if(e.bunny != NULL)
 			{
-				QsLogging::Logger::CronLog(e.plugin->GetName() + "::" + e.callback, e.bunny->GetID());
+				LogCron(e.plugin->GetName() + "::" + e.callback, e.bunny->GetID());
 				//CronLog::Log("BC", e.plugin->GetName() + "::" + e.callback);
 				e.bunny->SetGlobalSetting("LastCron", QString("%1 - %2->%3").arg(QDateTime::currentDateTime().toString("dd/MM/yyyy hh:mm:ss"), e.plugin->GetName(), e.callback));
 			}
 			else
 			{
-				QsLogging::Logger::CronLog(e.plugin->GetName() + "::" + e.callback);
+				LogCron(e.plugin->GetName() + "::" + e.callback);
 				//CronLog::Log("-C", e.plugin->GetName() + "::" + e.callback);
 			}
 			QMetaObject::invokeMethod(e.plugin, e.callback, Q_ARG(Bunny*, e.bunny), Q_ARG(QVariant, e.data), Q_ARG(unsigned int, e.type));
@@ -47,13 +47,13 @@ void Cron::OnTimer()
 		{
 			if(e.bunny != NULL)
 			{
-				QsLogging::Logger::CronLog(e.plugin->GetName() + "::OnCron", e.bunny->GetID());
+				LogCron(e.plugin->GetName() + "::OnCron", e.bunny->GetID());
 				//CronLog::Log("B-", e.plugin->GetName());
 				e.bunny->SetGlobalSetting("LastCron", QString("%1 - %2->OnCron").arg(QDateTime::currentDateTime().toString("dd/MM/yyyy hh:mm:ss"), e.plugin->GetName()));
 			}
 			else
 			{
-				QsLogging::Logger::CronLog(e.plugin->GetName() + "::OnCron");
+				LogCron(e.plugin->GetName() + "::OnCron");
 				//CronLog::Log("--", e.plugin->GetName());
 			}
 			e.plugin->OnCron(e.bunny, e.data, e.type);
@@ -169,7 +169,7 @@ void Cron::LogDebugCron(CronElement const& e)
 			time += " (" + QString::number(e.interval) + "s)";
 		}
 
-		QsLogging::Logger::DebugLog(QString("Bunny %1 - Schedule %2 on %3").arg(bunny, caller, time), "Cron");
+		LogCron(QString("Bunny %1 - Schedule %2 on %3").arg(bunny, caller, time));
 	}
 }
 
@@ -451,10 +451,14 @@ void Cron::Unregister(PluginInterface * p, unsigned int id)
 	{
 		if(e->plugin == p && e->id == id)
 		{
-			//LogInfo(QString("Cron Unregister : %1 - next %2").arg(p->GetVisualName(),QDateTime::fromTime_t(e.next_run).toString()));
-			theCron.CronElements.erase(e);
-		}
-		e++;
+			/*LogInfo(QString("Cron Unregister : %1/%2 - next: %3").arg(p->GetName())
+																													.arg(id)
+																													.arg(QDateTime::fromTime_t(e->next_run).toString())
+																												 );
+			*/
+			e = theCron.CronElements.erase(e);
+		} else
+			e++;
 	}
 }
 
@@ -466,10 +470,14 @@ void Cron::UnregisterAllForBunny(PluginInterface * p, Bunny * b)
 	{
 		if(e->plugin == p && e->bunny == b)
 		{
-			//LogInfo(QString("Cron Unregister : %1 - next %2").arg(p->GetVisualName(),QDateTime::fromTime_t(e.next_run).toString()));
-			theCron.CronElements.erase(e);
-		}
-		e++;
+			/*LogInfo(QString("Cron Unregister : %1/%2 - next: %3").arg(p->GetName())
+																											 .arg(b->GetBunnyName())
+																											 .arg(QDateTime::fromTime_t(e->next_run).toString())
+																											);
+			*/
+			e = theCron.CronElements.erase(e);
+		} else
+			e++;
 	}
 }
 
@@ -481,10 +489,13 @@ auto e = theCron.CronElements.begin();
 	{
 		if(e->plugin == p)
 		{
-			//LogInfo(QString("Cron Unregister : %1 - next %2").arg(p->GetVisualName(),QDateTime::fromTime_t(e.next_run).toString()));
-			theCron.CronElements.erase(e);
-		}
-		e++;
+			/*LogInfo(QString("Cron Unregister : %1 - next: %2").arg(p->GetName())
+																											 .arg(QDateTime::fromTime_t(e->next_run).toString())
+																											);
+			*/
+			e = theCron.CronElements.erase(e);
+		} else
+			e++;
 	}
 }
 
@@ -501,10 +512,10 @@ void Cron::InitApiCalls()
 API_CALL(Cron::Api_cron)
 {
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("action"));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("action"));
 
 	QString action = hRequest.GetArg("action");
 
@@ -535,17 +546,17 @@ API_CALL(Cron::Api_cron)
 			}
 		}
 		crons += "</crons>";
-		return new ApiManager::ApiXml(crons);
+		return new ApiAnswers::Xml(crons);
 	}
 	else if(action == "debug")
 	{
 		if(!hRequest.HasArg("subaction"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("subaction"));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("subaction"));
 
 		QString subaction = hRequest.GetArg("subaction");
 
 		if(!hRequest.HasArg("bunny"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("bunny"));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("bunny"));
 
 		QByteArray bunnyID = hRequest.GetArg("bunny").toLatin1();
 		Bunny * b = BunnyManager::GetBunny(bunnyID);
@@ -553,23 +564,23 @@ API_CALL(Cron::Api_cron)
 		if(subaction == "set")
 		{
 			if(!hRequest.HasArg("value"))
-				return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("value"));
+				return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("value"));
 
 			QString value = hRequest.GetArg("value");
 			b->SetGlobalSetting("CronDebug", value == "true" ? true : false);
-        		return new ApiManager::ApiOk(Translator::tr("Value '%1' set to '%2' for bunny %3", account).arg("CronDebug", value == "true" ? "true" : "false", QString(b->GetID())));
+        		return new ApiAnswers::Ok(Translator::tr("Value '%1' set to '%2' for bunny %3", account).arg("CronDebug", value == "true" ? "true" : "false", QString(b->GetID())));
 		}
 		else if(subaction == "get")
 		{
-        		return new ApiManager::ApiOk(b->GetGlobalSetting("CronDebug", false).toBool() ? "true" : "false");
+        		return new ApiAnswers::Ok(b->GetGlobalSetting("CronDebug", false).toBool() ? "true" : "false");
 		}
 		else
 		{
-			return new ApiManager::ApiError(Translator::tr("Bad argument '%1'", account).arg("subaction"));
+			return new ApiAnswers::Error(Translator::tr("Bad argument '%1'", account).arg("subaction"));
 		}
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1'", account).arg("action"));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1'", account).arg("action"));
 	}
 }

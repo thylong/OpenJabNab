@@ -286,7 +286,7 @@ PLUGIN_API_CALL(PluginAuth::Api_SelectAuth)
 	Q_UNUSED(hRequest);
 	Q_UNUSED(account);
 
-	return new ApiManager::ApiError(QString("This API is deprecated"));
+	return new ApiAnswers::Error(QString("This API is deprecated"));
 }
 
 PLUGIN_API_CALL(PluginAuth::Api_GetListOfAuths)
@@ -294,16 +294,16 @@ PLUGIN_API_CALL(PluginAuth::Api_GetListOfAuths)
 	Q_UNUSED(hRequest);
 	Q_UNUSED(account);
 
-	return new ApiManager::ApiError(QString("This API is deprecated"));
+	return new ApiAnswers::Error(QString("This API is deprecated"));
 }
 
 PLUGIN_API_CALL(PluginAuth::Api_Config)
 {
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
 
 	QString action = hRequest.GetArg("action");
 
@@ -313,11 +313,11 @@ PLUGIN_API_CALL(PluginAuth::Api_Config)
 		{
 			minBootcode = hRequest.GetArg("set").toInt();
 			SetSettings("Bootcode", minBootcode);
-			return new ApiManager::ApiOk(Translator::tr("Minimum bootcode set to %1", account).arg(hRequest.GetArg("set")));
+			return new ApiAnswers::Ok(Translator::tr("Minimum bootcode set to %1", account).arg(hRequest.GetArg("set")));
 		}
 		else
 		{
-			return new ApiManager::ApiString(QString::number(GetSettings("Bootcode", 0).toInt()));
+			return new ApiAnswers::String(QString::number(GetSettings("Bootcode", 0).toInt()));
 		}
 	}
 	if(action == "buggy")
@@ -329,7 +329,7 @@ PLUGIN_API_CALL(PluginAuth::Api_Config)
 			badBootcodes.append(bootcode);
 			badBootcodes.removeDuplicates();
 			SetSettings("Bad", badBootcodes);
-			return new ApiManager::ApiOk(Translator::tr("Bootcode %1 added to buggy list", account).arg(hRequest.GetArg("add")));
+			return new ApiAnswers::Ok(Translator::tr("Bootcode %1 added to buggy list", account).arg(hRequest.GetArg("add")));
 		}
 		else if(hRequest.HasArg("remove"))
 		{
@@ -338,20 +338,20 @@ PLUGIN_API_CALL(PluginAuth::Api_Config)
 			badBootcodes.removeAll(bootcode);
 			badBootcodes.removeDuplicates();
 			SetSettings("Bad", badBootcodes);
-			return new ApiManager::ApiOk(Translator::tr("Bootcode %1 removed from buggy list", account).arg(hRequest.GetArg("remove")));
+			return new ApiAnswers::Ok(Translator::tr("Bootcode %1 removed from buggy list", account).arg(hRequest.GetArg("remove")));
 		}
 		else if(hRequest.HasArg("list"))
 		{
-			return new ApiManager::ApiList(GetSettings("Bad", QStringList()).toStringList());
+			return new ApiAnswers::List(GetSettings("Bad", QStringList()).toStringList());
 		}
 		else
 		{
-			return new ApiManager::ApiString(QString::number(GetSettings("Bootcode", 0).toInt()));
+			return new ApiAnswers::String(QString::number(GetSettings("Bootcode", 0).toInt()));
 		}
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }
 

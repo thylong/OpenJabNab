@@ -5,7 +5,7 @@
 #include <QVector>
 #include "global.h"
 #include "apihandler.h"
-#include "apimanager.h"
+
 #include "ztamp.h"
 
 class Account;

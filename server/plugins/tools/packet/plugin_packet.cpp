@@ -22,7 +22,7 @@ PLUGIN_BUNNY_API_CALL(PluginPacket::Api_SendAmbient)
 	AmbientPacket p;
 	p.SetServiceValue((AmbientPacket::Services)hRequest.GetArg("service").toInt(), hRequest.GetArg("value").toInt());
 	bunny->SendPacket(p, GetName());
-	return new ApiManager::ApiOk(QString("Service sent to bunny"));
+	return new ApiAnswers::Ok(QString("Service sent to bunny"));
 }
 
 PLUGIN_BUNNY_API_CALL(PluginPacket::Api_SendPacket)
@@ -31,7 +31,7 @@ PLUGIN_BUNNY_API_CALL(PluginPacket::Api_SendPacket)
 
 	QByteArray data = QByteArray::fromHex(hRequest.GetArg("data").toLatin1());
 	bunny->SendData(data);
-	return new ApiManager::ApiOk(QString("'%1' sent to bunny").arg(QString(data.toHex())));
+	return new ApiAnswers::Ok(QString("'%1' sent to bunny").arg(QString(data.toHex())));
 }
 
 PLUGIN_BUNNY_API_CALL(PluginPacket::Api_SendExpert)
@@ -40,7 +40,7 @@ PLUGIN_BUNNY_API_CALL(PluginPacket::Api_SendExpert)
 
 	QByteArray data = hRequest.GetArg("msg").toLatin1();
 	bunny->SendExpertData(data);
-	return new ApiManager::ApiOk(QString("'%1' sent to bunny").arg(QString(data)));
+	return new ApiAnswers::Ok(QString("'%1' sent to bunny").arg(QString(data)));
 }
 
 PLUGIN_BUNNY_API_CALL(PluginPacket::Api_SendMessage)
@@ -49,13 +49,13 @@ PLUGIN_BUNNY_API_CALL(PluginPacket::Api_SendMessage)
 
 	QByteArray msg = hRequest.GetArg("msg").toLatin1();
 	bunny->SendPacket(MessagePacket(msg), GetName());
-	return new ApiManager::ApiOk(QString("'%1' sent to bunny").arg(QString(msg)));
+	return new ApiAnswers::Ok(QString("'%1' sent to bunny").arg(QString(msg)));
 }
 
 PLUGIN_API_CALL(PluginPacket::Api_SendServerMessage)
 {
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError("Access denied.");
+		return new ApiAnswers::Error("Access denied.");
 
 	int limit = 0;
 	if(hRequest.HasArg("limit"))
@@ -87,5 +87,5 @@ PLUGIN_API_CALL(PluginPacket::Api_SendServerMessage)
 		}
 		repeat--;
 	}
-	return new ApiManager::ApiOk(QString("'%1' sent to %2 bunnies").arg(QString(message), QString::number(count)));
+	return new ApiAnswers::Ok(QString("'%1' sent to %2 bunnies").arg(QString(message), QString::number(count)));
 }

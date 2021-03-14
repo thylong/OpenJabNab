@@ -16,8 +16,7 @@
 #include "translator.h"
 #include "ttsmanager.h"
 #include "messagepacket.h"
-//#include "voicelog.h"
-#include "QsLog.h"
+#include "log.h"
 
 PluginVoiceCommand::PluginVoiceCommand()
   : PluginInterface("voicecommand", "Voice recognition", SystemPlugin | SystemAfterPlugin)
@@ -53,7 +52,7 @@ bool PluginVoiceCommand::OnRecord(Bunny * b, QString const& filename)
 				wav = wav.replace("voicecommand", "record") + "/" + filename;
 				arguments << wav << command << "rate" << "16k";
 
-    				QsLogging::Logger::DebugLog(QString("%1 %2").arg(program, arguments.join(" ")), "VoicePlugin");
+				LogDebug(QString("%1 %2").arg(program, arguments.join(" ")));
 
 				char buffer[1024];
 				FILE* fd = popen(QString("%1 %2").arg(program, arguments.join(" ")).toLatin1(), "r");
@@ -116,7 +115,7 @@ bool PluginVoiceCommand::OnRecord(Bunny * b, QString const& filename)
 							}
 
 							QUrl url = "http://www.google.com/speech-api/v2/recognize?lang=" + lng + "&key=" + key + "&output=json";
-							QsLogging::Logger::DebugLog(QString("POST %1").arg(url.toString()), GetName());
+							LogDebug(QString("POST %1").arg(url.toString()));
 
               QNetworkRequest req(url);
 							req.setAttribute(QNetworkRequest::User, b->GetID());
@@ -252,7 +251,7 @@ void PluginVoiceCommand::recognitionFinished(QNetworkReply* rep)
     pos += rx.matchedLength();
     QString command = rx.cap(1).toLower();
     //VoiceLog::Log(QString(b->GetID()) + "/" + b->GetLanguage(), "Found command : " + command);
-    QsLogging::Logger::VoiceLog("Found command : " + command, b->GetID(), b->GetLanguage());
+    LogVoice("Found command : " + command, b->GetID(), b->GetLanguage());
     bool abuse = saveWords(b, command);
 
     QStringList otherCmds;
@@ -268,7 +267,7 @@ void PluginVoiceCommand::recognitionFinished(QNetworkReply* rep)
     foreach(QString cmd, otherCmds)
     {
       //VoiceLog::Log(QString(b->GetID()) + "/" + b->GetLanguage(), "Found other command : " + cmd);
-      QsLogging::Logger::VoiceLog("Found other command : " + cmd, b->GetID(), b->GetLanguage());
+      LogVoice("Found other command : " + cmd, b->GetID(), b->GetLanguage());
       analyzeWords(b, cmd, abuse);
     }
     if ( ! b->OnVoiceCommand(command, otherCmds))
@@ -288,7 +287,7 @@ void PluginVoiceCommand::recognitionFinished(QNetworkReply* rep)
     QByteArray message = "MU " + sound.file.toLatin1() + "\nMW\n";
     TTSLog(b->GetID(), GetName(), sound);
     LogDebug("No command found");
-    QsLogging::Logger::VoiceLog("No command found (" + content + ")", b->GetID(), b->GetLanguage());
+    LogVoice("No command found (" + content + ")", b->GetID(), b->GetLanguage());
     b->SendPacket(MessagePacket(message), GetName());
   }
 }
@@ -346,42 +345,42 @@ void PluginVoiceCommand::InitApiCalls()
 PLUGIN_API_CALL(PluginVoiceCommand::Api_AddAuthorizedBunny)
 {
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	QString hSn = hRequest.GetArg("sn");
 	QStringList bunnies = GetSettings("Bunnies", QStringList()).toStringList();
 	bunnies << hSn;
 	bunnies.removeDuplicates();
 	SetSettings("Bunnies", bunnies);
-	return new ApiManager::ApiOk(Translator::tr("Bunny '%1' added", account).arg(hSn));
+	return new ApiAnswers::Ok(Translator::tr("Bunny '%1' added", account).arg(hSn));
 }
 
 PLUGIN_API_CALL(PluginVoiceCommand::Api_RemoveAuthorizedBunny)
 {
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	QString hSn = hRequest.GetArg("sn");
 	QStringList bunnies = GetSettings("Bunnies", QStringList()).toStringList();
 	bunnies.removeAll(hSn);
 	bunnies.removeDuplicates();
 	SetSettings("Bunnies", bunnies);
-	return new ApiManager::ApiOk(Translator::tr("Bunny '%1' removed", account).arg(hSn));
+	return new ApiAnswers::Ok(Translator::tr("Bunny '%1' removed", account).arg(hSn));
 }
 
 PLUGIN_API_CALL(PluginVoiceCommand::Api_ListAuthorizedBunnies)
 {
 	Q_UNUSED(hRequest);
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
-	return new ApiManager::ApiList(GetSettings("Bunnies", QStringList()).toStringList());
+	return new ApiAnswers::List(GetSettings("Bunnies", QStringList()).toStringList());
 }
 
 PLUGIN_BUNNY_API_CALL(PluginVoiceCommand::Api_BunnyKey)
 {
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
 
 	QString action = hRequest.GetArg("action");
 
@@ -389,7 +388,7 @@ PLUGIN_BUNNY_API_CALL(PluginVoiceCommand::Api_BunnyKey)
 	{
 		QStringList list = bunny->GetPluginSetting(GetName(), "GoogleKeys", QStringList()).toStringList();
 		if(!hRequest.HasArg("key"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("key", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("key", GetName()));
 		QString key = hRequest.GetArg("key");
 
 		if(!list.contains(key))
@@ -397,15 +396,15 @@ PLUGIN_BUNNY_API_CALL(PluginVoiceCommand::Api_BunnyKey)
 			list.append(key);
 			list.removeDuplicates();
 			bunny->SetPluginSetting(GetName(), "GoogleKeys", list);
-			return new ApiManager::ApiOk(Translator::tr("Key '%1' added for bunny '%2'", account).arg(key, QString(bunny->GetID())));
+			return new ApiAnswers::Ok(Translator::tr("Key '%1' added for bunny '%2'", account).arg(key, QString(bunny->GetID())));
 		}
-		return new ApiManager::ApiError(Translator::tr("Key '%1' already exists for bunny '%2'", account).arg(key, QString(bunny->GetID())));
+		return new ApiAnswers::Error(Translator::tr("Key '%1' already exists for bunny '%2'", account).arg(key, QString(bunny->GetID())));
 	}
 	else if(action == "remove")
 	{
 		QStringList list = bunny->GetPluginSetting(GetName(), "GoogleKeys", QStringList()).toStringList();
 		if(!hRequest.HasArg("key"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("key", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("key", GetName()));
 		QString key = hRequest.GetArg("key");
 
 		if(list.contains(key))
@@ -413,28 +412,28 @@ PLUGIN_BUNNY_API_CALL(PluginVoiceCommand::Api_BunnyKey)
 			list.removeAll(key);
 			list.removeDuplicates();
 			bunny->SetPluginSetting(GetName(), "GoogleKeys", list);
-			return new ApiManager::ApiOk(Translator::tr("Key '%1' removed for bunny '%2'", account).arg(key, QString(bunny->GetID())));
+			return new ApiAnswers::Ok(Translator::tr("Key '%1' removed for bunny '%2'", account).arg(key, QString(bunny->GetID())));
 		}
-		return new ApiManager::ApiError(Translator::tr("Key '%1' does not exist for bunny '%2'", account).arg(key, QString(bunny->GetID())));
+		return new ApiAnswers::Error(Translator::tr("Key '%1' does not exist for bunny '%2'", account).arg(key, QString(bunny->GetID())));
 	}
 	else if(action == "list")
 	{
 		QStringList list = bunny->GetPluginSetting(GetName(), "GoogleKeys", QStringList()).toStringList();
-        	return new ApiManager::ApiList(list);
+        	return new ApiAnswers::List(list);
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }
 
 PLUGIN_API_CALL(PluginVoiceCommand::Api_Key)
 {
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
 
 	QString action = hRequest.GetArg("action");
 
@@ -446,12 +445,12 @@ PLUGIN_API_CALL(PluginVoiceCommand::Api_Key)
 		{
 		//	list.insert(key, GetSettings("Languages/" + key, QString()).toString());
 		}
-        	return new ApiManager::ApiMappedList(list);
+        	return new ApiAnswers::MappedList(list);
 	}
 	else if(action == "add")
 	{
 		if(!hRequest.HasArg("key"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("key", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("key", GetName()));
 
 		QString key = hRequest.GetArg("key");
 
@@ -462,14 +461,14 @@ PLUGIN_API_CALL(PluginVoiceCommand::Api_Key)
 			list.append(key);
 			list.removeDuplicates();
 			SetSettings("GoogleKeys", list);
-			return new ApiManager::ApiOk(Translator::tr("Key '%1' added for server", account).arg(key));
+			return new ApiAnswers::Ok(Translator::tr("Key '%1' added for server", account).arg(key));
 		}
-		return new ApiManager::ApiError(Translator::tr("Key '%1' already exists", account).arg(key));
+		return new ApiAnswers::Error(Translator::tr("Key '%1' already exists", account).arg(key));
 	}
 	else if(action == "remove")
 	{
 		if(!hRequest.HasArg("key"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("key", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("key", GetName()));
 
 		QString key = hRequest.GetArg("key");
 
@@ -479,34 +478,34 @@ PLUGIN_API_CALL(PluginVoiceCommand::Api_Key)
 			list.removeAll(key);
 			list.removeDuplicates();
 			SetSettings("GoogleKeys", list);
-			return new ApiManager::ApiOk(Translator::tr("Key '%1' removed for server", account).arg(key));
+			return new ApiAnswers::Ok(Translator::tr("Key '%1' removed for server", account).arg(key));
 		}
-		return new ApiManager::ApiError(Translator::tr("Key '%1' does not exist for server", account).arg(key));
+		return new ApiAnswers::Error(Translator::tr("Key '%1' does not exist for server", account).arg(key));
 	}
 	else if(action == "list")
 	{
 		QStringList list = GetSettings("GoogleKeys", QStringList()).toStringList();
-        	return new ApiManager::ApiList(list);
+        	return new ApiAnswers::List(list);
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }
 
 PLUGIN_API_CALL(PluginVoiceCommand::Api_Bunny)
 {
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
 
 	QString action = hRequest.GetArg("action");
 
 	if(action == "list")
 	{
-		return new ApiManager::ApiList(GetSettings("Bunnies", QStringList()).toStringList());
+		return new ApiAnswers::List(GetSettings("Bunnies", QStringList()).toStringList());
 	}
 	else if(action == "del")
 	{
@@ -515,7 +514,7 @@ PLUGIN_API_CALL(PluginVoiceCommand::Api_Bunny)
 		bunnies.removeAll(hSn);
 		bunnies.removeDuplicates();
 		SetSettings("Bunnies", bunnies);
-		return new ApiManager::ApiOk(Translator::tr("Bunny '%1' removed", account).arg(hSn));
+		return new ApiAnswers::Ok(Translator::tr("Bunny '%1' removed", account).arg(hSn));
 	}
 	else if(action == "add")
 	{
@@ -524,42 +523,42 @@ PLUGIN_API_CALL(PluginVoiceCommand::Api_Bunny)
 		bunnies << hSn;
 		bunnies.removeDuplicates();
 		SetSettings("Bunnies", bunnies);
-		return new ApiManager::ApiOk(Translator::tr("Bunny '%1' added", account).arg(hSn));
+		return new ApiAnswers::Ok(Translator::tr("Bunny '%1' added", account).arg(hSn));
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }
 
 PLUGIN_API_CALL(PluginVoiceCommand::Api_Sentences)
 {
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
 
 	QString action = hRequest.GetArg("action");
 
 	if(!hRequest.HasArg("type"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("type", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("type", GetName()));
 
 	QString type = hRequest.GetArg("type");
 
 	if(!hRequest.HasArg("lng"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("lng", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("lng", GetName()));
 
 	QString lng = hRequest.GetArg("lng");
 
 	if(action == "list")
 	{
-        	return new ApiManager::ApiList(GetSettings(lng + "/" + type, QStringList()).toStringList());
+        	return new ApiAnswers::List(GetSettings(lng + "/" + type, QStringList()).toStringList());
 	}
 	else if(action == "del")
 	{
 		if(!hRequest.HasArg("word"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("word", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("word", GetName()));
 
 		QString word = hRequest.GetArg("word");
 
@@ -569,12 +568,12 @@ PLUGIN_API_CALL(PluginVoiceCommand::Api_Sentences)
 			words.removeAll(word);
 			SetSettings(lng + "/" + type, words);
 		}
-		return new ApiManager::ApiOk(Translator::tr("Word '%1' is now deleted").arg(word));
+		return new ApiAnswers::Ok(Translator::tr("Word '%1' is now deleted").arg(word));
 	}
 	else if(action == "add")
 	{
 		if(!hRequest.HasArg("word"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("word", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("word", GetName()));
 
 		QString word = hRequest.GetArg("word");
 
@@ -584,42 +583,42 @@ PLUGIN_API_CALL(PluginVoiceCommand::Api_Sentences)
 			words << word;
 			SetSettings(lng + "/" + type, words);
 		}
-		return new ApiManager::ApiOk(Translator::tr("Word '%1' is now added").arg(word));
+		return new ApiAnswers::Ok(Translator::tr("Word '%1' is now added").arg(word));
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }
 
 PLUGIN_API_CALL(PluginVoiceCommand::Api_Words)
 {
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
 
 	QString action = hRequest.GetArg("action");
 
 	if(!hRequest.HasArg("type"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("type", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("type", GetName()));
 
 	QString type = hRequest.GetArg("type");
 
 	if(!hRequest.HasArg("lng"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("lng", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("lng", GetName()));
 
 	QString lng = hRequest.GetArg("lng");
 
 	if(action == "list")
 	{
-        	return new ApiManager::ApiList(GetSettings(lng + "/" + type, QStringList()).toStringList());
+        	return new ApiAnswers::List(GetSettings(lng + "/" + type, QStringList()).toStringList());
 	}
 	else if(action == "del")
 	{
 		if(!hRequest.HasArg("word"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("word", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("word", GetName()));
 
 		QString word = hRequest.GetArg("word");
 
@@ -629,12 +628,12 @@ PLUGIN_API_CALL(PluginVoiceCommand::Api_Words)
 			words.removeAll(word);
 			SetSettings(lng + "/" + type, words);
 		}
-		return new ApiManager::ApiOk(Translator::tr("Word '%1' is now deleted").arg(word));
+		return new ApiAnswers::Ok(Translator::tr("Word '%1' is now deleted").arg(word));
 	}
 	else if(action == "add")
 	{
 		if(!hRequest.HasArg("word"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("word", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("word", GetName()));
 
 		QString word = hRequest.GetArg("word");
 
@@ -644,21 +643,21 @@ PLUGIN_API_CALL(PluginVoiceCommand::Api_Words)
 			words << word;
 			SetSettings(lng + "/" + type, words);
 		}
-		return new ApiManager::ApiOk(Translator::tr("Word '%1' is now added").arg(word));
+		return new ApiAnswers::Ok(Translator::tr("Word '%1' is now added").arg(word));
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }
 
 PLUGIN_API_CALL(PluginVoiceCommand::Api_Language)
 {
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
 
 	QString action = hRequest.GetArg("action");
 
@@ -671,12 +670,12 @@ PLUGIN_API_CALL(PluginVoiceCommand::Api_Language)
 		{
 			list.insert(key, GetSettings("Languages/" + key, QString()).toString());
 		}
-        	return new ApiManager::ApiMappedList(list);
+        	return new ApiAnswers::MappedList(list);
 	}
 	else if(action == "del")
 	{
 		if(!hRequest.HasArg("lng"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("lng", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("lng", GetName()));
 
 		QString lng = hRequest.GetArg("lng");
 
@@ -687,17 +686,17 @@ PLUGIN_API_CALL(PluginVoiceCommand::Api_Language)
 			codes.removeAll(lng);
 			SetSettings("Languages/List", codes);
 		}
-		return new ApiManager::ApiOk(Translator::tr("Bunny language '%1' is now deleted").arg(lng));
+		return new ApiAnswers::Ok(Translator::tr("Bunny language '%1' is now deleted").arg(lng));
 	}
 	else if(action == "add")
 	{
 		if(!hRequest.HasArg("lng"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("lng", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("lng", GetName()));
 
 		QString lng = hRequest.GetArg("lng");
 
 		if(!hRequest.HasArg("equiv"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("equiv", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("equiv", GetName()));
 
 		QString equiv = hRequest.GetArg("equiv");
 
@@ -708,11 +707,11 @@ PLUGIN_API_CALL(PluginVoiceCommand::Api_Language)
 			codes << lng;
 			SetSettings("Languages/List", codes);
 		}
-		return new ApiManager::ApiOk(Translator::tr("Bunny language '%1' is '%2'").arg(lng, equiv));
+		return new ApiAnswers::Ok(Translator::tr("Bunny language '%1' is '%2'").arg(lng, equiv));
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }
 

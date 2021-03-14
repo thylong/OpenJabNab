@@ -95,9 +95,9 @@ PLUGIN_API_CALL(PluginRFID::Api_GetLastTag)
 	Q_UNUSED(hRequest);
 
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError("Access denied");
+		return new ApiAnswers::Error("Access denied");
 
-	return new ApiManager::ApiString(GetSettings("global/LastTag", QString()).toString());
+	return new ApiAnswers::String(GetSettings("global/LastTag", QString()).toString());
 }
 
 PLUGIN_BUNNY_API_CALL(PluginRFID::Api_GetLastBunnyTag)
@@ -105,41 +105,41 @@ PLUGIN_BUNNY_API_CALL(PluginRFID::Api_GetLastBunnyTag)
 	Q_UNUSED(hRequest);
 	Q_UNUSED(account);
 
-	return new ApiManager::ApiString(bunny->GetPluginSetting(GetName(), "LastTag", QString()).toString());
+	return new ApiAnswers::String(bunny->GetPluginSetting(GetName(), "LastTag", QString()).toString());
 }
 
 PLUGIN_API_CALL(PluginRFID::Api_GetLastTagForBunny)
 {
 	Bunny * b = BunnyManager::GetBunny(this, hRequest.GetArg("sn").toLatin1());
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError("Access denied");
+		return new ApiAnswers::Error("Access denied");
 
-	return new ApiManager::ApiString(b->GetPluginSetting(GetName(), "LastTag", QString()).toString());
+	return new ApiAnswers::String(b->GetPluginSetting(GetName(), "LastTag", QString()).toString());
 }
 
 PLUGIN_BUNNY_API_CALL(PluginRFID::Api_Config)
 {
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
 
 	QString action = hRequest.GetArg("action");
 
 	if(action == "disable")
 	{
 		if(!hRequest.HasArg("subaction"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("subaction", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("subaction", GetName()));
 
 		QString subaction = hRequest.GetArg("subaction");
 
 		if(subaction == "get")
 		{
 			int rfid = bunny->GetPluginSetting(GetName(), "disable", 0).toInt();
-			return new ApiManager::ApiString(QString::number(rfid));
+			return new ApiAnswers::String(QString::number(rfid));
 		}
 		else if(subaction == "set")
 		{
 			if(!hRequest.HasArg("value"))
-				return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("value", GetName()));
+				return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("value", GetName()));
 
 			int value = hRequest.GetArg("value").toInt();
 			if(value != 0)
@@ -148,13 +148,13 @@ PLUGIN_BUNNY_API_CALL(PluginRFID::Api_Config)
 			}
 			bunny->SetPluginSetting(GetName(), "disable", value);
 			QString status = value == 1 ? Translator::tr("enabled") : Translator::tr("disabled");
-			return new ApiManager::ApiOk(Translator::tr("Setting '%1' is now %2 for bunny %3", account).arg(Translator::tr("RFID Disabled", account), status, QString(bunny->GetID())));
+			return new ApiAnswers::Ok(Translator::tr("Setting '%1' is now %2 for bunny %3", account).arg(Translator::tr("RFID Disabled", account), status, QString(bunny->GetID())));
 		}
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("subaction", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("subaction", GetName()));
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }
 

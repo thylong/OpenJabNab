@@ -4,7 +4,7 @@
 #include <QUuid>
 #include <QDateTime>
 #include <QtSql/QtSql>
-#include "QsLog.h"
+
 #include "accountmanager.h"
 #include "dbmanager.h"
 #include "ambientpacket.h"
@@ -106,9 +106,9 @@ QString Bunny::GetXmlVoiceList()
 	return GetXmlVoiceList(GetLanguage());
 }
 
-ApiManager::ApiAnswer * Bunny::ProcessVioletApiCall(HTTPRequest const& hRequest)
+ApiAnswers::Answer * Bunny::ProcessVioletApiCall(HTTPRequest const& hRequest)
 {
-	ApiManager::ApiViolet* answer = new ApiManager::ApiViolet();
+	ApiAnswers::Violet* answer = new ApiAnswers::Violet();
 
 	if(hRequest.HasArg("sn") && hRequest.HasArg("token"))
 	{
@@ -129,7 +129,7 @@ ApiManager::ApiAnswer * Bunny::ProcessVioletApiCall(HTTPRequest const& hRequest)
 						{
 							if(hRequest.HasArg("urlList"))
 							{
-								QByteArray message = ("ST " + hRequest.GetArg("urlList").split("|", Qt::SkipEmptyParts).join("\nMW\nST ") + "\nMW\n").toLatin1();
+								QByteArray message = ("ST " + hRequest.GetArg("urlList").split("|", QString::SkipEmptyParts).join("\nMW\nST ") + "\nMW\n").toLatin1();
 								SendPacket(MessagePacket(message), "api_stream.jsp");
 								answer->AddMessage("WEBRADIOSENT", "Your webradio has been sent");
 							}
@@ -289,7 +289,7 @@ ApiManager::ApiAnswer * Bunny::ProcessVioletApiCall(HTTPRequest const& hRequest)
 									if(IsConnected())
 									{
 										answer->AddMessage("COMMANDSENT", "Bunny is going to restart !");
-										xmppHandler->Disconnect();
+										xmppHandler->cleanup();
 										xmppHandler = 0;
 									}
 									else
@@ -511,7 +511,7 @@ ApiManager::ApiAnswer * Bunny::ProcessVioletApiCall(HTTPRequest const& hRequest)
 										//TTSLog::Log(GetID(), "Bunny", hRequest.GetArg("tts"));
 										TTSManager::OutputFormat format = GetVersion() == 1 ? TTSManager::Format_Adp : TTSManager::Format_Mp3;
 										TTSAnswer sound = TTSManager::CreateSound(text, voice, language, format, false);
-										QsLogging::Logger::TTSLog(GetID(), "Bunny", sound);
+										LogTTS(GetID(), "Bunny", sound);
 										if(GetVersion() == 1)
 										{
 											AddSoundToSend(sound.file);
@@ -556,7 +556,7 @@ ApiManager::ApiAnswer * Bunny::ProcessVioletApiCall(HTTPRequest const& hRequest)
 							{
 								if(GetVersion() == 2)
 								{
-									QByteArray message = ("ST " + hRequest.GetArg("urllist").split("|", Qt::SkipEmptyParts).join("\nMW\nST ") + "\nMW\n").toLatin1();
+									QByteArray message = ("ST " + hRequest.GetArg("urllist").split("|", QString::SkipEmptyParts).join("\nMW\nST ") + "\nMW\n").toLatin1();
 									SendPacket(MessagePacket(message), "api.jsp");
 									answer->AddMessage("WEBRADIOSENT", "Your webradio has been sent");
 								}
@@ -909,7 +909,7 @@ void Bunny::SaveConfig()
 
 void Bunny::SetXmppHandler(XmppHandler * x)
 {
-	if (xmppHandler == 0)
+	if (xmppHandler == nullptr)
 		LogInfo(QString("%1 (%2) joined the server").arg(GetBunnyName(), QString(GetID())));
 	xmppHandler = x;
 }
@@ -918,7 +918,7 @@ void Bunny::RemoveXmppHandler(XmppHandler * x)
 {
 	if (xmppHandler == x)
 	{
-		xmppHandler = 0;
+		xmppHandler = nullptr;
 		state = State_Disconnected;
 		SetGlobalSetting("Last JabberDisconnection", QDateTime::currentDateTime());
 		LogInfo(QString("%1 (%2) quit the server").arg(GetBunnyName(), QString(GetID())));
@@ -929,10 +929,10 @@ void Bunny::RemoveXmppHandler(XmppHandler * x)
 // Called when the bunny start an authenticating process
 void Bunny::Authenticating()
 {
-	if(xmppHandler)
+	if(xmppHandler)	// Cleanup Old XMPP Handler
 	{
-		xmppHandler->Disconnect();
-		xmppHandler = 0;
+		xmppHandler->cleanup();
+		xmppHandler = nullptr;
 	}
 	state = State_Authenticating;
 }
@@ -1003,22 +1003,22 @@ void Bunny::SendPacket(Packet const& p, QString sender)
 					plugin->BeforeSendMessage(this, m, sender);
 			}
 			xmppHandler->WriteDataToBunny(m->GetData());
-			QsLogging::Logger::DumpLog(m->GetPrintableData(), "XMPP MsgPacket");
+			LogDump(m->GetPrintableData(), "XMPP MsgPacket");
 			delete m;
 		}
 		else if(p.GetType() == Packet::Packet_Serviceconfig)
 		{
-			QsLogging::Logger::DumpLog(p.GetPrintableData(), "XMPP SrvPacket");
+			LogDump(p.GetPrintableData(), "XMPP SrvPacket");
 			xmppHandler->WriteDataToBunny(p.GetData());
 		}
 		else if(p.GetType() == Packet::Packet_Chorconfig)
 		{
-			QsLogging::Logger::DumpLog(p.GetPrintableData(), "XMPP ChorPacket");
+			LogDump(p.GetPrintableData(), "XMPP ChorPacket");
 			xmppHandler->WriteDataToBunny(p.GetData());
 		}
 		else
 		{
-			QsLogging::Logger::DumpLog(p.GetPrintableData(), "XMPP Packet");
+			LogDump(p.GetPrintableData(), "XMPP Packet");
 			xmppHandler->WriteDataToBunny(p.GetData());
 		}
 	}
@@ -1028,7 +1028,7 @@ void Bunny::SendExpertData(QByteArray const& b)
 {
 	if (xmppHandler)
 	{
-		QsLogging::Logger::DumpLog(b, "XMPP SendExpertData");
+		LogDump(b, "XMPP SendExpertData");
 		xmppHandler->WriteExpertDataToBunny(b);
 	}
 }
@@ -1037,7 +1037,7 @@ void Bunny::SendData(QByteArray const& b)
 {
 	if (xmppHandler)
 	{
-		QsLogging::Logger::DumpLog(b.toHex(), "XMPP SendData");
+		LogDump(b.toHex(), "XMPP SendData");
 		xmppHandler->WriteDataToBunny(b);
 	}
 }
@@ -1531,77 +1531,77 @@ void Bunny::InitApiCalls()
 API_CALL(Bunny::Api_Config)
 {
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("action"));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("action"));
 
 	QString action = hRequest.GetArg("action");
 	if(action == "save")
 	{
 		SaveConfig();
-		return new ApiManager::ApiOk(Translator::tr("Bunny config has been saved", account));
+		return new ApiAnswers::Ok(Translator::tr("Bunny config has been saved", account));
 	}
 	else if(action == "get")
 	{
 		if(!hRequest.HasArg("setting"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("setting"));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("setting"));
 		QString setting = hRequest.GetArg("setting");
-		return new ApiManager::ApiString(GetGlobalSetting(setting, QString()).toString());
+		return new ApiAnswers::String(GetGlobalSetting(setting, QString()).toString());
 	}
 	else if(action == "set")
 	{
 		if(!hRequest.HasArg("setting"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("setting"));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("setting"));
 		if(!hRequest.HasArg("value"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("value"));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("value"));
 		QString setting = hRequest.GetArg("setting");
 		QVariant val    = hRequest.GetArg("value");
 		SetGlobalSetting(setting, val);
-		return new ApiManager::ApiString(GetGlobalSetting(setting, QString()).toString());
+		return new ApiAnswers::String(GetGlobalSetting(setting, QString()).toString());
 	}
-	return new ApiManager::ApiError(Translator::tr("Bad argument action='%1'", account).arg(action));
+	return new ApiAnswers::Error(Translator::tr("Bad argument action='%1'", account).arg(action));
 }
 
 API_CALL(Bunny::Api_DeletePluginSettings)
 {
 if(!hRequest.HasArg("plugin"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("plugin"));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("plugin"));
 
 	QString plugin = hRequest.GetArg("plugin");
 	needSave = true;
 	PluginsSettings.remove(plugin);
-  return new ApiManager::ApiOk(Translator::tr("Deleted all settings for plugin '%1'").arg(plugin));
+  return new ApiAnswers::Ok(Translator::tr("Deleted all settings for plugin '%1'").arg(plugin));
 }
 
 API_CALL(Bunny::Api_Resource)
 {
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("action"));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("action"));
 
 	QString action = hRequest.GetArg("action");
 
 	if(action == "get")
 	{
-		return new ApiManager::ApiString(QString(GetXmppResource()));
+		return new ApiAnswers::String(QString(GetXmppResource()));
 	}
 	else if(action == "set")
 	{
 		if(!hRequest.HasArg("resource"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("resource"));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("resource"));
 
 		QString resource = hRequest.GetArg("resource");
 
 		SetXmppResource(resource.toLatin1());
-		return new ApiManager::ApiOk(Translator::tr("Bunny is now '%1'", account).arg(resource));
+		return new ApiAnswers::Ok(Translator::tr("Bunny is now '%1'", account).arg(resource));
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1'", account).arg("action"));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1'", account).arg("action"));
 	}
 }
 
 API_CALL(Bunny::Api_Traffic)
 {
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("action"));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("action"));
 
 	QString action = hRequest.GetArg("action");
 
@@ -1611,11 +1611,11 @@ API_CALL(Bunny::Api_Traffic)
 		{
 			trafficCount = hRequest.GetArg("set").toInt();
 			SetGlobalSetting("trafficCount", trafficCount);
-			return new ApiManager::ApiOk(Translator::tr("Traffic count is now '%1'", account).arg(trafficCount));
+			return new ApiAnswers::Ok(Translator::tr("Traffic count is now '%1'", account).arg(trafficCount));
 		}
 		else
 		{
-			return new ApiManager::ApiString(QString::number(trafficCount));
+			return new ApiAnswers::String(QString::number(trafficCount));
 		}
 	}
 	else if(action == "get")
@@ -1626,57 +1626,57 @@ API_CALL(Bunny::Api_Traffic)
 		traffic += "<outXmpp>"+QString::number(outXmppTraffic)+"</outXmpp>";
 		traffic += "<outHttp>"+QString::number(outHttpTraffic)+"</outHttp>";
 		traffic += "</traffic>";
-		return new ApiManager::ApiXml(traffic);
+		return new ApiAnswers::Xml(traffic);
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1'", account).arg("action"));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1'", account).arg("action"));
 	}
 }
 
 API_CALL(Bunny::Api_Voice)
 {
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("action"));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("action"));
 
 	QString action = hRequest.GetArg("action");
 
 	if(action == "list")
 	{
-		return new ApiManager::ApiMappedList(TTSManager::GetVoiceList(GetLanguage(), !IsLimited()));
+		return new ApiAnswers::MappedList(TTSManager::GetVoiceList(GetLanguage(), !IsLimited()));
 	}
 	else if(action == "test")
 	{
 		if(!hRequest.HasArg("voice"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("voice"));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("voice"));
 
 		QString voice = hRequest.GetArg("voice");
 
 		if(!hRequest.HasArg("sentence"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("sentence"));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("sentence"));
 
 		QString sentence = hRequest.GetArg("sentence");
 
 		TTSAnswer sound = TTSManager::CreateSound(sentence, voice, "");
-		return new ApiManager::ApiString(sound.file);
+		return new ApiAnswers::String(sound.file);
 	}
 	else if(action == "get")
 	{
-		return new ApiManager::ApiString(GetGlobalSetting("Voice", QString()).toString());
+		return new ApiAnswers::String(GetGlobalSetting("Voice", QString()).toString());
 	}
 	else if(action == "set")
 	{
 		if(!hRequest.HasArg("voice"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("voice"));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("voice"));
 
 		QString voice = hRequest.GetArg("voice");
 
 		SetGlobalSetting("Voice", voice);
-		return new ApiManager::ApiOk(Translator::tr("Bunny will now use '%1' voice when possible", account).arg(voice));
+		return new ApiAnswers::Ok(Translator::tr("Bunny will now use '%1' voice when possible", account).arg(voice));
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1'", account).arg("action"));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1'", account).arg("action"));
 	}
 }
 
@@ -1686,10 +1686,10 @@ API_CALL(Bunny::Api_AddPlugin)
 
 	QString error = CheckPlugin(plugin);
 	if(!error.isNull())
-		return new ApiManager::ApiError(error.arg(hRequest.GetArg("name")));
+		return new ApiAnswers::Error(error.arg(hRequest.GetArg("name")));
 
 	AddPlugin(plugin);
-	return new ApiManager::ApiOk(Translator::tr("Added '%1' as active plugin", account).arg(Translator::tr(plugin->GetVisualName(), account)));
+	return new ApiAnswers::Ok(Translator::tr("Added '%1' as active plugin", account).arg(Translator::tr(plugin->GetVisualName(), account)));
 }
 
 API_CALL(Bunny::Api_RemovePlugin)
@@ -1697,10 +1697,10 @@ API_CALL(Bunny::Api_RemovePlugin)
 	PluginInterface * plugin = PluginManager::Instance().GetPluginByName(hRequest.GetArg("name"));
 	QString error = CheckPlugin(plugin);
 	if(!error.isNull())
-		return new ApiManager::ApiError(error.arg(hRequest.GetArg("name")));
+		return new ApiAnswers::Error(error.arg(hRequest.GetArg("name")));
 
 	RemovePlugin(plugin);
-	return new ApiManager::ApiOk(Translator::tr("Removed '%1' as active plugin", account).arg(Translator::tr(plugin->GetVisualName(), account)));
+	return new ApiAnswers::Ok(Translator::tr("Removed '%1' as active plugin", account).arg(Translator::tr(plugin->GetVisualName(), account)));
 }
 
 API_CALL(Bunny::Api_GetListOfAssociatedPlugins)
@@ -1712,7 +1712,7 @@ API_CALL(Bunny::Api_GetListOfAssociatedPlugins)
 	foreach (PluginInterface * p, listOfPluginsPtr)
 		list.append(p->GetName());
 
-	return new ApiManager::ApiList(list);
+	return new ApiAnswers::List(list);
 
 }
 
@@ -1724,18 +1724,18 @@ API_CALL(Bunny::Api_SetSingleClickPlugin)
 	{
 		RemoveGlobalSetting(SINGLE_CLICK_PLUGIN_SETTINGNAME);
 		singleClickPlugin = NULL;
-		return new ApiManager::ApiOk(Translator::tr("Removed preferred single click plugin", account));
+		return new ApiAnswers::Ok(Translator::tr("Removed preferred single click plugin", account));
 	}
 
 	PluginInterface * plugin = PluginManager::Instance().GetPluginByName(hRequest.GetArg("name"));
 
 	QString error = CheckPlugin(plugin, true);
 	if(!error.isNull())
-		return new ApiManager::ApiError(error.arg(hRequest.GetArg("name")));
+		return new ApiAnswers::Error(error.arg(hRequest.GetArg("name")));
 
 	singleClickPlugin = plugin;
 	SetGlobalSetting(SINGLE_CLICK_PLUGIN_SETTINGNAME, plugin->GetName());
-	return new ApiManager::ApiOk(Translator::tr("Set '%1' as single click plugin", account).arg(plugin->GetVisualName()));
+	return new ApiAnswers::Ok(Translator::tr("Set '%1' as single click plugin", account).arg(plugin->GetVisualName()));
 }
 
 API_CALL(Bunny::Api_SetDoubleClickPlugin)
@@ -1746,18 +1746,18 @@ API_CALL(Bunny::Api_SetDoubleClickPlugin)
 	{
 		RemoveGlobalSetting(DOUBLE_CLICK_PLUGIN_SETTINGNAME);
 		doubleClickPlugin = NULL;
-		return new ApiManager::ApiOk(Translator::tr("Removed preferred double click plugin", account));
+		return new ApiAnswers::Ok(Translator::tr("Removed preferred double click plugin", account));
 	}
 
 	PluginInterface * plugin = PluginManager::Instance().GetPluginByName(hRequest.GetArg("name"));
 
 	QString error = CheckPlugin(plugin, true);
 	if(!error.isNull())
-		return new ApiManager::ApiError(error.arg(hRequest.GetArg("name")));
+		return new ApiAnswers::Error(error.arg(hRequest.GetArg("name")));
 
 	doubleClickPlugin = plugin;
 	SetGlobalSetting(DOUBLE_CLICK_PLUGIN_SETTINGNAME, plugin->GetName());
-	return new ApiManager::ApiOk(Translator::tr("Set '%1' as double click plugin", account).arg(plugin->GetVisualName()));
+	return new ApiAnswers::Ok(Translator::tr("Set '%1' as double click plugin", account).arg(plugin->GetVisualName()));
 }
 
 API_CALL(Bunny::Api_GetClickPlugins)
@@ -1769,7 +1769,7 @@ API_CALL(Bunny::Api_GetClickPlugins)
 	list.append(GetGlobalSetting(SINGLE_CLICK_PLUGIN_SETTINGNAME, QString()).toString());
 	list.append(GetGlobalSetting(DOUBLE_CLICK_PLUGIN_SETTINGNAME, QString()).toString());
 
-	return new ApiManager::ApiList(list);
+	return new ApiAnswers::List(list);
 }
 
 API_CALL(Bunny::Api_GetListOfKnownRFIDTags)
@@ -1783,26 +1783,26 @@ API_CALL(Bunny::Api_GetListOfKnownRFIDTags)
 	for (i = knownRFIDTags.constBegin(); i != knownRFIDTags.constEnd(); ++i)
 		list.insert(QString(i.key()), i.value());
 
-	return new ApiManager::ApiMappedList(list);
+	return new ApiAnswers::MappedList(list);
 }
 
 API_CALL(Bunny::Api_SetRFIDTagName)
 {
 	QByteArray tagName = hRequest.GetArg("tag").toLatin1();
 	if(!knownRFIDTags.contains(tagName))
-		return new ApiManager::ApiError(Translator::tr("Tag '%1' is unkown", account).arg(hRequest.GetArg("tag")));
+		return new ApiAnswers::Error(Translator::tr("Tag '%1' is unkown", account).arg(hRequest.GetArg("tag")));
 
 	knownRFIDTags[tagName] = hRequest.GetArg("name");
 	needSave = true;
 
-	return new ApiManager::ApiOk(Translator::tr("Name '%1' associated to tag '%2'", account).arg(hRequest.GetArg("name"), hRequest.GetArg("tag")));
+	return new ApiAnswers::Ok(Translator::tr("Name '%1' associated to tag '%2'", account).arg(hRequest.GetArg("name"), hRequest.GetArg("tag")));
 }
 
 API_CALL(Bunny::Api_SetBunnyName)
 {
 	SetBunnyName( hRequest.GetArg("name") );
 
-	return new ApiManager::ApiOk(Translator::tr("Bunny '%1' is now named '%2'", account).arg(GetID(), hRequest.GetArg("name")));
+	return new ApiAnswers::Ok(Translator::tr("Bunny '%1' is now named '%2'", account).arg(GetID(), hRequest.GetArg("name")));
 }
 
 API_CALL(Bunny::Api_SetService)
@@ -1813,7 +1813,7 @@ API_CALL(Bunny::Api_SetService)
 	AmbientPacket a((AmbientPacket::Services)service, value);
 	SendPacket(a, "bunny");
 
-	return new ApiManager::ApiOk(Translator::tr("Set value '%2' for service '%1'", account).arg(QString::number(service), QString::number(value)));
+	return new ApiAnswers::Ok(Translator::tr("Set value '%2' for service '%1'", account).arg(QString::number(service), QString::number(value)));
 }
 
 API_CALL(Bunny::Api_ResetPassword)
@@ -1821,7 +1821,7 @@ API_CALL(Bunny::Api_ResetPassword)
 	Q_UNUSED(hRequest);
 
 	ClearBunnyPassword();
-	return new ApiManager::ApiOk(Translator::tr("Password cleared", account));
+	return new ApiAnswers::Ok(Translator::tr("Password cleared", account));
 }
 
 API_CALL(Bunny::Api_ResetOwner)
@@ -1829,7 +1829,7 @@ API_CALL(Bunny::Api_ResetOwner)
 	Q_UNUSED(hRequest);
 
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	Account * a = AccountManager::GetAccountByLogin(GetGlobalSetting("OwnerAccount").toByteArray());
 	if(a)
@@ -1837,36 +1837,36 @@ API_CALL(Bunny::Api_ResetOwner)
 		a->RemoveBunny(GetID());
 	}
 	RemoveGlobalSetting("OwnerAccount");
-	return new ApiManager::ApiOk(Translator::tr("Owner cleared", account));
+	return new ApiAnswers::Ok(Translator::tr("Owner cleared", account));
 }
 
 API_CALL(Bunny::Api_GetOwner)
 {
 	Q_UNUSED(hRequest);
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
-	return new ApiManager::ApiString(GetGlobalSetting("OwnerAccount").toString());
+	return new ApiAnswers::String(GetGlobalSetting("OwnerAccount").toString());
 }
 
 API_CALL(Bunny::Api_Disconnect)
 {
 	Q_UNUSED(account);
 
-        if(!xmppHandler)
-		return new ApiManager::ApiError(Translator::tr("Bunny is not connected", account));
+  if(!xmppHandler)
+    return new ApiAnswers::Error(Translator::tr("Bunny is not connected", account));
 
 	if(hRequest.HasArg("reboot"))
 	{
 		SendPacket(MessagePacket("RB\n"), "bunny");
-		return new ApiManager::ApiOk(Translator::tr("Bunny is restarting", account));
+		return new ApiAnswers::Ok(Translator::tr("Bunny is restarting", account));
 	}
 	else
-        {
-                xmppHandler->Disconnect();
-                xmppHandler = 0;
-		return new ApiManager::ApiOk(Translator::tr("Connexion closed", account));
-        }
+  {
+    xmppHandler->cleanup();
+    xmppHandler = nullptr;
+    return new ApiAnswers::Ok(Translator::tr("Connexion closed", account));
+  }
 }
 
 API_CALL(Bunny::Api_SetTimeZone)
@@ -1876,14 +1876,14 @@ API_CALL(Bunny::Api_SetTimeZone)
   SetGlobalSetting("TimeZone", tzN);
   OnDisconnect();
   OnConnect();
-  return new ApiManager::ApiOk(Translator::tr("Bunny is now in %1 timezone", account).arg(tzN));
+  return new ApiAnswers::Ok(Translator::tr("Bunny is now in %1 timezone", account).arg(tzN));
 }
 
 API_CALL(Bunny::Api_GetTimeZone)
 {
   Q_UNUSED(account);
   Q_UNUSED(hRequest);
-  return new ApiManager::ApiString(GetGlobalSetting("TimeZone","UTC").toString());
+  return new ApiAnswers::String(GetGlobalSetting("TimeZone","UTC").toString());
 }
 
 API_CALL(Bunny::Api_setInsomniac)
@@ -1891,7 +1891,7 @@ API_CALL(Bunny::Api_setInsomniac)
         bool i = (bool)(hRequest.GetArg("insomniac").toInt());
         SetGlobalSetting("Insomniac",i);
         QString night = i ? Translator::tr("Bunny is now insomniac", account) : Translator::tr("Bunny is now a good sleeper", account);
-        return new ApiManager::ApiOk(night);
+        return new ApiAnswers::Ok(night);
 }
 
 API_CALL(Bunny::Api_getInsomniac)
@@ -1899,42 +1899,42 @@ API_CALL(Bunny::Api_getInsomniac)
         Q_UNUSED(account);
         Q_UNUSED(hRequest);
         QString night = GetGlobalSetting("Insomniac",false).toBool() ? "insomniac" : "a good sleeper";
-        return new ApiManager::ApiString(night);
+        return new ApiAnswers::String(night);
 }
 
 API_CALL(Bunny::Api_setLanguage)
 {
 	QString lng = hRequest.GetArg("lng");
 	SetLanguage(lng);
-        return new ApiManager::ApiOk(Translator::tr("Bunny language is now %1", account).arg(lng));
+        return new ApiAnswers::Ok(Translator::tr("Bunny language is now %1", account).arg(lng));
 }
 
 API_CALL(Bunny::Api_getLanguage)
 {
 	Q_UNUSED(account);
 	Q_UNUSED(hRequest);
-	return new ApiManager::ApiString(GetLanguage());
+	return new ApiAnswers::String(GetLanguage());
 }
 
 API_CALL(Bunny::Api_setVersion)
 {
         int i = hRequest.GetArg("version").toInt();
         SetGlobalSetting("Version",i);
-        return new ApiManager::ApiOk(Translator::tr("Bunny version is now %1", account).arg(QString::number(i)));
+        return new ApiAnswers::Ok(Translator::tr("Bunny version is now %1", account).arg(QString::number(i)));
 }
 
 API_CALL(Bunny::Api_getBootcode)
 {
 	Q_UNUSED(account);
 	Q_UNUSED(hRequest);
-	return new ApiManager::ApiString(GetGlobalSetting("Bootcode", "OJN01").toString());
+	return new ApiAnswers::String(GetGlobalSetting("Bootcode", "OJN01").toString());
 }
 
 API_CALL(Bunny::Api_getVersion)
 {
 	Q_UNUSED(account);
 	Q_UNUSED(hRequest);
-	return new ApiManager::ApiString(QString::number(GetGlobalSetting("Version", 2).toInt()));
+	return new ApiAnswers::String(QString::number(GetGlobalSetting("Version", 2).toInt()));
 }
 
 API_CALL(Bunny::Api_setPublicVApi)
@@ -1942,7 +1942,7 @@ API_CALL(Bunny::Api_setPublicVApi)
         bool p = (bool)(hRequest.GetArg("public").toInt());
         QString pub = p ? "public" : "private";
         SetGlobalSetting("VApiPublic",p);
-        return new ApiManager::ApiOk(Translator::tr("Bunny is now %1 for VioletAPI", account).arg(Translator::tr(pub, account)));
+        return new ApiAnswers::Ok(Translator::tr("Bunny is now %1 for VioletAPI", account).arg(Translator::tr(pub, account)));
 }
 
 API_CALL(Bunny::Api_getPublicVApi)
@@ -1950,7 +1950,7 @@ API_CALL(Bunny::Api_getPublicVApi)
         Q_UNUSED(account);
         Q_UNUSED(hRequest);
         QString pub = GetGlobalSetting("VApiPublic",false).toBool() ? "public" : "private";
-        return new ApiManager::ApiString(pub);
+        return new ApiAnswers::String(pub);
 }
 
 API_CALL(Bunny::Api_enableVApi)
@@ -1964,51 +1964,51 @@ API_CALL(Bunny::Api_enableVApi)
 		SetGlobalSetting("VApiToken",Token);
 	}
 	SetGlobalSetting("VApiEnable",true);
-	return new ApiManager::ApiOk(Translator::tr("VioletAPI enabled", account));
+	return new ApiAnswers::Ok(Translator::tr("VioletAPI enabled", account));
 }
 
 API_CALL(Bunny::Api_disableVApi)
 {
 	Q_UNUSED(hRequest);
 	SetGlobalSetting("VApiEnable",false);
-	return new ApiManager::ApiOk(Translator::tr("VioletAPI disabled", account));
+	return new ApiAnswers::Ok(Translator::tr("VioletAPI disabled", account));
 }
 
 API_CALL(Bunny::Api_getVApiStatus)
 {
 	Q_UNUSED(account);
 	Q_UNUSED(hRequest);
-	return new ApiManager::ApiString(GetGlobalSetting("VApiEnable", false).toBool() ? "enabled" : "disabled");
+	return new ApiAnswers::String(GetGlobalSetting("VApiEnable", false).toBool() ? "enabled" : "disabled");
 }
 
 API_CALL(Bunny::Api_getVApiToken)
 {
 	Q_UNUSED(account);
 	Q_UNUSED(hRequest);
-	return new ApiManager::ApiString(GetGlobalSetting("VApiToken", "").toString());
+	return new ApiAnswers::String(GetGlobalSetting("VApiToken", "").toString());
 }
 
 API_CALL(Bunny::Api_setVApiToken)
 {
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	SetGlobalSetting("VApiToken",hRequest.GetArg("tk").toLatin1());
-	return new ApiManager::ApiOk(Translator::tr("VioletAPI Token updated.", account));
+	return new ApiAnswers::Ok(Translator::tr("VioletAPI Token updated.", account));
 }
 
 API_CALL(Bunny::Api_getOneLast)
 {
 	Q_UNUSED(account);
 	//if(!account.IsAdmin())
-	//	return new ApiManager::ApiError("Access denied");
+	//	return new ApiAnswers::Error("Access denied");
 
 	QString hParam = hRequest.GetArg("param");
 	if(hParam == "Last JabberDisconnection" || hParam == "Last JabberConnection" || hParam == "LastIP" || hParam == "LastRecord" || hParam == "LastLocate" || hParam == "LastLocateString" || hParam == "LastCron" || hParam == "Last PingConnection" || hParam == "Last Ping")
 	{
-		return new ApiManager::ApiString(GetGlobalSetting(hParam, QString("")).toString());
+		return new ApiAnswers::String(GetGlobalSetting(hParam, QString("")).toString());
 	}
-	return new ApiManager::ApiError(Translator::tr("Bad value '%1' for argument '%2'", account).arg(hParam, "param"));
+	return new ApiAnswers::Error(Translator::tr("Bad value '%1' for argument '%2'", account).arg(hParam, "param"));
 }
 
 API_CALL(Bunny::Api_getAllLast)
@@ -2016,7 +2016,7 @@ API_CALL(Bunny::Api_getAllLast)
 	Q_UNUSED(hRequest);
 	Q_UNUSED(account);
 	//if(!account.IsAdmin())
-	//	return new ApiManager::ApiError(Translator::tr("Access denied", account));
+	//	return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	QStringList params;
 	params << "Last JabberDisconnection" << "Last JabberConnection" << "Last PingConnection" << "LastIP" << "LastRecord" << "LastLocate" << "LastLocateString" << "LastCron" << "Last Ping";
@@ -2026,14 +2026,14 @@ API_CALL(Bunny::Api_getAllLast)
 		answer.insert(param, GetGlobalSetting(param, QString("")));
 	}
 
-	return new ApiManager::ApiMappedList(answer);
+	return new ApiAnswers::MappedList(answer);
 }
 
 API_CALL(Bunny::Api_getAllCronList)
 {
 	Q_UNUSED(hRequest);
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	QString crons = "<crons>";
 	std::list<CronElement>::iterator i;
@@ -2053,14 +2053,14 @@ API_CALL(Bunny::Api_getAllCronList)
 		crons += "</cron>";
 	}
 	crons += "</crons>";
-	return new ApiManager::ApiXml(crons);
+	return new ApiAnswers::Xml(crons);
 }
 
 API_CALL(Bunny::Api_getNextCronList)
 {
 	Q_UNUSED(hRequest);
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	QMap<QString, QVariant> answer = QMap<QString, QVariant>();
 	QMap<PluginInterface *, QDateTime>::iterator i;
@@ -2068,7 +2068,7 @@ API_CALL(Bunny::Api_getNextCronList)
 	for (i = map.begin(); i != map.end(); ++i)
 		answer.insert(i.key()->GetName(), i.value().toTime_t());
 
-	return new ApiManager::ApiMappedList(answer);
+	return new ApiAnswers::MappedList(answer);
 }
 
 // V1

@@ -257,7 +257,7 @@ void PluginWeather::InitApiCalls()
 
 PLUGIN_API_CALL(PluginWeather::Api_GetAllCitiesList) {
   if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
   QMap<QString, QVariant> list;
   const auto& bunnies = BunnyManager::GetAllBunnies();
@@ -275,7 +275,7 @@ PLUGIN_API_CALL(PluginWeather::Api_GetAllCitiesList) {
     }
 
 
-	return new ApiManager::ApiMappedList(list);
+	return new ApiAnswers::MappedList(list);
 }
 
 PLUGIN_BUNNY_API_CALL(PluginWeather::Api_ListRFID)
@@ -294,12 +294,12 @@ PLUGIN_BUNNY_API_CALL(PluginWeather::Api_ListRFID)
 			list.insert(QString(rx.cap(1)), bunny->GetPluginSetting(GetName(), key, QString()));
 		}
 	}
-        return new ApiManager::ApiMappedList(list);
+        return new ApiAnswers::MappedList(list);
 }
 
 PLUGIN_API_CALL(PluginWeather::Api_setConditionGroup) {
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	int id = hRequest.GetArg("id").toInt();
 	QString name = hRequest.GetArg("name");
@@ -312,7 +312,7 @@ PLUGIN_API_CALL(PluginWeather::Api_setConditionGroup) {
 		list.removeDuplicates();
 		list.sort();
 		SetSettings("List/Winds", list);
-		return new ApiManager::ApiOk(QString("Wind group '%1' is now named '%2'").arg(QString::number(id), name));
+		return new ApiAnswers::Ok(QString("Wind group '%1' is now named '%2'").arg(QString::number(id), name));
 	}
 	else
 	{
@@ -322,7 +322,7 @@ PLUGIN_API_CALL(PluginWeather::Api_setConditionGroup) {
 		list.removeDuplicates();
 		list.sort();
 		SetSettings("List/Groups", list);
-		return new ApiManager::ApiOk(QString("Group '%1' is now named '%2'").arg(QString::number(id), name));
+		return new ApiAnswers::Ok(QString("Group '%1' is now named '%2'").arg(QString::number(id), name));
 	}
 
 }
@@ -330,7 +330,7 @@ PLUGIN_API_CALL(PluginWeather::Api_setConditionGroup) {
 PLUGIN_API_CALL(PluginWeather::Api_getConditionGroup) {
 	Q_UNUSED(hRequest);
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError("Access denied");
+		return new ApiAnswers::Error("Access denied");
 
 	QMap<QString, QVariant> list;
 	if(hRequest.HasArg("wind"))
@@ -346,12 +346,12 @@ PLUGIN_API_CALL(PluginWeather::Api_getConditionGroup) {
 			list.insert(key, GetSettings("Group" + key + "/Name", QString()));
 	}
 
-	return new ApiManager::ApiMappedList(list);
+	return new ApiAnswers::MappedList(list);
 }
 
 PLUGIN_API_CALL(PluginWeather::Api_setCondition) {
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError("Access denied");
+		return new ApiAnswers::Error("Access denied");
 
 	int id = hRequest.GetArg("id").toInt();
 	int group = hRequest.GetArg("group").toInt();
@@ -365,7 +365,7 @@ PLUGIN_API_CALL(PluginWeather::Api_setCondition) {
 			list << GetSettings("Wind" + key + "/Min", QString()).toString();
 		SetSettings("List/Speed", list);
 
-		return new ApiManager::ApiOk(QString("Wind group '%2' starts at %1 km/h").arg(QString::number(id), QString::number(group)));
+		return new ApiAnswers::Ok(QString("Wind group '%2' starts at %1 km/h").arg(QString::number(id), QString::number(group)));
 	}
 	else
 	{
@@ -386,33 +386,33 @@ PLUGIN_API_CALL(PluginWeather::Api_setCondition) {
 		conditions << QString::number(id);
 		SetSettings("List/Conditions", conditions);
 
-		return new ApiManager::ApiOk(QString("Condition '%1' is now in group '%2'").arg(QString::number(id), QString::number(group)));
+		return new ApiAnswers::Ok(QString("Condition '%1' is now in group '%2'").arg(QString::number(id), QString::number(group)));
 	}
 }
 
 PLUGIN_API_CALL(PluginWeather::Api_getCondition) {
 	Q_UNUSED(hRequest);
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError("Access denied");
+		return new ApiAnswers::Error("Access denied");
 
 	int group = hRequest.GetArg("group").toInt();
 
 	if(hRequest.HasArg("wind"))
 	{
-		return new ApiManager::ApiString(GetSettings("Wind" + QString::number(group) + "/Min", "0").toString());
+		return new ApiAnswers::String(GetSettings("Wind" + QString::number(group) + "/Min", "0").toString());
 	}
 	else
 	{
 		QStringList list = GetSettings("Group" + QString::number(group) + "/Conditions", QStringList()).toStringList();
 
-		return new ApiManager::ApiList(list);
+		return new ApiAnswers::List(list);
 	}
 }
 
 PLUGIN_API_CALL(PluginWeather::Api_getConditions) {
 	Q_UNUSED(hRequest);
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError("Access denied");
+		return new ApiAnswers::Error("Access denied");
 
 	QMap<QString, QVariant> list;
 	if(hRequest.HasArg("wind"))
@@ -431,30 +431,30 @@ PLUGIN_API_CALL(PluginWeather::Api_getConditions) {
 			list.insert(key, GetSettings("Conditions/" + key, QString()));
 	}
 
-	return new ApiManager::ApiMappedList(list);
+	return new ApiAnswers::MappedList(list);
 }
 
 PLUGIN_API_CALL(PluginWeather::Api_Translation) {
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError("Access denied");
+		return new ApiAnswers::Error("Access denied");
 
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
 
 	QString action = hRequest.GetArg("action");
 
 	if(!hRequest.HasArg("when"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("when", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("when", GetName()));
 
 	QString when = hRequest.GetArg("when");
 
 	if(!hRequest.HasArg("id"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("id", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("id", GetName()));
 
 	int id = hRequest.GetArg("id").toInt();
 
 	if(!hRequest.HasArg("lng"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("lng", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("lng", GetName()));
 
 	QString lng = hRequest.GetArg("lng");
 
@@ -466,12 +466,12 @@ PLUGIN_API_CALL(PluginWeather::Api_Translation) {
 		else
 			list = GetSettings("Group" + QString::number(id) + "/" + when + "_" + lng, QStringList()).toStringList();
 
-		return new ApiManager::ApiList(list);
+		return new ApiAnswers::List(list);
 	}
 	else if(action == "add")
 	{
 		if(!hRequest.HasArg("tr"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("tr", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("tr", GetName()));
 
 		QString tr = hRequest.GetArg("tr");
 
@@ -482,7 +482,7 @@ PLUGIN_API_CALL(PluginWeather::Api_Translation) {
 			list.removeDuplicates();
 			list.sort();
 			SetSettings("Wind" + QString::number(id) + "/" + when + "_" + lng, list);
-			return new ApiManager::ApiOk(QString("Added translation in wind group '%1'").arg(QString::number(id)));
+			return new ApiAnswers::Ok(QString("Added translation in wind group '%1'").arg(QString::number(id)));
 		}
 		else
 		{
@@ -491,13 +491,13 @@ PLUGIN_API_CALL(PluginWeather::Api_Translation) {
 			list.removeDuplicates();
 			list.sort();
 			SetSettings("Group" + QString::number(id) + "/" + when + "_" + lng, list);
-			return new ApiManager::ApiOk(QString("Added translation in group '%1'").arg(QString::number(id)));
+			return new ApiAnswers::Ok(QString("Added translation in group '%1'").arg(QString::number(id)));
 		}
 	}
 	else if(action == "del")
 	{
 		if(!hRequest.HasArg("tr"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("tr", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("tr", GetName()));
 
 		QString tr = hRequest.GetArg("tr");
 
@@ -507,7 +507,7 @@ PLUGIN_API_CALL(PluginWeather::Api_Translation) {
 			list.removeAll(tr);
 			list.sort();
 			SetSettings("Wind" + QString::number(id) + "/" + when + "_" + lng, list);
-			return new ApiManager::ApiOk(QString("Removed translation in wind group '%1'").arg(QString::number(id)));
+			return new ApiAnswers::Ok(QString("Removed translation in wind group '%1'").arg(QString::number(id)));
 		}
 		else
 		{
@@ -515,18 +515,18 @@ PLUGIN_API_CALL(PluginWeather::Api_Translation) {
 			list.removeAll(tr);
 			list.sort();
 			SetSettings("Group" + QString::number(id) + "/" + when + "_" + lng, list);
-			return new ApiManager::ApiOk(QString("Removed translation in group '%1'").arg(QString::number(id)));
+			return new ApiAnswers::Ok(QString("Removed translation in group '%1'").arg(QString::number(id)));
 		}
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }
 
 PLUGIN_API_CALL(PluginWeather::Api_setTranslation) {
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError("Access denied");
+		return new ApiAnswers::Error("Access denied");
 
 	int id = hRequest.GetArg("id").toInt();
 	QString lng = hRequest.GetArg("lng");
@@ -540,7 +540,7 @@ PLUGIN_API_CALL(PluginWeather::Api_setTranslation) {
 		list.removeDuplicates();
 		list.sort();
 		SetSettings("Wind" + QString::number(id) + "/" + when + "_" + lng, list);
-		return new ApiManager::ApiOk(QString("Added translation in wind group '%1'").arg(QString::number(id)));
+		return new ApiAnswers::Ok(QString("Added translation in wind group '%1'").arg(QString::number(id)));
 	}
 	else
 	{
@@ -549,7 +549,7 @@ PLUGIN_API_CALL(PluginWeather::Api_setTranslation) {
 		list.removeDuplicates();
 		list.sort();
 		SetSettings("Group" + QString::number(id) + "/" + when + "_" + lng, list);
-		return new ApiManager::ApiOk(QString("Added translation in group '%1'").arg(QString::number(id)));
+		return new ApiAnswers::Ok(QString("Added translation in group '%1'").arg(QString::number(id)));
 	}
 
 }
@@ -557,7 +557,7 @@ PLUGIN_API_CALL(PluginWeather::Api_setTranslation) {
 PLUGIN_API_CALL(PluginWeather::Api_getTranslation) {
 	Q_UNUSED(hRequest);
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError("Access denied");
+		return new ApiAnswers::Error("Access denied");
 
 	int id = hRequest.GetArg("id").toInt();
 	QString lng = hRequest.GetArg("lng");
@@ -569,21 +569,21 @@ PLUGIN_API_CALL(PluginWeather::Api_getTranslation) {
 	else
 		list = GetSettings("Group" + QString::number(id) + "/" + when + "_" + lng, QStringList()).toStringList();
 
-	return new ApiManager::ApiList(list);
+	return new ApiAnswers::List(list);
 }
 
 PLUGIN_BUNNY_API_CALL(PluginWeather::Api_addCity) {
 	Q_UNUSED(account);
 
 	if(!hRequest.HasArg("city"))
-		return new ApiManager::ApiError(QString("Missing argument 'city' for plugin Weather"));
+		return new ApiAnswers::Error(QString("Missing argument 'city' for plugin Weather"));
 	QString city = hRequest.GetArg("city");
 	QStringList list = bunny->GetPluginSetting(GetName(), "Cities", QStringList()).toStringList();
 	list.append(city);
 	bunny->SetPluginSetting(GetName(), "Cities", list);
 	SetSettings("Cities/" + city, hRequest.GetArg("name"));
 
-	return new ApiManager::ApiOk(QString("Added city '%1' for bunny '%2'").arg(city, QString(bunny->GetID())));
+	return new ApiAnswers::Ok(QString("Added city '%1' for bunny '%2'").arg(city, QString(bunny->GetID())));
 }
 
 PLUGIN_BUNNY_API_CALL(PluginWeather::Api_removeCity)
@@ -591,14 +591,14 @@ PLUGIN_BUNNY_API_CALL(PluginWeather::Api_removeCity)
 	Q_UNUSED(account);
 
 	if(!hRequest.HasArg("city"))
-		return new ApiManager::ApiError(QString("Missing argument 'city' for plugin Weather"));
+		return new ApiAnswers::Error(QString("Missing argument 'city' for plugin Weather"));
 
 	QString city = hRequest.GetArg("city");
 	QStringList list = bunny->GetPluginSetting(GetName(), "Cities", QStringList()).toStringList();
 	list.removeAll(city);
 	bunny->SetPluginSetting(GetName(), "Cities", list);
 
-	return new ApiManager::ApiOk(QString("Removed city '%1' for bunny '%2'").arg(city, QString(bunny->GetID())));
+	return new ApiAnswers::Ok(QString("Removed city '%1' for bunny '%2'").arg(city, QString(bunny->GetID())));
 }
 
 PLUGIN_BUNNY_API_CALL(PluginWeather::Api_getCitiesList) {
@@ -610,7 +610,7 @@ PLUGIN_BUNNY_API_CALL(PluginWeather::Api_getCitiesList) {
 	{
 		list.insert(city, GetSettings("Cities/" + city, QString()));
 	}
-	return new ApiManager::ApiMappedList(list);
+	return new ApiAnswers::MappedList(list);
 }
 
 PLUGIN_BUNNY_API_CALL(PluginWeather::Api_setDefaultCity)
@@ -618,10 +618,10 @@ PLUGIN_BUNNY_API_CALL(PluginWeather::Api_setDefaultCity)
 	Q_UNUSED(account);
 
 	if(!hRequest.HasArg("city"))
-		return new ApiManager::ApiError(QString("Missing argument 'city' for plugin Weather"));
+		return new ApiAnswers::Error(QString("Missing argument 'city' for plugin Weather"));
 
 	bunny->SetPluginSetting(GetName(), "Default/City", hRequest.GetArg("city"));
-	return new ApiManager::ApiOk(QString("New default city defined '%1' for bunny '%2'").arg(hRequest.GetArg("city"), QString(bunny->GetID())));
+	return new ApiAnswers::Ok(QString("New default city defined '%1' for bunny '%2'").arg(hRequest.GetArg("city"), QString(bunny->GetID())));
 }
 
 PLUGIN_BUNNY_API_CALL(PluginWeather::Api_getDefaultCity)
@@ -629,7 +629,7 @@ PLUGIN_BUNNY_API_CALL(PluginWeather::Api_getDefaultCity)
 	Q_UNUSED(account);
 	Q_UNUSED(hRequest);
 
-	return new ApiManager::ApiString(bunny->GetPluginSetting(GetName(), "Default/City",QString()).toString());
+	return new ApiAnswers::String(bunny->GetPluginSetting(GetName(), "Default/City",QString()).toString());
 }
 
 PLUGIN_BUNNY_API_CALL(PluginWeather::Api_AddWebcast)
@@ -644,9 +644,9 @@ PLUGIN_BUNNY_API_CALL(PluginWeather::Api_AddWebcast)
 		Cron::RegisterDaily(this, Cron::mkTime(hTime), bunny, Cron::Classic, QVariant::fromValue(city));
 		list.insert(hTime,city);
 		bunny->SetPluginSetting(GetName(), "Webcasts", list);
-		return new ApiManager::ApiOk(QString("Add webcast at '%1' to bunny '%2'").arg(hTime, QString(bunny->GetID())));
+		return new ApiAnswers::Ok(QString("Add webcast at '%1' to bunny '%2'").arg(hTime, QString(bunny->GetID())));
 	}
-	return new ApiManager::ApiError(QString("Webcast already exists at '%1' for bunny '%2'").arg(hTime, QString(bunny->GetID())));
+	return new ApiAnswers::Error(QString("Webcast already exists at '%1' for bunny '%2'").arg(hTime, QString(bunny->GetID())));
 }
 
 PLUGIN_BUNNY_API_CALL(PluginWeather::Api_RemoveWebcast)
@@ -654,7 +654,7 @@ PLUGIN_BUNNY_API_CALL(PluginWeather::Api_RemoveWebcast)
 	Q_UNUSED(account);
 
 	if(!hRequest.HasArg("time"))
-		return new ApiManager::ApiError(QString("Missing argument 'time' for plugin Weather"));
+		return new ApiAnswers::Error(QString("Missing argument 'time' for plugin Weather"));
 
 	QMap<QString, QVariant> list = bunny->GetPluginSetting(GetName(), "Webcasts", QMap<QString, QVariant>()).toMap();
 	QString time = hRequest.GetArg("time");
@@ -666,16 +666,16 @@ PLUGIN_BUNNY_API_CALL(PluginWeather::Api_RemoveWebcast)
 		// Recreate crons
 		OnBunnyDisconnect(bunny);
 		OnBunnyConnect(bunny);
-		return new ApiManager::ApiOk(QString("Remove webcast at '%1' for bunny '%2'").arg(hRequest.GetArg("time"), QString(bunny->GetID())));
+		return new ApiAnswers::Ok(QString("Remove webcast at '%1' for bunny '%2'").arg(hRequest.GetArg("time"), QString(bunny->GetID())));
 	}
-	return new ApiManager::ApiError(QString("No webcast at '%1' for bunny '%2'").arg(hRequest.GetArg("time"), QString(bunny->GetID())));
+	return new ApiAnswers::Error(QString("No webcast at '%1' for bunny '%2'").arg(hRequest.GetArg("time"), QString(bunny->GetID())));
 }
 
 PLUGIN_BUNNY_API_CALL(PluginWeather::Api_ListWebcast)
 {
 	Q_UNUSED(account);
 	Q_UNUSED(hRequest);
-	return new ApiManager::ApiMappedList(bunny->GetPluginSetting(GetName(), "Webcasts", QMap<QString, QVariant>()).toMap());
+	return new ApiAnswers::MappedList(bunny->GetPluginSetting(GetName(), "Webcasts", QMap<QString, QVariant>()).toMap());
 }
 
 PLUGIN_BUNNY_API_CALL(PluginWeather::Api_AddRFID)
@@ -684,7 +684,7 @@ PLUGIN_BUNNY_API_CALL(PluginWeather::Api_AddRFID)
 
 	bunny->SetPluginSetting(GetName(), QString("RFIDWeather/%1").arg(hRequest.GetArg("tag")), hRequest.GetArg("city"));
 
-	return new ApiManager::ApiOk(QString("Add weather for '%1' for RFID '%2', bunny '%3'").arg(hRequest.GetArg("city"), hRequest.GetArg("tag"), QString(bunny->GetID())));
+	return new ApiAnswers::Ok(QString("Add weather for '%1' for RFID '%2', bunny '%3'").arg(hRequest.GetArg("city"), hRequest.GetArg("tag"), QString(bunny->GetID())));
 }
 
 PLUGIN_BUNNY_API_CALL(PluginWeather::Api_RemoveRFID)
@@ -693,7 +693,7 @@ PLUGIN_BUNNY_API_CALL(PluginWeather::Api_RemoveRFID)
 
 	bunny->RemovePluginSetting(GetName(), QString("RFIDWeather/%1").arg(hRequest.GetArg("tag")));
 
-	return new ApiManager::ApiOk(QString("Remove RFID '%2' for bunny '%3'").arg(hRequest.GetArg("tag"), QString(bunny->GetID())));
+	return new ApiAnswers::Ok(QString("Remove RFID '%2' for bunny '%3'").arg(hRequest.GetArg("tag"), QString(bunny->GetID())));
 }
 
 PLUGIN_BUNNY_API_CALL(PluginWeather::Api_getLang)
@@ -701,7 +701,7 @@ PLUGIN_BUNNY_API_CALL(PluginWeather::Api_getLang)
 	Q_UNUSED(account);
 	Q_UNUSED(hRequest);
 
-	return new ApiManager::ApiString(bunny->GetPluginSetting(GetName(), "Lang","fr").toString());
+	return new ApiAnswers::String(bunny->GetPluginSetting(GetName(), "Lang","fr").toString());
 }
 
 PLUGIN_BUNNY_API_CALL(PluginWeather::Api_setLang)
@@ -709,7 +709,7 @@ PLUGIN_BUNNY_API_CALL(PluginWeather::Api_setLang)
 	Q_UNUSED(account);
 	bunny->SetPluginSetting(GetName(), "Lang",hRequest.GetArg("lg"));
 
-	return new ApiManager::ApiOk("Lang Updated!");
+	return new ApiAnswers::Ok("Lang Updated!");
 }
 
 PLUGIN_BUNNY_API_CALL(PluginWeather::Api_getFrequency)
@@ -717,7 +717,7 @@ PLUGIN_BUNNY_API_CALL(PluginWeather::Api_getFrequency)
 	Q_UNUSED(account);
 	Q_UNUSED(hRequest);
 
-	return new ApiManager::ApiString(bunny->GetPluginSetting(GetName(), "Frequency", 0).toString());
+	return new ApiAnswers::String(bunny->GetPluginSetting(GetName(), "Frequency", 0).toString());
 }
 
 PLUGIN_BUNNY_API_CALL(PluginWeather::Api_setFrequency)
@@ -727,7 +727,7 @@ PLUGIN_BUNNY_API_CALL(PluginWeather::Api_setFrequency)
 	OnBunnyDisconnect(bunny);
 	OnBunnyConnect(bunny);
 
-	return new ApiManager::ApiOk("Frequency updated!");
+	return new ApiAnswers::Ok("Frequency updated!");
 }
 
 int PluginWeather::GetWeatherFromCode(int code)

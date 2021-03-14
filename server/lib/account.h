@@ -8,11 +8,12 @@
 #include <QDir>
 #include <QString>
 #include <QDateTime>
-#include "apimanager.h"
+
 #include "apihandler.h"
 #include "global.h"
 
-class OJN_EXPORT Account : public ApiHandler<Account>
+class OJN_EXPORT Account 
+	: public ApiHandler<Account>
 {
 	friend class AccountManager;
 	friend class File2Db;

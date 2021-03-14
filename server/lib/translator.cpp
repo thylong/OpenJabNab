@@ -468,7 +468,7 @@ API_CALL(Translator::Api_getTime)
 	{
 		list.insert(hRequest.GetArg("tz"), GetTimezoneTime(hRequest.GetArg("tz"), time).toString( "yyyy-MM-dd hh:mm:ss" ));
 	}
-	return new ApiManager::ApiMappedList(list);
+	return new ApiAnswers::MappedList(list);
 }
 
 API_CALL(Translator::Api_GetListOfTimezones)
@@ -483,24 +483,24 @@ API_CALL(Translator::Api_GetListOfTimezones)
     outList.insert(QString(tz), GetCurrentTime(QString(tz)).toString( "yyyy-MM-dd hh:mm:ss" ));
   }
 
-	return new ApiManager::ApiMappedList(outList);
+	return new ApiAnswers::MappedList(outList);
 }
 
 API_CALL(Translator::Api_Translation)
 {
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("action"));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("action"));
 
 	QString action = hRequest.GetArg("action");
 
 	if(action == "reload")
 	{
 		loadTranslations();
-		return new ApiManager::ApiOk(Translator::tr("Translations reloaded", account));
+		return new ApiAnswers::Ok(Translator::tr("Translations reloaded", account));
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1'", account).arg("action"));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1'", account).arg("action"));
 	}
 }
 

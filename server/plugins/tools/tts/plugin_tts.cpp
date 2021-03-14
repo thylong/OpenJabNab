@@ -25,7 +25,7 @@ void PluginTTS::InitApiCalls()
 PLUGIN_BUNNY_API_CALL(PluginTTS::Api_Say)
 {
 	if(!bunny->IsConnected())
-		return new ApiManager::ApiError(Translator::tr("Bunny '%1' is not connected", account).arg(QString(bunny->GetID())));
+		return new ApiAnswers::Error(Translator::tr("Bunny '%1' is not connected", account).arg(QString(bunny->GetID())));
 
 	TTSManager::OutputFormat format = bunny->GetVersion() == 1 ? TTSManager::Format_Adp : TTSManager::Format_Mp3;
 
@@ -40,5 +40,5 @@ PLUGIN_BUNNY_API_CALL(PluginTTS::Api_Say)
 	{
 		bunny->SendPacket(MessagePacket("MU " + sound.file.toLatin1() + "\nMW\n"), GetName());
 	}
-	return new ApiManager::ApiOk(Translator::tr("Sending '%1' to bunny '%2'", account).arg(hRequest.GetArg("text"), QString(bunny->GetID())));
+	return new ApiAnswers::Ok(Translator::tr("Sending '%1' to bunny '%2'", account).arg(hRequest.GetArg("text"), QString(bunny->GetID())));
 }

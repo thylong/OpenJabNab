@@ -58,33 +58,33 @@ void PluginEars::InitApiCalls()
 PLUGIN_BUNNY_API_CALL(PluginEars::Api_Friend)
 {
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
 
 	QString action = hRequest.GetArg("action");
 
 	if(action == "check")
 	{
 		if(!hRequest.HasArg("id"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("id", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("id", GetName()));
 
 		Bunny * f = BunnyManager::GetBunny(hRequest.GetArg("id").toLatin1());
-		return new ApiManager::ApiString(f->GetPluginSetting(GetName(), "Friend", "").toString() == bunny->GetID() ? "Friend" : "Not friend");
+		return new ApiAnswers::String(f->GetPluginSetting(GetName(), "Friend", "").toString() == bunny->GetID() ? "Friend" : "Not friend");
 	}
 	else if(action == "get")
 	{
-		return new ApiManager::ApiString(bunny->GetPluginSetting(GetName(), "Friend", "").toString());
+		return new ApiAnswers::String(bunny->GetPluginSetting(GetName(), "Friend", "").toString());
 	}
 	else if(action == "set")
 	{
 		if(!hRequest.HasArg("id"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("id", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("id", GetName()));
 
 		bunny->SetPluginSetting(GetName(), "Friend", QString(hRequest.GetArg("id")));
-		return new ApiManager::ApiOk(Translator::tr("Bunny '%1' is now friend with bunny '%2'", account).arg(hRequest.GetArg("id"), QString(bunny->GetID())));
+		return new ApiAnswers::Ok(Translator::tr("Bunny '%1' is now friend with bunny '%2'", account).arg(hRequest.GetArg("id"), QString(bunny->GetID())));
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }
 
@@ -93,14 +93,14 @@ PLUGIN_BUNNY_API_CALL(PluginEars::Api_setFriend)
 	Q_UNUSED(account);
 	/* Update Configuration */
 	bunny->SetPluginSetting(GetName(), "Friend", QVariant(hRequest.GetArg("id")));
-	return new ApiManager::ApiOk(QString("Plugin configuration updated."));
+	return new ApiAnswers::Ok(QString("Plugin configuration updated."));
 }
 
 PLUGIN_BUNNY_API_CALL(PluginEars::Api_checkFriend)
 {
 	Q_UNUSED(account);
 	Bunny * f = BunnyManager::GetBunny(hRequest.GetArg("id").toLatin1());
-	return new ApiManager::ApiString(f->GetPluginSetting(GetName(), "Friend", "").toString() == bunny->GetID() ? "Friend" : "Not friend");
+	return new ApiAnswers::String(f->GetPluginSetting(GetName(), "Friend", "").toString() == bunny->GetID() ? "Friend" : "Not friend");
 }
 
 PLUGIN_BUNNY_API_CALL(PluginEars::Api_getFriend)
@@ -108,5 +108,5 @@ PLUGIN_BUNNY_API_CALL(PluginEars::Api_getFriend)
 	Q_UNUSED(account);
 	Q_UNUSED(hRequest);
 	/* Get Configuration */
-	return new ApiManager::ApiString(bunny->GetPluginSetting(GetName(), "Friend", "").toString());
+	return new ApiAnswers::String(bunny->GetPluginSetting(GetName(), "Friend", "").toString());
 }

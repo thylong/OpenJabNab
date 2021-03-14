@@ -77,15 +77,15 @@ void BunnyManager::InitApiCalls()
 API_CALL(BunnyManager::Api_Export)
 {
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("action"));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("action"));
 
 	QString action = hRequest.GetArg("action");
 
 	if(!hRequest.HasArg("options"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("options"));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("options"));
 
 	QStringList options = hRequest.GetArg("options").split(",");
 
@@ -165,21 +165,21 @@ API_CALL(BunnyManager::Api_Export)
 			bunnies += "</bunny>";
 		}
 		bunnies += "</bunnies>";
-		return new ApiManager::ApiXml(bunnies);
+		return new ApiAnswers::Xml(bunnies);
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1'", account).arg("action"));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1'", account).arg("action"));
 	}
 }
 
 API_CALL(BunnyManager::Api_EmailsForBunnies)
 {
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("action"));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("action"));
 
 	QString action = hRequest.GetArg("action");
 
@@ -207,68 +207,68 @@ API_CALL(BunnyManager::Api_EmailsForBunnies)
 				list.insert(b->GetID(), value);
 			}
 		}
-		return new ApiManager::ApiMappedList(list);
+		return new ApiAnswers::MappedList(list);
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1'", account).arg("action"));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1'", account).arg("action"));
 	}
 }
 
 API_CALL(BunnyManager::Api_SettingsForBunny)
 {
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("action"));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("action"));
 
 	QString action = hRequest.GetArg("action");
 
 	if(action == "clone")
 	{
 		if(!hRequest.HasArg("plugin"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("plugin"));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("plugin"));
 
 		QString plugin = hRequest.GetArg("plugin");
 
 		if(!hRequest.HasArg("from"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("from"));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("from"));
 
 		Bunny * from = GetBunny(hRequest.GetArg("from").toLatin1());
 		if(from == NULL)
-			return new ApiManager::ApiError(Translator::tr("Unknow bunny : %1").arg(hRequest.GetArg("from")));
+			return new ApiAnswers::Error(Translator::tr("Unknow bunny : %1").arg(hRequest.GetArg("from")));
 
 		if(!hRequest.HasArg("to"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("to"));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("to"));
 
 		Bunny * to = GetBunny(hRequest.GetArg("to").toLatin1());
 		if(to == NULL)
-			return new ApiManager::ApiError(Translator::tr("Unknow bunny : %1").arg(hRequest.GetArg("to")));
+			return new ApiAnswers::Error(Translator::tr("Unknow bunny : %1").arg(hRequest.GetArg("to")));
 
 		to->ImportPluginSettings(plugin, from->ExportPluginSettings(plugin));
-		return new ApiManager::ApiOk(Translator::tr("Settings cloned for plugin '%1'").arg(plugin));
+		return new ApiAnswers::Ok(Translator::tr("Settings cloned for plugin '%1'").arg(plugin));
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1'", account).arg("action"));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1'", account).arg("action"));
 	}
 }
 
 API_CALL(BunnyManager::Api_SettingsForBunnies)
 {
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("action"));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("action"));
 
 	QString action = hRequest.GetArg("action");
 
 	if(action == "get")
 	{
 		if(!hRequest.HasArg("key"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("key"));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("key"));
 
 		QString key = hRequest.GetArg("key");
 
@@ -298,14 +298,14 @@ API_CALL(BunnyManager::Api_SettingsForBunnies)
 				list.insert(b->GetID(), value);
 			}
 		}
-		return new ApiManager::ApiMappedList(list);
+		return new ApiAnswers::MappedList(list);
 	}
   else if(action == "set")
   {
 		if(!hRequest.HasArg("key"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("key"));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("key"));
 		if(!hRequest.HasArg("value"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("value"));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("value"));
 
 
 		QString key = hRequest.GetArg("key");
@@ -332,24 +332,24 @@ API_CALL(BunnyManager::Api_SettingsForBunnies)
 			}
 
 		}
-		return new ApiManager::ApiOk(Translator::tr("Great success", account));
+		return new ApiAnswers::Ok(Translator::tr("Great success", account));
 
   }
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1'", account).arg("action"));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1'", account).arg("action"));
 	}
 }
 
 API_CALL(BunnyManager::Api_RemoveBunny)
 {
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	QString serial = hRequest.GetArg("serial");
 	QByteArray hexSerial = QByteArray::fromHex(serial.toLatin1());
 	if(!listOfBunnies.contains(hexSerial))
-		return new ApiManager::ApiError(Translator::tr("Bunny '%1' does not exist", account).arg(serial));
+		return new ApiAnswers::Error(Translator::tr("Bunny '%1' does not exist", account).arg(serial));
 
 	Bunny * b = listOfBunnies.value(hexSerial);
 /*
@@ -376,8 +376,8 @@ API_CALL(BunnyManager::Api_RemoveBunny)
 	if(close)
 		DbManager::releaseDb();
 	if(ret)
-		return new ApiManager::ApiOk(Translator::tr("Bunny %1 removed", account).arg(serial));
-	return new ApiManager::ApiError(Translator::tr("Error when removing bunny %1", account).arg(serial));
+		return new ApiAnswers::Ok(Translator::tr("Bunny %1 removed", account).arg(serial));
+	return new ApiAnswers::Error(Translator::tr("Error when removing bunny %1", account).arg(serial));
 }
 
 int BunnyManager::GetConnectedBunnyCount(int version)
@@ -512,14 +512,14 @@ API_CALL(BunnyManager::Api_GetListOfConnectedBunnies)
 	Q_UNUSED(hRequest);
 
 	if(!account.HasAccess(Account::AcBunnies,Account::Read))
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	QMap<QString, QVariant> list;
 	foreach(Bunny * b, listOfBunnies)
 		if(b->IsConnected() && account.GetBunniesList().contains(b->GetID()))
 			list.insert(b->GetID(), b->GetBunnyName());
 
-	return new ApiManager::ApiMappedList(list);
+	return new ApiAnswers::MappedList(list);
 }
 
 API_CALL(BunnyManager::Api_GetListOfSleepingBunnies)
@@ -527,14 +527,14 @@ API_CALL(BunnyManager::Api_GetListOfSleepingBunnies)
 	Q_UNUSED(hRequest);
 
 	if(!account.HasAccess(Account::AcBunnies,Account::Read))
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	QMap<QString, QVariant> list;
 	foreach(Bunny * b, listOfBunnies)
 		if(b->IsConnected() && b->IsSleeping() && account.GetBunniesList().contains(b->GetID()))
 			list.insert(b->GetID(), b->GetBunnyName());
 
-	return new ApiManager::ApiMappedList(list);
+	return new ApiAnswers::MappedList(list);
 }
 
 API_CALL(BunnyManager::Api_ResetAllPassword)
@@ -542,19 +542,19 @@ API_CALL(BunnyManager::Api_ResetAllPassword)
 	Q_UNUSED(hRequest);
 
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	foreach(Bunny * b, listOfBunnies)
 		b->ClearBunnyPassword();
 
-	return new ApiManager::ApiOk(Translator::tr("All passwords cleared", account));
+	return new ApiAnswers::Ok(Translator::tr("All passwords cleared", account));
 }
 
 API_CALL(BunnyManager::Api_GetListOfPluginsForBunnies) {
 	Q_UNUSED(hRequest);
 
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	QMap<QString, QVariant> list;
 	foreach(Bunny * b, listOfBunnies)
@@ -562,101 +562,101 @@ API_CALL(BunnyManager::Api_GetListOfPluginsForBunnies) {
 		list.insert(b->GetID(), QStringList(b->GetListOfPlugins()).join(","));
 	}
 
-	return new ApiManager::ApiMappedList(list);
+	return new ApiAnswers::MappedList(list);
 }
 
 API_CALL(BunnyManager::Api_GetListOfBunnies) {
 	Q_UNUSED(hRequest);
 
 	if(!account.HasAccess(Account::AcBunnies,Account::Read))
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	QMap<QString, QVariant> list;
 	foreach(Bunny * b, listOfBunnies)
 		if(account.GetBunniesList().contains(b->GetID()))
 			list.insert(b->GetID(), b->GetBunnyName());
 
-	return new ApiManager::ApiMappedList(list);
+	return new ApiAnswers::MappedList(list);
 }
 
 API_CALL(BunnyManager::Api_GetListOfAllBunnies) {
 	Q_UNUSED(hRequest);
 
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	QMap<QString, QVariant> list;
 	foreach(Bunny * b, listOfBunnies)
 		list.insert(b->GetID(), b->GetBunnyName());
 
-	return new ApiManager::ApiMappedList(list);
+	return new ApiAnswers::MappedList(list);
 }
 
 API_CALL(BunnyManager::Api_GetListOfBunniesByIP) {
 	Q_UNUSED(hRequest);
 
 	if(!account.HasAccess(Account::AcBunnies,Account::Read))
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	QMap<QString, QVariant> list;
 	foreach(Bunny * b, listOfBunnies)
 		if(b->GetGlobalSetting("LastIP","0.0.0.0") == hRequest.GetArg("ip"))
 			list.insert(b->GetID(), b->GetBunnyName());
 
-	return new ApiManager::ApiMappedList(list);
+	return new ApiAnswers::MappedList(list);
 }
 
 API_CALL(BunnyManager::Api_GetListOfAllConnectedBunnies) {
 	Q_UNUSED(hRequest);
 
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	QMap<QString, QVariant> list;
 	foreach(Bunny * b, listOfBunnies)
 		if(b->IsConnected())
 			list.insert(b->GetID(), b->GetBunnyName());
 
-	return new ApiManager::ApiMappedList(list);
+	return new ApiAnswers::MappedList(list);
 }
 
 API_CALL(BunnyManager::Api_GetListOfAllSleepingBunnies) {
 	Q_UNUSED(hRequest);
 
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	QMap<QString, QVariant> list;
 	foreach(Bunny * b, listOfBunnies)
 		if(b->IsConnected() && b->IsSleeping())
 			list.insert(b->GetID(), b->GetBunnyName());
 
-	return new ApiManager::ApiMappedList(list);
+	return new ApiAnswers::MappedList(list);
 }
 
 API_CALL(BunnyManager::Api_ResetAllBunniesPassword) {
 	Q_UNUSED(hRequest);
 
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	QMap<QString, QVariant> list;
 	foreach(Bunny * b, listOfBunnies)
 		b->ClearBunnyPassword();
 
-	return new ApiManager::ApiMappedList(list);
+	return new ApiAnswers::MappedList(list);
 }
 
 API_CALL(BunnyManager::Api_AddBunny) {
 	if(!account.HasAccess(Account::AcBunnies,Account::Write))
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	QByteArray bunnyID = hRequest.GetArg("serial").toLatin1();
 	if(listOfBunnies.contains(bunnyID))
-		return new ApiManager::ApiError(Translator::tr("Bunny already exists", account));
+		return new ApiAnswers::Error(Translator::tr("Bunny already exists", account));
 
 	GetBunny(bunnyID);
-	return new ApiManager::ApiOk(Translator::tr("Bunny successfully added", account));
+	return new ApiAnswers::Ok(Translator::tr("Bunny successfully added", account));
 }
 
 QHash<QByteArray, Bunny *> BunnyManager::listOfBunnies;

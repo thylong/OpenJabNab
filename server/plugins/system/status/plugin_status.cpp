@@ -141,50 +141,50 @@ void PluginStatus::InitApiCalls()
 PLUGIN_BUNNY_API_CALL(PluginStatus::Api_Status)
 {
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
 
 	QString action = hRequest.GetArg("action");
 
 	if(action == "silent")
 	{
 		SendRequestStatus(bunny);
-        	return new ApiManager::ApiOk(Translator::tr("'%1' status requested, waiting answer", account).arg(Translator::tr("silent", account)));
+        	return new ApiAnswers::Ok(Translator::tr("'%1' status requested, waiting answer", account).arg(Translator::tr("silent", account)));
 	}
 	else if(action == "running")
 	{
 		SendRequestStatus(bunny, "getrunningstate");
-        	return new ApiManager::ApiOk(Translator::tr("'%1' status requested, waiting answer", account).arg(Translator::tr("running", account)));
+        	return new ApiAnswers::Ok(Translator::tr("'%1' status requested, waiting answer", account).arg(Translator::tr("running", account)));
 	}
 	else if(action == "shortconfig")
 	{
 		SendRequestStatus(bunny, "getshortconfig");
-        	return new ApiManager::ApiOk(Translator::tr("'%1' status requested, waiting answer", account).arg(Translator::tr("shortconfig", account)));
+        	return new ApiAnswers::Ok(Translator::tr("'%1' status requested, waiting answer", account).arg(Translator::tr("shortconfig", account)));
 	}
 	else if(action == "config")
 	{
 		SendRequestStatus(bunny, "getconfig");
-        	return new ApiManager::ApiOk(Translator::tr("'%1' status requested, waiting answer", account).arg(Translator::tr("config", account)));
+        	return new ApiAnswers::Ok(Translator::tr("'%1' status requested, waiting answer", account).arg(Translator::tr("config", account)));
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }
 
 PLUGIN_API_CALL(PluginStatus::Api_Config)
 {
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
 
 	QString action = hRequest.GetArg("action");
 
 	if(action == "save")
 	{
 		if(!hRequest.HasArg("save"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("save", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("save", GetName()));
 
 		QString save = hRequest.GetArg("save");
 
@@ -194,22 +194,22 @@ PLUGIN_API_CALL(PluginStatus::Api_Config)
 			SetSettings("Save/" + save, value);
 			if(value == "1")
 			{
-        			return new ApiManager::ApiOk(Translator::tr("'%1' status will be saved in database", account).arg(Translator::tr(save, account)));
+        			return new ApiAnswers::Ok(Translator::tr("'%1' status will be saved in database", account).arg(Translator::tr(save, account)));
 			}
 			else
 			{
-        			return new ApiManager::ApiOk(Translator::tr("'%1' status will not be saved in database", account).arg(Translator::tr(save, account)));
+        			return new ApiAnswers::Ok(Translator::tr("'%1' status will not be saved in database", account).arg(Translator::tr(save, account)));
 			}
 		}
 		else
 		{
-			return new ApiManager::ApiString(GetSettings("Save/" + save, 0).toString());
+			return new ApiAnswers::String(GetSettings("Save/" + save, 0).toString());
 		}
 	}
 	else if(action == "unique")
 	{
 		if(!hRequest.HasArg("unique"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("unique", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("unique", GetName()));
 
 		QString unique = hRequest.GetArg("unique");
 
@@ -219,22 +219,22 @@ PLUGIN_API_CALL(PluginStatus::Api_Config)
 			SetSettings("Unique/" + unique, value);
 			if(value == "1")
 			{
-        			return new ApiManager::ApiOk(Translator::tr("'%1' status will be unique in database", account).arg(Translator::tr(unique, account)));
+        			return new ApiAnswers::Ok(Translator::tr("'%1' status will be unique in database", account).arg(Translator::tr(unique, account)));
 			}
 			else
 			{
-        			return new ApiManager::ApiOk(Translator::tr("'%1' status will not be unique in database", account).arg(Translator::tr(unique, account)));
+        			return new ApiAnswers::Ok(Translator::tr("'%1' status will not be unique in database", account).arg(Translator::tr(unique, account)));
 			}
 		}
 		else
 		{
-			return new ApiManager::ApiString(GetSettings("Unique/" + unique, 0).toString());
+			return new ApiAnswers::String(GetSettings("Unique/" + unique, 0).toString());
 		}
 	}
 	else if(action == "display")
 	{
 		if(!hRequest.HasArg("display"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("display", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("display", GetName()));
 
 		QString display = hRequest.GetArg("display");
 
@@ -244,29 +244,29 @@ PLUGIN_API_CALL(PluginStatus::Api_Config)
 			SetSettings("Display/" + display, value);
 			if(value == "1")
 			{
-        			return new ApiManager::ApiOk(Translator::tr("'%1' status will be displayed in logs", account).arg(Translator::tr(display, account)));
+        			return new ApiAnswers::Ok(Translator::tr("'%1' status will be displayed in logs", account).arg(Translator::tr(display, account)));
 			}
 			else
 			{
-        			return new ApiManager::ApiOk(Translator::tr("'%1' status will not be displayed in logs", account).arg(Translator::tr(display, account)));
+        			return new ApiAnswers::Ok(Translator::tr("'%1' status will not be displayed in logs", account).arg(Translator::tr(display, account)));
 			}
 		}
 		else
 		{
-			return new ApiManager::ApiString(GetSettings("Display/" + display, 0).toString());
+			return new ApiAnswers::String(GetSettings("Display/" + display, 0).toString());
 		}
 	}
 	else if(action == "decode")
 	{
 		if(!hRequest.HasArg("subaction"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("subaction", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("subaction", GetName()));
 
 		QString subaction = hRequest.GetArg("subaction");
 
 		if(subaction == "add")
 		{
 			if(!hRequest.HasArg("decode"))
-				return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("decode", GetName()));
+				return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("decode", GetName()));
 
 			QString decode = hRequest.GetArg("decode");
 
@@ -276,14 +276,14 @@ PLUGIN_API_CALL(PluginStatus::Api_Config)
 				list.append(decode);
 				list.removeDuplicates();
 				SetSettings("Decode", list);
-				return new ApiManager::ApiOk(Translator::tr("Added '%1' in the list of decoded values", account).arg(decode));
+				return new ApiAnswers::Ok(Translator::tr("Added '%1' in the list of decoded values", account).arg(decode));
 			}
-			return new ApiManager::ApiError(Translator::tr("'%1' is already in the list of decoded values", account).arg(decode));
+			return new ApiAnswers::Error(Translator::tr("'%1' is already in the list of decoded values", account).arg(decode));
 		}
 		else if(subaction == "del")
 		{
 			if(!hRequest.HasArg("decode"))
-				return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("decode", GetName()));
+				return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("decode", GetName()));
 
 			QString decode = hRequest.GetArg("decode");
 
@@ -292,21 +292,21 @@ PLUGIN_API_CALL(PluginStatus::Api_Config)
 			{
 				list.removeAll(decode);
 				SetSettings("Decode", list);
-				return new ApiManager::ApiOk(Translator::tr("Removed '%1' from the list of decoded values", account).arg(decode));
+				return new ApiAnswers::Ok(Translator::tr("Removed '%1' from the list of decoded values", account).arg(decode));
 			}
-			return new ApiManager::ApiError(Translator::tr("'%1' is not in the list of decoded values", account).arg(decode));
+			return new ApiAnswers::Error(Translator::tr("'%1' is not in the list of decoded values", account).arg(decode));
 		}
 		else if(subaction == "list")
 		{
-			return new ApiManager::ApiList(GetSettings("Decode", QStringList()).toStringList());
+			return new ApiAnswers::List(GetSettings("Decode", QStringList()).toStringList());
 		}
 		else
 		{
-			return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("subaction", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("subaction", GetName()));
 		}
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }

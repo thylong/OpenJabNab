@@ -125,18 +125,18 @@ void PluginDicton::InitApiCalls()
 PLUGIN_BUNNY_API_CALL(PluginDicton::Api_RFID)
 {
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
 
 	QString action = hRequest.GetArg("action");
 
 	if(action == "list")
 	{
-		return new ApiManager::ApiList(bunny->GetPluginSetting(GetName(), "RFID", QStringList()).toStringList());
+		return new ApiAnswers::List(bunny->GetPluginSetting(GetName(), "RFID", QStringList()).toStringList());
 	}
 	else if(action == "add")
 	{
 		if(!hRequest.HasArg("tag"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("tag", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("tag", GetName()));
 
 		QString tag = hRequest.GetArg("tag");
 
@@ -147,14 +147,14 @@ PLUGIN_BUNNY_API_CALL(PluginDicton::Api_RFID)
 			bunny->SetPluginSetting(GetName(), "RFID", list);
 			Ztamp * z = ZtampManager::GetZtamp(tag.toLatin1());
 			z->Associate(bunny, this);
-			return new ApiManager::ApiOk(Translator::tr("Add RFID '%1' for bunny '%2'").arg(tag, QString(bunny->GetID())));
+			return new ApiAnswers::Ok(Translator::tr("Add RFID '%1' for bunny '%2'").arg(tag, QString(bunny->GetID())));
 		}
-		return new ApiManager::ApiError(Translator::tr("RFID '%1' already assigned to bunny '%2'", account).arg(tag, QString(bunny->GetID())));
+		return new ApiAnswers::Error(Translator::tr("RFID '%1' already assigned to bunny '%2'", account).arg(tag, QString(bunny->GetID())));
 	}
 	else if(action == "del")
 	{
 		if(!hRequest.HasArg("tag"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("tag", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("tag", GetName()));
 
 		QString tag = hRequest.GetArg("tag");
 
@@ -166,31 +166,31 @@ PLUGIN_BUNNY_API_CALL(PluginDicton::Api_RFID)
 			Ztamp * z = ZtampManager::GetZtamp(tag.toLatin1());
 			z->Dissociate(bunny);
 
-			return new ApiManager::ApiOk(Translator::tr("RFID '%1' removed for bunny '%2'", account).arg(tag, QString(bunny->GetID())));
+			return new ApiAnswers::Ok(Translator::tr("RFID '%1' removed for bunny '%2'", account).arg(tag, QString(bunny->GetID())));
 		}
-		return new ApiManager::ApiError(Translator::tr("RFID '%1' is not assign to bunny '%2'", account).arg(tag, QString(bunny->GetID())));
+		return new ApiAnswers::Error(Translator::tr("RFID '%1' is not assign to bunny '%2'", account).arg(tag, QString(bunny->GetID())));
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }
 
 PLUGIN_BUNNY_API_CALL(PluginDicton::Api_Schedule)
 {
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
 
 	QString action = hRequest.GetArg("action");
 
 	if(action == "list")
 	{
-		return new ApiManager::ApiList(bunny->GetPluginSetting(GetName(), "Schedules", QStringList()).toStringList());
+		return new ApiAnswers::List(bunny->GetPluginSetting(GetName(), "Schedules", QStringList()).toStringList());
 	}
 	else if(action == "add")
 	{
 		if(!hRequest.HasArg("time"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("time", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("time", GetName()));
 
 		QString hTime = hRequest.GetArg("time");
 
@@ -200,14 +200,14 @@ PLUGIN_BUNNY_API_CALL(PluginDicton::Api_Schedule)
 			Cron::RegisterDaily(this, Cron::mkTime(hTime), bunny, Cron::Classic, QVariant());
 			list.append(hTime);
 			bunny->SetPluginSetting(GetName(), "Schedules", list);
-			return new ApiManager::ApiOk(Translator::tr("Add schedule at '%1' for bunny '%2'", account).arg(hTime, QString(bunny->GetID())));
+			return new ApiAnswers::Ok(Translator::tr("Add schedule at '%1' for bunny '%2'", account).arg(hTime, QString(bunny->GetID())));
 		}
-		return new ApiManager::ApiError(Translator::tr("Schedule already exists at '%1' for bunny '%2'", account).arg(hTime, QString(bunny->GetID())));
+		return new ApiAnswers::Error(Translator::tr("Schedule already exists at '%1' for bunny '%2'", account).arg(hTime, QString(bunny->GetID())));
 	}
 	else if(action == "del")
 	{
 		if(!hRequest.HasArg("time"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("time", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("time", GetName()));
 
 		QStringList list = bunny->GetPluginSetting(GetName(), "Schedules", QStringList()).toStringList();
 		QString time = hRequest.GetArg("time");
@@ -219,46 +219,46 @@ PLUGIN_BUNNY_API_CALL(PluginDicton::Api_Schedule)
 			// Recreate crons
 			OnBunnyDisconnect(bunny);
 			OnBunnyConnect(bunny);
-			return new ApiManager::ApiOk(Translator::tr("Remove schedule at '%1' for bunny '%2'", account).arg(time, QString(bunny->GetID())));
+			return new ApiAnswers::Ok(Translator::tr("Remove schedule at '%1' for bunny '%2'", account).arg(time, QString(bunny->GetID())));
 		}
-		return new ApiManager::ApiError(Translator::tr("No schedule at '%1' for bunny '%2'", account).arg(time, QString(bunny->GetID())));
+		return new ApiAnswers::Error(Translator::tr("No schedule at '%1' for bunny '%2'", account).arg(time, QString(bunny->GetID())));
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }
 
 PLUGIN_BUNNY_API_CALL(PluginDicton::Api_Language)
 {
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
 
 	QString action = hRequest.GetArg("action");
 
 	if(action == "list")
 	{
-		return new ApiManager::ApiList(GetLanguages());
+		return new ApiAnswers::List(GetLanguages());
 	}
 	else if(action == "get")
 	{
-		return new ApiManager::ApiString(bunny->GetPluginSetting(GetName(), "Language", bunny->GetLanguage()).toString());
+		return new ApiAnswers::String(bunny->GetPluginSetting(GetName(), "Language", bunny->GetLanguage()).toString());
 	}
 	else if(action == "set")
 	{
 		if(!hRequest.HasArg("lng"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("lng", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("lng", GetName()));
 
 		QString lng = hRequest.GetArg("lng");
 
 		if(!GetLanguages().contains(lng))
-			return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("lng", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("lng", GetName()));
 
 		bunny->SetPluginSetting(GetName(), "Language", lng);
-		return new ApiManager::ApiOk(Translator::tr("Bunny language is now '%1' for plugin '%2'").arg(lng, GetName()));
+		return new ApiAnswers::Ok(Translator::tr("Bunny language is now '%1' for plugin '%2'").arg(lng, GetName()));
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }

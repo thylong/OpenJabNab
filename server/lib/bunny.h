@@ -8,17 +8,18 @@
 #include <QVariant>
 #include <QRegExp>
 #include "apihandler.h"
-#include "apimanager.h"
+
 #include "global.h"
 #include "packet.h"
 //#include "accountmanager.h"
 #include "plugininterface.h"
 
 class XmppHandler;
-class OJN_EXPORT Bunny : public QObject, public ApiHandler<Bunny>
+
+class OJN_EXPORT Bunny 
+	: public ApiHandler<Bunny>
 {
 	friend class BunnyManager;
-	Q_OBJECT
 public:
 	enum State { State_Disconnected, State_Authenticating, State_Authenticated, State_Ready};
 	enum Services { ServiceNone = 0, ColorBreathing = 9, LeftEar = 16, RightEar = 17, Nose = 18 };
@@ -131,7 +132,7 @@ public:
 
 	// API
 	static void InitApiCalls();
-	ApiManager::ApiAnswer * ProcessVioletApiCall(HTTPRequest const&);
+	ApiAnswers::Answer * ProcessVioletApiCall(HTTPRequest const&);
 
 	void AddInXmppTraffic(int);
 	void AddInHttpTraffic(int);

@@ -104,34 +104,34 @@ PLUGIN_BUNNY_API_CALL(PluginDebug::Api_Info)
 {
 	Q_UNUSED(bunny);
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
 
 	QString action = hRequest.GetArg("action");
 
 	if(action == "silent")
 	{
-        	return new ApiManager::ApiOk(Translator::tr("'%1' debug requested, waiting answer", account).arg(Translator::tr("silent", account)));
+        	return new ApiAnswers::Ok(Translator::tr("'%1' debug requested, waiting answer", account).arg(Translator::tr("silent", account)));
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }
 
 PLUGIN_API_CALL(PluginDebug::Api_Config)
 {
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
 
 	QString action = hRequest.GetArg("action");
 
 	if(action == "save")
 	{
 		if(!hRequest.HasArg("save"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("save", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("save", GetName()));
 
 		QString save = hRequest.GetArg("save");
 
@@ -141,22 +141,22 @@ PLUGIN_API_CALL(PluginDebug::Api_Config)
 			SetSettings("Save/" + save, value);
 			if(value == "1")
 			{
-        			return new ApiManager::ApiOk(Translator::tr("'%1' debug will be saved in database", account).arg(Translator::tr(save, account)));
+        			return new ApiAnswers::Ok(Translator::tr("'%1' debug will be saved in database", account).arg(Translator::tr(save, account)));
 			}
 			else
 			{
-        			return new ApiManager::ApiOk(Translator::tr("'%1' debug will not be saved in database", account).arg(Translator::tr(save, account)));
+        			return new ApiAnswers::Ok(Translator::tr("'%1' debug will not be saved in database", account).arg(Translator::tr(save, account)));
 			}
 		}
 		else
 		{
-			return new ApiManager::ApiString(GetSettings("Save/" + save, 0).toString());
+			return new ApiAnswers::String(GetSettings("Save/" + save, 0).toString());
 		}
 	}
 	else if(action == "display")
 	{
 		if(!hRequest.HasArg("display"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("display", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("display", GetName()));
 
 		QString display = hRequest.GetArg("display");
 
@@ -166,20 +166,20 @@ PLUGIN_API_CALL(PluginDebug::Api_Config)
 			SetSettings("Display/" + display, value);
 			if(value == "1")
 			{
-        			return new ApiManager::ApiOk(Translator::tr("'%1' debug will be displayed in logs", account).arg(Translator::tr(display, account)));
+        			return new ApiAnswers::Ok(Translator::tr("'%1' debug will be displayed in logs", account).arg(Translator::tr(display, account)));
 			}
 			else
 			{
-        			return new ApiManager::ApiOk(Translator::tr("'%1' debug will not be displayed in logs", account).arg(Translator::tr(display, account)));
+        			return new ApiAnswers::Ok(Translator::tr("'%1' debug will not be displayed in logs", account).arg(Translator::tr(display, account)));
 			}
 		}
 		else
 		{
-			return new ApiManager::ApiString(GetSettings("Display/" + display, 0).toString());
+			return new ApiAnswers::String(GetSettings("Display/" + display, 0).toString());
 		}
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }

@@ -99,7 +99,7 @@ PLUGIN_BUNNY_API_CALL(PluginTaichi::Api_SetFrequency)
 
 	bunny->SetPluginSetting(GetName(), "frequency", QVariant(hRequest.GetArg("value").toInt()));
 	SendTaichiFrequency(bunny);
-	return new ApiManager::ApiOk(QString("Plugin configuration updated."));
+	return new ApiAnswers::Ok(QString("Plugin configuration updated."));
 }
 
 PLUGIN_BUNNY_API_CALL(PluginTaichi::Api_GetFrequency)
@@ -107,7 +107,7 @@ PLUGIN_BUNNY_API_CALL(PluginTaichi::Api_GetFrequency)
 	Q_UNUSED(account);
 	Q_UNUSED(hRequest);
 
-	return new ApiManager::ApiString(QString::number(bunny->GetPluginSetting(GetName(), "frequency", 0).toInt()));
+	return new ApiAnswers::String(QString::number(bunny->GetPluginSetting(GetName(), "frequency", 0).toInt()));
 }
 
 PLUGIN_BUNNY_API_CALL(PluginTaichi::Api_SetRFID)
@@ -119,12 +119,12 @@ PLUGIN_BUNNY_API_CALL(PluginTaichi::Api_SetRFID)
 	if(tag.length() > 0)
 	{
 		bunny->SetPluginSetting(GetName(), "RFID", tag);
-		return new ApiManager::ApiOk(QString("RFID '%1' will now launch taichi for bunny '%2'").arg(tag, QString(bunny->GetID())));
+		return new ApiAnswers::Ok(QString("RFID '%1' will now launch taichi for bunny '%2'").arg(tag, QString(bunny->GetID())));
 	}
 	else
 	{
 		bunny->RemovePluginSetting(GetName(), "RFID");
-		return new ApiManager::ApiOk(QString("Remove RFID for bunny '%2'").arg(QString(bunny->GetID())));
+		return new ApiAnswers::Ok(QString("Remove RFID for bunny '%2'").arg(QString(bunny->GetID())));
 	}
 }
 

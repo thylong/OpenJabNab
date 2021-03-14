@@ -18,18 +18,18 @@ class OJN_EXPORT HttpHandler
 
 public:
 	HttpHandler(QTcpSocket *, bool, bool);
-	virtual ~HttpHandler();
-
+	
 	bool shouldDelete(void);
-
-public slots:
-	void Disconnect();
+	void cleanup(void);
 
 private slots:
-	void ReceiveData();
+	void ReceiveData(void);
+
+protected:
+	virtual ~HttpHandler();
 
 private:
-	void HandleBunnyHTTPRequest();
+	void HandleHTTPRequest(void);
 
 	PluginManager & pluginManager;
 	QTcpSocket * incomingHttpSocket;

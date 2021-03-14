@@ -8,7 +8,7 @@
 #include <QNetworkAccessManager>
 
 #include "apihandler.h"
-#include "apimanager.h"
+
 #include "global.h"
 #include "bunny.h"
 #include "account.h"

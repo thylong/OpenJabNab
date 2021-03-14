@@ -384,7 +384,7 @@ void Ztamp::InitApiCalls()
 API_CALL(Ztamp::Api_Config)
 {
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("action"));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("action"));
 
 	QString action = hRequest.GetArg("action");
 
@@ -394,41 +394,41 @@ API_CALL(Ztamp::Api_Config)
 		{
 			QString name = hRequest.GetArg("set");
 			SetZtampName( name );
-			return new ApiManager::ApiOk(Translator::tr("Ztamp '%1' is now named '%2'", account).arg(GetID(), name));
+			return new ApiAnswers::Ok(Translator::tr("Ztamp '%1' is now named '%2'", account).arg(GetID(), name));
 		}
-		return new ApiManager::ApiString( GetZtampName() );
+		return new ApiAnswers::String( GetZtampName() );
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1'", account).arg("action"));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1'", account).arg("action"));
 	}
 }
 
 API_CALL(Ztamp::Api_Plugin)
 {
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("action"));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("action"));
 
 	QString action = hRequest.GetArg("action");
 
 	if(action == "association")
 	{
-		return new ApiManager::ApiMappedList(GetGlobalSetting("Associations", QMap<QString, QVariant>()).toMap());
+		return new ApiAnswers::MappedList(GetGlobalSetting("Associations", QMap<QString, QVariant>()).toMap());
 	}
 	else if(action == "deassociate")
 	{
 		if(!hRequest.HasArg("bunny"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("bunny"));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("bunny"));
 
 		QString bunny = hRequest.GetArg("bunny");
 		Dissociate(bunny);
 
-		return new ApiManager::ApiOk(Translator::tr("Removed association for bunny '%1'", account).arg(bunny));
+		return new ApiAnswers::Ok(Translator::tr("Removed association for bunny '%1'", account).arg(bunny));
 	}
 	else if(action == "register")
 	{
 		if(!hRequest.HasArg("name"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("name"));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("name"));
 
 		QString name = hRequest.GetArg("name");
 
@@ -436,25 +436,25 @@ API_CALL(Ztamp::Api_Plugin)
 
 		QString error = CheckPlugin(plugin);
 		if(!error.isNull())
-			return new ApiManager::ApiError(error.arg(name));
+			return new ApiAnswers::Error(error.arg(name));
 
 		AddPlugin(plugin);
-		return new ApiManager::ApiOk(Translator::tr("Added '%1' as active plugin", account).arg(plugin->GetVisualName()));
+		return new ApiAnswers::Ok(Translator::tr("Added '%1' as active plugin", account).arg(plugin->GetVisualName()));
 	}
 	else if(action == "unregister")
 	{
 		if(!hRequest.HasArg("name"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("name"));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("name"));
 
 		QString name = hRequest.GetArg("name");
 
 		PluginInterface * plugin = PluginManager::Instance().GetPluginByName(name);
 		QString error = CheckPlugin(plugin);
 		if(!error.isNull())
-			return new ApiManager::ApiError(error.arg(name));
+			return new ApiAnswers::Error(error.arg(name));
 
 		RemovePlugin(plugin);
-		return new ApiManager::ApiOk(Translator::tr("Removed '%1' as active plugin", account).arg(plugin->GetVisualName()));
+		return new ApiAnswers::Ok(Translator::tr("Removed '%1' as active plugin", account).arg(plugin->GetVisualName()));
 	}
 	else if(action == "active")
 	{
@@ -462,68 +462,68 @@ API_CALL(Ztamp::Api_Plugin)
 		foreach (PluginInterface * p, listOfPluginsPtr)
 			list.append(p->GetName());
 
-		return new ApiManager::ApiList(list);
+		return new ApiAnswers::List(list);
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1'", account).arg("action"));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1'", account).arg("action"));
 	}
 }
 
 API_CALL(Ztamp::Api_Owner)
 {
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("action"));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("action"));
 
 	QString action = hRequest.GetArg("action");
 
 	if(action == "list")
 	{
-		return new ApiManager::ApiList(GetGlobalSetting("OwnerAccounts",QStringList()).toStringList());
+		return new ApiAnswers::List(GetGlobalSetting("OwnerAccounts",QStringList()).toStringList());
 	}
 	else if(action == "add")
 	{
 		if(!hRequest.HasArg("login"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("login"));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("login"));
 
 		QString owner = hRequest.GetArg("login");
 		if(owner == "")
-			return new ApiManager::ApiError(Translator::tr("Bad login", account));
+			return new ApiAnswers::Error(Translator::tr("Bad login", account));
 
 		QStringList owners = GetGlobalSetting("OwnerAccounts",QStringList()).toStringList();
 		if(owners.contains(owner))
-			return new ApiManager::ApiError(Translator::tr("'%1' is not an owner", account).arg(owner));
+			return new ApiAnswers::Error(Translator::tr("'%1' is not an owner", account).arg(owner));
 
 		owners.append(owner);
 		SetGlobalSetting("OwnerAccounts", owners);
-		return new ApiManager::ApiOk(Translator::tr("Owner '%1' added", account).arg(owner));
+		return new ApiAnswers::Ok(Translator::tr("Owner '%1' added", account).arg(owner));
 	}
 	else if(action == "del")
 	{
 		if(!hRequest.HasArg("login"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("login"));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("login"));
 
 		QString owner = hRequest.GetArg("login");
 		if(owner == "")
-			return new ApiManager::ApiError(Translator::tr("Bad login", account));
+			return new ApiAnswers::Error(Translator::tr("Bad login", account));
 
 		QStringList owners = GetGlobalSetting("OwnerAccounts",QStringList()).toStringList();
 		if(owners.contains(owner))
 		{
 			owners.removeAll(owner);
 			SetGlobalSetting("OwnerAccounts", owners);
-			return new ApiManager::ApiOk(Translator::tr("Owner '%1' removed", account).arg(owner));
+			return new ApiAnswers::Ok(Translator::tr("Owner '%1' removed", account).arg(owner));
 		}
-		return new ApiManager::ApiError(Translator::tr("'%1' is not an owner", account).arg(owner));
+		return new ApiAnswers::Error(Translator::tr("'%1' is not an owner", account).arg(owner));
 	}
 	else if(action == "reset")
 	{
 		RemoveGlobalSetting("OwnerAccounts");
-		return new ApiManager::ApiOk(Translator::tr("All owners removed", account));
+		return new ApiAnswers::Ok(Translator::tr("All owners removed", account));
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1'", account).arg("action"));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1'", account).arg("action"));
 	}
 }
 
@@ -535,10 +535,10 @@ API_CALL(Ztamp::Api_AddPlugin)
 
 	QString error = CheckPlugin(plugin);
 	if(!error.isNull())
-		return new ApiManager::ApiError(error.arg(hRequest.GetArg("name")));
+		return new ApiAnswers::Error(error.arg(hRequest.GetArg("name")));
 
 	AddPlugin(plugin);
-	return new ApiManager::ApiOk(Translator::tr("Added '%1' as active plugin", account).arg(plugin->GetVisualName()));
+	return new ApiAnswers::Ok(Translator::tr("Added '%1' as active plugin", account).arg(plugin->GetVisualName()));
 }
 
 API_CALL(Ztamp::Api_RemovePlugin)
@@ -548,10 +548,10 @@ API_CALL(Ztamp::Api_RemovePlugin)
 	PluginInterface * plugin = PluginManager::Instance().GetPluginByName(hRequest.GetArg("name"));
 	QString error = CheckPlugin(plugin);
 	if(!error.isNull())
-		return new ApiManager::ApiError(error.arg(hRequest.GetArg("name")));
+		return new ApiAnswers::Error(error.arg(hRequest.GetArg("name")));
 
 	RemovePlugin(plugin);
-	return new ApiManager::ApiOk(Translator::tr("Removed '%1' as active plugin", account).arg(plugin->GetVisualName()));
+	return new ApiAnswers::Ok(Translator::tr("Removed '%1' as active plugin", account).arg(plugin->GetVisualName()));
 }
 
 API_CALL(Ztamp::Api_GetListOfAssociatedPlugins)
@@ -563,7 +563,7 @@ API_CALL(Ztamp::Api_GetListOfAssociatedPlugins)
 	foreach (PluginInterface * p, listOfPluginsPtr)
 		list.append(p->GetName());
 
-	return new ApiManager::ApiList(list);
+	return new ApiAnswers::List(list);
 
 }
 
@@ -571,19 +571,19 @@ API_CALL(Ztamp::Api_SetZtampName)
 {
 	SetZtampName( hRequest.GetArg("name") );
 
-	return new ApiManager::ApiOk(Translator::tr("Ztamp '%1' is now named '%2'", account).arg(GetID(), hRequest.GetArg("name")));
+	return new ApiAnswers::Ok(Translator::tr("Ztamp '%1' is now named '%2'", account).arg(GetID(), hRequest.GetArg("name")));
 }
 
 API_CALL(Ztamp::Api_RemoveOwner)
 {
 	QString owner = hRequest.GetArg("login");
 	if(owner == "")
-		return new ApiManager::ApiError(Translator::tr("Bad login", account));
+		return new ApiAnswers::Error(Translator::tr("Bad login", account));
 
 	QStringList owners = GetGlobalSetting("OwnerAccounts","").toStringList();
 	owners.removeAll(owner);
 	SetGlobalSetting("OwnerAccounts", owners);
-	return new ApiManager::ApiOk(Translator::tr("Owner '%1' removed", account).arg(owner));
+	return new ApiAnswers::Ok(Translator::tr("Owner '%1' removed", account).arg(owner));
 }
 
 API_CALL(Ztamp::Api_ResetOwner)
@@ -591,5 +591,5 @@ API_CALL(Ztamp::Api_ResetOwner)
 	Q_UNUSED(hRequest);
 
 	RemoveGlobalSetting("OwnerAccounts");
-	return new ApiManager::ApiOk(Translator::tr("Owner cleared", account));
+	return new ApiAnswers::Ok(Translator::tr("Owner cleared", account));
 }

@@ -7,7 +7,7 @@
 #include <QDebug>
 #include "account.h"
 #include "accountmanager.h"
-#include "apimanager.h"
+
 #include "bunny.h"
 #include "bunnymanager.h"
 #include "ztamp.h"
@@ -389,12 +389,12 @@ API_CALL(AccountManager::Api_Auth)
 	QString login = hRequest.GetArg("login");
 	Account *ac = listOfAccountsByName.value(login.toLatin1());
 	if(!ac)
-		return new ApiManager::ApiError(Translator::tr("Login not found"));
+		return new ApiAnswers::Error(Translator::tr("Login not found"));
 	if(ac->IsLimited() && ac->GetLoginCount() > GlobalSettings::GetInt("User/MaxLogin", 255))
-		return new ApiManager::ApiError(Translator::tr("Sorry, too many logins today (limit is %1)").arg(QString::number(GlobalSettings::GetInt("User/MaxLogin", 255))));
+		return new ApiAnswers::Error(Translator::tr("Sorry, too many logins today (limit is %1)").arg(QString::number(GlobalSettings::GetInt("User/MaxLogin", 255))));
 	QByteArray retour = GetToken(login, QCryptographicHash::hash(hRequest.GetArg("pass").toLatin1(), QCryptographicHash::Md5));
 	if(retour == QByteArray())
-		return new ApiManager::ApiError(Translator::tr("Access denied"));
+		return new ApiAnswers::Error(Translator::tr("Access denied"));
 
 	LogInfo(QString("User login : %1").arg(login));
   QSqlDatabase db = DbManager::getOpenDb();
@@ -407,27 +407,27 @@ API_CALL(AccountManager::Api_Auth)
 
 	if(!hRequest.HasArg("notcount"))
 		ac->AddLoginCount();
-	return new ApiManager::ApiString(retour);
+	return new ApiAnswers::String(retour);
 }
 
 API_CALL(AccountManager::Api_AuthAs)
 {
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	QString login = hRequest.GetArg("login");
 	Account *ac = listOfAccountsByName.value(login.toLatin1());
 	if(!ac)
 	{
-		return new ApiManager::ApiError(Translator::tr("Login not found"));
+		return new ApiAnswers::Error(Translator::tr("Login not found"));
 	}
 	QByteArray retour = GetToken(login);
 	if(retour == QByteArray())
-		return new ApiManager::ApiError(Translator::tr("Access denied"));
+		return new ApiAnswers::Error(Translator::tr("Access denied"));
 
 	LogInfo(QString("User %2 logged as : %1").arg(login, account.GetUsername()));
 
-	return new ApiManager::ApiString(retour);
+	return new ApiAnswers::String(retour);
 }
 
 API_CALL(AccountManager::Api_ChangePasswd)
@@ -436,15 +436,15 @@ API_CALL(AccountManager::Api_ChangePasswd)
 	QString pwd = hRequest.GetArg("pass");
 	LogWarning(QString("Login: %1 Pwd: %2 user %3").arg(login,pwd,account.GetLogin()));
 	if(login == "" || pwd == "" || (!account.IsAdmin() && login != account.GetLogin()))
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	Account *ac = listOfAccountsByName.value(login.toLatin1());
 	if(ac == NULL)
-		return new ApiManager::ApiError(Translator::tr("Login not found", account));
+		return new ApiAnswers::Error(Translator::tr("Login not found", account));
 
 	ac->SetPassword(QCryptographicHash::hash(pwd.toLatin1(), QCryptographicHash::Md5));
 	LogInfo(Translator::tr("Password changed for user '%1'", account).arg(login));
-	return new ApiManager::ApiOk(Translator::tr("Password changed", account));
+	return new ApiAnswers::Ok(Translator::tr("Password changed", account));
 }
 
 API_CALL(AccountManager::Api_ChangeUsername)
@@ -452,25 +452,25 @@ API_CALL(AccountManager::Api_ChangeUsername)
         QString login = hRequest.GetArg("login");
         QString username = hRequest.GetArg("username");
         if(login == "" || username == "" || (!account.IsAdmin() && login != account.GetLogin()))
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
         Account *ac = listOfAccountsByName.value(login.toLatin1());
         if(ac == NULL)
-                return new ApiManager::ApiError(Translator::tr("Login not found", account));
+                return new ApiAnswers::Error(Translator::tr("Login not found", account));
 
         ac->SetUsername(username);
         LogInfo(QString("Username changed for user '%1'").arg(login));
-        return new ApiManager::ApiOk(Translator::tr("Username changed", account));
+        return new ApiAnswers::Ok(Translator::tr("Username changed", account));
 }
 
 API_CALL(AccountManager::Api_RegisterNewAccount)
 {
 	if(GlobalSettings::Get("Config/AllowAnonymousRegistration", false) == false && !account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	QString login = hRequest.GetArg("login");
 	if(listOfAccountsByName.contains(login))
-		return new ApiManager::ApiError(Translator::tr("Account '%1' already exists", account).arg(hRequest.GetArg("login")));
+		return new ApiAnswers::Error(Translator::tr("Account '%1' already exists", account).arg(hRequest.GetArg("login")));
 
 	Account * a = new Account(login, hRequest.GetArg("username"), QCryptographicHash::hash(hRequest.GetArg("pass").toLatin1(), QCryptographicHash::Md5));
 	listOfAccounts.append(a);
@@ -481,17 +481,17 @@ API_CALL(AccountManager::Api_RegisterNewAccount)
 		//Todo: Drop default admin right now, security issues
 	}
 	SaveAccounts();
-	return new ApiManager::ApiOk(Translator::tr("New account created : %1", account).arg(hRequest.GetArg("login")));
+	return new ApiAnswers::Ok(Translator::tr("New account created : %1", account).arg(hRequest.GetArg("login")));
 }
 
 API_CALL(AccountManager::Api_RemoveAccount)
 {
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	QString login = hRequest.GetArg("login");
 	if(!listOfAccountsByName.contains(login))
-		return new ApiManager::ApiError(Translator::tr("Account '%1' doesn't exist", account).arg(login));
+		return new ApiAnswers::Error(Translator::tr("Account '%1' doesn't exist", account).arg(login));
 
 	Account * a = GetAccountByLogin(login.toLatin1());
 	int indexOfAccount = listOfAccounts.indexOf(a);
@@ -505,12 +505,12 @@ API_CALL(AccountManager::Api_RemoveAccount)
 	query->exec();
 	if(query->numRowsAffected () > 0)
 	{
-		return new ApiManager::ApiOk(Translator::tr("Account %1 removed", account).arg(login));
+		return new ApiAnswers::Ok(Translator::tr("Account %1 removed", account).arg(login));
 		delete query;
 		DbManager::releaseDb();
 	}
 	delete query;
-	return new ApiManager::ApiError(Translator::tr("Error when removing account %1", account).arg(login));
+	return new ApiAnswers::Error(Translator::tr("Error when removing account %1", account).arg(login));
 }
 
 API_CALL(AccountManager::Api_SaveAccounts)
@@ -518,11 +518,11 @@ API_CALL(AccountManager::Api_SaveAccounts)
 	Q_UNUSED(hRequest);
 
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	SaveAccounts();
 
-	return new ApiManager::ApiOk(Translator::tr("Accounts saved", account));
+	return new ApiAnswers::Ok(Translator::tr("Accounts saved", account));
 }
 
 API_CALL(AccountManager::Api_CheckAccounts)
@@ -530,7 +530,7 @@ API_CALL(AccountManager::Api_CheckAccounts)
 	Q_UNUSED(hRequest);
 
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	foreach (Account* a, listOfAccounts)
 	{
@@ -546,7 +546,7 @@ API_CALL(AccountManager::Api_CheckAccounts)
 			}
 		}
 	}
-	return new ApiManager::ApiOk(Translator::tr("Accounts checked and cleaned", account));
+	return new ApiAnswers::Ok(Translator::tr("Accounts checked and cleaned", account));
 }
 
 API_CALL(AccountManager::Api_InactiveAccounts)
@@ -554,7 +554,7 @@ API_CALL(AccountManager::Api_InactiveAccounts)
 	Q_UNUSED(hRequest);
 
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	QMap<QString, QVariant> list;
 	foreach (Account* a, listOfAccounts)
@@ -565,46 +565,46 @@ API_CALL(AccountManager::Api_InactiveAccounts)
 		}
 	}
 
-	return new ApiManager::ApiMappedList(list);
+	return new ApiAnswers::MappedList(list);
 }
 
 API_CALL(AccountManager::Api_ReloadAccount)
 {
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	QString login = hRequest.GetArg("login");
 	//if(!listOfAccountsByName.contains(login))
-	//	return new ApiManager::ApiError(QString("Account '%1' does not exist").arg(login));
+	//	return new ApiAnswers::Error(QString("Account '%1' does not exist").arg(login));
 
 	LoadAccount(login);
-	return new ApiManager::ApiOk(Translator::tr("Account %1 reloaded", account).arg(login));
+	return new ApiAnswers::Ok(Translator::tr("Account %1 reloaded", account).arg(login));
 }
 
 API_CALL(AccountManager::Api_AddBunny)
 {
 	// Only admins can add a bunny to an account
 	if(GlobalSettings::Get("Config/AllowUserManageBunny", false) == false && !account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	QString login = hRequest.GetArg("login");
 	if(!account.IsAdmin() && login != account.GetLogin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	if(!listOfAccountsByName.contains(login))
-		return new ApiManager::ApiError(Translator::tr("Account '%1' doesn't exist", account).arg(login));
+		return new ApiAnswers::Error(Translator::tr("Account '%1' doesn't exist", account).arg(login));
 	QString bunnyid = hRequest.GetArg("bunnyid");
 
 	// Lock bunny to this account
 	Bunny *b = BunnyManager::GetBunny(bunnyid.toLatin1());
 	QString own = b->GetGlobalSetting("OwnerAccount","").toString();
 	if(own != "" && own != login)
-		return new ApiManager::ApiError(Translator::tr("Bunny %1 is already attached to this account: '%2'", account).arg(bunnyid,own));
+		return new ApiAnswers::Error(Translator::tr("Bunny %1 is already attached to this account: '%2'", account).arg(bunnyid,own));
 
 	b->SetGlobalSetting("OwnerAccount", login);
 	QByteArray id = listOfAccountsByName.value(login)->AddBunny(bunnyid.toLatin1());
 	listOfAccountsByName.value(login)->SetSaveNeeded(true);
-	return new ApiManager::ApiOk(Translator::tr("Bunny '%1' added to account '%2'", account).arg(QString(id)).arg(login));
+	return new ApiAnswers::Ok(Translator::tr("Bunny '%1' added to account '%2'", account).arg(QString(id)).arg(login));
 }
 
 API_CALL(AccountManager::Api_RemoveBunny)
@@ -613,19 +613,19 @@ API_CALL(AccountManager::Api_RemoveBunny)
 	QString login = hRequest.GetArg("login");
 	/* Account doesn't exist */
 	if(!listOfAccountsByName.contains(login))
-		return new ApiManager::ApiError(Translator::tr("Account '%1' doesn't exist", account).arg(login));
+		return new ApiAnswers::Error(Translator::tr("Account '%1' doesn't exist", account).arg(login));
 	/* user is not admin and (is not allowed or it's not his account) */
 	else if(!account.IsAdmin() && (GlobalSettings::Get("Config/AllowUserManageBunny", false) != true || account.GetLogin() != login))
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	QString bunnyID = hRequest.GetArg("bunnyid");
 	if(listOfAccountsByName.value(login)->RemoveBunny(bunnyID.toLatin1())) {
 		Bunny *b = BunnyManager::GetBunny(bunnyID.toLatin1());
 		b->RemoveGlobalSetting("OwnerAccount");
 		listOfAccountsByName.value(login)->SetSaveNeeded(true);
-		return new ApiManager::ApiOk(Translator::tr("Bunny '%1' removed from account '%2'", account).arg(bunnyID).arg(login));
+		return new ApiAnswers::Ok(Translator::tr("Bunny '%1' removed from account '%2'", account).arg(bunnyID).arg(login));
 	} else
-		return new ApiManager::ApiError(Translator::tr("Can't remove bunny '%1' from account '%2'", account).arg(bunnyID).arg(login));
+		return new ApiAnswers::Error(Translator::tr("Can't remove bunny '%1' from account '%2'", account).arg(bunnyID).arg(login));
 }
 
 API_CALL(AccountManager::Api_RemoveZtamp)
@@ -634,11 +634,11 @@ API_CALL(AccountManager::Api_RemoveZtamp)
 	QString login = hRequest.GetArg("login");
 	/* Account doesn't exist */
 	if(!listOfAccountsByName.contains(login))
-		return new ApiManager::ApiError(Translator::tr("Account '%1' doesn't exist", account).arg(login));
+		return new ApiAnswers::Error(Translator::tr("Account '%1' doesn't exist", account).arg(login));
 	/* user is not admin and (is not allowed or it's not his account) */
 	//else if(!account.IsAdmin() && (GlobalSettings::Get("Config/AllowUserManageZtamp", false) != true || account.GetLogin() != login))
 	else if( !(account.IsAdmin() || account.GetLogin() == login) )
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	QString zID = hRequest.GetArg("zid");
 	if(listOfAccountsByName.value(login)->RemoveZtamp(zID.toLatin1()))
@@ -648,9 +648,9 @@ API_CALL(AccountManager::Api_RemoveZtamp)
 		list.removeAll(login);
 		z->SetGlobalSetting("OwnerAccounts", list);
 		listOfAccountsByName.value(login)->SetSaveNeeded(true);
-		return new ApiManager::ApiOk(Translator::tr("Ztamp '%1' removed from account '%2'", account).arg(zID).arg(login));
+		return new ApiAnswers::Ok(Translator::tr("Ztamp '%1' removed from account '%2'", account).arg(zID).arg(login));
 	} else
-		return new ApiManager::ApiError(Translator::tr("Can't remove ztamp '%1' from account '%2'", account).arg(zID).arg(login));
+		return new ApiAnswers::Error(Translator::tr("Can't remove ztamp '%1' from account '%2'", account).arg(zID).arg(login));
 }
 
 API_CALL(AccountManager::Api_SetToken)
@@ -659,22 +659,22 @@ API_CALL(AccountManager::Api_SetToken)
 	if(it != listOfAccountsByName.end())
 	{
 		it.value()->SetToken(hRequest.GetArg("tk").toLatin1());
-		return new ApiManager::ApiString(Translator::tr("Token changed", account));
+		return new ApiAnswers::String(Translator::tr("Token changed", account));
 	}
 
 	//LogError("Account not found");
-	return new ApiManager::ApiError(Translator::tr("Access denied", account));
+	return new ApiAnswers::Error(Translator::tr("Access denied", account));
 }
 
 API_CALL(AccountManager::Api_SetUserInfos)
 {
 	QString login = hRequest.GetArg("user");
 	if(login == "" || (!account.IsAdmin() && login != account.GetLogin()))
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	Account *ac = listOfAccountsByName.value(login.toLatin1());
 	if(ac == NULL)
-		return new ApiManager::ApiError(Translator::tr("Login not found", account));
+		return new ApiAnswers::Error(Translator::tr("Login not found", account));
 
 	QString setting = hRequest.GetArg("setting");
 	int value = hRequest.GetArg("value").toInt();
@@ -700,18 +700,18 @@ API_CALL(AccountManager::Api_SetUserInfos)
 	list.insert("abuseCount",ac->GetAbuseCount());
 	list.insert("lastBanStart",ac->GetLastBanStart().toString("yyyy-MM-dd hh:mm:ss"));
 	list.insert("lastBanEnd",ac->GetLastBanEnd().toString("yyyy-MM-dd hh:mm:ss"));
-	return new ApiManager::ApiMappedList(list);
+	return new ApiAnswers::MappedList(list);
 }
 
 API_CALL(AccountManager::Api_GetUserInfos)
 {
 	QString login = hRequest.GetArg("user");
 	if(login == "" || (!account.IsAdmin() && login != account.GetLogin()))
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	Account *ac = listOfAccountsByName.value(login.toLatin1());
 	if(ac == NULL)
-		return new ApiManager::ApiError(Translator::tr("Login not found", account));
+		return new ApiAnswers::Error(Translator::tr("Login not found", account));
 
 	QMap<QString, QVariant> list;
 	list.insert("login",ac->GetLogin());
@@ -728,98 +728,98 @@ API_CALL(AccountManager::Api_GetUserInfos)
 	list.insert("abuseCount",ac->GetAbuseCount());
 	list.insert("lastBanStart",ac->GetLastBanStart().toString("yyyy-MM-dd hh:mm:ss"));
 	list.insert("lastBanEnd",ac->GetLastBanEnd().toString("yyyy-MM-dd hh:mm:ss"));
-	return new ApiManager::ApiMappedList(list);
+	return new ApiAnswers::MappedList(list);
 }
 
 API_CALL(AccountManager::Api_GetUserAbuses)
 {
 	Q_UNUSED(hRequest);
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	QMap<QString, QVariant> list;
 	foreach (Account* a, listOfAccounts)
 		list.insert(a->GetLogin(),QString::number(a->GetAbuseCount()) + ";" + a->GetLastBanStart().toString("yyyy-MM-dd hh:mm:ss") + ";" + a->GetLastBanEnd().toString("yyyy-MM-dd hh:mm:ss"));
 
-	return new ApiManager::ApiMappedList(list);
+	return new ApiAnswers::MappedList(list);
 }
 
 API_CALL(AccountManager::Api_GetUserLogins)
 {
 	Q_UNUSED(hRequest);
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	QMap<QString, QVariant> list;
 	foreach (Account* a, listOfAccounts)
 		list.insert(a->GetLogin(),a->GetLoginCount());
 
-	return new ApiManager::ApiMappedList(list);
+	return new ApiAnswers::MappedList(list);
 }
 
 API_CALL(AccountManager::Api_GetUserlist)
 {
 	Q_UNUSED(hRequest);
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	QMap<QString, QVariant> list;
 	foreach (Account* a, listOfAccounts)
 		list.insert(a->GetLogin(),a->GetUsername());
 
-	return new ApiManager::ApiMappedList(list);
+	return new ApiAnswers::MappedList(list);
 }
 
 API_CALL(AccountManager::Api_GetConnectedUsers)
 {
 	Q_UNUSED(hRequest);
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	QList<QString> list;
 	foreach (Account* a, listOfAccounts)
 		if(listOfTokens.contains(a->GetToken()))
 			list.append(a->GetLogin());
-	return new ApiManager::ApiList(list);
+	return new ApiAnswers::List(list);
 }
 
 API_CALL(AccountManager::Api_GetListOfAdmins)
 {
 	Q_UNUSED(hRequest);
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	QList<QString> list;
 	foreach (Account* a, listOfAccounts)
 		if(a->IsAdmin())
 			list.append(a->GetLogin());
-	return new ApiManager::ApiList(list);
+	return new ApiAnswers::List(list);
 }
 
 API_CALL(AccountManager::Api_GetListOfPremiums)
 {
 	Q_UNUSED(hRequest);
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	QList<QString> list;
 	foreach (Account* a, listOfAccounts)
 		if(a->IsPremium())
 			list.append(a->GetLogin());
-	return new ApiManager::ApiList(list);
+	return new ApiAnswers::List(list);
 }
 
 API_CALL(AccountManager::Api_GetListOfVips)
 {
 	Q_UNUSED(hRequest);
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	QList<QString> list;
 	foreach (Account* a, listOfAccounts)
 		if(a->IsVip())
 			list.append(a->GetLogin());
-	return new ApiManager::ApiList(list);
+	return new ApiAnswers::List(list);
 }
 
 API_CALL(AccountManager::Api_SetAdmin)
@@ -828,18 +828,18 @@ API_CALL(AccountManager::Api_SetAdmin)
 	QString adm = hRequest.GetArg("adm");
 
 	if(login == "" || !account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	/* Get User */
 	Account *ac = listOfAccountsByName.value(login.toLatin1());
 	if(ac == NULL)
-		return new ApiManager::ApiError(Translator::tr("Login not found", account));
+		return new ApiAnswers::Error(Translator::tr("Login not found", account));
 	if(adm == "user")
 		ac->setAdmin(false);
 	else
 		ac->setAdmin();
 
-	return new ApiManager::ApiOk(Translator::tr("user '%1' is now admin", account).arg(login));
+	return new ApiAnswers::Ok(Translator::tr("user '%1' is now admin", account).arg(login));
 }
 
 API_CALL(AccountManager::Api_SetPremium)
@@ -848,18 +848,18 @@ API_CALL(AccountManager::Api_SetPremium)
 	QString premium = hRequest.GetArg("premium");
 
 	if(login == "" || !account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	/* Get User */
 	Account *ac = listOfAccountsByName.value(login.toLatin1());
 	if(ac == NULL)
-		return new ApiManager::ApiError(Translator::tr("Login not found", account));
+		return new ApiAnswers::Error(Translator::tr("Login not found", account));
 	if(premium == "false")
 		ac->setPremium(false);
 	else
 		ac->setPremium(true);
 
-	return new ApiManager::ApiOk(Translator::tr("user '%1' is now premium", account).arg(login));
+	return new ApiAnswers::Ok(Translator::tr("user '%1' is now premium", account).arg(login));
 }
 
 API_CALL(AccountManager::Api_SetVip)
@@ -868,18 +868,18 @@ API_CALL(AccountManager::Api_SetVip)
 	QString vip = hRequest.GetArg("vip");
 
 	if(login == "" || !account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	/* Get User */
 	Account *ac = listOfAccountsByName.value(login.toLatin1());
 	if(ac == NULL)
-		return new ApiManager::ApiError(Translator::tr("Login not found", account));
+		return new ApiAnswers::Error(Translator::tr("Login not found", account));
 	if(vip == "false")
 		ac->setVip(false);
 	else
 		ac->setVip(true);
 
-	return new ApiManager::ApiOk(Translator::tr("user '%1' is now VIP", account).arg(login));
+	return new ApiAnswers::Ok(Translator::tr("user '%1' is now VIP", account).arg(login));
 }
 
 API_CALL(AccountManager::Api_SetLanguage)
@@ -890,14 +890,14 @@ API_CALL(AccountManager::Api_SetLanguage)
 	QString language = hRequest.GetArg("lng");
 
 	if(login == "")
-		return new ApiManager::ApiError(Translator::tr("No account specified", account));
+		return new ApiAnswers::Error(Translator::tr("No account specified", account));
 
 	/* Get User */
 	Account *ac = listOfAccountsByName.value(login.toLatin1());
 	if(ac == NULL)
-		return new ApiManager::ApiError(Translator::tr("Account not found"));
+		return new ApiAnswers::Error(Translator::tr("Account not found"));
 	ac->SetLanguage(language);
-	return new ApiManager::ApiOk(Translator::tr("Language is now '%1' for user '%2'", account).arg(language, login));
+	return new ApiAnswers::Ok(Translator::tr("Language is now '%1' for user '%2'", account).arg(language, login));
 }
 
 API_CALL(AccountManager::Api_GetLanguage)
@@ -907,13 +907,13 @@ API_CALL(AccountManager::Api_GetLanguage)
 	QString login = hRequest.GetArg("login");
 
 	if(login == "")
-		return new ApiManager::ApiError(Translator::tr("No account specified", account));
+		return new ApiAnswers::Error(Translator::tr("No account specified", account));
 
 	/* Get User */
 	Account *ac = listOfAccountsByName.value(login.toLatin1());
 	if(ac == NULL)
-		return new ApiManager::ApiError(Translator::tr("Account not found", account));
-	return new ApiManager::ApiString(ac->GetLanguage());
+		return new ApiAnswers::Error(Translator::tr("Account not found", account));
+	return new ApiAnswers::String(ac->GetLanguage());
 }
 
 API_CALL(AccountManager::Api_SetEmail)
@@ -922,14 +922,14 @@ API_CALL(AccountManager::Api_SetEmail)
 	QString email = hRequest.GetArg("email");
 
 	if(login == "")
-		return new ApiManager::ApiError(Translator::tr("No account specified", account));
+		return new ApiAnswers::Error(Translator::tr("No account specified", account));
 
 	/* Get User */
 	Account *ac = listOfAccountsByName.value(login.toLatin1());
 	if(ac == NULL)
-		return new ApiManager::ApiError(Translator::tr("Account not found", account));
+		return new ApiAnswers::Error(Translator::tr("Account not found", account));
 	ac->SetEmail(email);
-	return new ApiManager::ApiOk(Translator::tr("Email is now '%1' for user '%2'", account).arg(email, login));
+	return new ApiAnswers::Ok(Translator::tr("Email is now '%1' for user '%2'", account).arg(email, login));
 }
 
 API_CALL(AccountManager::Api_GetEmail)
@@ -937,13 +937,13 @@ API_CALL(AccountManager::Api_GetEmail)
 	QString login = hRequest.GetArg("login");
 
 	if(login == "")
-		return new ApiManager::ApiError(Translator::tr("No account specified", account));
+		return new ApiAnswers::Error(Translator::tr("No account specified", account));
 
 	/* Get User */
 	Account *ac = listOfAccountsByName.value(login.toLatin1());
 	if(ac == NULL)
-		return new ApiManager::ApiError(Translator::tr("Account not found", account));
-	return new ApiManager::ApiString(ac->GetEmail());
+		return new ApiAnswers::Error(Translator::tr("Account not found", account));
+	return new ApiAnswers::String(ac->GetEmail());
 }
 
 API_CALL(AccountManager::Api_EditSoundGroup)
@@ -951,24 +951,24 @@ API_CALL(AccountManager::Api_EditSoundGroup)
 	QString login = hRequest.GetArg("login");
 	QString group = hRequest.GetArg("group");
 	if(login == "" || (!account.IsAdmin() && login != account.GetLogin()))
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	Account *ac = listOfAccountsByName.value(login.toLatin1());
 	if(ac == NULL)
-		return new ApiManager::ApiError(Translator::tr("Login not found", account));
+		return new ApiAnswers::Error(Translator::tr("Login not found", account));
 
 	if(hRequest.HasArg("create") && hRequest.GetArg("create") == group)
 	{
 		QStringList list = GetSettings("Groups/" + login, QStringList()).toStringList();
 		if(list.contains(group))
 		{
-			return new ApiManager::ApiError(Translator::tr("Group already exists", account));
+			return new ApiAnswers::Error(Translator::tr("Group already exists", account));
 		}
 		list << group;
 		SetSettings("Groups/" + login, list);
 		SetSettings(login + "_" + group + "/Files", QStringList());
 		SetSettings(login + "_" + group + "/Private", true);
-		return new ApiManager::ApiOk(Translator::tr("Group added successfully", account));
+		return new ApiAnswers::Ok(Translator::tr("Group added successfully", account));
 	}
 	else if(hRequest.HasArg("rename") && hRequest.GetArg("rename") != "")
 	{
@@ -977,7 +977,7 @@ API_CALL(AccountManager::Api_EditSoundGroup)
 	if(hRequest.HasArg("private") && hRequest.GetArg("private") != "")
 	{
 	}
-	return new ApiManager::ApiError(Translator::tr("No action specified", account));
+	return new ApiAnswers::Error(Translator::tr("No action specified", account));
 }
 
 API_CALL(AccountManager::Api_DelSoundGroup)
@@ -985,34 +985,34 @@ API_CALL(AccountManager::Api_DelSoundGroup)
 	QString login = hRequest.GetArg("login");
 	QString group = hRequest.GetArg("group");
 	if(login == "" || (!account.IsAdmin() && login != account.GetLogin()))
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	Account *ac = listOfAccountsByName.value(login.toLatin1());
 	if(ac == NULL)
-		return new ApiManager::ApiError(Translator::tr("Login not found", account));
+		return new ApiAnswers::Error(Translator::tr("Login not found", account));
 
 	QStringList list = GetSettings("Groups/" + login, QStringList()).toStringList();
 	if(!list.contains(group))
 	{
-		return new ApiManager::ApiError(Translator::tr("Group doesn't exist", account));
+		return new ApiAnswers::Error(Translator::tr("Group doesn't exist", account));
 	}
 	list.removeAll(group);
 	SetSettings("Groups/" + login, list);
 	RemoveSettings(login + "_" + group);
-	return new ApiManager::ApiOk(Translator::tr("Group removed successfully", account));
+	return new ApiAnswers::Ok(Translator::tr("Group removed successfully", account));
 }
 
 API_CALL(AccountManager::Api_ListSoundGroup)
 {
 	QString login = hRequest.GetArg("login");
 	if(login == "" || (!account.IsAdmin() && login != account.GetLogin()))
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	Account *ac = listOfAccountsByName.value(login.toLatin1());
 	if(ac == NULL)
-		return new ApiManager::ApiError(Translator::tr("Login not found", account));
+		return new ApiAnswers::Error(Translator::tr("Login not found", account));
 
-	return new ApiManager::ApiList(GetSettings("Groups/" + login, QStringList()).toStringList());
+	return new ApiAnswers::List(GetSettings("Groups/" + login, QStringList()).toStringList());
 }
 
 API_CALL(AccountManager::Api_AddSound)
@@ -1021,19 +1021,19 @@ API_CALL(AccountManager::Api_AddSound)
 	QString group = hRequest.GetArg("group");
 	QString sound = hRequest.GetArg("sound");
 	if(login == "" || (!account.IsAdmin() && login != account.GetLogin()))
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	Account *ac = listOfAccountsByName.value(login.toLatin1());
 	if(ac == NULL)
-		return new ApiManager::ApiError(Translator::tr("Login not found", account));
+		return new ApiAnswers::Error(Translator::tr("Login not found", account));
 
 	QStringList files = GetSettings(login + "_" + group + "/Files", QStringList()).toStringList();
 	if(files.contains(sound))
-		return new ApiManager::ApiError(Translator::tr("This file is already in the group", account));
+		return new ApiAnswers::Error(Translator::tr("This file is already in the group", account));
 
 	files << sound;
 	SetSettings(login + "_" + group + "/Files", files);
-	return new ApiManager::ApiOk(Translator::tr("File added", account));
+	return new ApiAnswers::Ok(Translator::tr("File added", account));
 }
 
 API_CALL(AccountManager::Api_RemoveSound)
@@ -1042,19 +1042,19 @@ API_CALL(AccountManager::Api_RemoveSound)
 	QString group = hRequest.GetArg("group");
 	QString sound = hRequest.GetArg("sound");
 	if(login == "" || (!account.IsAdmin() && login != account.GetLogin()))
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	Account *ac = listOfAccountsByName.value(login.toLatin1());
 	if(ac == NULL)
-		return new ApiManager::ApiError(Translator::tr("Login not found", account));
+		return new ApiAnswers::Error(Translator::tr("Login not found", account));
 
 	QStringList files = GetSettings(login + "_" + group + "/Files", QStringList()).toStringList();
 	if(!files.contains(sound))
-		return new ApiManager::ApiError(Translator::tr("This file is not in the group", account));
+		return new ApiAnswers::Error(Translator::tr("This file is not in the group", account));
 
 	files.removeAll(sound);
 	SetSettings(login + "_" + group + "/Files", files);
-	return new ApiManager::ApiOk(Translator::tr("File removed", account));
+	return new ApiAnswers::Ok(Translator::tr("File removed", account));
 }
 
 API_CALL(AccountManager::Api_ListSound)
@@ -1062,13 +1062,13 @@ API_CALL(AccountManager::Api_ListSound)
 	QString login = hRequest.GetArg("login");
 	QString group = hRequest.GetArg("group");
 	if(login == "" || (!account.IsAdmin() && login != account.GetLogin()))
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	Account *ac = listOfAccountsByName.value(login.toLatin1());
 	if(ac == NULL)
-		return new ApiManager::ApiError(Translator::tr("Login not found", account));
+		return new ApiAnswers::Error(Translator::tr("Login not found", account));
 
-	return new ApiManager::ApiList(GetSettings(login + "_" + group + "/Files", QStringList()).toStringList());
+	return new ApiAnswers::List(GetSettings(login + "_" + group + "/Files", QStringList()).toStringList());
 }
 
 API_CALL(AccountManager::Api_User)
@@ -1080,14 +1080,14 @@ API_CALL(AccountManager::Api_User)
 
 	Account *user = listOfAccountsByName.value(login.toLatin1());
 	if(user == NULL)
-		return new ApiManager::ApiError(Translator::tr("Account '%1' not found", account).arg(login));
+		return new ApiAnswers::Error(Translator::tr("Account '%1' not found", account).arg(login));
 
 	//if(login != "" && (!account.IsAdmin() || login != account.GetLogin()))
 	if(user != &account && !account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("action"));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("action"));
 
 	QString action = hRequest.GetArg("action");
 
@@ -1103,7 +1103,7 @@ API_CALL(AccountManager::Api_User)
 			QString username = hRequest.GetArg("username");
 			user->SetUsername(username);
 		}
-		return new ApiManager::ApiString(Translator::tr("User informations updated", account));
+		return new ApiAnswers::String(Translator::tr("User informations updated", account));
 	}
 	else if(action == "add")
 	{
@@ -1120,7 +1120,7 @@ API_CALL(AccountManager::Api_User)
 			// FIXME Add user as ztamp owner in ztamp config (see APICall Api_AddZtamp)
 		}
 		else
-			return new ApiManager::ApiError(Translator::tr("Invalid argument for action '%1'", account).arg(action));
+			return new ApiAnswers::Error(Translator::tr("Invalid argument for action '%1'", account).arg(action));
 	}
 	else if(action == "del")
 	{
@@ -1137,11 +1137,11 @@ API_CALL(AccountManager::Api_User)
 			// FIXME Add user as ztamp owner in ztamp config (see APICall Api_RemoveZtamp)
 		}
 		else
-			return new ApiManager::ApiError(Translator::tr("Invalid argument for action '%1'", account).arg(action));
+			return new ApiAnswers::Error(Translator::tr("Invalid argument for action '%1'", account).arg(action));
 	}
 	else
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1'", account).arg("action"));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1'", account).arg("action"));
 
 	user->SetSaveNeeded(true);
-	return new ApiManager::ApiString(Translator::tr("User informations updated", account));
+	return new ApiAnswers::String(Translator::tr("User informations updated", account));
 }

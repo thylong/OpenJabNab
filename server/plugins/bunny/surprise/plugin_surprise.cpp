@@ -241,21 +241,21 @@ void PluginSurprise::InitApiCalls()
 PLUGIN_BUNNY_API_CALL(PluginSurprise::Api_Surprise)
 {
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
 
 	QString action = hRequest.GetArg("action");
 
 	if(action == "list")
 	{
-		return new ApiManager::ApiMappedList(bunny->GetPluginSetting(GetName(), "Surprises", QMap<QString, QVariant>()).toMap());
+		return new ApiAnswers::MappedList(bunny->GetPluginSetting(GetName(), "Surprises", QMap<QString, QVariant>()).toMap());
 	}
 	else if(action == "add")
 	{
 		if(!hRequest.HasArg("name"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("name", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("name", GetName()));
 
 		if(!hRequest.HasArg("frequency"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("frequency", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("frequency", GetName()));
 
 		QString folder = hRequest.GetArg("name");
 		int frequency = hRequest.GetArg("frequency").toInt();
@@ -267,7 +267,7 @@ PLUGIN_BUNNY_API_CALL(PluginSurprise::Api_Surprise)
 			bunny->SetPluginSetting(GetName(), "Surprises", list);
 			OnBunnyDisconnect(bunny);
 			OnBunnyConnect(bunny);
-			return new ApiManager::ApiOk(Translator::tr("Removed surprise '%1'", account).arg(folder));
+			return new ApiAnswers::Ok(Translator::tr("Removed surprise '%1'", account).arg(folder));
 		}
 		else
 		{
@@ -280,7 +280,7 @@ PLUGIN_BUNNY_API_CALL(PluginSurprise::Api_Surprise)
 				OnBunnyDisconnect(bunny);
 				OnBunnyConnect(bunny);
 
-				return new ApiManager::ApiOk(Translator::tr("Folder '%1' added", account).arg(folder));
+				return new ApiAnswers::Ok(Translator::tr("Folder '%1' added", account).arg(folder));
 			}
 			QString accountName = bunny->GetGlobalSetting("OwnerAccount").toString();
 			QStringList groups = AccountManager::ListSoundGroup(accountName);
@@ -293,15 +293,15 @@ PLUGIN_BUNNY_API_CALL(PluginSurprise::Api_Surprise)
 				OnBunnyDisconnect(bunny);
 				OnBunnyConnect(bunny);
 
-				return new ApiManager::ApiOk(Translator::tr("Sound group '%1' added", account).arg(folder));
+				return new ApiAnswers::Ok(Translator::tr("Sound group '%1' added", account).arg(folder));
 			}
-			return new ApiManager::ApiError(Translator::tr("Unknown folder or sound group : '%1'", account).arg(folder));
+			return new ApiAnswers::Error(Translator::tr("Unknown folder or sound group : '%1'", account).arg(folder));
 		}
 	}
 	else if(action == "del")
 	{
 		if(!hRequest.HasArg("name"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("name", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("name", GetName()));
 
 		QString folder = hRequest.GetArg("name");
 		QMap<QString, QVariant> list = bunny->GetPluginSetting(GetName(), "Surprises", QMap<QString, QVariant>()).toMap();
@@ -310,18 +310,18 @@ PLUGIN_BUNNY_API_CALL(PluginSurprise::Api_Surprise)
 		bunny->SetPluginSetting(GetName(), "Surprises", list);
 		OnBunnyDisconnect(bunny);
 		OnBunnyConnect(bunny);
-		return new ApiManager::ApiOk(Translator::tr("Removed surprise '%1'", account).arg(folder));
+		return new ApiAnswers::Ok(Translator::tr("Removed surprise '%1'", account).arg(folder));
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }
 
 PLUGIN_BUNNY_API_CALL(PluginSurprise::Api_Folder)
 {
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
 
 	QString action = hRequest.GetArg("action");
 
@@ -340,11 +340,11 @@ PLUGIN_BUNNY_API_CALL(PluginSurprise::Api_Folder)
 		QStringList folders = availableSurprises << groups;
 		folders.removeDuplicates();
 		folders.sort();
-		return new ApiManager::ApiList(folders);
+		return new ApiAnswers::List(folders);
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }
 
@@ -364,7 +364,7 @@ PLUGIN_BUNNY_API_CALL(PluginSurprise::Api_SetSurprise)
 		OnBunnyDisconnect(bunny);
 		OnBunnyConnect(bunny);
 
-		return new ApiManager::ApiOk(QString("Folder '%1' added").arg(folder));
+		return new ApiAnswers::Ok(QString("Folder '%1' added").arg(folder));
 	}
 	QString accountName = bunny->GetGlobalSetting("OwnerAccount").toString();
 	QStringList groups = AccountManager::ListSoundGroup(accountName);
@@ -378,9 +378,9 @@ PLUGIN_BUNNY_API_CALL(PluginSurprise::Api_SetSurprise)
 		OnBunnyDisconnect(bunny);
 		OnBunnyConnect(bunny);
 
-		return new ApiManager::ApiOk(QString("Group '%1' added").arg(folder));
+		return new ApiAnswers::Ok(QString("Group '%1' added").arg(folder));
 	}
-	return new ApiManager::ApiError(QString("Unknown '%1' folder").arg(folder));
+	return new ApiAnswers::Error(QString("Unknown '%1' folder").arg(folder));
 }
 
 PLUGIN_BUNNY_API_CALL(PluginSurprise::Api_GetSurprises)
@@ -388,7 +388,7 @@ PLUGIN_BUNNY_API_CALL(PluginSurprise::Api_GetSurprises)
         Q_UNUSED(account);
 	Q_UNUSED(hRequest);
 
-	return new ApiManager::ApiMappedList(bunny->GetPluginSetting(GetName(), "Surprises", QMap<QString, QVariant>()).toMap());
+	return new ApiAnswers::MappedList(bunny->GetPluginSetting(GetName(), "Surprises", QMap<QString, QVariant>()).toMap());
 }
 
 PLUGIN_BUNNY_API_CALL(PluginSurprise::Api_DelSurprise)
@@ -403,7 +403,7 @@ PLUGIN_BUNNY_API_CALL(PluginSurprise::Api_DelSurprise)
 	bunny->SetPluginSetting(GetName(), "Surprises", list);
 	OnBunnyDisconnect(bunny);
 	OnBunnyConnect(bunny);
-	return new ApiManager::ApiOk(QString("Plugin configuration updated."));
+	return new ApiAnswers::Ok(QString("Plugin configuration updated."));
 }
 
 PLUGIN_BUNNY_API_CALL(PluginSurprise::Api_GetFolderList)
@@ -426,29 +426,29 @@ PLUGIN_BUNNY_API_CALL(PluginSurprise::Api_GetFolderList)
 	QStringList folders = availableSurprises << groups;
 	folders.removeDuplicates();
 	folders.sort();
-	return new ApiManager::ApiList(folders);
+	return new ApiAnswers::List(folders);
 }
 
 PLUGIN_BUNNY_API_CALL(PluginSurprise::Api_RFID)
 {
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
 
 	QString action = hRequest.GetArg("action");
 
 	if(action == "list")
 	{
-		return new ApiManager::ApiMappedList(bunny->GetPluginSetting(GetName(), "RFID", QMap<QString, QVariant>()).toMap());
+		return new ApiAnswers::MappedList(bunny->GetPluginSetting(GetName(), "RFID", QMap<QString, QVariant>()).toMap());
 	}
 	else if(action == "add")
 	{
 		if(!hRequest.HasArg("tag"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("tag", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("tag", GetName()));
 
 		QString tag = hRequest.GetArg("tag");
 
 		if(!hRequest.HasArg("folder"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("folder", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("folder", GetName()));
 
 		QString folder = hRequest.GetArg("folder");
 
@@ -461,7 +461,7 @@ PLUGIN_BUNNY_API_CALL(PluginSurprise::Api_RFID)
 				bunny->SetPluginSetting(GetName(), "RFID", list);
 				Ztamp * z = ZtampManager::GetZtamp(tag.toLatin1());
 				z->Associate(bunny, this);
-				return new ApiManager::ApiOk(Translator::tr("Add RFID '%1' for bunny '%2'", account).arg(tag, QString(bunny->GetID())));
+				return new ApiAnswers::Ok(Translator::tr("Add RFID '%1' for bunny '%2'", account).arg(tag, QString(bunny->GetID())));
 			}
 			QString accountName = bunny->GetGlobalSetting("OwnerAccount").toString();
 			QStringList groups = AccountManager::ListSoundGroup(accountName);
@@ -471,16 +471,16 @@ PLUGIN_BUNNY_API_CALL(PluginSurprise::Api_RFID)
 				bunny->SetPluginSetting(GetName(), "RFID", list);
 				Ztamp * z = ZtampManager::GetZtamp(tag.toLatin1());
 				z->Associate(bunny, this);
-				return new ApiManager::ApiOk(Translator::tr("Add RFID '%1' for bunny '%2'", account).arg(tag, QString(bunny->GetID())));
+				return new ApiAnswers::Ok(Translator::tr("Add RFID '%1' for bunny '%2'", account).arg(tag, QString(bunny->GetID())));
 			}
-			return new ApiManager::ApiError(Translator::tr("Unknown folder or sound group : '%1'", account).arg(folder));
+			return new ApiAnswers::Error(Translator::tr("Unknown folder or sound group : '%1'", account).arg(folder));
 		}
-		return new ApiManager::ApiError(Translator::tr("RFID '%1' already assigned to bunny '%2'", account).arg(tag, QString(bunny->GetID())));
+		return new ApiAnswers::Error(Translator::tr("RFID '%1' already assigned to bunny '%2'", account).arg(tag, QString(bunny->GetID())));
 	}
 	else if(action == "del")
 	{
 		if(!hRequest.HasArg("tag"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("tag", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("tag", GetName()));
 
 		QString tag = hRequest.GetArg("tag");
 
@@ -492,13 +492,13 @@ PLUGIN_BUNNY_API_CALL(PluginSurprise::Api_RFID)
 			Ztamp * z = ZtampManager::GetZtamp(tag.toLatin1());
 			z->Dissociate(bunny);
 
-			return new ApiManager::ApiOk(Translator::tr("RFID '%1' removed for bunny '%2'", account).arg(tag, QString(bunny->GetID())));
+			return new ApiAnswers::Ok(Translator::tr("RFID '%1' removed for bunny '%2'", account).arg(tag, QString(bunny->GetID())));
 		}
-		return new ApiManager::ApiError(Translator::tr("RFID '%1' is not assign to bunny '%2'", account).arg(tag, QString(bunny->GetID())));
+		return new ApiAnswers::Error(Translator::tr("RFID '%1' is not assign to bunny '%2'", account).arg(tag, QString(bunny->GetID())));
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }
 

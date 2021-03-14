@@ -24,10 +24,10 @@ void PluginMsgall::InitApiCalls()
 PLUGIN_API_CALL(PluginMsgall::Api_Say)
 {
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError("Access denied.");
+		return new ApiAnswers::Error("Access denied.");
 
 	if(!hRequest.HasArg("text"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("text", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("text", GetName()));
 
 	QString text = hRequest.GetArg("text");
 
@@ -60,5 +60,5 @@ PLUGIN_API_CALL(PluginMsgall::Api_Say)
 			SaveMessage(b, QString(fileName));
 		}
 	}
-	return new ApiManager::ApiOk("Message sent.");
+	return new ApiAnswers::Ok("Message sent.");
 }

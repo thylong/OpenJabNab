@@ -6,7 +6,7 @@
 #include "global.h"
 #include "plugininterface.h"
 #include "apihandler.h"
-#include "apimanager.h"
+
 
 class Account;
 class PluginInterface;

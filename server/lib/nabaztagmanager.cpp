@@ -3,7 +3,7 @@
 #include <memory>
 #include <QMetaObject>
 #include <QMetaMethod>
-#include "QsLog.h"
+
 #include "account.h"
 #include "ambientpacket.h"
 #include "nabaztagmanager.h"
@@ -343,7 +343,7 @@ void NabaztagManager::handlePing(const HTTPRequest& request, QTcpSocket * s)
     Instance().lastPing.insert(n, now);
     if(log)
     {
-      QsLogging::Logger::DumpLog(request.GetRawURI(), QString("V1 on OJN (%1)").arg(QString(n->GetID())));
+      LogDump(request.GetRawURI(), QString("V1 on OJN (%1)").arg(QString(n->GetID())));
     }
     QString last = n->GetGlobalSetting("Last Ping", QString()).toString();
     if(last == "" || n->GetGlobalSetting("Last PingConnection", QString()) == "")
@@ -491,7 +491,7 @@ void NabaztagManager::handlePing(const HTTPRequest& request, QTcpSocket * s)
     s->write(answer);
     if(log)
     {
-      QsLogging::Logger::DumpLog(answer.toHex(), "V1 answer");
+      LogDump(answer.toHex(), "V1 answer");
     }
   }
 }

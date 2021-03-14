@@ -4,7 +4,6 @@
 #include <QMapIterator>
 #include "tts_pico.h"
 #include "log.h"
-#include "QsLog.h"
 
 /*
 root@ojn:/home/pico [04:47] $ pico2wave -l fr-FR -w test.wav "Vous venez de recevoir un imèile"
@@ -103,14 +102,14 @@ QString TTSPico::CreateNewSound(QString text, QString voice, bool forceOverwrite
 	}
 */
 
-        QString program = "/usr/bin/pico2wave";
-        QStringList arguments;
-        arguments << "-l";
+	QString program = "/usr/bin/pico2wave";
+	QStringList arguments;
+	arguments << "-l";
 	arguments << voice;
 	arguments << "-w";
 	arguments << fileWav;
 	arguments << "\"" + text.remove("\"") + "\"";
-        QsLogging::Logger::DebugLog(QString("%1 %2").arg(program, arguments.join(" ")), "Pico");
+  //LogDebug(QString("%1 %2").arg(program, arguments.join(" ")));
 
 	char buffer[1024];
 	FILE* fd = popen(QString("%1 %2 >/dev/null 2>&1").arg(program, arguments.join(" ")).toLatin1(), "r");
@@ -136,7 +135,7 @@ QString TTSPico::CreateNewSound(QString text, QString voice, bool forceOverwrite
 	arguments << "-f";
 	arguments << "mp3";
 	arguments << filePath;
-        QsLogging::Logger::DebugLog(QString("%1 %2").arg(program, arguments.join(" ")), "Pico");
+	//DebugLog(QString("%1 %2").arg(program, arguments.join(" ")));
 
 	fd = popen(QString("%1 %2 >/dev/null 2>&1").arg(program, arguments.join(" ")).toLatin1(), "r");
 	if (fd != NULL) {

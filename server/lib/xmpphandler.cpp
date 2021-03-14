@@ -1,23 +1,29 @@
 #include <QDateTime>
+#include <QHostAddress>
 #include <QRegExp>
+
+
+
 #include "bunny.h"
 #include "bunnymanager.h"
 #include "iq.h"
 #include "log.h"
 #include "messagepacket.h"
-//#include "netdump.h"
-#include "QsLog.h"
-//#include "openjabnab.h"
+#include "pluginmanager.h"
 #include "settings.h"
 #include "ttsmanager.h"
 #include "xmpphandler.h"
-#include "pluginmanager.h"
-#include <QHostAddress>
+
 unsigned short XmppHandler::msgNb = 0;
 unsigned short XmppHandler::msgStreamNb = 0;
 
+#define DEFAULT_BIND_TIMEOUT_S 10
+#define DEFAULT_XMPP_TIMEOUT_S 10
+
 XmppHandler::XmppHandler(QTcpSocket * s)
-: pluginManager(PluginManager::Instance())
+	: pluginManager(PluginManager::Instance())
+	
+	, _lastMsgTime(std::chrono::system_clock::now())
 {
 	tempInXmppTraffic = 0;
 	tempOutXmppTraffic = 0;
@@ -31,65 +37,76 @@ XmppHandler::XmppHandler(QTcpSocket * s)
 
 	// Bunny -> OpenJabNab socket
 	incomingXmppSocket->setParent(this);
-	connect(incomingXmppSocket, SIGNAL(disconnected()), this, SLOT(Disconnect()));
-	connect(incomingXmppSocket, SIGNAL(readyRead()), this, SLOT(HandleBunnyXmppMessage()));
-
-	timeoutTimer = new QTimer(this);
-	timeoutTimer->setSingleShot(true);
-	QObject::connect(timeoutTimer, &QTimer::timeout, this, &XmppHandler::Timeout);
-
-	bindTimer = new QTimer(this);
-	bindTimer->setSingleShot(true);
-	QObject::connect(bindTimer, &QTimer::timeout, this, &XmppHandler::Bind);
+	QObject::connect(incomingXmppSocket, &QTcpSocket::disconnected, this, &XmppHandler::cleanup);
+	QObject::connect(incomingXmppSocket, &QTcpSocket::readyRead, this, &XmppHandler::HandleBunnyXmppMessage);
 
 	OjnXmppDomain = GlobalSettings::GetString("OpenJabNabServers/XmppServer").toLatin1();
 	lastQueryResource = "streaming";
 }
 
-bool XmppHandler::shouldDelete(void)
+XmppHandler::~XmppHandler()
 {
-	return true;
+	//LogDebug(QString("Delete XMPPHandler 0x%1").arg((quintptr)this, QT_POINTER_SIZE * 2, 16, QChar('0')));
 }
 
+bool XmppHandler::shouldDelete(void)
+{
+	if(!incomingXmppSocket)
+		return true;
+	auto now = std::chrono::system_clock::now();
+	if(bindingResource != "")
+	{
+		auto dt = std::chrono::duration_cast<std::chrono::seconds>(now - _lastBindTime).count();
+		auto maxDt = GlobalSettings::GetInt("Timeout/Bind",DEFAULT_BIND_TIMEOUT_S);
+		if(dt > maxDt)
+		{
+			if(bunny)
+			{
+				LogInfo("Bind process failed for " + bunny->GetBunnyName() + " ("+bunny->GetID()+")");
+				bunny->SetXmppResource("idle");
+			}
+			else
+				LogInfo("Bind process failed for unknow bunny");
+		}
+	}
+	auto dt = std::chrono::duration_cast<std::chrono::seconds>(now - _lastMsgTime).count();
+	auto maxDt = GlobalSettings::GetInt("Timeout/Xmpp",DEFAULT_XMPP_TIMEOUT_S);
+	if(dt > maxDt)
+	{
+		if(bunny)
+			LogInfo("Xmpp timeout for " + bunny->GetBunnyName() + " ("+bunny->GetID()+")");
+		cleanup();
+		return true;
+	}
+	return false;
+}
+
+void XmppHandler::cleanup()
+{
+	if(incomingXmppSocket)
+	{
+		incomingXmppSocket->abort();
+		if(bunny)
+		{
+			bunny->RemoveXmppHandler(this);
+			bunny = nullptr;
+		}
+		incomingXmppSocket = nullptr;
+		return;
+	}
+
+	deleteLater();
+}
 
 QString XmppHandler::GetBunnyIp()
 {
 	return bunny_real_ip != "" ? bunny_real_ip : incomingXmppSocket->peerAddress().toString();
 }
 
-void XmppHandler::Bind()
-{
-	if(bunny)
-	{
-		LogInfo("Bind process failed for " + bunny->GetBunnyName() + " ("+bunny->GetID()+")");
-		bunny->SetXmppResource("idle");
-	}
-	else
-		LogInfo("Bind process failed for unknow bunny");
-}
-
-void XmppHandler::Timeout()
-{
-	if(bunny)
-		LogInfo("Xmpp timeout for " + bunny->GetBunnyName() + " ("+bunny->GetID()+")");
-	Disconnect();
-}
-
-void XmppHandler::Disconnect()
-{
-	incomingXmppSocket->abort();
-	if(bunny)
-	{
-		bunny->RemoveXmppHandler(this);
-		bunny = 0;
-	}
-
-	deleteLater();
-}
-
 void XmppHandler::HandleBunnyXmppMessage()
 {
-	timeoutTimer->start(GlobalSettings::GetInt("Timeout/Xmpp",120)*1000);
+	_lastMsgTime = std::chrono::system_clock::now();
+//	timeoutTimer->start(GlobalSettings::GetInt("Timeout/Xmpp",120)*1000);
 
 	QByteArray data = incomingXmppSocket->readAll().trimmed();
 	bool handled = false;
@@ -99,9 +116,9 @@ void XmppHandler::HandleBunnyXmppMessage()
 	if(data != "")
 	{
 		if(bunny)
-			QsLogging::Logger::DumpLog(data, QString("XMPP from %1").arg(QString(bunny->GetID())));
+			LogDump(data, QString("XMPP from %1").arg(QString(bunny->GetID())));
 		else
-			QsLogging::Logger::DumpLog(data, "XMPP from Bunny");
+			LogDump(data, "XMPP from Bunny");
 	}
 
 	// If we don't know which bunny is connected, try to authenticate it
@@ -123,7 +140,7 @@ void XmppHandler::HandleBunnyXmppMessage()
 		// Authentication error, disconnect
 		if(pluginManager.GetAuthPlugin()->DoAuth(this, data, &bunny, ret) == false)
 		{
-			Disconnect();
+			cleanup();
 			return;
 		}
 		// Answer to bunny if needed
@@ -251,8 +268,6 @@ void XmppHandler::HandleBunnyXmppMessage()
 				IQ iq(data);
 				if(iq.IsValid())
 				{
-					bindTimer->stop();
-
 					if(iq.Content() == "")
 					{
 						known = true;
@@ -261,7 +276,9 @@ void XmppHandler::HandleBunnyXmppMessage()
 					{
 						bindingResource = rx.cap(1).toLatin1();
 						bunny->SetXmppResource(bindingResource);
-						bindTimer->start(GlobalSettings::GetInt("Timeout/Bind")*1000);
+
+						//bindTimer->start(GlobalSettings::GetInt("Timeout/Bind")*1000);
+						_lastBindTime = std::chrono::system_clock::now();
 
 						QByteArray from = bunny->GetID()+"@"+OjnXmppDomain+"/"+bindingResource;
 						WriteToBunnyAndLog(iq.Reply(IQ::Iq_Result, "%1 %4", "<bind xmlns='urn:ietf:params:xml:ns:xmpp-bind'><jid>"+from+"</jid></bind>"));
@@ -276,14 +293,16 @@ void XmppHandler::HandleBunnyXmppMessage()
 					}
 					else if(iq.Content() == "<session xmlns='urn:ietf:params:xml:ns:xmpp-session'/>")
 					{
-						bindTimer->start(GlobalSettings::GetInt("Timeout/Bind")*1000);
+						//bindTimer->start(GlobalSettings::GetInt("Timeout/Bind")*1000);
+						_lastBindTime = std::chrono::system_clock::now();
 						WriteToBunnyAndLog(iq.Reply(IQ::Iq_Result, "%4 %3 %2 %1", "<session xmlns='urn:ietf:params:xml:ns:xmpp-session'/>"));
 						handled = true;
 						known = true;
 					}
 					else if(iq.Content() == "<query xmlns=\"violet:iq:sources\"><packet xmlns=\"violet:packet\" format=\"1.0\"/></query>")
 					{
-						bindTimer->start(GlobalSettings::GetInt("Timeout/Bind")*1000);
+						//bindTimer->start(GlobalSettings::GetInt("Timeout/Bind")*1000);
+						_lastBindTime = std::chrono::system_clock::now();
 						QByteArray status = bunny->GetInitPacket();
 						WriteToBunnyAndLog(iq.Reply(IQ::Iq_Result, "%2 %3 %1 %4", "<query xmlns='violet:iq:sources'><packet xmlns='violet:packet' format='1.0' ttl='604800'>"+(status.toBase64())+"</packet></query>"));
 						handled = true;
@@ -295,6 +314,7 @@ void XmppHandler::HandleBunnyXmppMessage()
 						{
 							// Boot process finished
 							bunny->Ready();
+							bindingResource.clear();
 						}
 						WriteToBunnyAndLog(iq.Reply(IQ::Iq_Result, "%1 %4", QByteArray()));
 						handled = true;
@@ -322,7 +342,9 @@ void XmppHandler::HandleBunnyXmppMessage()
 			}
 			else if(rx.setPattern("<presence from='(.*)' id='(.*)'></presence>"), rx.indexIn(data) != -1)
 			{
-				bindTimer->start(GlobalSettings::GetInt("Timeout/Bind")*1000);
+				//bindTimer->start(GlobalSettings::GetInt("Timeout/Bind")*1000);
+				_lastBindTime = std::chrono::system_clock::now();
+				
 				QByteArray from = rx.cap(1).toLatin1();
 				QByteArray id = rx.cap(2).toLatin1();
 				WriteToBunnyAndLog("<presence from='"+from+"' to='"+from+"' id='"+id+"'/>");
@@ -346,14 +368,13 @@ void XmppHandler::HandleBunnyXmppMessage()
 						streamingQueryCount = 15;
 					}
 				}
-
 			}
 		}
 
 		// If the message wasn't handled
 		if (!handled && !known)
 		{
-			LogError(QString("Unable to handle bunny xmpp message : %1").arg(QString(data)));
+			LogError(QString("Unable to handle bunny XMPP message : %1").arg(QString(data)));
 		}
 	}
 }
@@ -376,9 +397,9 @@ void XmppHandler::WriteToBunny(QByteArray const& d)
 void XmppHandler::WriteToBunnyAndLog(QByteArray const& d)
 {
 	if(bunny)
-		QsLogging::Logger::DumpLog(d, QString("XMPP to %1").arg(QString(bunny->GetID())));
+		LogDump(d, QString("XMPP to %1").arg(QString(bunny->GetID())));
 	else
-		QsLogging::Logger::DumpLog(d, "XMPP to Bunny");
+		LogDump(d, "XMPP to Bunny");
 	WriteToBunny(d);
 }
 
@@ -386,7 +407,7 @@ void XmppHandler::WriteExpertDataToBunny(QByteArray const& b)
 {
 	if(bunny)
 	{
-		QsLogging::Logger::DumpLog(b, QString("XMPP to %1").arg(QString(bunny->GetID())));
+		LogDump(b, QString("XMPP to %1").arg(QString(bunny->GetID())));
 		WriteToBunny(b);
 		msgNb++;
 	}
@@ -403,7 +424,7 @@ void XmppHandler::WriteDataToBunny(QByteArray const& b)
 		msg.append("<packet xmlns='violet:packet' format='1.0' ttl='604800'>");
 		msg.append(b.toBase64());
 		msg.append("</packet></message>");
-		QsLogging::Logger::DumpLog(msg, QString("XMPP to %1").arg(QString(bunny->GetID())));
+		LogDump(msg, QString("XMPP to %1").arg(QString(bunny->GetID())));
 		WriteToBunny(msg);
 		msgNb++;
 	}

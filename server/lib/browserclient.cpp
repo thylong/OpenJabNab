@@ -4,7 +4,6 @@
 #include <QDateTime>
 #include "browsercache.h"
 #include "browserclient.h"
-#include "QsLog.h"
 #include "log.h"
 #include "settings.h"
 // Cache-Control: max-age=3600
@@ -29,7 +28,7 @@ QNetworkReply* BrowserClient::createRequest(QNetworkAccessManager::Operation ope
 	if(_age > 0)
 	{
 		if(meta.expirationDate().secsTo(QDateTime::currentDateTime()) > 0) {
-			QsLogging::Logger::DebugLog(QString("Want %1 forced to revalidate with max-_age %2").arg(request.url().toString(), QString::number(_age)), "BrowserClient");
+			LogDebug(QString("Want %1 forced to revalidate with max-age %2").arg(request.url().toString(), QString::number(_age)));
 			request.setRawHeader("Pragma", "no-cache");
 			request.setRawHeader("Cache-Control", "no-cache, must-revalidate");
 			meta.setExpirationDate(QDateTime::currentDateTime().addSecs(_age));
@@ -38,14 +37,14 @@ QNetworkReply* BrowserClient::createRequest(QNetworkAccessManager::Operation ope
 		}
 		else
 		{
-			QsLogging::Logger::DebugLog(QString("Want %1 with max-_age %2").arg(request.url().toString(), QString::number(_age)), "BrowserClient");
-			request.setRawHeader("Cache-Control", "max-_age=" + QString::number(_age).toLatin1() );
+			LogDebug(QString("Want %1 with max-age %2").arg(request.url().toString(), QString::number(age)));
+			request.setRawHeader("Cache-Control", "max-age=" + QString::number(_age).toLatin1() );
 			request.setAttribute(QNetworkRequest::CacheLoadControlAttribute, QNetworkRequest::PreferCache);
 		}
 	}
 	else
 	{
-		QsLogging::Logger::DebugLog(QString("Want %1 from network").arg(request.url().toString()), "BrowserClient");
+		LogDebug(QString("Want %1 from network").arg(request.url().toString()));
 		request.setAttribute(QNetworkRequest::CacheLoadControlAttribute, QNetworkRequest::AlwaysNetwork);
 	}
 
@@ -53,7 +52,7 @@ QNetworkReply* BrowserClient::createRequest(QNetworkAccessManager::Operation ope
 	bool fromCache = reply->attribute(QNetworkRequest::SourceIsFromCacheAttribute).toBool();
 	if(fromCache)
 	{
-		QsLogging::Logger::DebugLog(QString("Using cache for %1").arg(request.url().toString()), "BrowserClient");
+		LogDebug(QString("Using cache for %1").arg(request.url().toString()));
 	}
 	return reply;
 }

@@ -44,7 +44,7 @@ inline void PluginInterface::SetTTSLog(bool b)
 inline void PluginInterface::TTSLog(QString const& bunny, QString const& what, TTSAnswer answer)
 {
 	TTSLog(bunny.leftJustified(12, ' ').left(12).toLatin1(), what, answer);
-	//QsLogging::Logger::TTSLog(txt, bunny.leftJustified(12, " ").left(12).toLatin1(), what);
+	//LogTTS(txt, bunny.leftJustified(12, " ").left(12).toLatin1(), what);
 }
 
 inline void PluginInterface::TTSLog(QByteArray const& bunny, QString const& what, TTSAnswer answer)
@@ -52,7 +52,7 @@ inline void PluginInterface::TTSLog(QByteArray const& bunny, QString const& what
 	if(pluginTTSLog)
 	{
 		//TTSLog::Log(bunny, what, txt);
-		QsLogging::Logger::TTSLog(bunny, what, answer);
+		LogTTS(bunny, what, answer);
 	}
 }
 

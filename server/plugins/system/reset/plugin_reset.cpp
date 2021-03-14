@@ -86,15 +86,15 @@ void PluginReset::InitApiCalls()
 PLUGIN_API_CALL(PluginReset::Api_Reset)
 {
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
 
 	QString action = hRequest.GetArg("action");
 
 	if(!hRequest.HasArg("bunny"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("bunny", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("bunny", GetName()));
 
 	if(hRequest.GetArg("bunny").length() != 12)
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("bunny", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("bunny", GetName()));
 
 	QByteArray const& bunnyID = hRequest.GetArg("bunny").toLatin1();
 
@@ -103,7 +103,7 @@ PLUGIN_API_CALL(PluginReset::Api_Reset)
 	{
 		// Clean config
 		bunny->CleanSettings();
-        	return new ApiManager::ApiOk(Translator::tr("Bunny configuration is now empty", account));
+        	return new ApiAnswers::Ok(Translator::tr("Bunny configuration is now empty", account));
 	}
 	else if(action == "free")
 	{
@@ -112,10 +112,10 @@ PLUGIN_API_CALL(PluginReset::Api_Reset)
 		newAccount.insert(bunny->GetID(), account.GetLogin());
 		LogDebug(account.GetLogin() + " need to click to free the bunny");
 		QTimer::singleShot(1000 * (60 - (now.toTime_t()%60)), this, SLOT(RemoveReset()));
-        	return new ApiManager::ApiOk(Translator::tr("You have one minute to double-click on the bunny button if you want to add it to your account", account));
+        	return new ApiAnswers::Ok(Translator::tr("You have one minute to double-click on the bunny button if you want to add it to your account", account));
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }

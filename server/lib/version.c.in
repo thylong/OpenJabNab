@@ -1,0 +1,11 @@
+#include "version.h"
+
+const char* __version="0.99";
+
+const char* __git_rev="@GIT_REV@";
+const char* __git_current_tag="@GIT_TAG@";
+const char* __git_branch="@GIT_BRANCH@";
+
+const char* __build_version="@GIT_REV@";
+const char* __build_date=__DATE__;
+const char* __build_time=__TIME__;

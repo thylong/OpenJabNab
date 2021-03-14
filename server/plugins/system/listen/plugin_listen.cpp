@@ -85,26 +85,26 @@ void PluginListen::InitApiCalls()
 PLUGIN_BUNNY_API_CALL(PluginListen::Api_Config)
 {
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
 
 	QString action = hRequest.GetArg("action");
 
 	if(action == "set")
 	{
 		if(!hRequest.HasArg("value"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("value", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("value", GetName()));
 
 		bunny->SetPluginSetting(GetName(), "gain", QVariant(hRequest.GetArg("value").toInt()));
 		SendListeningGain(bunny);
-		return new ApiManager::ApiOk(QString("Plugin configuration updated."));
+		return new ApiAnswers::Ok(QString("Plugin configuration updated."));
 	}
 	else if(action == "get")
 	{
-		return new ApiManager::ApiString(QString::number(bunny->GetPluginSetting(GetName(), "gain", 0).toInt()));
+		return new ApiAnswers::String(QString::number(bunny->GetPluginSetting(GetName(), "gain", 0).toInt()));
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }
 

@@ -6,7 +6,7 @@
 #include <QVariant>
 #include "global.h"
 #include "apihandler.h"
-#include "apimanager.h"
+
 
 class PluginInterface;
 class Bunny;

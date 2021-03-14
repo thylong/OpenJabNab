@@ -9,7 +9,6 @@
 #include "nabaztagmanager.h"
 #include "httprequest.h"
 #include "log.h"
-#include "QsLog.h"
 #include "pluginmanager.h"
 #include "settings.h"
 
@@ -26,7 +25,12 @@ HttpHandler::HttpHandler(QTcpSocket * s, bool api, bool violetapi)
 	QObject::connect(s, &QTcpSocket::readyRead, this, &HttpHandler::ReceiveData);
 }
 
-bool HttpHandler::shouldDelete()
+HttpHandler::~HttpHandler() 
+{
+	//LogDebug(QString("Delete HTTPHandler 0x%1").arg((quintptr)this, QT_POINTER_SIZE * 2, 16, QChar('0')));
+}
+
+bool HttpHandler::shouldDelete(void)
 {
 	if(!incomingHttpSocket)
 		return true;
@@ -36,9 +40,18 @@ bool HttpHandler::shouldDelete()
 	return dt > maxDt;
 }
 
-HttpHandler::~HttpHandler() 
+void HttpHandler::cleanup(void)
 {
-
+	if(incomingHttpSocket)
+	{
+		incomingHttpSocket->disconnectFromHost();
+		incomingHttpSocket = nullptr;
+		return;
+	}
+	
+	// Delete incomingHttpSocket when it will be disconnected
+	//QObject::connect(incomingHttpSocket, &QTcpSocket::disconnected, incomingHttpSocket, &QObject::deleteLater);
+	deleteLater();
 }
 
 void HttpHandler::ReceiveData()
@@ -49,24 +62,27 @@ void HttpHandler::ReceiveData()
 		bytesToReceive = *(int *)receivedData.left(4).constData();
 
 	if(bytesToReceive != 0 && (receivedData.size() == bytesToReceive))
-		HandleBunnyHTTPRequest();
+		HandleHTTPRequest();
 }
 
-void HttpHandler::HandleBunnyHTTPRequest()
+void HttpHandler::HandleHTTPRequest()
 {
 	HTTPRequest request(receivedData);
 	QString uri = request.GetURI();
 	QRegExp rx("(ojn|vl)/([A-Z]{2})/api");
 	if (uri.startsWith("/ojn_api/"))
 	{
-		QsLogging::Logger::DumpLog(request.GetRawURI(), "Api Call");
+		LogDump(request.GetRawURI(), "Api Call");
 		if(httpApi)
 		{
-			std::unique_ptr<ApiManager::ApiAnswer> apianswer(ApiManager::Instance().ProcessApiCall(uri.mid(9), request));
-			//QByteArray answer = "Content-Type: text/xml\n\n" + apianswer->GetData();
-			QByteArray answer = apianswer->GetData();
-			incomingHttpSocket->write(answer);
-			QsLogging::Logger::DumpLog(answer, "Api Answer");
+			std::unique_ptr<ApiAnswers::Answer> apianswer(ApiManager::Instance().ProcessApiCall(uri.mid(9), request));
+			if(apianswer)
+			{
+				//QByteArray answer = "Content-Type: text/xml\n\n" + apianswer->GetData();
+				QByteArray answer = apianswer->GetData();
+				incomingHttpSocket->write(answer);
+				LogDump(answer, "Api Answer");
+			}
 		}
 		else
 			incomingHttpSocket->write("Api is disabled");
@@ -74,14 +90,17 @@ void HttpHandler::HandleBunnyHTTPRequest()
 	else if(uri.contains(rx) || uri.contains("/ojn/FR/api") || uri.startsWith("/vl/FR/api"))
 	//else if (uri.startsWith("/ojn/FR/api") || uri.startsWith("/vl/FR/api"))
 	{
-		QsLogging::Logger::DumpLog(request.GetRawURI(), "Violet Api Call");
+		LogDump(request.GetRawURI(), "Violet Api Call");
 		if(httpVioletApi)
 		{
-			std::unique_ptr<ApiManager::ApiAnswer> apianswer(ApiManager::Instance().ProcessApiCall(uri, request));
-			//QByteArray answer = "Content-Type: text/xml\n\n" + apianswer->GetData();
-			QByteArray answer = apianswer->GetData();
-			incomingHttpSocket->write(answer);
-			QsLogging::Logger::DumpLog(answer, "Violet Api Answer");
+			std::unique_ptr<ApiAnswers::Answer> apianswer(ApiManager::Instance().ProcessApiCall(uri, request));
+			if(apianswer)
+			{
+				//QByteArray answer = "Content-Type: text/xml\n\n" + apianswer->GetData();
+				QByteArray answer = apianswer->GetData();
+				incomingHttpSocket->write(answer);
+				LogDump(answer, "Violet Api Answer");
+			}
 		}
 		else
 			incomingHttpSocket->write("Violet Api is disabled");
@@ -92,7 +111,7 @@ void HttpHandler::HandleBunnyHTTPRequest()
 	}
 	else
 	{
-		QsLogging::Logger::DumpLog(request.GetRawURI(), "HTTP Request");
+		LogDump(request.GetRawURI(), "HTTP Request");
 		pluginManager.HttpRequestBefore(request);
 		if (!pluginManager.HttpRequestHandle(request))
 		{
@@ -110,20 +129,7 @@ void HttpHandler::HandleBunnyHTTPRequest()
 		pluginManager.HttpRequestAfter(request);
 		incomingHttpSocket->write(request.reply);
 		if(!uri.contains("itmode.jsp") && !uri.contains(".mp3") && !uri.contains(".chor") && !uri.contains("bc.jsp") && request.reply.size() < 256) // Don't dump too big answers
-			QsLogging::Logger::DumpLog(request.reply, "HTTP Answer");
+			LogDump(request.reply, "HTTP Answer");
 	}
-	Disconnect();
-}
-
-void HttpHandler::Disconnect()
-{
-	if(incomingHttpSocket)
-	{
-		incomingHttpSocket->disconnectFromHost();
-		// Delete incomingHttpSocket when it will be disconnected
-		QObject::connect(incomingHttpSocket, &QTcpSocket::disconnected, incomingHttpSocket, &QObject::deleteLater);
-		// Try delete anyway
-		deleteLater();
-		incomingHttpSocket = nullptr;
-	}
+	cleanup();
 }

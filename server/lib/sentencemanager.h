@@ -7,7 +7,7 @@
 #include <QSettings>
 #include "global.h"
 #include "apihandler.h"
-#include "apimanager.h"
+
 
 class OJN_EXPORT SentenceManager : public ApiHandler<SentenceManager>
 {

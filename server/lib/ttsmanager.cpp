@@ -8,9 +8,9 @@
 #include <QStringList>
 #include <QUrl>
 #include <QDir>
-#include "apimanager.h"
+
 #include "log.h"
-#include "QsLog.h"
+
 #include "settings.h"
 #include "translator.h"
 #include "ttsmanager.h"
@@ -574,7 +574,7 @@ QString TTSManager::convertToAdp(QString file, bool overwrite, bool fullPath, bo
     arguments << "-r 16000";
     arguments << "-c 1";
     arguments << fileWav;
-    QsLogging::Logger::DebugLog(QString("%1 %2").arg(program, arguments.join(" ")), "TTS");
+    //LogDebug(QString("%1 %2").arg(program, arguments.join(" ")));
 
 	char buffer[1024];
 	FILE* fd = popen(QString("%1 %2 >/dev/null 2>&1").arg(program, arguments.join(" ")).toLatin1(), "r");
@@ -592,7 +592,7 @@ QString TTSManager::convertToAdp(QString file, bool overwrite, bool fullPath, bo
 	arguments << fileAdpFS;
 	//arguments << "4ADP2";
 
-    	QsLogging::Logger::DebugLog(QString("%1 %2").arg(program, arguments.join(" ")), "TTS");
+  //LogDebug(QString("%1 %2").arg(program, arguments.join(" ")));
 
 	fd = popen(QString("%1 %2 >/dev/null 2>&1").arg(program, arguments.join(" ")).toLatin1(), "r");
 	if (fd != NULL) {
@@ -624,10 +624,10 @@ void TTSManager::InitApiCalls()
 API_CALL(TTSManager::Api_TTS)
 {
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("action"));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("action"));
 
 	QString action = hRequest.GetArg("action");
 
@@ -653,21 +653,21 @@ API_CALL(TTSManager::Api_TTS)
 			}
 		}
 */
-		return new ApiManager::ApiMappedList(list);
+		return new ApiAnswers::MappedList(list);
 	}
 	else if(action == "reload")
 	{
 		if(!hRequest.HasArg("name"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("name"));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("name"));
 
 		QString name = hRequest.GetArg("name");
 		ReloadTTS(name);
-		return new ApiManager::ApiString(Translator::tr("TTS %1 is now reloaded", account).arg(name));
+		return new ApiAnswers::String(Translator::tr("TTS %1 is now reloaded", account).arg(name));
 	}
 	else if(action == "status")
 	{
 		if(!hRequest.HasArg("name"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("name"));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("name"));
 
 		QString name = hRequest.GetArg("name");
 
@@ -676,37 +676,37 @@ API_CALL(TTSManager::Api_TTS)
 		if(hRequest.HasArg("status"))
 		{
 			tts->SetEnable(hRequest.GetArg("status") == "enable" ? true : false);
-			return new ApiManager::ApiString(Translator::tr("TTS %1 is now %2", account).arg(name, tts->GetEnable() ? Translator::tr("enabled", account) : Translator::tr("disabled", account)));
+			return new ApiAnswers::String(Translator::tr("TTS %1 is now %2", account).arg(name, tts->GetEnable() ? Translator::tr("enabled", account) : Translator::tr("disabled", account)));
 		}
 		else
 		{
-			return new ApiManager::ApiOk(Translator::tr("TTS %1 is %2", account).arg(name, tts->GetEnable() ? Translator::tr("enabled", account) : Translator::tr("disabled", account)));
+			return new ApiAnswers::Ok(Translator::tr("TTS %1 is %2", account).arg(name, tts->GetEnable() ? Translator::tr("enabled", account) : Translator::tr("disabled", account)));
 		}
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1'", account).arg("action"));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1'", account).arg("action"));
 	}
 }
 
 API_CALL(TTSManager::Api_Voices)
 {
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("action"));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("action"));
 
 	QString action = hRequest.GetArg("action");
 
 	if(!hRequest.HasArg("tts"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("tts"));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("tts"));
 
 	QString ttsName = hRequest.GetArg("tts");
 	TTSInterface * tts = Instance().GetTTSByNameOrNull(ttsName);
 
 	if(tts == NULL)
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1'", account).arg("tts"));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1'", account).arg("tts"));
 
 	if(action == "list")
 	{
@@ -727,12 +727,12 @@ API_CALL(TTSManager::Api_Voices)
 			voices += "</languages>";
 		}
 		voices += "</tts>";
-		return new ApiManager::ApiXml(voices);
+		return new ApiAnswers::Xml(voices);
 	}
 	else if(action == "status")
 	{
 		if(!hRequest.HasArg("name"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("name"));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("name"));
 
 		QString name = hRequest.GetArg("name");
 
@@ -741,15 +741,15 @@ API_CALL(TTSManager::Api_Voices)
 		if(hRequest.HasArg("status"))
 		{
 			tts->SetEnable(hRequest.GetArg("status") == "enable" ? true : false);
-			return new ApiManager::ApiString(Translator::tr("TTS %1 is now %2", account).arg(name, tts->GetEnable() ? Translator::tr("enabled", account) : Translator::tr("disabled", account)));
+			return new ApiAnswers::String(Translator::tr("TTS %1 is now %2", account).arg(name, tts->GetEnable() ? Translator::tr("enabled", account) : Translator::tr("disabled", account)));
 		}
 		else
 		{
-			return new ApiManager::ApiOk(Translator::tr("TTS %1 is %2", account).arg(name, tts->GetEnable() ? Translator::tr("enabled", account) : Translator::tr("disabled", account)));
+			return new ApiAnswers::Ok(Translator::tr("TTS %1 is %2", account).arg(name, tts->GetEnable() ? Translator::tr("enabled", account) : Translator::tr("disabled", account)));
 		}
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1'", account).arg("action"));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1'", account).arg("action"));
 	}
 }

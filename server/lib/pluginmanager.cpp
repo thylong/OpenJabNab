@@ -3,7 +3,7 @@
 #include <QLibrary>
 #include <QPluginLoader>
 #include <QString>
-#include "apimanager.h"
+
 #include "account.h"
 #include "httprequest.h"
 #include "log.h"
@@ -425,22 +425,22 @@ API_CALL(PluginManager::Api_GetPluginsVioletApiCall)
 		}
 	}
 	plugins += "</plugins>";
-	return new ApiManager::ApiXml(plugins);
+	return new ApiAnswers::Xml(plugins);
 }
 
 API_CALL(PluginManager::Api_Plugins)
 {
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("action"));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("action"));
 
 	QString action = hRequest.GetArg("action");
 
 	/*
 	if(!hRequest.HasArg("options"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("options"));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("options"));
 
 	QStringList options = hRequest.GetArg("options").split(",");
 	*/
@@ -448,17 +448,17 @@ API_CALL(PluginManager::Api_Plugins)
 	if(action == "obsolete")
 	{
 		if(!hRequest.HasArg("subaction"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("subaction"));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("subaction"));
 
 		QString subaction = hRequest.GetArg("subaction");
 		if(subaction == "list")
 		{
-			return new ApiManager::ApiList(obsoleteList);
+			return new ApiAnswers::List(obsoleteList);
 		}
 		else if(subaction == "add")
 		{
 			if(!hRequest.HasArg("value"))
-				return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("value"));
+				return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("value"));
 
 			QString value = hRequest.GetArg("value");
 
@@ -467,14 +467,14 @@ API_CALL(PluginManager::Api_Plugins)
 				obsoleteList.append(value);
 				obsoleteList.removeDuplicates();
 				GlobalSettings::Set("Plugins/Obsolete", obsoleteList);
-				return new ApiManager::ApiOk(Translator::tr("Add plugin '%1' to obsolete list", account).arg(value));
+				return new ApiAnswers::Ok(Translator::tr("Add plugin '%1' to obsolete list", account).arg(value));
 			}
-			return new ApiManager::ApiOk(Translator::tr("Plugin '%1' is already in obsolete list", account).arg(value));
+			return new ApiAnswers::Ok(Translator::tr("Plugin '%1' is already in obsolete list", account).arg(value));
 		}
 		else if(subaction == "remove")
 		{
 			if(!hRequest.HasArg("value"))
-				return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("value"));
+				return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("value"));
 
 			QString value = hRequest.GetArg("value");
 
@@ -483,18 +483,18 @@ API_CALL(PluginManager::Api_Plugins)
 				obsoleteList.removeAll(value);
 				obsoleteList.removeDuplicates();
 				GlobalSettings::Set("Plugins/Obsolete", obsoleteList);
-				return new ApiManager::ApiOk(Translator::tr("Remove plugin '%1' from obsoloete list", account).arg(value));
+				return new ApiAnswers::Ok(Translator::tr("Remove plugin '%1' from obsoloete list", account).arg(value));
 			}
-			return new ApiManager::ApiOk(Translator::tr("Plugin '%1' is not in obsolete list", account).arg(value));
+			return new ApiAnswers::Ok(Translator::tr("Plugin '%1' is not in obsolete list", account).arg(value));
 		}
 		else
 		{
-			return new ApiManager::ApiError(Translator::tr("Bad argument '%1'", account).arg("subaction"));
+			return new ApiAnswers::Error(Translator::tr("Bad argument '%1'", account).arg("subaction"));
 		}
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1'", account).arg("action"));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1'", account).arg("action"));
 	}
 }
 
@@ -534,13 +534,13 @@ API_CALL(PluginManager::Api_GetPlugins)
 		plugins += ">" + Translator::tr(p->GetVisualName(), lng) + "</plugin>";
 	}
 	plugins += "</plugins>";
-	return new ApiManager::ApiXml(plugins);
+	return new ApiAnswers::Xml(plugins);
 }
 
 API_CALL(PluginManager::Api_GetPlugin)
 {
 	if(!hRequest.HasArg("plugin"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("plugin"));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("plugin"));
 
 	QString plugin = hRequest.GetArg("plugin");
 
@@ -588,7 +588,7 @@ API_CALL(PluginManager::Api_GetPlugin)
 		plugins += "</changelog></plugin>";
 	}
 	plugins += "</plugins>";
-	return new ApiManager::ApiXml(plugins);
+	return new ApiAnswers::Xml(plugins);
 }
 
 API_CALL(PluginManager::Api_GetListOfPlugins)
@@ -596,13 +596,13 @@ API_CALL(PluginManager::Api_GetListOfPlugins)
 	Q_UNUSED(hRequest);
 
 	if(!account.HasAccess(Account::AcPlugins,Account::Read))
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	QMap<QString, QVariant> list;
 	foreach (PluginInterface * p, listOfPlugins)
 		list.insert(p->GetName(), Translator::tr(p->GetVisualName(), account));
 
-	return new ApiManager::ApiMappedList(list);
+	return new ApiAnswers::MappedList(list);
 }
 
 API_CALL(PluginManager::Api_GetListOfEnabledPlugins)
@@ -610,14 +610,14 @@ API_CALL(PluginManager::Api_GetListOfEnabledPlugins)
 	Q_UNUSED(hRequest);
 
 	if(!account.HasAccess(Account::AcPlugins,Account::Read))
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	QList<QString> list;
 	foreach (PluginInterface * p, listOfPlugins)
 		if(p->GetEnable())
 			list.append(p->GetName());
 
-	return new ApiManager::ApiList(list);
+	return new ApiAnswers::List(list);
 }
 
 API_CALL(PluginManager::Api_GetListOfTTSLogPlugins)
@@ -625,14 +625,14 @@ API_CALL(PluginManager::Api_GetListOfTTSLogPlugins)
 	Q_UNUSED(hRequest);
 
 	if(!account.HasAccess(Account::AcPlugins,Account::Read))
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	QList<QString> list;
 	foreach (PluginInterface * p, listOfPlugins)
 		if(p->GetTTSLog())
 			list.append(p->GetName());
 
-	return new ApiManager::ApiList(list);
+	return new ApiAnswers::List(list);
 }
 
 API_CALL(PluginManager::Api_GetListOfBunnyV1Plugins)
@@ -640,28 +640,28 @@ API_CALL(PluginManager::Api_GetListOfBunnyV1Plugins)
 	Q_UNUSED(hRequest);
 
 	if(!account.HasAccess(Account::AcPluginsBunny,Account::Read))
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	QList<QString> list;
 	foreach (PluginInterface * p, listOfPlugins)
 		if(p->GetType() & PluginInterface::BunnyV1Plugin)
 			list.append(p->GetName());
 
-	return new ApiManager::ApiList(list);
+	return new ApiAnswers::List(list);
 }
 API_CALL(PluginManager::Api_GetListOfBunnyV2Plugins)
 {
 	Q_UNUSED(hRequest);
 
 	if(!account.HasAccess(Account::AcPluginsBunny,Account::Read))
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	QList<QString> list;
 	foreach (PluginInterface * p, listOfPlugins)
 		if(p->GetType() & PluginInterface::BunnyV2Plugin)
 			list.append(p->GetName());
 
-	return new ApiManager::ApiList(list);
+	return new ApiAnswers::List(list);
 }
 
 API_CALL(PluginManager::Api_GetListOfZtampPlugins)
@@ -669,14 +669,14 @@ API_CALL(PluginManager::Api_GetListOfZtampPlugins)
 	Q_UNUSED(hRequest);
 
 	if(!account.HasAccess(Account::AcPluginsZtamp,Account::Read))
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	QList<QString> list;
 	foreach (PluginInterface * p, listOfPlugins)
 		if(p->GetType() & PluginInterface::ZtampPlugin)
 			list.append(p->GetName());
 
-	return new ApiManager::ApiList(list);
+	return new ApiAnswers::List(list);
 }
 
 API_CALL(PluginManager::Api_GetListOfSystemPlugins)
@@ -684,14 +684,14 @@ API_CALL(PluginManager::Api_GetListOfSystemPlugins)
 	Q_UNUSED(hRequest);
 
 	if(!account.HasAccess(Account::AcServer,Account::Read))
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	QList<QString> list;
 	foreach (PluginInterface * p, listOfSystemPlugins)
 		if(p->GetType() & PluginInterface::SystemPlugin)
 			list.append(p->GetName());
 
-	return new ApiManager::ApiList(list);
+	return new ApiAnswers::List(list);
 }
 
 API_CALL(PluginManager::Api_GetListOfSystemEnabledPlugins)
@@ -699,14 +699,14 @@ API_CALL(PluginManager::Api_GetListOfSystemEnabledPlugins)
 	Q_UNUSED(hRequest);
 
 	if(!account.HasAccess(Account::AcServer,Account::Read))
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	QList<QString> list;
 	foreach (PluginInterface * p, listOfSystemPlugins)
 		if(p->GetType() & PluginInterface::SystemPlugin && p->GetEnable())
 			list.append(p->GetName());
 
-	return new ApiManager::ApiList(list);
+	return new ApiAnswers::List(list);
 }
 
 API_CALL(PluginManager::Api_GetListOfRequiredPlugins)
@@ -714,14 +714,14 @@ API_CALL(PluginManager::Api_GetListOfRequiredPlugins)
 	Q_UNUSED(hRequest);
 
 	if(!account.HasAccess(Account::AcServer,Account::Read))
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	QList<QString> list;
 	foreach (PluginInterface * p, listOfPlugins)
 		if(p->GetType() & PluginInterface::RequiredPlugin)
 			list.append(p->GetName());
 
-	return new ApiManager::ApiList(list);
+	return new ApiAnswers::List(list);
 }
 
 API_CALL(PluginManager::Api_GetListOfBunnyEnabledPlugins)
@@ -729,14 +729,14 @@ API_CALL(PluginManager::Api_GetListOfBunnyEnabledPlugins)
 	Q_UNUSED(hRequest);
 
 	if(!account.HasAccess(Account::AcPluginsBunny,Account::Read))
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	QList<QString> list;
 	foreach (PluginInterface * p, listOfPlugins)
 		if((p->GetType() & PluginInterface::BunnyV1Plugin || p->GetType() & PluginInterface::BunnyV2Plugin) && p->GetEnable())
 			list.append(p->GetName());
 
-	return new ApiManager::ApiList(list);
+	return new ApiAnswers::List(list);
 }
 
 API_CALL(PluginManager::Api_GetListOfZtampEnabledPlugins)
@@ -744,14 +744,14 @@ API_CALL(PluginManager::Api_GetListOfZtampEnabledPlugins)
 	Q_UNUSED(hRequest);
 
 	if(!account.HasAccess(Account::AcPluginsZtamp,Account::Read))
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	QList<QString> list;
 	foreach (PluginInterface * p, listOfPlugins)
 		if((p->GetType() & PluginInterface::ZtampPlugin) && p->GetEnable())
 			list.append(p->GetName());
 
-	return new ApiManager::ApiList(list);
+	return new ApiAnswers::List(list);
 }
 
 API_CALL(PluginManager::Api_ActivatePlugin)
@@ -759,17 +759,17 @@ API_CALL(PluginManager::Api_ActivatePlugin)
 	Q_UNUSED(hRequest);
 
 	if(!account.HasAccess(Account::AcServer,Account::Write))
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	PluginInterface * p = listOfPluginsByName.value(hRequest.GetArg("name"));
 	if(!p)
-		return new ApiManager::ApiError(Translator::tr("Unknown plugin '%1'", account).arg(hRequest.GetArg("name")));
+		return new ApiAnswers::Error(Translator::tr("Unknown plugin '%1'", account).arg(hRequest.GetArg("name")));
 
 	if(p->GetEnable())
-		return new ApiManager::ApiError(Translator::tr("Plugin '%1' is already enabled!", account).arg(hRequest.GetArg("name")));
+		return new ApiAnswers::Error(Translator::tr("Plugin '%1' is already enabled!", account).arg(hRequest.GetArg("name")));
 
 	p->SetEnable(true);
-	return new ApiManager::ApiOk(Translator::tr("'%1' is now enabled", account).arg(p->GetName()));
+	return new ApiAnswers::Ok(Translator::tr("'%1' is now enabled", account).arg(p->GetName()));
 }
 
 API_CALL(PluginManager::Api_DeactivatePlugin)
@@ -777,20 +777,20 @@ API_CALL(PluginManager::Api_DeactivatePlugin)
 	Q_UNUSED(hRequest);
 
 	if(!account.HasAccess(Account::AcServer,Account::Write))
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	PluginInterface * p = listOfPluginsByName.value(hRequest.GetArg("name"));
 	if(!p)
-		return new ApiManager::ApiError(Translator::tr("Unknown plugin '%1'", account).arg(hRequest.GetArg("name")));
+		return new ApiAnswers::Error(Translator::tr("Unknown plugin '%1'", account).arg(hRequest.GetArg("name")));
 
 	if(p->GetType() & PluginInterface::RequiredPlugin)
-		return new ApiManager::ApiError(Translator::tr("Plugin '%1' can't be deactivated!", account).arg(hRequest.GetArg("name")));
+		return new ApiAnswers::Error(Translator::tr("Plugin '%1' can't be deactivated!", account).arg(hRequest.GetArg("name")));
 
 	if(!p->GetEnable())
-		return new ApiManager::ApiError(Translator::tr("Plugin '%1' is already disabled!", account).arg(hRequest.GetArg("name")));
+		return new ApiAnswers::Error(Translator::tr("Plugin '%1' is already disabled!", account).arg(hRequest.GetArg("name")));
 
 	p->SetEnable(false);
-	return new ApiManager::ApiOk(Translator::tr("'%1' is now disabled", account).arg(p->GetName()));
+	return new ApiAnswers::Ok(Translator::tr("'%1' is now disabled", account).arg(p->GetName()));
 }
 
 API_CALL(PluginManager::Api_UnloadPlugin)
@@ -798,15 +798,15 @@ API_CALL(PluginManager::Api_UnloadPlugin)
 	Q_UNUSED(hRequest);
 
 	if(!account.HasAccess(Account::AcServer,Account::Write))
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	QString name = hRequest.GetArg("name");
 	if(UnloadPlugin(name))
 	{
-		return new ApiManager::ApiOk(Translator::tr("'%1' is now unloaded", account).arg(name));
+		return new ApiAnswers::Ok(Translator::tr("'%1' is now unloaded", account).arg(name));
 	}
 	else
-		return new ApiManager::ApiError(Translator::tr("Can't unload '%1'!", account).arg(name));
+		return new ApiAnswers::Error(Translator::tr("Can't unload '%1'!", account).arg(name));
 }
 
 API_CALL(PluginManager::Api_LoadPlugin)
@@ -814,13 +814,13 @@ API_CALL(PluginManager::Api_LoadPlugin)
 	Q_UNUSED(hRequest);
 
 	if(!account.HasAccess(Account::AcServer,Account::Write))
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	QString filename = hRequest.GetArg("filename");
 	if(LoadPlugin(filename))
-		return new ApiManager::ApiOk(Translator::tr("'%1' is now loaded", account).arg(filename));
+		return new ApiAnswers::Ok(Translator::tr("'%1' is now loaded", account).arg(filename));
 	else
-		return new ApiManager::ApiError(Translator::tr("Can't load '%1'!", account).arg(filename));
+		return new ApiAnswers::Error(Translator::tr("Can't load '%1'!", account).arg(filename));
 }
 
 API_CALL(PluginManager::Api_ReloadPlugin)
@@ -828,54 +828,54 @@ API_CALL(PluginManager::Api_ReloadPlugin)
 	Q_UNUSED(hRequest);
 
 	if(!account.HasAccess(Account::AcServer,Account::Write))
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	QString name = hRequest.GetArg("name");
 	if(ReloadPlugin(name))
-		return new ApiManager::ApiOk(Translator::tr("'%1' is now reloaded", account).arg(name));
+		return new ApiAnswers::Ok(Translator::tr("'%1' is now reloaded", account).arg(name));
 	else
-		return new ApiManager::ApiError(Translator::tr("Can't reload '%1'!", account).arg(name));
+		return new ApiAnswers::Error(Translator::tr("Can't reload '%1'!", account).arg(name));
 }
 
 API_CALL(PluginManager::Api_TTSLogPlugin)
 {
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("action"));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("action"));
 
 	QString action = hRequest.GetArg("action");
 
 	if(action == "set")
 	{
 		if(!hRequest.HasArg("plugin"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("plugin"));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("plugin"));
 
 		QString plugin = hRequest.GetArg("plugin");
 
 		if(!hRequest.HasArg("value"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("value"));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("value"));
 
 		bool value = hRequest.GetArg("value") == "enable" ? true : false;
 
 		PluginInterface * p = listOfPluginsByName.value(plugin);
 
 		p->SetTTSLog(value);
-		return new ApiManager::ApiOk(Translator::tr("'%1' value is now '%2' for plugin '%3'", account).arg("TTSLog", Translator::tr(value ? "enabled" : "disabled"), p->GetName()));
+		return new ApiAnswers::Ok(Translator::tr("'%1' value is now '%2' for plugin '%3'", account).arg("TTSLog", Translator::tr(value ? "enabled" : "disabled"), p->GetName()));
 	}
 	else if(action == "get")
 	{
 		if(!hRequest.HasArg("plugin"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1'", account).arg("plugin"));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1'", account).arg("plugin"));
 
 		QString plugin = hRequest.GetArg("plugin");
 
 		PluginInterface * p = listOfPluginsByName.value(plugin);
 
 		bool value = p->GetTTSLog();
-		return new ApiManager::ApiOk(Translator::tr("'%1' value is '%2' for plugin '%3'", account).arg("TTSLog", Translator::tr(value ? "enabled" : "disabled"), p->GetName()));
+		return new ApiAnswers::Ok(Translator::tr("'%1' value is '%2' for plugin '%3'", account).arg("TTSLog", Translator::tr(value ? "enabled" : "disabled"), p->GetName()));
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1'", account).arg("action"));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1'", account).arg("action"));
 	}
 }
 

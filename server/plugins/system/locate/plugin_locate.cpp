@@ -99,17 +99,17 @@ bool PluginLocate::HttpRequestHandle(HTTPRequest & request)
 			if(request.GetArg("r") == "1")
 			{
 				//LogInfo(QString("Requesting a restart LOCATE for tag %1").arg(serialnumber));
-				QsLogging::Logger::BootLog("Restart", serialnumber.toLatin1());
+				LogBoot("Restart", serialnumber.toLatin1());
 			}
 			else
 			{
 				//LogInfo(QString("Requesting a full reboot LOCATE for tag %1").arg(serialnumber));
-				QsLogging::Logger::BootLog("Reboot", serialnumber.toLatin1());
+				LogBoot("Reboot", serialnumber.toLatin1());
 			}
 		}
 		else
 		{
-			QsLogging::Logger::BootLog("Boot", serialnumber.toLatin1());
+			LogBoot("Boot", serialnumber.toLatin1());
 			//LogInfo(QString("Requesting LOCATE for tag %1").arg(serialnumber));
 		}
 
@@ -145,7 +145,7 @@ bool PluginLocate::HttpRequestHandle(HTTPRequest & request)
 		Bunny * bunny = BunnyManager::GetBunny(this, serialnumber.toLatin1());
 		bunny->SetBootcode(request.GetArg("v"));
 
-		QsLogging::Logger::DebugLog(QString("Bunny %1 ask a reconfiguration").arg(serialnumber), GetName());
+		LogDebug(QString("Bunny %1 ask a reconfiguration").arg(serialnumber));
 		QString locateString;
 
 		foreach(QString configString, configList)
@@ -199,67 +199,67 @@ void PluginLocate::InitApiCalls()
 PLUGIN_BUNNY_API_CALL(PluginLocate::Api_BunnyConfig)
 {
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
 
 	QString action = hRequest.GetArg("action");
 
 	if(action == "set")
 	{
 		if(!hRequest.HasArg("config"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("config", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("config", GetName()));
 
 		QString config = hRequest.GetArg("config");
 
 		if(configList.contains(config))
 		{
 			if(!hRequest.HasArg("value"))
-				return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("value", GetName()));
+				return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("value", GetName()));
 
 			QString value = hRequest.GetArg("value");
 
 			if(value == "")
 			{
 				bunny->RemovePluginSetting(GetName(), config);
-				return new ApiManager::ApiOk(Translator::tr("Config removed for bunny '%1'", account).arg(QString(bunny->GetID())));
+				return new ApiAnswers::Ok(Translator::tr("Config removed for bunny '%1'", account).arg(QString(bunny->GetID())));
 			}
 			else
 			{
 				bunny->SetPluginSetting(GetName(), config, value);
-				return new ApiManager::ApiOk(Translator::tr("Config updated for bunny '%1'", account).arg(QString(bunny->GetID())));
+				return new ApiAnswers::Ok(Translator::tr("Config updated for bunny '%1'", account).arg(QString(bunny->GetID())));
 			}
 		}
-		return new ApiManager::ApiError(Translator::tr("Bad value '%1' for argument '%2'", account).arg(config, "config"));
+		return new ApiAnswers::Error(Translator::tr("Bad value '%1' for argument '%2'", account).arg(config, "config"));
 	}
 	else if(action == "get")
 	{
 		if(!hRequest.HasArg("config"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("config", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("config", GetName()));
 
 		QString config = hRequest.GetArg("config");
 
 		if(configList.contains(config))
 		{
 			QString value = bunny->GetPluginSetting(GetName(), config, QString()).toString();
-			return new ApiManager::ApiString(value);
+			return new ApiAnswers::String(value);
 		}
-		return new ApiManager::ApiError(Translator::tr("Bad value '%1' for argument '%2'", account).arg(config, "config"));
+		return new ApiAnswers::Error(Translator::tr("Bad value '%1' for argument '%2'", account).arg(config, "config"));
 	}
 	else if(action == "relocate")
 	{
 		if(!hRequest.HasArg("value"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("calue", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("calue", GetName()));
 
 		int value = hRequest.GetArg("value").toInt();
 
 		bunny->SetPluginSetting(GetName(), "Relocate", value);
-		return new ApiManager::ApiOk(Translator::tr("Config updated for bunny '%1'", account).arg(QString(bunny->GetID())));
+		return new ApiAnswers::Ok(Translator::tr("Config updated for bunny '%1'", account).arg(QString(bunny->GetID())));
 	}
 	else if(action == "getraw")
 	{
-		return new ApiManager::ApiString(bunny->GetPluginSetting(GetName(), "BunnyConfiguration", QString()).toString());
+		return new ApiAnswers::String(bunny->GetPluginSetting(GetName(), "BunnyConfiguration", QString()).toString());
 	}
 	else if(action == "getconfig")
 	{
@@ -272,24 +272,24 @@ PLUGIN_BUNNY_API_CALL(PluginLocate::Api_BunnyConfig)
 			configs += "</config>";
 		}
 		configs += "</configs>";
-		return new ApiManager::ApiXml(configs);
+		return new ApiAnswers::Xml(configs);
 	}
 	else if(action == "update")
 	{
 		QString data = QString("<iq type='set' to='%1@%2/%3' from='%2@%2/server' id='exec1'><command xmlns='http://jabber.org/protocol/commands' node='reconfigure' action='execute'/></iq>").arg(QString(bunny->GetID()), GlobalSettings::GetString("OpenJabNabServers/XmppServer"), QString(bunny->GetXmppResource()));
 		bunny->SendExpertData(data.toLatin1());
-		return new ApiManager::ApiOk(Translator::tr("Setup changed for bunny '%1'", account).arg(QString(bunny->GetID())));
+		return new ApiAnswers::Ok(Translator::tr("Setup changed for bunny '%1'", account).arg(QString(bunny->GetID())));
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }
 
 PLUGIN_BUNNY_API_CALL(PluginLocate::Api_BunnyCustom)
 {
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
 
 	QString action = hRequest.GetArg("action");
 
@@ -310,7 +310,7 @@ PLUGIN_BUNNY_API_CALL(PluginLocate::Api_BunnyCustom)
 				}
 			}
 		}
-		return new ApiManager::ApiOk(QString("Custom settings updated"));
+		return new ApiAnswers::Ok(QString("Custom settings updated"));
 	}
 	else if(action == "get")
 	{
@@ -323,21 +323,21 @@ PLUGIN_BUNNY_API_CALL(PluginLocate::Api_BunnyCustom)
 			customs += "</custom>";
 		}
 		customs += "</customs>";
-		return new ApiManager::ApiXml(customs);
+		return new ApiAnswers::Xml(customs);
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }
 
 PLUGIN_BUNNY_API_CALL(PluginLocate::Api_BunnyServer)
 {
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
 
 	QString action = hRequest.GetArg("action");
 
@@ -349,25 +349,25 @@ PLUGIN_BUNNY_API_CALL(PluginLocate::Api_BunnyServer)
 		SetSettings("Server/List", bad);
 		QString data = QString("<iq type='set' to='%1@%2/%3' from='%2@%2/server' id='exec1'><command xmlns='http://jabber.org/protocol/commands' node='updateconfig' action='execute'/></iq>").arg(QString(bunny->GetID()), GlobalSettings::GetString("OpenJabNabServers/XmppServer"), QString(bunny->GetXmppResource()));
 		bunny->SendExpertData(data.toLatin1());
-		return new ApiManager::ApiOk(Translator::tr("Setup changed for bunny '%1'", account).arg(QString(bunny->GetID())));
+		return new ApiAnswers::Ok(Translator::tr("Setup changed for bunny '%1'", account).arg(QString(bunny->GetID())));
 	}
 	else if(action == "get")
 	{
-		return new ApiManager::ApiString(GetSettings(QString("Server/%1").arg(QString(bunny->GetID())), QString()).toString());
+		return new ApiAnswers::String(GetSettings(QString("Server/%1").arg(QString(bunny->GetID())), QString()).toString());
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }
 
 PLUGIN_API_CALL(PluginLocate::Api_Server)
 {
 	if(!account.IsAdmin())
-		return new ApiManager::ApiError(Translator::tr("Access denied", account));
+		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
 
 	QString action = hRequest.GetArg("action");
 
@@ -378,7 +378,7 @@ PLUGIN_API_CALL(PluginLocate::Api_Server)
 		{
 			list.insert(serialnumber, GetSettings(QString("Server/%1").arg(serialnumber), QString()).toString());
 		}
-		return new ApiManager::ApiMappedList(list);
+		return new ApiAnswers::MappedList(list);
 	}
 	else if(action == "waiting")
 	{
@@ -390,20 +390,20 @@ PLUGIN_API_CALL(PluginLocate::Api_Server)
 				Bunny * bunny = BunnyManager::GetBunny(this, serialnumber.toLatin1());
 				list.insert(serialnumber, QString::number(bunny->GetGlobalSetting("LastLocate", QDateTime::currentDateTime()).toDateTime().secsTo(QDateTime::currentDateTime())));
 			}
-			return new ApiManager::ApiMappedList(list);
+			return new ApiAnswers::MappedList(list);
 		}
 		else
 		{
-			return new ApiManager::ApiList(waitingBunnies);
+			return new ApiAnswers::List(waitingBunnies);
 		}
 	}
 	else if(action == "failing")
 	{
-		return new ApiManager::ApiList(failingBunnies);
+		return new ApiAnswers::List(failingBunnies);
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }
 
@@ -417,15 +417,15 @@ PLUGIN_BUNNY_API_CALL(PluginLocate::Api_SetCustomLocateSetting)
 		if(hRequest.GetArg("value") != "")
 		{
 			bunny->SetPluginSetting(GetName(), hParam, hRequest.GetArg("value"));
-			return new ApiManager::ApiOk(QString("Setting '%1' to custom value '%2'").arg(hParam, hRequest.GetArg("value")));
+			return new ApiAnswers::Ok(QString("Setting '%1' to custom value '%2'").arg(hParam, hRequest.GetArg("value")));
 		}
 		else
 		{
 			bunny->RemovePluginSetting(GetName(), hParam);
-			return new ApiManager::ApiOk(QString("Removing '%1' custom value").arg(hParam));
+			return new ApiAnswers::Ok(QString("Removing '%1' custom value").arg(hParam));
 		}
 	}
-	return new ApiManager::ApiError(QString("'%1' is not a setting for this plugin").arg(hParam));
+	return new ApiAnswers::Error(QString("'%1' is not a setting for this plugin").arg(hParam));
 }
 
 PLUGIN_BUNNY_API_CALL(PluginLocate::Api_GetCustomLocateSetting)
@@ -435,8 +435,8 @@ PLUGIN_BUNNY_API_CALL(PluginLocate::Api_GetCustomLocateSetting)
 	QString hParam = hRequest.GetArg("param");
 	if(customList.contains(hParam))
 	{
-		return new ApiManager::ApiString(bunny->GetPluginSetting(GetName(), hParam, QString("")).toString());
+		return new ApiAnswers::String(bunny->GetPluginSetting(GetName(), hParam, QString("")).toString());
 	}
-	return new ApiManager::ApiError(QString("'%1' is not a setting for this plugin").arg(hParam));
+	return new ApiAnswers::Error(QString("'%1' is not a setting for this plugin").arg(hParam));
 }
 

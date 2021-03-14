@@ -5,7 +5,7 @@
 #include <QString>
 #include <QSql>
 
-#include "QsLog.h"
+
 
 #include "accountmanager.h"
 #include "browsercache.h"
@@ -68,6 +68,7 @@ OpenJabNab::OpenJabNab(int argc, char ** argv)
 	PluginManager::Init();
 	BunnyManager::LoadBunnies();
 	ZtampManager::LoadZtamps();
+	ApiManager::InitApiCalls();
 
 	if(GlobalSettings::Get("Config/HttpListener", true) == true)
 	{
@@ -80,9 +81,11 @@ OpenJabNab::OpenJabNab(int argc, char ** argv)
 		httpListener = new QTcpServer(this);
 		httpListener->setMaxPendingConnections(GlobalSettings::GetInt("OpenJabNabServers/HTTPMaxPendingConnections", 30));
 		httpListener->listen(QHostAddress::LocalHost, GlobalSettings::GetInt("OpenJabNabServers/ListeningHttpPort", 8080));
-		QObject::connect(httpListener, &QTcpServer::newConnection, [&](void)
+		QObject::connect(httpListener, &QTcpServer::newConnection, [&,httpApi,httpVioletApi](void)
 		{
-			_httpHandlers.emplace_back(new HttpHandler(httpListener->nextPendingConnection(), httpApi, httpVioletApi));
+			auto* it = new HttpHandler(httpListener->nextPendingConnection(), httpApi, httpVioletApi);
+			//LogDebug(QString("New HTTPHandler 0x%1").arg((quintptr)it, QT_POINTER_SIZE * 2, 16, QChar('0')));
+			_httpHandlers.emplace_back(it);
 		});
 	}
 	else
@@ -97,13 +100,15 @@ OpenJabNab::OpenJabNab(int argc, char ** argv)
 		xmppListener->listen(QHostAddress::Any, port);
 		QObject::connect(xmppListener, &QTcpServer::newConnection, [&](void)
 		{
-			_xmppHandlers.emplace_back(new XmppHandler(xmppListener->nextPendingConnection()));
+			auto* it = new XmppHandler(xmppListener->nextPendingConnection());
+			//LogDebug(QString("New XMPPHandler 0x%1").arg((quintptr)it, QT_POINTER_SIZE * 2, 16, QChar('0')));
+			_xmppHandlers.emplace_back(it);
 		});
 	}
 	else
 		LogWarning("Warning : XMPP Listener is disabled !");
 
-	autoSaveTmr.setInterval(5 * 60 * 1000);	// 5min
+	autoSaveTmr.setInterval(GlobalSettings::GetInt("Timer/Autosave", 5*60) * 1000);	// 5min
 	QObject::connect(&autoSaveTmr,&QTimer::timeout, [&](void)
 	{
 		AccountManager::Instance().SaveAccounts();
@@ -112,33 +117,50 @@ OpenJabNab::OpenJabNab(int argc, char ** argv)
 	});
 
 
-	nabStatusTmr.setInterval(60 * 1000);	// 1min
+	nabStatusTmr.setInterval(GlobalSettings::GetInt("Timer/UpdateV1", 60) * 1000);	// 1min
 	QObject::connect(&nabStatusTmr,&QTimer::timeout, [&](void)
 	{
 		NabaztagManager::Instance().UpdateStatus();
 	});
 
-	timeoutTmr.setInterval(60 * 1000);
+	timeoutTmr.setInterval(GlobalSettings::GetInt("Timer/TimeoutsCleanup", 10) * 1000);	// 10s
 	QObject::connect(&timeoutTmr, &QTimer::timeout, [&](void)
 	{
-		for(auto& it: _httpHandlers)
 		{
-			if(it->shouldDelete())
+			auto it = _httpHandlers.begin();
+			const auto& end = _httpHandlers.end();
+			while(it != end)
 			{
-				LogDebug("Should delete HTTP Handler");
+				if((*it)->shouldDelete())
+				{
+					//LogDebug(QString("Should delete HTTPHandler 0x%1").arg((quintptr)*it, T_POINTER_SIZE * 2, 16, QChar('0')));
+					(*it)->cleanup();
+					it = _httpHandlers.erase(it);
+				}
+				else
+					++it;
 			}
 		}
-		for(auto& it: _xmppHandlers)
 		{
-			if(it->shouldDelete())
+			auto it = _xmppHandlers.begin();
+			const auto& end = _xmppHandlers.end();
+			while(it != end)
 			{
-				LogDebug("Should delete XMPP Handler");
+				if((*it)->shouldDelete())
+				{
+					//LogDebug(QString("Should delete XMPPHandler 0x%1").arg((quintptr)*it, QT_POINTER_SIZE * 2, 16, QChar('0')));
+					(*it)->cleanup();
+					it = _xmppHandlers.erase(it);
+				}				
+				else
+					++it;
 			}
 		}
 	});
 
 	autoSaveTmr.start();
 	nabStatusTmr.start();
+	timeoutTmr.start();
 }
 
 void OpenJabNab::insertServerInDb()
@@ -181,13 +203,13 @@ OpenJabNab::~OpenJabNab()
 	if(xmppListener)
 	{
 		for(auto& it: _xmppHandlers)
-			it->Disconnect();
+			it->cleanup();
 		xmppListener->close();
 	}
 	if(httpListener)
 	{
 		for(auto& it: _httpHandlers)
-			it->Disconnect();
+			it->cleanup();
 		httpListener->close();
 	}
 	BrowserCache::Close();
@@ -200,7 +222,7 @@ OpenJabNab::~OpenJabNab()
 	AccountManager::Close();
 	GlobalSettings::Close();
 	DbManager::Close();
-	QsLogging::Logger::destroyInstance();
-
 	LogInfo("-- OpenJabNab Close --");
+
+	QsLogging::Logger::destroyInstance();
 }

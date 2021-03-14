@@ -4,10 +4,10 @@
 #include <map>
 #include <QString>
 
-#include "apimanager.h"
 #include "global.h"
-#include "httprequest.h"
 #include "log.h"
+#include "apianswers.h"
+#include "httprequest.h"
 
 #include <functional>
 
@@ -62,7 +62,7 @@ protected:
       return;
     }
     QString funcName = rx.cap(1);
-    QStringList args = rx.cap(2).split(',', Qt::SkipEmptyParts);
+    QStringList args = rx.cap(2).split(',', QString::SkipEmptyParts);
     //std::cout << "  [ApiHandlerGeneric::registerAPICall] " << sig << " " << &fn << std::endl;
     //std::cout << "    Put into map... " << &_apicalls << std::endl;
     _apicalls.emplace(funcName, std::make_pair(args,[fn](C* o, Args... args) -> R { 
@@ -76,8 +76,8 @@ private:
 };
 
 #define DECLARE_API_CALL(FSIG, FUNC) registerApiCall(FSIG, FUNC)
-#define API_CALL(NAME) ApiManager::ApiAnswer* NAME(HTTPRequest const& hRequest, Account const& account)
-using ApiCall_t      = ApiManager::ApiAnswer*     (HTTPRequest const&,          Account const&);
+#define API_CALL(NAME) ApiAnswers::Answer* NAME(HTTPRequest const& hRequest, Account const& account)
+using ApiCall_t      = ApiAnswers::Answer*     (HTTPRequest const&,          Account const&);
 
 template<class C>
 class ApiHandler
@@ -113,7 +113,7 @@ private:
       QMap<QString,QVariant> ret;
 			for (const auto& it: _api.apiCalls)
 				ret.insert(it.first,it.second.first.join(','));
-			return new ApiManager::ApiMappedList(ret);
+			return new ApiAnswers::MappedList(ret);
   }
 
   static ApiHandlerGeneric<C,ApiCall_t> _api;

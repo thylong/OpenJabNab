@@ -6,16 +6,16 @@
 #include <QString>
 #include <QVariant>
 #include "apihandler.h"
-#include "apimanager.h"
+
 #include "global.h"
 #include "packet.h"
 #include "plugininterface.h"
 
 //class XmppHandler;
-class OJN_EXPORT Ztamp : public QObject, public ApiHandler<Ztamp>
+class OJN_EXPORT Ztamp 
+	: public ApiHandler<Ztamp>
 {
 	friend class ZtampManager;
-	Q_OBJECT
 public:
 	virtual ~Ztamp();
 

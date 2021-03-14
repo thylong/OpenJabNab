@@ -87,7 +87,7 @@ void PluginRecord::InitApiCalls()
 PLUGIN_BUNNY_API_CALL(PluginRecord::Api_Record)
 {
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
 
 	QString action = hRequest.GetArg("action");
 
@@ -99,11 +99,11 @@ PLUGIN_BUNNY_API_CALL(PluginRecord::Api_Record)
 		int limit = 20;
 		if(hRequest.HasArg("limit"))
 			limit = hRequest.GetArg("limit").toInt();
-		return new ApiManager::ApiList(GetRecordList(bunny, offset, limit));
+		return new ApiAnswers::List(GetRecordList(bunny, offset, limit));
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }
 

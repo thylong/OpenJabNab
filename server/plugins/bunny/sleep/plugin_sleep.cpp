@@ -354,23 +354,23 @@ void PluginSleep::InitApiCalls()
 PLUGIN_BUNNY_API_CALL(PluginSleep::Api_RFID)
 {
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
 
 	QString action = hRequest.GetArg("action");
 
 	if(action == "list")
 	{
-		return new ApiManager::ApiMappedList(bunny->GetPluginSetting(GetName(), "RFID", QMap<QString, QVariant>()).toMap());
+		return new ApiAnswers::MappedList(bunny->GetPluginSetting(GetName(), "RFID", QMap<QString, QVariant>()).toMap());
 	}
 	else if(action == "add")
 	{
 		if(!hRequest.HasArg("tag"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("tag", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("tag", GetName()));
 
 		QString tag = hRequest.GetArg("tag");
 
 		if(!hRequest.HasArg("name"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("name", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("name", GetName()));
 
 		QString name = hRequest.GetArg("name");
 
@@ -381,14 +381,14 @@ PLUGIN_BUNNY_API_CALL(PluginSleep::Api_RFID)
 			bunny->SetPluginSetting(GetName(), "RFID", list);
 			Ztamp * z = ZtampManager::GetZtamp(tag.toLatin1());
 			z->Associate(bunny, this);
-			return new ApiManager::ApiOk(Translator::tr("Add RFID '%1' for bunny '%2'").arg(tag, QString(bunny->GetID())));
+			return new ApiAnswers::Ok(Translator::tr("Add RFID '%1' for bunny '%2'").arg(tag, QString(bunny->GetID())));
 		}
-		return new ApiManager::ApiError(Translator::tr("RFID '%1' already assigned to bunny '%2'", account).arg(tag, QString(bunny->GetID())));
+		return new ApiAnswers::Error(Translator::tr("RFID '%1' already assigned to bunny '%2'", account).arg(tag, QString(bunny->GetID())));
 	}
 	else if(action == "del")
 	{
 		if(!hRequest.HasArg("tag"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("tag", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("tag", GetName()));
 
 		QString tag = hRequest.GetArg("tag");
 
@@ -400,20 +400,20 @@ PLUGIN_BUNNY_API_CALL(PluginSleep::Api_RFID)
 			Ztamp * z = ZtampManager::GetZtamp(tag.toLatin1());
 			z->Dissociate(bunny);
 
-			return new ApiManager::ApiOk(Translator::tr("RFID '%1' removed for bunny '%2'", account).arg(tag, QString(bunny->GetID())));
+			return new ApiAnswers::Ok(Translator::tr("RFID '%1' removed for bunny '%2'", account).arg(tag, QString(bunny->GetID())));
 		}
-		return new ApiManager::ApiError(Translator::tr("RFID '%1' is not assign to bunny '%2'", account).arg(tag, QString(bunny->GetID())));
+		return new ApiAnswers::Error(Translator::tr("RFID '%1' is not assign to bunny '%2'", account).arg(tag, QString(bunny->GetID())));
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }
 
 PLUGIN_BUNNY_API_CALL(PluginSleep::Api_Config)
 {
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
 
 	QString action = hRequest.GetArg("action");
 
@@ -427,41 +427,41 @@ PLUGIN_BUNNY_API_CALL(PluginSleep::Api_Config)
 		{
 			bool ears = (bool)hRequest.GetArg("set").toInt();
 			bunny->SetPluginSetting(GetName(), "WakeupOnEars", ears);
-			return new ApiManager::ApiOk(Translator::tr("Ear setup done", account));
+			return new ApiAnswers::Ok(Translator::tr("Ear setup done", account));
 		}
 		else
 		{
-			return new ApiManager::ApiString(bunny->GetPluginSetting(GetName(), "WakeupOnEars", false).toString());
+			return new ApiAnswers::String(bunny->GetPluginSetting(GetName(), "WakeupOnEars", false).toString());
 		}
 	}
 	else if(action == "list")
 	{
 		ConvertConf(bunny);
-		return new ApiManager::ApiList(bunny->GetPluginSetting(GetName(), QString("SleepList"), QStringList()).toStringList());
+		return new ApiAnswers::List(bunny->GetPluginSetting(GetName(), QString("SleepList"), QStringList()).toStringList());
 	}
 	else if(action == "add")
 	{
 		if(!hRequest.HasArg("sleepAt"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("sleepAt", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("sleepAt", GetName()));
 
 		QTime sleepAt = Cron::mkTime(hRequest.GetArg("sleepAt"));
 		if(!sleepAt.isValid())
-			return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("sleepAt", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("sleepAt", GetName()));
 
 		if(!hRequest.HasArg("sleepOn"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("sleepOn", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("sleepOn", GetName()));
 
 		int sleepOn = ((hRequest.GetArg("sleepOn").toInt() - 1 ) % 7) + 1;
 
 		if(!hRequest.HasArg("wakeAt"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("wakeAt", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("wakeAt", GetName()));
 
 		QTime wakeAt = Cron::mkTime(hRequest.GetArg("wakeAt"));
 		if(!wakeAt.isValid())
-			return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("wakeAt", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("wakeAt", GetName()));
 
 		if(!hRequest.HasArg("wakeOn"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("wakeOn", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("wakeOn", GetName()));
 
 		int wakeOn = ((hRequest.GetArg("wakeOn").toInt() - 1 ) % 7) + 1;
 
@@ -482,12 +482,12 @@ PLUGIN_BUNNY_API_CALL(PluginSleep::Api_Config)
 			UpdateState(bunny);
 		}
 
-		return new ApiManager::ApiOk(Translator::tr("Settings saved for plugin %2", account).arg(GetName()));
+		return new ApiAnswers::Ok(Translator::tr("Settings saved for plugin %2", account).arg(GetName()));
 	}
 	else if(action == "del")
 	{
 		if(!hRequest.HasArg("id"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("id", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("id", GetName()));
 
 		int id = hRequest.GetArg("id").toInt();
 
@@ -502,41 +502,41 @@ PLUGIN_BUNNY_API_CALL(PluginSleep::Api_Config)
 			UpdateState(bunny);
 		}
 
-		return new ApiManager::ApiOk(Translator::tr("Settings saved for plugin %2", account).arg(GetName()));
+		return new ApiAnswers::Ok(Translator::tr("Settings saved for plugin %2", account).arg(GetName()));
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }
 
 PLUGIN_BUNNY_API_CALL(PluginSleep::Api_Sleep)
 {
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
 
 	QString action = hRequest.GetArg("action");
 
 	if(action == "sleep")
 	{
 		if(!bunny->IsIdle())
-			return new ApiManager::ApiError(Translator::tr("Bunny is not idle (%1)", account).arg(QString(bunny->GetXmppResource())));
+			return new ApiAnswers::Error(Translator::tr("Bunny is not idle (%1)", account).arg(QString(bunny->GetXmppResource())));
 
 		bunny->SendPacket(SleepPacket(SleepPacket::Sleep), GetName());
 		bunny->SetGlobalSetting("asleep", true);
-		return new ApiManager::ApiOk(Translator::tr("Bunny is going to sleep.", account));
+		return new ApiAnswers::Ok(Translator::tr("Bunny is going to sleep.", account));
 	}
 	else if(action == "wakeup")
 	{
 		if(!bunny->IsSleeping())
-			return new ApiManager::ApiError(Translator::tr("Bunny is not sleeping (%1)", account).arg(QString(bunny->GetXmppResource())));
+			return new ApiAnswers::Error(Translator::tr("Bunny is not sleeping (%1)", account).arg(QString(bunny->GetXmppResource())));
 
 		bunny->SendPacket(SleepPacket(SleepPacket::Wake_Up), GetName());
 		bunny->SetGlobalSetting("asleep", false);
-		return new ApiManager::ApiOk(Translator::tr("Bunny is waking up.", account));
+		return new ApiAnswers::Ok(Translator::tr("Bunny is waking up.", account));
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }

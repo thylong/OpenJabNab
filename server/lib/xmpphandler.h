@@ -1,5 +1,6 @@
 #ifndef _XMPPHANDLER_H_
 #define _XMPPHANDLER_H_
+#include <chrono>
 
 #include <QByteArray>
 #include <QList>
@@ -28,12 +29,12 @@ public:
 	bool shouldDelete(void);
 
 public slots:
-	void Disconnect();
-	void Timeout();
-	void Bind();
+	void cleanup();
+	//void Timeout();
+	//void Bind();
 
 protected:
-	virtual ~XmppHandler() {};
+	virtual ~XmppHandler();
 
 private slots:
 	void HandleBunnyXmppMessage();
@@ -56,12 +57,11 @@ private:
 	QByteArray bindingResource;
 	QByteArray lastQueryResource;
 
-	QTimer * timeoutTimer;
-	QTimer * bindTimer;
-
 	int streamingQueryCount;
 	unsigned long long tempInXmppTraffic;
 	unsigned long long tempOutXmppTraffic;
+	std::chrono::time_point<std::chrono::system_clock> _lastBindTime,
+																										 _lastMsgTime;
 };
 
 #endif

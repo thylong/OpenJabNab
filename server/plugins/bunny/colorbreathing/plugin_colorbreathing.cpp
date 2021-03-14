@@ -95,17 +95,17 @@ void PluginColorbreathing::InitApiCalls()
 PLUGIN_BUNNY_API_CALL(PluginColorbreathing::Api_Color)
 {
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
 
 	QString action = hRequest.GetArg("action");
 
 	if(action == "list")
 	{
-		return new ApiManager::ApiList(availableColorsV2.keys());
+		return new ApiAnswers::List(availableColorsV2.keys());
 	}
 	else if(action == "get")
 	{
-        	return new ApiManager::ApiOk(bunny->GetPluginSetting(GetName(), "color", QString("violet")).toString());
+        	return new ApiAnswers::Ok(bunny->GetPluginSetting(GetName(), "color", QString("violet")).toString());
 	}
 	else if(action == "set")
 	{
@@ -116,27 +116,27 @@ PLUGIN_BUNNY_API_CALL(PluginColorbreathing::Api_Color)
 			{
 				bunny->SetPluginSetting(GetName(), "color", color);
 				bunny->SendPacket(AmbientPacket(AmbientPacket::Service_BottomLed, availableColorsV2[color]), GetName());
-				return new ApiManager::ApiOk(Translator::tr("Bottom color set to '%1'", account).arg(Translator::tr(color, account)));
+				return new ApiAnswers::Ok(Translator::tr("Bottom color set to '%1'", account).arg(Translator::tr(color, account)));
 			}
-			return new ApiManager::ApiError(Translator::tr("Unknown '%1' color", account).arg(color));
+			return new ApiAnswers::Error(Translator::tr("Unknown '%1' color", account).arg(color));
 		}
 		else if(bunny->GetVersion() == 1)
 		{
 			if(availableColorsV1.contains(color))
 			{
 				bunny->SetPluginSetting(GetName(), "color", color);
-				return new ApiManager::ApiOk(Translator::tr("Bottom color set to '%1'", account).arg(Translator::tr(color, account)));
+				return new ApiAnswers::Ok(Translator::tr("Bottom color set to '%1'", account).arg(Translator::tr(color, account)));
 			}
-			return new ApiManager::ApiError(Translator::tr("Unknown '%1' color", account).arg(color));
+			return new ApiAnswers::Error(Translator::tr("Unknown '%1' color", account).arg(color));
 		}
 		else
 		{
-			return new ApiManager::ApiError(Translator::tr("Unknown bunny version", account));
+			return new ApiAnswers::Error(Translator::tr("Unknown bunny version", account));
 		}
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }
 
@@ -145,7 +145,7 @@ PLUGIN_BUNNY_API_CALL(PluginColorbreathing::Api_GetColor)
         Q_UNUSED(account);
 	Q_UNUSED(hRequest);
 
-        return new ApiManager::ApiOk(bunny->GetPluginSetting(GetName(), "color", QString("violet")).toString());
+        return new ApiAnswers::Ok(bunny->GetPluginSetting(GetName(), "color", QString("violet")).toString());
 }
 
 PLUGIN_BUNNY_API_CALL(PluginColorbreathing::Api_SetColor)
@@ -161,9 +161,9 @@ PLUGIN_BUNNY_API_CALL(PluginColorbreathing::Api_SetColor)
 			// Send color to bunny
 			bunny->SendPacket(AmbientPacket(AmbientPacket::Service_BottomLed, availableColorsV2[color]), GetName());
 
-			return new ApiManager::ApiOk(Translator::tr("Bottom color set to '%1'", account).arg(Translator::tr(color, account)));
+			return new ApiAnswers::Ok(Translator::tr("Bottom color set to '%1'", account).arg(Translator::tr(color, account)));
 		}
-        	return new ApiManager::ApiError(Translator::tr("Unknown '%1' color", account).arg(color));
+        	return new ApiAnswers::Error(Translator::tr("Unknown '%1' color", account).arg(color));
 	}
 	else if(bunny->GetVersion() == 1)
 	{
@@ -171,13 +171,13 @@ PLUGIN_BUNNY_API_CALL(PluginColorbreathing::Api_SetColor)
         	{
         	        // Save new config
         	        bunny->SetPluginSetting(GetName(), "color", color);
-			return new ApiManager::ApiOk(Translator::tr("Bottom color set to '%1'", account).arg(Translator::tr(color, account)));
+			return new ApiAnswers::Ok(Translator::tr("Bottom color set to '%1'", account).arg(Translator::tr(color, account)));
 		}
-        	return new ApiManager::ApiError(Translator::tr("Unknown '%1' color", account).arg(color));
+        	return new ApiAnswers::Error(Translator::tr("Unknown '%1' color", account).arg(color));
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Unknown bunny version", account));
+		return new ApiAnswers::Error(Translator::tr("Unknown bunny version", account));
 	}
 }
 
@@ -188,15 +188,15 @@ PLUGIN_BUNNY_API_CALL(PluginColorbreathing::Api_GetColorList)
 
 	if(bunny->GetVersion() == 1)
 	{
-		return new ApiManager::ApiList(availableColorsV1.keys());
+		return new ApiAnswers::List(availableColorsV1.keys());
 	}
 	else if(bunny->GetVersion() == 2)
 	{
-		return new ApiManager::ApiList(availableColorsV2.keys());
+		return new ApiAnswers::List(availableColorsV2.keys());
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Unknown bunny version", account));
+		return new ApiAnswers::Error(Translator::tr("Unknown bunny version", account));
 	}
 }
 

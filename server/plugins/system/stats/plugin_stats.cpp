@@ -1,11 +1,12 @@
 #include "plugin_stats.h"
 #include <QtSql/QtSql>
-#include "dbmanager.h"
+#include "apimanager.h"
 #include "bunny.h"
 #include "bunnymanager.h"
-#include "pluginmanager.h"
-#include "log.h"
 #include "cron.h"
+#include "dbmanager.h"
+#include "log.h"
+#include "pluginmanager.h"
 
 PluginStats::PluginStats():PluginInterface("stats", "Statistics plugin", SystemPlugin)
 {
@@ -142,7 +143,7 @@ PLUGIN_API_CALL(PluginStats::Api_GetPlugins)
 			list.insert(plugin, list.value(plugin).toInt() + 1);
 	}
 
-	return new ApiManager::ApiMappedList(list);
+	return new ApiAnswers::MappedList(list);
 }
 
 PLUGIN_API_CALL(PluginStats::Api_GetColors)
@@ -160,7 +161,7 @@ PLUGIN_API_CALL(PluginStats::Api_GetColors)
 		list.insert(color, list.value(color).toInt() + 1);
 	}
 
-	return new ApiManager::ApiMappedList(list);
+	return new ApiAnswers::MappedList(list);
 }
 
 PLUGIN_API_CALL(PluginStats::Api_GetBunniesIP)
@@ -177,7 +178,7 @@ PLUGIN_API_CALL(PluginStats::Api_GetBunniesIP)
 		list.insert(QString(b->GetID()), b->GetGlobalSetting("LastIP"));
 	}
 
-	return new ApiManager::ApiMappedList(list);
+	return new ApiAnswers::MappedList(list);
 }
 
 PLUGIN_API_CALL(PluginStats::Api_GetBunniesTimezone)
@@ -194,7 +195,7 @@ PLUGIN_API_CALL(PluginStats::Api_GetBunniesTimezone)
 		list.insert(QString(b->GetID()), b->GetGlobalSetting("TimeZone", "unset"));
 	}
 
-	return new ApiManager::ApiMappedList(list);
+	return new ApiAnswers::MappedList(list);
 }
 
 PLUGIN_API_CALL(PluginStats::Api_GetBunniesName)
@@ -211,7 +212,7 @@ PLUGIN_API_CALL(PluginStats::Api_GetBunniesName)
 		list.insert(QString(b->GetID()), b->GetBunnyName());
 	}
 
-	return new ApiManager::ApiMappedList(list);
+	return new ApiAnswers::MappedList(list);
 }
 
 PLUGIN_API_CALL(PluginStats::Api_GetBunniesStatus)
@@ -231,61 +232,59 @@ PLUGIN_API_CALL(PluginStats::Api_GetBunniesStatus)
 		list.insert(awake, list.value(awake).toInt() + 1);
 	}
 
-	return new ApiManager::ApiMappedList(list);
+	return new ApiAnswers::MappedList(list);
 }
 
 PLUGIN_API_CALL(PluginStats::Api_GetBunniesInformation)
 {
-        Q_UNUSED(account);
-        Q_UNUSED(hRequest);
+  Q_UNUSED(account);
+  Q_UNUSED(hRequest);
 
-        QString xml = "";
-        QString awake;
-        QList<QByteArray> listB =  BunnyManager::GetConnectedBunniesList();
+  QString xml = "";
+  QString awake;
+  QList<QByteArray> listB =  BunnyManager::GetConnectedBunniesList();
 
-        QMap<QString, QVariant> list;
-        foreach(QByteArray id, listB)
-        {
-                Bunny * b = BunnyManager::GetBunny(id);
-                list.insert(QString(b->GetID()), b->GetBunnyName());
-                awake = b->IsSleeping() ? "1" : "0";
-                xml += "<bunny>";
-                xml += "  <name>" + b->GetBunnyName() + "</name>";
-                xml += "  <version>" + QString::number(b->GetVersion()) + "</version>";
-                xml += "  <ID>" + QString(b->GetID()) + "</ID>";
-                xml += "  <sleep>" + awake  + "</sleep>";
-                xml += "  <color>" + b->GetPluginSetting("colorbreathing", "color", QString("violet")).toString() + "</color>";
-                xml += "  <apiEnable>"+ b->GetGlobalSetting("VApiEnable", false).toString() + "</apiEnable>";
-                xml += "  <apiPublic>" + b->GetGlobalSetting("VApiPublic", false).toString()  + "</apiPublic>";
-                xml += "  <lastRecord>" +  b->GetGlobalSetting("LastRecord","").toString() + "</lastRecord>";
-                xml += "  <lastLocate>" + b->GetGlobalSetting("LastLocate","").toString() + "</lastLocate>";
-                xml += "  <LastCron>" + b->GetGlobalSetting("LastCron","").toString() + "</LastCron>";
-                xml += "</bunny>";
-        }
-        return new ApiManager::ApiXml(xml);
+  QMap<QString, QVariant> list;
+  foreach(QByteArray id, listB)
+  {
+    Bunny * b = BunnyManager::GetBunny(id);
+    list.insert(QString(b->GetID()), b->GetBunnyName());
+    awake = b->IsSleeping() ? "1" : "0";
+    xml += "<bunny>";
+    xml += "  <name>" + b->GetBunnyName() + "</name>";
+    xml += "  <version>" + QString::number(b->GetVersion()) + "</version>";
+    xml += "  <ID>" + QString(b->GetID()) + "</ID>";
+    xml += "  <sleep>" + awake  + "</sleep>";
+    xml += "  <color>" + b->GetPluginSetting("colorbreathing", "color", QString("violet")).toString() + "</color>";
+    xml += "  <apiEnable>"+ b->GetGlobalSetting("VApiEnable", false).toString() + "</apiEnable>";
+    xml += "  <apiPublic>" + b->GetGlobalSetting("VApiPublic", false).toString()  + "</apiPublic>";
+    xml += "  <lastRecord>" +  b->GetGlobalSetting("LastRecord","").toString() + "</lastRecord>";
+    xml += "  <lastLocate>" + b->GetGlobalSetting("LastLocate","").toString() + "</lastLocate>";
+    xml += "  <LastCron>" + b->GetGlobalSetting("LastCron","").toString() + "</LastCron>";
+    xml += "</bunny>";
+  }
+  return new ApiAnswers::Xml(xml);
 }
 
 PLUGIN_API_CALL(PluginStats::Api_GetWidgetJson)
 {
-	Q_UNUSED(account);
-	Q_UNUSED(hRequest);
+  Q_UNUSED(account);
+  Q_UNUSED(hRequest);
 
-	int connectedBunnies = BunnyManager::Instance().GetConnectedBunnyCount();
+  int connectedBunnies = BunnyManager::Instance().GetConnectedBunnyCount();
+  int ztamps = ZtampManager::Instance().GetZtampCount();
+  //int plugins = PluginManager::Instance().GetPluginCount();
+  int enabledPlugins = PluginManager::Instance().GetEnabledPluginCount();
 
-	int ztamps = ZtampManager::Instance().GetZtampCount();
+  int uptime = ApiManager::getUptime();
 
-	//int plugins = PluginManager::Instance().GetPluginCount();
-	int enabledPlugins = PluginManager::Instance().GetEnabledPluginCount();
-
-	int uptime = ApiManager::getUptime();
-
-	QString json = "{";
-	json += "\"bunnies\":" + QString::number(connectedBunnies) + ",";
-	json += "\"ztamps\":" + QString::number(ztamps) + ",";
-	json += "\"plugins\":" + QString::number(enabledPlugins) + ",";
-	json += "\"uptime\":" + QString::number(uptime);
-	json += "}";
-	return new ApiManager::ApiClear(json);
+  QString json = "{";
+  json += "\"bunnies\":" + QString::number(connectedBunnies) + ",";
+  json += "\"ztamps\":" + QString::number(ztamps) + ",";
+  json += "\"plugins\":" + QString::number(enabledPlugins) + ",";
+  json += "\"uptime\":" + QString::number(uptime);
+  json += "}";
+  return new ApiAnswers::Clear(json);
 }
 
 PLUGIN_API_CALL(PluginStats::Api_GetCounters)
@@ -302,6 +301,6 @@ PLUGIN_API_CALL(PluginStats::Api_GetCounters)
 	list.insert("record", record);
 	list.insert("api", api);
 
-	return new ApiManager::ApiMappedList(list);
+	return new ApiAnswers::MappedList(list);
 }
 

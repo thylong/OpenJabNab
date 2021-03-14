@@ -320,7 +320,7 @@ void PluginClock::InitApiCalls()
 PLUGIN_BUNNY_API_CALL(PluginClock::Api_Setup)
 {
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
 
 	QString action = hRequest.GetArg("action");
 
@@ -334,14 +334,14 @@ PLUGIN_BUNNY_API_CALL(PluginClock::Api_Setup)
 				type = Type_Voice;
 			}
 			bunny->SetPluginSetting(GetName(), "type", type);
-			return new ApiManager::ApiOk(Translator::tr("Type changed to '%1'", account).arg(QString::number(type)));
+			return new ApiAnswers::Ok(Translator::tr("Type changed to '%1'", account).arg(QString::number(type)));
 		}
-		return new ApiManager::ApiString(bunny->GetPluginSetting(GetName(), "type", QString()).toString());
+		return new ApiAnswers::String(bunny->GetPluginSetting(GetName(), "type", QString()).toString());
 	}
 	else
 	{
 		QString(bunny->GetID());
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }
 
@@ -357,9 +357,9 @@ PLUGIN_BUNNY_API_CALL(PluginClock::Api_SetVoice)
 		// Save new config
 		bunny->SetPluginSetting(GetName(), "voice", voice);
 
-		return new ApiManager::ApiOk(Translator::tr("Voice changed to '%1'", account).arg(voice));
+		return new ApiAnswers::Ok(Translator::tr("Voice changed to '%1'", account).arg(voice));
 	}
-	return new ApiManager::ApiError(Translator::tr("Unknown '%1' voice", account).arg(voice));
+	return new ApiAnswers::Error(Translator::tr("Unknown '%1' voice", account).arg(voice));
 }
 
 PLUGIN_BUNNY_API_CALL(PluginClock::Api_GetVoiceList)
@@ -368,24 +368,24 @@ PLUGIN_BUNNY_API_CALL(PluginClock::Api_GetVoiceList)
 	Q_UNUSED(bunny);
 	Q_UNUSED(hRequest);
 
-	return new ApiManager::ApiList(availableVoices);
+	return new ApiAnswers::List(availableVoices);
 }
 
 PLUGIN_BUNNY_API_CALL(PluginClock::Api_Voice)
 {
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
 
 	QString action = hRequest.GetArg("action");
 
 	if(action == "list")
 	{
-		return new ApiManager::ApiList(availableVoices);
+		return new ApiAnswers::List(availableVoices);
 	}
 	else if(action == "set")
 	{
 		if(!hRequest.HasArg("name"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("name", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("name", GetName()));
 
 		QString voice = hRequest.GetArg("name");
 		if(availableVoices.contains(voice) || (voice == "RANDOM" && bunny->GetPluginSetting(GetName(), "voices", QStringList()).toStringList().length() > 0))
@@ -395,25 +395,25 @@ PLUGIN_BUNNY_API_CALL(PluginClock::Api_Voice)
 			// Save new config
 			bunny->SetPluginSetting(GetName(), "voice", voice);
 
-			return new ApiManager::ApiOk(Translator::tr("Voice changed to '%1'", account).arg(voice));
+			return new ApiAnswers::Ok(Translator::tr("Voice changed to '%1'", account).arg(voice));
 		}
-		return new ApiManager::ApiError(Translator::tr("Unknown '%1' voice", account).arg(voice));
+		return new ApiAnswers::Error(Translator::tr("Unknown '%1' voice", account).arg(voice));
 	}
 	else if(action == "get")
 	{
-		return new ApiManager::ApiString(bunny->GetPluginSetting(GetName(), "voice", "").toString());
+		return new ApiAnswers::String(bunny->GetPluginSetting(GetName(), "voice", "").toString());
 	}
 	else if(action == "random")
 	{
 		if(!hRequest.HasArg("subaction"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("subaction", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("subaction", GetName()));
 
 		QString subaction = hRequest.GetArg("subaction");
 
 		if(subaction == "set")
 		{
 			if(!hRequest.HasArg("list"))
-				return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("list", GetName()));
+				return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("list", GetName()));
 
 			QStringList list = hRequest.GetArg("list").split(",");
 			QStringList voices;
@@ -427,25 +427,25 @@ PLUGIN_BUNNY_API_CALL(PluginClock::Api_Voice)
 			if(voices.length())
 			{
 				bunny->SetPluginSetting(GetName(), "voices", voices);
-				return new ApiManager::ApiOk(Translator::tr("List of random voices saved", account));
+				return new ApiAnswers::Ok(Translator::tr("List of random voices saved", account));
 			}
 			else
 			{
-				return new ApiManager::ApiError(Translator::tr("Unknown voices", account));
+				return new ApiAnswers::Error(Translator::tr("Unknown voices", account));
 			}
 		}
 		else if(subaction == "get")
 		{
-			return new ApiManager::ApiList(bunny->GetPluginSetting(GetName(), "voices", QStringList()).toStringList());
+			return new ApiAnswers::List(bunny->GetPluginSetting(GetName(), "voices", QStringList()).toStringList());
 		}
 		else
 		{
-			return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("subaction", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("subaction", GetName()));
 		}
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }
 

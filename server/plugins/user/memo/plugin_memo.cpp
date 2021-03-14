@@ -101,18 +101,18 @@ void PluginMemo::InitApiCalls()
 PLUGIN_BUNNY_API_CALL(PluginMemo::Api_Schedule)
 {
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
 
 	QString action = hRequest.GetArg("action");
 
 	if(action == "list")
 	{
-		return new ApiManager::ApiMappedList(bunny->GetPluginSetting(GetName(), "Schedules", QMap<QString, QVariant>()).toMap());
+		return new ApiAnswers::MappedList(bunny->GetPluginSetting(GetName(), "Schedules", QMap<QString, QVariant>()).toMap());
 	}
 	else if(action == "edit")
 	{
 		if(!hRequest.HasArg("time"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("time", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("time", GetName()));
 
 		QString time = hRequest.GetArg("time");
 
@@ -121,7 +121,7 @@ PLUGIN_BUNNY_API_CALL(PluginMemo::Api_Schedule)
 			day = hRequest.GetArg("day").toInt();
 
 		if(!hRequest.HasArg("message"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("message", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("message", GetName()));
 
 		QString message = hRequest.GetArg("message");
 
@@ -140,17 +140,17 @@ PLUGIN_BUNNY_API_CALL(PluginMemo::Api_Schedule)
 			list.insert(QString::number(day) + "|" + time, message);
 			bunny->SetPluginSetting(GetName(), "Schedules", list);
 			if(day == 0)
-				return new ApiManager::ApiOk(Translator::tr("Schedule at '%1' edited for bunny '%2'", account).arg(time, QString(bunny->GetID())));
-			return new ApiManager::ApiOk(Translator::tr("Schedule on '%1' at '%2' edited for bunny '%3'", account).arg(QString::number(day), time, QString(bunny->GetID())));
+				return new ApiAnswers::Ok(Translator::tr("Schedule at '%1' edited for bunny '%2'", account).arg(time, QString(bunny->GetID())));
+			return new ApiAnswers::Ok(Translator::tr("Schedule on '%1' at '%2' edited for bunny '%3'", account).arg(QString::number(day), time, QString(bunny->GetID())));
 		}
 		if(day == 0)
-			return new ApiManager::ApiError(Translator::tr("No schedule at '%1' for bunny '%2'", account).arg(time, QString(bunny->GetID())));
-		return new ApiManager::ApiError(Translator::tr("No schedule on '%1' at '%2' for bunny '%3'", account).arg(QString::number(day), time, QString(bunny->GetID())));
+			return new ApiAnswers::Error(Translator::tr("No schedule at '%1' for bunny '%2'", account).arg(time, QString(bunny->GetID())));
+		return new ApiAnswers::Error(Translator::tr("No schedule on '%1' at '%2' for bunny '%3'", account).arg(QString::number(day), time, QString(bunny->GetID())));
 	}
 	else if(action == "add")
 	{
 		if(!hRequest.HasArg("time"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("time", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("time", GetName()));
 
 		QString time = hRequest.GetArg("time");
 
@@ -159,7 +159,7 @@ PLUGIN_BUNNY_API_CALL(PluginMemo::Api_Schedule)
 			day = hRequest.GetArg("day").toInt();
 
 		if(!hRequest.HasArg("message"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("message", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("message", GetName()));
 
 		QString message = hRequest.GetArg("message");
 
@@ -177,16 +177,16 @@ PLUGIN_BUNNY_API_CALL(PluginMemo::Api_Schedule)
 
 			list.insert(QString::number(day) + "|" + time, message);
 			bunny->SetPluginSetting(GetName(), "Schedules", list);
-			return new ApiManager::ApiOk(Translator::tr("Add schedule at '%1' to bunny '%2'", account).arg(time, QString(bunny->GetID())));
+			return new ApiAnswers::Ok(Translator::tr("Add schedule at '%1' to bunny '%2'", account).arg(time, QString(bunny->GetID())));
 		}
 		if(day == 0)
-			return new ApiManager::ApiError(Translator::tr("Schedule at '%1' already exists for bunny '%2'", account).arg(time, QString(bunny->GetID())));
-		return new ApiManager::ApiError(Translator::tr("Schedule on '%1', at '%2' already exists for bunny '%3'", account).arg(QString::number(day), time, QString(bunny->GetID())));
+			return new ApiAnswers::Error(Translator::tr("Schedule at '%1' already exists for bunny '%2'", account).arg(time, QString(bunny->GetID())));
+		return new ApiAnswers::Error(Translator::tr("Schedule on '%1', at '%2' already exists for bunny '%3'", account).arg(QString::number(day), time, QString(bunny->GetID())));
 	}
 	else if(action == "del")
 	{
 		if(!hRequest.HasArg("time"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("time", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("time", GetName()));
 
 		QString time = hRequest.GetArg("time");
 
@@ -205,13 +205,13 @@ PLUGIN_BUNNY_API_CALL(PluginMemo::Api_Schedule)
         		OnBunnyDisconnect(bunny);
         		OnBunnyConnect(bunny);
 
-			return new ApiManager::ApiOk(Translator::tr("Schedule at '%1' removed for bunny '%2'", account).arg(time, QString(bunny->GetID())));
+			return new ApiAnswers::Ok(Translator::tr("Schedule at '%1' removed for bunny '%2'", account).arg(time, QString(bunny->GetID())));
 		}
-		return new ApiManager::ApiError(Translator::tr("No schedule at '%1' for bunny '%2'", account).arg(time, QString(bunny->GetID())));
+		return new ApiAnswers::Error(Translator::tr("No schedule at '%1' for bunny '%2'", account).arg(time, QString(bunny->GetID())));
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }
 

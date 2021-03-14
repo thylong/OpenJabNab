@@ -1,91 +1,52 @@
 cmake_minimum_required(VERSION 3.7)
 project(ojn)
 
+include(cmake/version.cmake)
 
 add_library(${PROJECT_NAME} SHARED
 #WIN32
-dbmanager.h
-QsLog.h
-QsLogDest.h
-QsLogDestFile.h
-QsLogDestConsole.h
-sentencemanager.h
-translator.h
-httphandler.h
-nabaztagmanager.h
-xmpphandler.h
-httprequest.h
-settings.h
-#logger.h
-log.h
-browsercache.h
-browserclient.h
-pluginmanager.h
-pluginapihandler.h
-pluginauthinterface.h
-plugininterface.h
-plugininterface_inline.h
-pluginmessageinterface.h
-pluginmessageinterface_inline.h
-packet.h
-ambientpacket.h
-chorconfigpacket.h
-serviceconfigpacket.h
-messagepacket.h
-sleeppacket.h
-configpacket.h
-choregraphy.h
-bunnymanager.h
-bunny.h
-ztampmanager.h
-ztamp.h
-apimanager.h
-cron.h
-voice.h
-sleeptime.h
-ttsanswer.h
-ttsmanager.h
-ttsinterface.h
-ttsinterface_inline.h
-accountmanager.h
-account.h
-apihandler.h
-iq.h
-dbmanager.cpp
-QsLog.cpp
-QsLogDest.cpp
-QsLogDestFile.cpp
-QsLogDestConsole.cpp
-sentencemanager.cpp
-translator.cpp
-httphandler.cpp
-nabaztagmanager.cpp
-xmpphandler.cpp
-httprequest.cpp
-settings.cpp
-#logger.cpp
-log.cpp
-browsercache.cpp
-browserclient.cpp
-pluginmanager.cpp
-packet.cpp
-ambientpacket.cpp
-chorconfigpacket.cpp
-serviceconfigpacket.cpp
-messagepacket.cpp
-sleeppacket.cpp
-configpacket.cpp
-choregraphy.cpp
-bunnymanager.cpp
-bunny.cpp
-ztampmanager.cpp
-ztamp.cpp
-apimanager.cpp
-cron.cpp
-ttsmanager.cpp
-accountmanager.cpp
-account.cpp
-iq.cpp
+  browsercache.h
+  browserclient.h
+  cron.h
+  httphandler.h
+  xmpphandler.h
+
+  account.cpp
+  accountmanager.cpp
+  ambientpacket.cpp
+  apimanager.cpp
+  browsercache.cpp
+  browserclient.cpp
+  bunny.cpp
+  bunnymanager.cpp
+  chorconfigpacket.cpp
+  choregraphy.cpp
+  configpacket.cpp
+  cron.cpp
+  dbmanager.cpp
+  httphandler.cpp
+  httprequest.cpp
+  iq.cpp
+  log.cpp
+  messagepacket.cpp
+  nabaztagmanager.cpp
+  packet.cpp
+  pluginmanager.cpp
+  QsLog/QsLog.cpp
+  QsLog/QsLogDest.cpp
+  QsLog/QsLogDestFile.cpp
+  QsLog/QsLogDestConsole.cpp
+  serviceconfigpacket.cpp
+  settings.cpp
+  sentencemanager.cpp
+  sleeppacket.cpp
+  ttsmanager.cpp
+  translator.cpp
+  xmpphandler.cpp
+  ztamp.cpp
+  ztampmanager.cpp
+
+  ${CMAKE_CURRENT_BINARY_DIR}/version.c
 )
 
 target_link_libraries(${PROJECT_NAME}

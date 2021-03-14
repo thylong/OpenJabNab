@@ -135,7 +135,7 @@ void PluginSignature::InitApiCalls()
 PLUGIN_BUNNY_API_CALL(PluginSignature::Api_Config)
 {
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
 
 	QString action = hRequest.GetArg("action");
 
@@ -157,22 +157,22 @@ PLUGIN_BUNNY_API_CALL(PluginSignature::Api_Config)
 			j.next();
 			list.insert("after_" + j.key(), j.value());
 		}
-		return new ApiManager::ApiMappedList(list);
+		return new ApiAnswers::MappedList(list);
 	}
 	else if(action == "add")
 	{
 		if(!hRequest.HasArg("type"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("type", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("type", GetName()));
 
 		QString type = hRequest.GetArg("type");
 
 		if(!hRequest.HasArg("sender"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("sender", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("sender", GetName()));
 
 		QString sender = hRequest.GetArg("sender");
 
 		if(!hRequest.HasArg("name"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("name", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("name", GetName()));
 
 		QString name = hRequest.GetArg("name");
 
@@ -181,29 +181,29 @@ PLUGIN_BUNNY_API_CALL(PluginSignature::Api_Config)
 			QMap<QString, QVariant> list = bunny->GetPluginSetting(GetName(), "Before", QMap<QString, QVariant>()).toMap();
 			list.insert(sender, name);
 			bunny->SetPluginSetting(GetName(), "Before", list);
-			return new ApiManager::ApiOk(Translator::tr("Added signature '%1' for bunny '%2'", account).arg(name, QString(bunny->GetID())));
+			return new ApiAnswers::Ok(Translator::tr("Added signature '%1' for bunny '%2'", account).arg(name, QString(bunny->GetID())));
 		}
 		else if(type == "after")
 		{
 			QMap<QString, QVariant> list = bunny->GetPluginSetting(GetName(), "After", QMap<QString, QVariant>()).toMap();
 			list.insert(sender, name);
 			bunny->SetPluginSetting(GetName(), "After", list);
-			return new ApiManager::ApiOk(Translator::tr("Added signature '%1' for bunny '%2'", account).arg(name, QString(bunny->GetID())));
+			return new ApiAnswers::Ok(Translator::tr("Added signature '%1' for bunny '%2'", account).arg(name, QString(bunny->GetID())));
 		}
 		else
 		{
-			return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("type", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("type", GetName()));
 		}
 	}
 	else if(action == "del")
 	{
 		if(!hRequest.HasArg("type"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("type", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("type", GetName()));
 
 		QString type = hRequest.GetArg("type");
 
 		if(!hRequest.HasArg("sender"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("sender", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("sender", GetName()));
 
 		QString sender = hRequest.GetArg("sender");
 
@@ -214,9 +214,9 @@ PLUGIN_BUNNY_API_CALL(PluginSignature::Api_Config)
 			if(removed > 0)
 			{
 				bunny->SetPluginSetting(GetName(), "Before", list);
-				return new ApiManager::ApiOk(Translator::tr("Removed signature '%1' for bunny '%2'", account).arg(sender, QString(bunny->GetID())));
+				return new ApiAnswers::Ok(Translator::tr("Removed signature '%1' for bunny '%2'", account).arg(sender, QString(bunny->GetID())));
 			}
-			return new ApiManager::ApiError(Translator::tr("Signature '%1' not found for bunny %2", account).arg(sender, QString(bunny->GetID())));
+			return new ApiAnswers::Error(Translator::tr("Signature '%1' not found for bunny %2", account).arg(sender, QString(bunny->GetID())));
 		}
 		else if(type == "after")
 		{
@@ -225,31 +225,31 @@ PLUGIN_BUNNY_API_CALL(PluginSignature::Api_Config)
 			if(removed > 0)
 			{
 				bunny->SetPluginSetting(GetName(), "After", list);
-				return new ApiManager::ApiOk(Translator::tr("Removed signature '%1' for bunny '%2'", account).arg(sender, QString(bunny->GetID())));
+				return new ApiAnswers::Ok(Translator::tr("Removed signature '%1' for bunny '%2'", account).arg(sender, QString(bunny->GetID())));
 			}
-			return new ApiManager::ApiError(Translator::tr("Signature '%1' not found for bunny %2", account).arg(sender, QString(bunny->GetID())));
+			return new ApiAnswers::Error(Translator::tr("Signature '%1' not found for bunny %2", account).arg(sender, QString(bunny->GetID())));
 		}
 		else
 		{
-			return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("type", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("type", GetName()));
 		}
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }
 
 PLUGIN_BUNNY_API_CALL(PluginSignature::Api_Sound)
 {
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
 
 	QString action = hRequest.GetArg("action");
 
 	if(action == "list")
 	{
-		return new ApiManager::ApiMappedList(bunny->GetPluginSetting(GetName(), "Sounds", QMap<QString, QVariant>()).toMap());
+		return new ApiAnswers::MappedList(bunny->GetPluginSetting(GetName(), "Sounds", QMap<QString, QVariant>()).toMap());
 	}
 	else if(action == "add")
 	{
@@ -259,7 +259,7 @@ PLUGIN_BUNNY_API_CALL(PluginSignature::Api_Sound)
 			file = hRequest.GetArg("url");
 
 			if(file.left(7) != "http://")
-				return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("url", GetName()));
+				return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("url", GetName()));
 		}
 		else if (hRequest.HasArg("file"))
 		{
@@ -267,11 +267,11 @@ PLUGIN_BUNNY_API_CALL(PluginSignature::Api_Sound)
 		}
 		else
 		{
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' or '%2' for plugin %3", account).arg("url", "file", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' or '%2' for plugin %3", account).arg("url", "file", GetName()));
 		}
 
 		if(!hRequest.HasArg("name"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("name", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("name", GetName()));
 
 		QString	name = hRequest.GetArg("name");
 
@@ -280,14 +280,14 @@ PLUGIN_BUNNY_API_CALL(PluginSignature::Api_Sound)
 		{
 			list.insert(name, file);
 			bunny->SetPluginSetting(GetName(), "Sounds", list);
-			return new ApiManager::ApiOk(Translator::tr("Added file '%1' for bunny '%2'", account).arg(file, QString(bunny->GetID())));
+			return new ApiAnswers::Ok(Translator::tr("Added file '%1' for bunny '%2'", account).arg(file, QString(bunny->GetID())));
 		}
-		return new ApiManager::ApiError(Translator::tr("File '%1' already exists for bunny '%2'", account).arg(name, QString(bunny->GetID())));
+		return new ApiAnswers::Error(Translator::tr("File '%1' already exists for bunny '%2'", account).arg(name, QString(bunny->GetID())));
 	}
 	else if(action == "del")
 	{
 		if(!hRequest.HasArg("name"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("name", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("name", GetName()));
 
 		QString name = hRequest.GetArg("name");
 		QMap<QString, QVariant> list = bunny->GetPluginSetting(GetName(), "Sounds", QMap<QString, QVariant>()).toMap();
@@ -295,26 +295,26 @@ PLUGIN_BUNNY_API_CALL(PluginSignature::Api_Sound)
 		if(removed > 0)
 		{
 			bunny->SetPluginSetting(GetName(), "Sounds", list);
-			return new ApiManager::ApiOk(Translator::tr("Removed file '%1' for bunny '%2'", account).arg(name, QString(bunny->GetID())));
+			return new ApiAnswers::Ok(Translator::tr("Removed file '%1' for bunny '%2'", account).arg(name, QString(bunny->GetID())));
 		}
-		return new ApiManager::ApiError(Translator::tr("File '%1' not found for bunny %2", account).arg(name, QString(bunny->GetID())));
+		return new ApiAnswers::Error(Translator::tr("File '%1' not found for bunny %2", account).arg(name, QString(bunny->GetID())));
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }
 
 PLUGIN_API_CALL(PluginSignature::Api_PluginSound)
 {
 	if(!hRequest.HasArg("action"))
-		return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("action", GetName()));
 
 	QString action = hRequest.GetArg("action");
 
 	if(action == "list")
 	{
-		return new ApiManager::ApiMappedList(GetSettings("Sounds", QMap<QString, QVariant>()).toMap());
+		return new ApiAnswers::MappedList(GetSettings("Sounds", QMap<QString, QVariant>()).toMap());
 	}
 	else if(action == "add")
 	{
@@ -324,7 +324,7 @@ PLUGIN_API_CALL(PluginSignature::Api_PluginSound)
 			file = hRequest.GetArg("url");
 
 			if(file.left(7) != "http://")
-				return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("url", GetName()));
+				return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("url", GetName()));
 		}
 		else if (hRequest.HasArg("file"))
 		{
@@ -332,11 +332,11 @@ PLUGIN_API_CALL(PluginSignature::Api_PluginSound)
 		}
 		else
 		{
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' or '%2' for plugin %3", account).arg("url", "file", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' or '%2' for plugin %3", account).arg("url", "file", GetName()));
 		}
 
 		if(!hRequest.HasArg("name"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("name", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("name", GetName()));
 
 		QString	name = hRequest.GetArg("name");
 
@@ -344,27 +344,27 @@ PLUGIN_API_CALL(PluginSignature::Api_PluginSound)
 		{
 			pluginSounds.insert(name, file);
 			SetSettings("Sounds", pluginSounds);
-			return new ApiManager::ApiOk(Translator::tr("Added file '%1'", account).arg(file));
+			return new ApiAnswers::Ok(Translator::tr("Added file '%1'", account).arg(file));
 		}
-		return new ApiManager::ApiError(Translator::tr("File '%1' already exists'", account).arg(name));
+		return new ApiAnswers::Error(Translator::tr("File '%1' already exists'", account).arg(name));
 	}
 	else if(action == "del")
 	{
 		if(!hRequest.HasArg("name"))
-			return new ApiManager::ApiError(Translator::tr("Missing argument '%1' for plugin %2", account).arg("name", GetName()));
+			return new ApiAnswers::Error(Translator::tr("Missing argument '%1' for plugin %2", account).arg("name", GetName()));
 
 		QString name = hRequest.GetArg("name");
 		int removed = pluginSounds.remove(name);
 		if(removed > 0)
 		{
 			SetSettings("Sounds", pluginSounds);
-			return new ApiManager::ApiOk(Translator::tr("Removed file '%1'", account).arg(name));
+			return new ApiAnswers::Ok(Translator::tr("Removed file '%1'", account).arg(name));
 		}
-		return new ApiManager::ApiError(Translator::tr("File '%1' not found", account).arg(name));
+		return new ApiAnswers::Error(Translator::tr("File '%1' not found", account).arg(name));
 	}
 	else
 	{
-		return new ApiManager::ApiError(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
+		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }
 
