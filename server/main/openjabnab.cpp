@@ -75,6 +75,7 @@ OpenJabNab::OpenJabNab(int argc, char ** argv)
 	{
 		// Create Listeners
 		httpListener = new QTcpServer(this);
+		httpListener->setMaxPendingConnections(GlobalSettings::GetInt("OpenJabNabServers/HTTPMaxPendingConnections", 30));
 		httpListener->listen(QHostAddress::LocalHost, GlobalSettings::GetInt("OpenJabNabServers/ListeningHttpPort", 8080));
 		connect(httpListener, SIGNAL(newConnection()), this, SLOT(NewHTTPConnection()));
 	}
@@ -86,6 +87,7 @@ OpenJabNab::OpenJabNab(int argc, char ** argv)
 		int port = GlobalSettings::GetInt("OpenJabNabServers/ListeningXmppPort", 5222);
 		LogInfo(QString("XMPP Port is: %1").arg(port));
 		xmppListener = new QTcpServer(this);
+		xmppListener->setMaxPendingConnections(GlobalSettings::GetInt("OpenJabNabServers/XMPPMaxPendingConnections", 30));
 		xmppListener->listen(QHostAddress::Any, port);
 		connect(xmppListener, SIGNAL(newConnection()), this, SLOT(NewXMPPConnection()));
 	}
