@@ -145,12 +145,12 @@ void AccountManager::SaveAccounts()
 				QString q("");
 				if(nb == 1)
 				{
-					LogDebug(QString("Updating Account %1 in DB").arg(a->GetLogin()));
+					//LogDebug(QString("Updating Account %1 in DB").arg(a->GetLogin()));
 					q = "UPDATE account SET`settings`=:settings WHERE `username`=:username";
 				} 
 				else if(nb == 0)
 				{
-					LogDebug(QString("Adding new Account in DB for %2").arg(a->GetLogin()));
+					//LogDebug(QString("Adding new Account in DB for %2").arg(a->GetLogin()));
 					q = "INSERT INTO account SET `id`=NULL, `settings`=:settings, `username`=:username,  `lastlogin`=NULL";
 				}
 				else

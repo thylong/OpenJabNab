@@ -123,12 +123,12 @@ void Ztamp::SaveConfig()
 		QString q("");
 		if(nb == 1)
 		{
-			LogDebug(QString("Updating Ztamp %1/%2 in DB").arg(QString(GetID())).arg(GetZtampName()));
+			//LogDebug(QString("Updating Ztamp %1/%2 in DB").arg(QString(GetID())).arg(GetZtampName()));
 			q = "UPDATE ztamp set`settings`=:settings, `server_id`=:server, `accounts`=:accounts WHERE `serial`=:serial";
 		} 
 		else if(nb == 0)
 		{
-			LogDebug(QString("Adding new Ztamp in DB for %1/%2").arg(QString(GetID())).arg(GetZtampName()));
+			//LogDebug(QString("Adding new Ztamp in DB for %1/%2").arg(QString(GetID())).arg(GetZtampName()));
 			q = "INSERT INTO ztamp SET `id`=NULL, `serial`=:serial, `settings`=:settings, `server_id`=:server, `accounts`=:accounts, `lastshow`=NULL";
 		}
 		else

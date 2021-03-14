@@ -871,12 +871,12 @@ void Bunny::SaveConfig()
 		QString q("");
 		if(nb == 1)
 		{
-			LogDebug(QString("Updating Bunny %1/%2 in DB").arg(QString(GetID())).arg(GetBunnyName()));
+			//LogDebug(QString("Updating Bunny %1/%2 in DB").arg(QString(GetID())).arg(GetBunnyName()));
 			q = "UPDATE bunny set`settings`=:settings, `server_id`=:server, `account_id`=(SELECT `id` FROM account WHERE `username`=:username) WHERE `mac`=:mac";
 		} 
 		else if(nb == 0)
 		{
-			LogDebug(QString("Adding new Bunny in DB for %1/%2").arg(QString(GetID())).arg(GetBunnyName()));
+			//LogDebug(QString("Adding new Bunny in DB for %1/%2").arg(QString(GetID())).arg(GetBunnyName()));
 			q = "INSERT INTO bunny SET `id`=NULL, `mac`=:mac, `settings`=:settings, `server_id`=:server, `account_id`=(SELECT `id` FROM account WHERE `username`=:username), `lastlocate`=NULL";
 		}
 		else
