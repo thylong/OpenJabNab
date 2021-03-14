@@ -27,7 +27,7 @@ public:
   using APICallMap_t = std::map<QString, std::pair<QStringList, std::function<R(C*,Args...)> > >;
 
   template<typename cC>
-  R processAPICall(cC* obj, const QString& sig, Args&&... args)
+  R processAPICall(cC* obj, const QString& sig, Args... args)
   {
     //std::cout << "  [ApiHandlerGeneric::processAPICall] " << sig << std::endl;
     //std::cout << "    Look into map... " << &_apicalls << std::endl;
@@ -92,7 +92,7 @@ public:
   inline static void print(void) { _api.print(); }
 
   template<typename ...cArgs>
-  inline auto ProcessApiCall(cArgs... args)
+  inline auto ProcessApiCall(cArgs&&... args)
   {
     //auto* obj = dynamic_cast<C*>(this);
     //std::cout << "    Casting pointer..." << this << " => " << obj << std::endl;

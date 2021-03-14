@@ -37,7 +37,7 @@ QNetworkReply* BrowserClient::createRequest(QNetworkAccessManager::Operation ope
 		}
 		else
 		{
-			LogDebug(QString("Want %1 with max-age %2").arg(request.url().toString(), QString::number(age)));
+			LogDebug(QString("Want %1 with max-age %2").arg(request.url().toString(), QString::number(_age)));
 			request.setRawHeader("Cache-Control", "max-age=" + QString::number(_age).toLatin1() );
 			request.setAttribute(QNetworkRequest::CacheLoadControlAttribute, QNetworkRequest::PreferCache);
 		}

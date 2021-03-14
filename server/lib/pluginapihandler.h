@@ -44,22 +44,19 @@ public:
   }
   */
 
-  template<typename...cArgs>
-  inline auto ProcessApiCall(cArgs... args)
+  inline auto ProcessApiCall(QString const& request, HTTPRequest const& hRequest, Account const& account)
   {
-    return _pluginApi.processAPICall(this, std::forward<cArgs>(args)...);
+    return _pluginApi.processAPICall(this, request, hRequest, account);
   }
 
-  template<typename...cArgs>
-  inline auto ProcessBunnyApiCall(cArgs... args)
+  inline auto ProcessBunnyApiCall(QString const& request, HTTPRequest const& hRequest, Account const& account, Bunny *b)
   {
-    return _bunnyApi.processAPICall(this, std::forward<cArgs>(args)...);
+    return _bunnyApi.processAPICall(this, request, hRequest, account, b);
   }
 
-  template<typename...cArgs>
-  inline auto ProcessZtampApiCall(cArgs... args)
+  inline auto ProcessZtampApiCall(QString const& request, HTTPRequest const& hRequest, Account const& account, Ztamp* z)
   {
-    return _ztampApi.processAPICall(this, std::forward<cArgs>(args)...);
+    return _ztampApi.processAPICall(this, request, hRequest, account, z);
   }
 
 protected:
