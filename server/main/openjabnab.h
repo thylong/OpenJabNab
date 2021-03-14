@@ -1,39 +1,40 @@
 #ifndef _OPENJABNAB_H_
 #define _OPENJABNAB_H_
 
+#include <list>
+
 #include <QCoreApplication>
-#include <QTcpServer>
 #include <QTimer>
 #include "apimanager.h"
 #include "pluginmanager.h"
 
-class OpenJabNab : public QCoreApplication
+class QTcpServer;
+class HttpHandler;
+class XmppHandler;
+
+class OpenJabNab 
+  : public QCoreApplication
 {
-	Q_OBJECT
+  Q_OBJECT
 
 public:
-	OpenJabNab(int argc, char ** argv);
-	void Close();
-	virtual ~OpenJabNab();
+  OpenJabNab(int argc, char ** argv);
+  void Close();
+  virtual ~OpenJabNab();
 
 signals:
-	void Quit();
-
-private slots:
-//	void RotateLog();
-	void NewHTTPConnection();
-	void NewXMPPConnection();
-//	void SendStatsToSense();
+  void Quit();
 
 private:
-	QTimer autoSaveTmr,
-				 nabStatusTmr;
-	void insertServerInDb();
+  QTimer autoSaveTmr,
+         nabStatusTmr,
+         timeoutTmr;
+  void insertServerInDb();
 
-	QTcpServer * httpListener;
-	QTcpServer * xmppListener;
-	bool httpApi;
-	bool httpVioletApi;
+  QTcpServer *httpListener,
+             *xmppListener;
+  std::list<HttpHandler*> _httpHandlers;
+  std::list<XmppHandler*> _xmppHandlers;
 };
 
 #endif

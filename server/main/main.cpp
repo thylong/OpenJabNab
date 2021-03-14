@@ -1,4 +1,3 @@
-#include <iostream>
 #include <signal.h>
 #include "openjabnab.h"
 
@@ -16,10 +15,7 @@ int main( int argc, char **argv )
 	signal(SIGTERM, sigCatcher);
 
 	o = new OpenJabNab(argc, argv);
-	//QTextCodec::setCodecForCStrings(QTextCodec::codecForName("UTF-8"));
-	//QTextCodec::setCodecForTr(QTextCodec::codecForName("UTF-8"));
 	o->exec();
 	delete o;
-
 	return 0;
 }

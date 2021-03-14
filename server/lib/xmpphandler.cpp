@@ -46,6 +46,12 @@ XmppHandler::XmppHandler(QTcpSocket * s)
 	lastQueryResource = "streaming";
 }
 
+bool XmppHandler::shouldDelete(void)
+{
+	return true;
+}
+
+
 QString XmppHandler::GetBunnyIp()
 {
 	return bunny_real_ip != "" ? bunny_real_ip : incomingXmppSocket->peerAddress().toString();

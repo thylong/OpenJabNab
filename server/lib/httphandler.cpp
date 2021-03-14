@@ -1,5 +1,7 @@
-#include <QByteArray>
 #include <memory>
+#include <QByteArray>
+#include <QTcpSocket>
+
 #include "apimanager.h"
 #include "bunny.h"
 #include "bunnymanager.h"
@@ -7,25 +9,41 @@
 #include "nabaztagmanager.h"
 #include "httprequest.h"
 #include "log.h"
-//#include "netdump.h"
 #include "QsLog.h"
-//#include "openjabnab.h"
 #include "pluginmanager.h"
 #include "settings.h"
 
-HttpHandler::HttpHandler(QTcpSocket * s, bool api, bool violetapi):pluginManager(PluginManager::Instance())
+#define DEFAULT_HTTP_TIMEOUT_S	10
+
+HttpHandler::HttpHandler(QTcpSocket * s, bool api, bool violetapi)
+	: pluginManager(PluginManager::Instance())
+	, incomingHttpSocket(s)
+	, httpApi(api)
+	, httpVioletApi(violetapi)
+	, bytesToReceive(0)
+	, _lastMsgTime(std::chrono::system_clock::now())
 {
-	incomingHttpSocket = s;
-	httpApi = api;
-	httpVioletApi = violetapi;
-	bytesToReceive = 0;
-	connect(s, SIGNAL(readyRead()), this, SLOT(ReceiveData()));
+	QObject::connect(s, &QTcpSocket::readyRead, this, &HttpHandler::ReceiveData);
 }
 
-HttpHandler::~HttpHandler() {}
+bool HttpHandler::shouldDelete()
+{
+	if(!incomingHttpSocket)
+		return true;
+	auto now = std::chrono::system_clock::now();
+	auto dt = std::chrono::duration_cast<std::chrono::seconds>(now - _lastMsgTime).count();
+	auto maxDt = GlobalSettings::GetInt("Timeout/Http",DEFAULT_HTTP_TIMEOUT_S);
+	return dt > maxDt;
+}
+
+HttpHandler::~HttpHandler() 
+{
+
+}
 
 void HttpHandler::ReceiveData()
 {
+	_lastMsgTime = std::chrono::system_clock::now();
 	receivedData += incomingHttpSocket->readAll();
 	if(bytesToReceive == 0 && (receivedData.size() >= 4))
 		bytesToReceive = *(int *)receivedData.left(4).constData();
@@ -99,9 +117,13 @@ void HttpHandler::HandleBunnyHTTPRequest()
 
 void HttpHandler::Disconnect()
 {
-	incomingHttpSocket->disconnectFromHost();
-	//incomingHttpSocket->abort();
-	// Delete incomingHttpSocket when it will be disconnected
-	connect(incomingHttpSocket, SIGNAL(disconnected()), incomingHttpSocket, SLOT(deleteLater()));
-	deleteLater();
+	if(incomingHttpSocket)
+	{
+		incomingHttpSocket->disconnectFromHost();
+		// Delete incomingHttpSocket when it will be disconnected
+		QObject::connect(incomingHttpSocket, &QTcpSocket::disconnected, incomingHttpSocket, &QObject::deleteLater);
+		// Try delete anyway
+		deleteLater();
+		incomingHttpSocket = nullptr;
+	}
 }

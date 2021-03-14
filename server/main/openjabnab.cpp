@@ -1,33 +1,32 @@
-#include <QTcpSocket>
-#include <QString>
+#include <QCommandLineParser>
 #include <QDebug>
-#include <QtSql/QtSql>
+#include <QTcpServer>
 #include <QTimer>
+#include <QString>
+#include <QSql>
 
 #include "QsLog.h"
-#include "openjabnab.h"
-#include "cron.h"
-#include "sentencemanager.h"
+
 #include "accountmanager.h"
+#include "browsercache.h"
 #include "bunny.h"
 #include "bunnymanager.h"
-#include "nabaztagmanager.h"
-#include "ztamp.h"
-#include "ztampmanager.h"
+#include "cron.h"
+#include "dbmanager.h"
 #include "httphandler.h"
 #include "log.h"
+#include "nabaztagmanager.h"
+#include "openjabnab.h"
 //#include "netdump.h"
 #include "pluginmanager.h"
 #include "settings.h"
+#include "sentencemanager.h"
+#include "translator.h"
 #include "ttsmanager.h"
 #include "xmpphandler.h"
-#include "translator.h"
-#include "browsercache.h"
+#include "ztamp.h"
+#include "ztampmanager.h"
 
-#include <QDebug>
-#include "dbmanager.h"
-
-#include <QCommandLineParser>
 
 OpenJabNab::OpenJabNab(int argc, char ** argv)
 : QCoreApplication(argc, argv)
@@ -65,7 +64,6 @@ OpenJabNab::OpenJabNab(int argc, char ** argv)
 	ZtampManager::Init();
 	Ztamp::Init();
 	AccountManager::Init();
-	//NetworkDump::Init();
 	BrowserCache::Init(this);
 	PluginManager::Init();
 	BunnyManager::LoadBunnies();
@@ -73,11 +71,19 @@ OpenJabNab::OpenJabNab(int argc, char ** argv)
 
 	if(GlobalSettings::Get("Config/HttpListener", true) == true)
 	{
+		auto httpApi = GlobalSettings::Get("Config/HttpApi", true).toBool();
+		auto httpVioletApi = GlobalSettings::Get("Config/HttpVioletApi", true).toBool();
+		LogInfo(QString("Parsing of HTTP Api is ").append(httpApi?"enabled":"disabled"));
+		LogInfo(QString("Parsing of HTTP VioletApi is ").append(httpVioletApi?"enabled":"disabled"));
+
 		// Create Listeners
 		httpListener = new QTcpServer(this);
 		httpListener->setMaxPendingConnections(GlobalSettings::GetInt("OpenJabNabServers/HTTPMaxPendingConnections", 30));
 		httpListener->listen(QHostAddress::LocalHost, GlobalSettings::GetInt("OpenJabNabServers/ListeningHttpPort", 8080));
-		connect(httpListener, SIGNAL(newConnection()), this, SLOT(NewHTTPConnection()));
+		QObject::connect(httpListener, &QTcpServer::newConnection, [&](void)
+		{
+			_httpHandlers.emplace_back(new HttpHandler(httpListener->nextPendingConnection(), httpApi, httpVioletApi));
+		});
 	}
 	else
 		LogWarning("Warning : HTTP Listener is disabled !");
@@ -89,14 +95,13 @@ OpenJabNab::OpenJabNab(int argc, char ** argv)
 		xmppListener = new QTcpServer(this);
 		xmppListener->setMaxPendingConnections(GlobalSettings::GetInt("OpenJabNabServers/XMPPMaxPendingConnections", 30));
 		xmppListener->listen(QHostAddress::Any, port);
-		connect(xmppListener, SIGNAL(newConnection()), this, SLOT(NewXMPPConnection()));
+		QObject::connect(xmppListener, &QTcpServer::newConnection, [&](void)
+		{
+			_xmppHandlers.emplace_back(new XmppHandler(xmppListener->nextPendingConnection()));
+		});
 	}
 	else
 		LogWarning("Warning : XMPP Listener is disabled !");
-
-	httpApi = GlobalSettings::Get("Config/HttpApi", true).toBool();
-	httpVioletApi = GlobalSettings::Get("Config/HttpVioletApi", true).toBool();
-	LogInfo(QString("Parsing of HTTP Api is ").append((httpApi == true)?"enabled":"disabled"));
 
 	autoSaveTmr.setInterval(5 * 60 * 1000);	// 5min
 	QObject::connect(&autoSaveTmr,&QTimer::timeout, [&](void)
@@ -111,6 +116,25 @@ OpenJabNab::OpenJabNab(int argc, char ** argv)
 	QObject::connect(&nabStatusTmr,&QTimer::timeout, [&](void)
 	{
 		NabaztagManager::Instance().UpdateStatus();
+	});
+
+	timeoutTmr.setInterval(60 * 1000);
+	QObject::connect(&timeoutTmr, &QTimer::timeout, [&](void)
+	{
+		for(auto& it: _httpHandlers)
+		{
+			if(it->shouldDelete())
+			{
+				LogDebug("Should delete HTTP Handler");
+			}
+		}
+		for(auto& it: _xmppHandlers)
+		{
+			if(it->shouldDelete())
+			{
+				LogDebug("Should delete XMPP Handler");
+			}
+		}
 	});
 
 	autoSaveTmr.start();
@@ -156,10 +180,14 @@ OpenJabNab::~OpenJabNab()
 	SentenceManager::Close();
 	if(xmppListener)
 	{
+		for(auto& it: _xmppHandlers)
+			it->Disconnect();
 		xmppListener->close();
 	}
 	if(httpListener)
 	{
+		for(auto& it: _httpHandlers)
+			it->Disconnect();
 		httpListener->close();
 	}
 	BrowserCache::Close();
@@ -175,16 +203,4 @@ OpenJabNab::~OpenJabNab()
 	QsLogging::Logger::destroyInstance();
 
 	LogInfo("-- OpenJabNab Close --");
-}
-
-void OpenJabNab::NewHTTPConnection()
-{
-	HttpHandler * h = new HttpHandler(httpListener->nextPendingConnection(), httpApi, httpVioletApi);
-	connect(this, SIGNAL(Quit()), h, SLOT(Disconnect()));
-}
-
-void OpenJabNab::NewXMPPConnection()
-{
-	XmppHandler * x = new XmppHandler(xmppListener->nextPendingConnection());
-	connect(this, SIGNAL(Quit()), x, SLOT(Disconnect()));
 }

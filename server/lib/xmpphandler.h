@@ -25,6 +25,8 @@ public:
 	QString GetBunnyIp();
 	QString bunny_real_ip;
 
+	bool shouldDelete(void);
+
 public slots:
 	void Disconnect();
 	void Timeout();
