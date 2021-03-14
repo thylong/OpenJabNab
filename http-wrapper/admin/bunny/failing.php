@@ -9,10 +9,10 @@ asort($wait);
 function fail($mac)
 {
   global $fails;
-  $color = 'success';
+  $badge = '<span class="badge badge-success">Waiting</span>';
   if(in_array($mac, $fails))
-    $color = 'error';
-  return '<span class="badge badge-'.$color.'">'.$mac.'</span>';
+    $badge = '<span class="badge badge-danger">Failing</span>';
+  return $mac.' '.$badge;
 }
 ?>
 <div class="card">
@@ -20,6 +20,12 @@ function fail($mac)
     <i class="icon-cog"></i> <?php echo count($wait); ?> <?php echo __tr("Bunnies") ?>
   </h5>
   <div class="card-body">
+    <div>
+      <ul>
+        <li><span class="badge badge-success">Waiting</span> </li>
+        <li><span class="badge badge-danger">Failing</span> </li>
+      </ul>
+    </div>
     <table class="table table-bordered table-striped">
       <thead>
       <tr>
