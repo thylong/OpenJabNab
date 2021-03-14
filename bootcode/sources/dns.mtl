@@ -182,19 +182,28 @@ fun dnsreq domain cb=
 	Dnsw "dnsreq("; Secho domain; Secholn ")";
 	set dnsid=(if dnsid==nil then time_ms else (dnsid+1));
 	let listswitchstr ldns domain -> [ ip time_valid ] in
-		if (ip!=nil && time < time_valid)
-			then (Dnsw "ip dans le cache"; call cb[ip])
-	else let dump question dnsid domain -> tramedns in
 	(
-		Dnsw strcatlist "on fait une requete dns pour le domaine " :: domain :: nil;
-		if (nil!=ip) then // il y a une reponse dans le cache mais elle est périmée
-			dnsremoveipfromcache ip;
-		let listnth netdnslist 0 -> netdns in
-			udpsend netip DNSLOCAL netdns 53 tramedns nil;
-		set ldnsreq=[idD:dnsid domainD:domain reqD:tramedns timeoutD:time+5 cbD:cb idxDnsD:0]::ldnsreq;
-		nil
-	);
-	0;;
+		sendarpgrat;
+		if (ip!=nil && time < time_valid) then 
+		(
+			Dnsw "ip dans le cache"; 
+			call cb[ip]
+		)
+		else 
+		(
+			Dnsw "ip pas dans le cache"; 
+			let dump question dnsid domain -> tramedns in
+			(
+				Dnsw strcatlist "on fait une requete dns pour le domaine " :: domain :: nil;
+				if (nil!=ip) then // il y a une reponse dans le cache mais elle est périmée
+					dnsremoveipfromcache ip;
+				let listnth netdnslist 0 -> netdns in
+					udpsend netip DNSLOCAL netdns 53 tramedns nil;
+				set ldnsreq=[idD:dnsid domainD:domain reqD:tramedns timeoutD:time+5 cbD:cb idxDnsD:0]::ldnsreq;
+				nil
+			)
+		)
+	);;
 
 /**
 	Tells, for a (failed) dns request, if there is another dns server that could possibly answer the request

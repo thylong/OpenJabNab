@@ -19,6 +19,8 @@ fun mkarp op ipsrc macdst ipdst=
 fun sendarp ip=
 	netSend (mkarp ARPREQ netip macbroadcast ip) 0 nil macbroadcast 0 1;;
 
+fun sendarpgrat=
+	netSend (mkarp ARPANS netip macbroadcast netip) 0 nil macbroadcast 0 1;;
 
 fun filterarpip l src =
 	if l!=nil then let hd l->[ip _ _] in if !vstrcmp src 8+14 ip 0 4  then filterarpip tl l src
