@@ -63,7 +63,8 @@
 <!!FOOTER!!>
       </div>
       <div class="footer-copyright py-3 text-center">
-        &copy; 2012-2020 <a href="http://openjabnab.fr">openJabNab</a> - <!!TIME!!>.
+        &copy; 2012-2021 <a href="http://openjabnab.fr">openJabNab</a> - <!!TIME!!>. <br/>
+        <span class="text-muted"><!!ABOUT!!></span>
       </div>
     </footer>
 

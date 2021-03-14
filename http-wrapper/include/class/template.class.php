@@ -27,42 +27,53 @@ class ojnTemplate {
 		$this->titre = $titre . " - openJabNab";
 	}
 
-	public function display($buffer) {
-		$template = file_get_contents(ROOT_SITE.'include/class/template.tpl.php');
-
-		$pattern = array(
-				"|<!!TITLE!!>|",
-				"|<!!ALTTITLE!!>|",
-				"|<!!SUBTITLE!!>|",
-				"|<!!CONTENT!!>|",
-				"|<!!MENU!!>|",
-				"|<!!USER!!>|",
-				"|<!!FOOTER!!>|",
-				"|<!!JS!!>|",
-				"|<!!CSS!!>|",
-			);
-		$replace = array(
-				__tr($this->titre),
-				$this->titre_alt,
-				$this->soustitre,
-				$buffer,
-				$this->makeMenu(),
-				$this->makeUserMenu(),
-				$this->makeFooter(),
-				$this->getJS(),
-				$this->getCSS().'?'.time(),
-			);
-
-		$template = preg_replace($pattern, $replace, $template);
-    		$mtime = microtime();
-    		$mtime = explode(" ",$mtime);
-    		$mtime = $mtime[1] + $mtime[0];
-    		$tend = $mtime;
+	function loadTime()
+	{
+		$mtime = microtime();
+		$mtime = explode(" ",$mtime);
+		$mtime = $mtime[1] + $mtime[0];
 		global $tstart;
-    		$totaltime = ($tend - $tstart);
-    		$template = preg_replace("|<!!TIME!!>|", __tr("Page was generated in %1 seconds", round($totaltime,4)), $template);
-		return $template;
-        }
+		return ($mtime - $tstart);
+	}
+
+  public function display($buffer) 
+  {
+    $template = file_get_contents(ROOT_SITE.'include/class/template.tpl.php');
+
+    $pattern = array(
+      "|<!!TITLE!!>|",
+      "|<!!ALTTITLE!!>|",
+      "|<!!SUBTITLE!!>|",
+      "|<!!CONTENT!!>|",
+      "|<!!MENU!!>|",
+      "|<!!USER!!>|",
+      "|<!!FOOTER!!>|",
+      "|<!!JS!!>|",
+      "|<!!CSS!!>|",
+      "|<!!ABOUT!!>|",
+      "|<!!TIME!!>|",
+    );
+
+    $a = $this->Api->getAbout();
+    $about = !empty($a) ? __tr("%1 %2 (Built on %3 - %4)", $a["name"],$a["git_rev"],$a["build_date"],$a["build_time"]) : "";
+    
+    $replace = array(
+      __tr($this->titre),
+      $this->titre_alt,
+      $this->soustitre,
+      $buffer,
+      $this->makeMenu(),
+      $this->makeUserMenu(),
+      $this->makeFooter(),
+      $this->getJS(),
+      $this->getCSS(),//.'?'.time(),
+      $about,
+      __tr("Page was generated in %1 seconds", round($this->loadTime(),4))
+    );
+
+    $template = preg_replace($pattern, $replace, $template);
+    return $template;
+  }
 
 	private function makeMenu() {
 		$menu = '<ul class="navbar-nav mr-auto">'."\n";

@@ -67,6 +67,19 @@ class ojnApi {
 		return apcu_fetch(APC_PREFIX.'ojn_uptime_'.$Infos['language']);
 	}
 
+	public function getAbout($reload = false)
+	{
+		$r = true;
+		$cache = apcu_fetch(APC_PREFIX.'ojn_about',$r);
+		if(!$r || $reload)
+		{
+			$cache = $this->getApiMapped('global/about');
+			if(!empty($cache))
+				apcu_store(APC_PREFIX.'ojn_about', $cache, 30);
+		}
+		return $cache;
+	}
+
 	public function getLasts($bunny)
 	{
 		$r = $this->loginAccount(ADMIN_API_USER, ADMIN_API_PWD, false);
