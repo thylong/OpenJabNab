@@ -22,7 +22,6 @@ unsigned short XmppHandler::msgStreamNb = 0;
 
 XmppHandler::XmppHandler(QTcpSocket * s)
 	: pluginManager(PluginManager::Instance())
-	
 	, _lastMsgTime(std::chrono::system_clock::now())
 {
 	tempInXmppTraffic = 0;
@@ -37,7 +36,7 @@ XmppHandler::XmppHandler(QTcpSocket * s)
 
 	// Bunny -> OpenJabNab socket
 	incomingXmppSocket->setParent(this);
-	QObject::connect(incomingXmppSocket, &QTcpSocket::disconnected, this, &XmppHandler::cleanup);
+	//QObject::connect(incomingXmppSocket, &QTcpSocket::disconnected, this, &XmppHandler::cleanup);
 	QObject::connect(incomingXmppSocket, &QTcpSocket::readyRead, this, &XmppHandler::HandleBunnyXmppMessage);
 
 	OjnXmppDomain = GlobalSettings::GetString("OpenJabNabServers/XmppServer").toLatin1();
@@ -67,6 +66,7 @@ bool XmppHandler::shouldDelete(void)
 			}
 			else
 				LogInfo("Bind process failed for unknow bunny");
+				bindingResource.clear();
 		}
 	}
 	auto dt = std::chrono::duration_cast<std::chrono::seconds>(now - _lastMsgTime).count();
@@ -91,6 +91,7 @@ void XmppHandler::cleanup()
 			bunny->RemoveXmppHandler(this);
 			bunny = nullptr;
 		}
+		incomingXmppSocket->deleteLater();
 		incomingXmppSocket = nullptr;
 		return;
 	}
