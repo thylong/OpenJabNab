@@ -46,7 +46,7 @@ if(preg_match("/\d+\.\d+\.\d+\.\d+/", $search)) {
 		$sql = 'SELECT mac
 						FROM bunny
 						WHERE LOWER(mac) LIKE \'%'.$search.'%\'
-							OR  LOWER(replace(settings, \'\0\', \'\')) LIKE \'%OwnerAccount%'.$search.'%\'
+							OR  LOWER(CAST(REPLACE(settings, \'\0\', \'\') as CHAR)) LIKE \'%owneraccount%'.$search.'%\'
 						ORDER BY mac ASC;';
 		$res = mysqli_query($link, $sql);
 		while($row = mysqli_fetch_assoc($res))
