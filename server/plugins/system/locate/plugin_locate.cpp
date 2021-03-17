@@ -387,8 +387,8 @@ PLUGIN_API_CALL(PluginLocate::Api_Server)
 			QMap<QString, QVariant> list;
 			foreach(QString serialnumber, waitingBunnies)
 			{
-				Bunny * bunny = BunnyManager::GetBunny(this, serialnumber.toLatin1());
-				list.insert(serialnumber, QString::number(bunny->GetGlobalSetting("LastLocate", QDateTime::currentDateTime()).toDateTime().secsTo(QDateTime::currentDateTime())));
+				if(auto* bunny = BunnyManager::GetBunny(this, serialnumber.toLatin1()))
+				  list.insert(serialnumber, QString::number(bunny->GetGlobalSetting("LastLocate", QDateTime::currentDateTime()).toDateTime().secsTo(QDateTime::currentDateTime())));
 			}
 			return new ApiAnswers::MappedList(list);
 		}
