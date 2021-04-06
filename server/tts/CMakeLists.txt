@@ -32,6 +32,5 @@ endfunction()
 
 add_subdirectory(acapela/)
 add_subdirectory(bluemix/)
-add_subdirectory(notevibes/)
 add_subdirectory(pico/)
 add_subdirectory(responsivevoice/)

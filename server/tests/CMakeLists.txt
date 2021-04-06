@@ -86,7 +86,6 @@ add_test_target(NAME v1_msg       SRCS  lib/v1/msg.cpp              LIBRARIES oj
 set(TTS_LIST
   "acapela"
   "bluemix"
-  "notevibes"
   "pico"
   "responsivevoice"
 )
