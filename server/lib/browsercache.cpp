@@ -19,11 +19,13 @@ void BrowserCache::Init(QObject * parent)
 void BrowserCache::Close()
 {
 	delete Instance().diskCache;
+	Instance().diskCache = nullptr;
 }
 
 BrowserCache::~BrowserCache()
 {
-	delete diskCache;
+	if(diskCache)
+		delete diskCache;
 }
 
 BrowserCache & BrowserCache::Instance()
