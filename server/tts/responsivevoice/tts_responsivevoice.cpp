@@ -181,18 +181,22 @@ QString TTSresponsivevoice::CreateNewSound(QString text, QString voice, bool for
     }
 
     // Fetch MP3
-    QNetworkRequest req(QUrl("http://code.responsivevoice.org/getvoice.php?tl="+voice2+"&gender="+gender+"&key=WGciAW2s&t="+QUrl::toPercentEncoding(text)));
+    // Old
+    // QNetworkRequest req(QUrl("http://code.responsivevoice.org/getvoice.php?tl="+voice2+"&gender="+gender+"&key=WGciAW2s&t="+QUrl::toPercentEncoding(text)));
+    // New
+    https://texttospeech.responsivevoice.org/v1/text:synthesize?lang=en-GB&key=WfWmvaX0&gender=female&text=Hello%20it%20is%205%20pm
+    QNetworkRequest req(QUrl("https://texttospeech.responsivevoice.org/v1/text:synthesize?lang="+voice2+"&gender="+gender+"&key=WfWmvaX0&text="+QUrl::toPercentEncoding(text)));
 
     auto* rep = _http.get(req);
     QObject::connect(rep, &QNetworkReply::finished, &loop, &QEventLoop::quit);
     QObject::connect(rep, qOverload<QNetworkReply::NetworkError>(&QNetworkReply::error), &loop, &QEventLoop::quit);
     loop.exec();
 
-    const auto& answer = rep->readAll();
+    const auto answer = rep->readAll();
+    delete rep;
     if(answer.size() == 0)
     {
       LogError("TTS ReponsiveVoice: Empty file =(");
-      delete rep;
       return QString();
     }
 
@@ -200,12 +204,10 @@ QString TTSresponsivevoice::CreateNewSound(QString text, QString voice, bool for
   if (!file.open(QIODevice::WriteOnly))
   {
     LogError("TTS ReponsiveVoice: Cannot open sound file for writing");
-    delete rep;
     return QString();
   }
   file.write(answer);
   file.close();
-  delete rep;
   return ttsHTTPUrl.arg(voice, fileName).toLatin1();
 }
 
