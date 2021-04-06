@@ -9,6 +9,7 @@ $timezones = array();
 
 foreach($ips as $bunny => $ip)
 {
+	$ip = str_replace('::ffff:','',$ip); // Remove IPv6 > IPv4 mapping
 	$url = 'http://api.ipstack.com/'.$ip.'?access_key='.IPSTACK_APIKEY; // 10000 req/month limit
 	if(strstr($ip,'ffff'))
 	{
