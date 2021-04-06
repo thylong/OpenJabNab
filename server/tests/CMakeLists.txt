@@ -82,8 +82,21 @@ endfunction(add_test_target)
 add_test_target(NAME api          SRCS  lib/api.cpp                              )
 add_test_target(NAME translator   SRCS  lib/translator.cpp          LIBRARIES ojn)
 add_test_target(NAME v1_msg       SRCS  lib/v1/msg.cpp              LIBRARIES ojn)
-
-  # A ll
+# TTS
+set(TTS_LIST
+  "acapela"
+  "bluemix"
+  "notevibes"
+  "pico"
+  "responsivevoice"
+)
+foreach(TTS ${TTS_LIST})
+  add_test_target(NAME tts_${TTS} SRCS  tts/${TTS}.cpp             
+                                  LIBRARIES ojn tts_${TTS}
+                                  INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/tts
+                 )
+endforeach()
+  # All
 add_test_target(NAME All          SRCS  test_all.cpp                 ALL)
 
 add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS ${all_tests})
