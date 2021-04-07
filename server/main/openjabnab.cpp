@@ -166,29 +166,29 @@ OpenJabNab::OpenJabNab(int argc, char ** argv)
 void OpenJabNab::insertServerInDb()
 {
 	QSqlDatabase db = DbManager::getOpenDb();
-	QSqlQuery *query = new QSqlQuery(db);
-	query->prepare("SELECT * from `server` WHERE `hostname` = :host");
-	query->bindValue(":host", GlobalSettings::GetString("OpenJabNabServers/PingServer"));
-	query->exec();
-	int size = query->size();
-	query->finish();
+	QSqlQuery query(db);
+	query.prepare("SELECT * from `server` WHERE `hostname` = :host");
+	query.bindValue(":host", GlobalSettings::GetString("OpenJabNabServers/PingServer"));
+	query.exec();
+	query.first();
+	int size = query.size();
 	if(size < 1)
 	{
-		query->prepare("INSERT INTO `server` SET `hostname`=:host");
-		query->bindValue(":host", GlobalSettings::GetString("OpenJabNabServers/PingServer"));
-		bool ins = query->exec();
+		query.prepare("INSERT INTO `server` SET `hostname`=:host");
+		query.bindValue(":host", GlobalSettings::GetString("OpenJabNabServers/PingServer"));
+		bool ins = query.exec();
 		if(!ins)
 		{
-			LogError(QString("Impossible to insert value in table 'server' : %1").arg(query->lastError().driverText()));
+			LogError(QString("Impossible to insert value in table 'server' : %1").arg(query.lastError().driverText()));
 			Close();
 		}
-		query->prepare("SELECT * from `server` WHERE `hostname` = :host");
-		query->bindValue(":host", GlobalSettings::GetString("OpenJabNabServers/PingServer"));
-		query->exec();
+		query.prepare("SELECT * from `server` WHERE `hostname` = :host");
+		query.bindValue(":host", GlobalSettings::GetString("OpenJabNabServers/PingServer"));
+		query.exec();
+		query.first();
 	}
-	int serverId = query->value(1).toInt();
+	int serverId = query.value(1).toInt();
 	GlobalSettings::Set("Database/ServerId", serverId);
-	delete query;
 	DbManager::releaseDb();
 }
 
