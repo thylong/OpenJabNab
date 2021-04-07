@@ -10,7 +10,10 @@
 #include "translator.h"
 #include "ttsmanager.h"
 
-PluginTTS::PluginTTS():PluginInterface("tts", "TTS Plugin, Send Text to Bunny",BunnyV2Plugin | BunnyV1Plugin)
+PluginTTS::PluginTTS()
+	: PluginInterface("tts", "TTS Plugin, Send Text to Bunny", 
+										BunnyV2Plugin | BunnyV1Plugin | ApiPlugin
+									 )
 {
 }
 /*******
