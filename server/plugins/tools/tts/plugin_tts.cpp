@@ -22,23 +22,36 @@ void PluginTTS::InitApiCalls()
 	DECLARE_PLUGIN_BUNNY_API_CALL("say(text)", &PluginTTS::Api_Say);
 }
 
-PLUGIN_BUNNY_API_CALL(PluginTTS::Api_Say)
+bool PluginTTS::sayText(Bunny *b, const QString& str)
 {
-	if(!bunny->IsConnected())
-		return new ApiAnswers::Error(Translator::tr("Bunny '%1' is not connected", account).arg(QString(bunny->GetID())));
+	if(!b->IsConnected())
+		return false;
 
-	TTSManager::OutputFormat format = bunny->GetVersion() == 1 ? TTSManager::Format_Adp : TTSManager::Format_Mp3;
+	TTSManager::OutputFormat format = b->GetVersion() == 1 ? TTSManager::Format_Adp : TTSManager::Format_Mp3;
 
-	TTSAnswer sound = TTSManager::CreateSound(hRequest.GetArg("text"), bunny->GetVoice(), bunny->GetLanguage(), format, false);
-	TTSLog(bunny->GetID(), GetName(), sound);
+	TTSAnswer sound = TTSManager::CreateSound(str, b->GetVoice(), b->GetLanguage(), format, false);
+	TTSLog(b->GetID(), GetName(), sound);
 
-	if(bunny->GetVersion() == 1)
+	if(b->GetVersion() == 1)
 	{
-		AddSoundToSend(bunny, sound.file);
+		AddSoundToSend(b, sound.file);
 	}
 	else
 	{
-		bunny->SendPacket(MessagePacket("MU " + sound.file.toLatin1() + "\nMW\n"), GetName());
+		b->SendPacket(MessagePacket("MU " + sound.file.toLatin1() + "\nMW\n"), GetName());
 	}
+	return true;
+}
+
+PLUGIN_BUNNY_API_CALL(PluginTTS::Api_Say)
+{
+	if(sayText(bunny,hRequest.GetArg("text")))
+		return new ApiAnswers::Error(Translator::tr("Bunny '%1' is not connected", account).arg(QString(bunny->GetID())));
 	return new ApiAnswers::Ok(Translator::tr("Sending '%1' to bunny '%2'", account).arg(hRequest.GetArg("text"), QString(bunny->GetID())));
+}
+
+QString PluginTTS::OnApiSay(Bunny *b, QVariant arg)
+{
+	sayText(b,arg.toString());
+	return QString();
 }

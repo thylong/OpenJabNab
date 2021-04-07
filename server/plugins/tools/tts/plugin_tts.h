@@ -10,6 +10,9 @@ class PluginTTS : public PluginInterface
 	Q_INTERFACES(PluginInterface)
     Q_PLUGIN_METADATA(IID "ojn.plugin.bunny.tts" )
 
+private slots:
+	QString OnApiSay(Bunny *, QVariant);
+
 public:
 	PluginTTS();
 	virtual ~PluginTTS() {};
@@ -20,10 +23,18 @@ public:
 		revisions.insert("1.2.0", "Add support for Nabaztag V1");
 		return revisions;
 	}
+	QHash<QString, QString> GetExtendedApiFunctions()
+	{
+		QHash<QString, QString> list;
+		list.insert("say", "string");
+		return list;
+	}
+
 	// API
 	void InitApiCalls();
 	PLUGIN_BUNNY_API_CALL(Api_Say);
-
+private:
+	bool sayText(Bunny *b, const QString& str);
 };
 
 #endif
