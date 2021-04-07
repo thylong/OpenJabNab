@@ -129,6 +129,7 @@ fun Streamw str = nil;; //Secholn strcatlist "[streaming] " :: str :: nil;;
 #define NOMINAL
 
 // set doPing to something else than nil to activate ping
+// BMI 20210406 Ping looks broken, either in bootcode or in OpenJabNab
 var doPing = nil ;;
 
 
@@ -238,6 +239,8 @@ fun getEncodedConf = strcatlist (hexdata conf 0 (strlen conf));;
 #else
 #include ip.mtl
 #include arp.mtl
+#include icmp.mtl
+#include igmp.mtl // BMI 20210407 May be completely useless
 #include udp.mtl
 #include tcp.mtl
 #include dhcp.mtl
@@ -1412,16 +1415,17 @@ fun XmppGateIdle xSession=
 		// if there is an ping packet sent, check if the reply did not timeout
 		if (nil != xSession.sLastPingIqId) then // there is a ping packet sent, check timeout
 		(
-			 Pingw "PING time to send a ping"
+			Pingw "PING time to send a ping";
+			nil
 			//if (time - xSession.sLastPingTime > XmppPingMaxReponseDelay) then
 			//		XmppSessionIsDisconnected xSession
 		)
 		else if (time - xSession.sLastPingTime > XmppPingDelay) then
 		(
-			 Pingw "PING time to send a ping";
-			 XmppGateSend xSession (xmpps_createStanza xSession (xmpps_OurJID xSession) (xmpps_ServerJID xSession) stanzaIQGet "<ping xmlns='urn:xmpp:ping'/>");
-			 set xSession.sLastPingIqId = xSession.sStanzaID
-  		)
+			Pingw "PING time to send a ping";
+			XmppGateSend xSession (xmpps_createStanza xSession (xmpps_OurJID xSession) (xmpps_ServerJID xSession) stanzaIQGet "<ping xmlns='urn:xmpp:ping'/>");
+			set xSession.sLastPingIqId = xSession.sStanzaID
+		)
 	)
 	;
 
@@ -5917,97 +5921,191 @@ fun initchannel=
 	set channel=getchannel confGetWifissid wifiscans;
 	0;;
 
+var nextARP = 0;;
+
 fun loop=
 //Secho "l";
 	wifiRun;
 
 	if netState==RT2501_S_IDLE then
-	match wifi with
-	(initW -> nil)
-	|(_ ->
-		Secholn "######### wifi lost";  
-		set wifi=reconnectW;
-		earStop 1; // make sure that ears are not moving while we're reconnecting.
-		0
-	);
-        if gOfflineState==1 then 
-	(
-        	if gConnectingState == 0 then
+		match wifi with
+			(initW -> nil)
+			|(_ ->
+				Secholn "######### wifi lost";  
+				set wifi=reconnectW;
+				earStop 1; // make sure that ears are not moving while we're reconnecting.
+				0
+			);
+					if gOfflineState==1 then 
 		(
-			Secho "No connection, restarting";
-			runconfigstart
-		)
-		else
-		(
-			set cReconnect=cReconnect+1
-		);
-		if cReconnect > 1000 then set gConnectingState=0
+						if gConnectingState == 0 then
+			(
+				Secho "No connection, restarting";
+				runconfigstart
+			)
+			else
+			(
+				set cReconnect=cReconnect+1
+			);
+			if cReconnect > 1000 then set gConnectingState=0
 	);
 
 	buttonloop;
 //	buttongetevent;
 	let match run with
-	( configstartRun -> initchannel;earRun;bottomled;runconfigstart;0 )|
-	( configwaitRun http -> earRun;bottomled;runconfigwait http ; 0)|
-	( xmppLoginRun ->
-		if (earResetting && earsInited) then earRun else earStop 1;
+		( configstartRun -> 
+			initchannel;
+			earRun;
+			bottomled;
+			runconfigstart;
+			0
+		)|
+		( configwaitRun http -> 
+			earRun;
+			bottomled;
+			runconfigwait http;
+			0
+		)|
+		( xmppLoginRun ->
+			if (earResetting && earsInited) then 
+				earRun 
+			else 
+				earStop 1;
 #ifdef DBGCONNECT
-		httprequest "POST" Secholn dbgurl strcatlist "login:\n"::nil nil HTTP_NORMAL;
+			httprequest "POST" Secholn dbgurl strcatlist "login:\n"::nil nil HTTP_NORMAL;
 #endif
-		bottomled;runLogin;
-		CONTROL_WAIT) |
-	( xmppReconnectRun params ->
-		if (earResetting && earsInited) then earRun else earStop 1;
-		if gSleepState == 0 then (
-			// Affichage des sources.
-			infoRun;
-			// On fige la base en violet
-			led LED_BASE RGB_VIOLET	
-		);
-		let params -> [waitTime xSession oldRun] in 
-			match xSession.sStatus with
-				(sOpened -> set run = oldRun; 0)
-				|(sClosed -> 
-					if time_ms > waitTime then (
-						XmppGateReconnect xSession 0
+			bottomled;
+			runLogin;
+			CONTROL_WAIT
+		) |
+		( xmppReconnectRun params ->
+			if (earResetting && earsInited) then 
+				earRun 
+			else 
+			earStop 1;
+			if gSleepState == 0 then 
+			(
+				// Affichage des sources.
+				infoRun;
+				// On fige la base en violet
+				led LED_BASE RGB_VIOLET	
+			);
+			let params -> [waitTime xSession oldRun] in 
+				match xSession.sStatus with
+					(sOpened -> set run = oldRun; 0)|
+					(sClosed -> 
+						if time_ms > waitTime then (
+							XmppGateReconnect xSession 0
+						);
+						0
+					)|
+					(	_ -> 0);
+						CONTROL_WAIT
+					)|
+					//	( idleRun -> earRun;listenRun;infoRun;bottomled;noseled;runIdle;CONTROL_WAIT) |
+					( idleRun -> 
+							earRun;
+							infoPreRun;
+							infoRun;
+							bottomled;
+							noseled;
+							runIdle;
+							CONTROL_WAIT
+					) |
+					//	( sleepRun -> earRun;listenRun;controlwait;runIdle;0) |
+					( sleepRun -> 
+							earRun;
+							controlwait;
+							runIdle;
+							0
+					) |
+					
+					( rscLoadNextRun -> 
+							earRun;
+							infoPreRun;
+							infoRun;
+							bottomled;
+							noseled;
+							runRscLoadNext;
+							CONTROL_WAIT
+					)|
+					( rscLoadWaitRun http-> 
+							earRun;
+							infoPreRun;
+							infoRun;
+							bottomled;
+							noseled;
+							runRscLoadWait http;
+							CONTROL_WAIT
+					)|
+					( cmdEvalOne i-> 
+							earRun;
+							runEvalOneCommand i;
+							CONTROL_PLAY
+					)|
+					( chorCmdRun i-> 
+							earRun;
+							noseled;
+							runChorCmd i;
+							CONTROL_PLAY
+					)|
+					( streamCmdRun i0-> 
+							earRun;
+							noseled;
+							runStreamingCmd i0;
+							CONTROL_PLAY
+					)|
+					( waitCmdRun i -> 
+							earRun;
+							noseled;
+							runWaitCmd i;
+							CONTROL_PROGRAMWAIT
+					)|
+					( earResetWaitRun cb -> 
+							earRun;
+							runEarReset cb;
+							0
+					) |
+					( recordRun -> 
+							runrecord; 
+							0
+					)|
+					( recordStartRun -> 
+							runrecordstart; 
+							0
+					) 
+				-> keymanager in
+					(
+						if keymanager==CONTROL_WAIT then
+							controlwait
+						else if keymanager==CONTROL_PLAY then
+							controlplay
+						else if keymanager==CONTROL_PROGRAMWAIT then
+							controlprogramwait
+						else
+							buttongetevent
 					);
-					0)
-				|(_ -> 0);
-		CONTROL_WAIT)|
-
-//	( idleRun -> earRun;listenRun;infoRun;bottomled;noseled;runIdle;CONTROL_WAIT) |
-	( idleRun -> earRun;infoPreRun;infoRun;bottomled;noseled;runIdle;CONTROL_WAIT) |
-//	( sleepRun -> earRun;listenRun;controlwait;runIdle;0) |
-	( sleepRun -> earRun;controlwait;runIdle;0) |
-	
-	( rscLoadNextRun -> earRun;infoPreRun;infoRun;bottomled;noseled;runRscLoadNext; CONTROL_WAIT)|
-	( rscLoadWaitRun http-> earRun;infoPreRun;infoRun;bottomled;noseled;runRscLoadWait http;CONTROL_WAIT)|
-	( cmdEvalOne i-> earRun;runEvalOneCommand i;CONTROL_PLAY)|
-	( chorCmdRun i-> earRun;noseled;runChorCmd i;CONTROL_PLAY)|
-	( streamCmdRun i0-> earRun;noseled;runStreamingCmd i0;CONTROL_PLAY)|
-	( waitCmdRun i -> earRun;noseled;runWaitCmd i;CONTROL_PROGRAMWAIT)|
-
-	( earResetWaitRun cb -> earRun; runEarReset cb; 0) |
-
-	( recordRun -> runrecord; 0)|
-	( recordStartRun -> runrecordstart; 0) 
-
-	 -> keymanager in
-	if keymanager==CONTROL_WAIT then
-		controlwait
-	else if keymanager==CONTROL_PLAY then
-		controlplay
-	else if keymanager==CONTROL_PROGRAMWAIT then
-		controlprogramwait
-	else
-		buttongetevent
-	;
 
 	XmppSessionRun; // On envois éventuellement les packets en attente	
 	XmppSessionIdle;
 	uploadtimeout;
 
 	checkdhcp 0;
+
+	let  time -> now in 
+	(
+		if ( now > nextARP ) then 
+		(
+			set nextARP = now + 60;
+			//Secholn strcatlist "Now:"::(itoa now)::". Next ARP at "::(itoa nextARP)::nil
+			//Secholn "Send IGMP. Next in 600s.";
+      //igmpSend IGMP_CHANGE_TO_INCLUDE_MODE IGMP_IP4_SELF;
+      //igmpSend IGMP_CHANGE_TO_EXCLUDE_MODE IGMP_IP4_SELF;
+			icmpSend netgateway;
+			//icmpSend "\192\168\70\102";
+			nil
+		)
+	);
 
 	wavtime;
 

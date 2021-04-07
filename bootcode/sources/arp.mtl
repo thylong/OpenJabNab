@@ -7,7 +7,7 @@ var larp;;
 var larpreq;;
 
 
-fun mkarp op ipsrc macdst ipdst=
+fun mkarp op macdst ipdst=
 	strcatlist
 	"\$aa\$aa\$03\$00\$00\$00\$08\$06\$00\$01\$08\$00\$06\$04\$00"::(ctoa op)::
 	mymac::
@@ -17,47 +17,70 @@ fun mkarp op ipsrc macdst ipdst=
 	::nil;;
 
 fun sendarp ip=
-	netSend (mkarp ARPREQ netip macbroadcast ip) 0 nil macbroadcast 0 1;;
+  //Secho ">a "; IPecho ip 0 1;
+  Secho "[ARP][Request] Need MAC for IP "; IPecho ip 0 1;
+	netSend (mkarp ARPREQ macbroadcast ip) 0 nil macbroadcast 0 1;;
 
 fun sendarpgrat=
-	netSend (mkarp ARPANS netip macbroadcast netip) 0 nil macbroadcast 0 1;;
+	netSend (mkarp ARPANS macbroadcast netip) 0 nil macbroadcast 0 1;;
 
 fun filterarpip l src =
-	if l!=nil then let hd l->[ip _ _] in if !vstrcmp src 8+14 ip 0 4  then filterarpip tl l src
-	else (hd l)::filterarpip tl l src;;
-
-fun checkarp l src=
-	if l!=nil then let hd l->[ip _ cb] in 
-	(
-		if !vstrcmp src 8+14 ip 0 4 then
-		let strsub src 8+8 6 -> mac in
-		(
-			Secho "found MAC target : "; MACecho mac 0 1;
-			set larp=[ip mac]::larp;
-			call cb [mac]
-		);
-		checkarp tl l src
-	);
-	nil
+	if l!=nil then                          // List not null
+    let hd l->[ip _ _] in                 // Get IP from first item of l 
+    (
+      if !vstrcmp src 8+14 ip 0 4 then    // Match 4 first chars of IP with FIXME
+        filterarpip tl l src              // Drop Item from list
+	    else 
+        (hd l)::filterarpip tl l src      // Keep item in list
+    )
 ;;
 
-fun cbnetarp src mac=
-	//Secho "<a";
-	let strget src 8+7-> op in
-	if op==1 then // req
-	(
-//		Secho "ask ";MACecho src 16+10 1; IPecho src 16+16 1;
-		if !vstrcmp src 32 netip 0 4 then
-			netSend (mkarp ARPANS netip strsub src 16 6 strsub src 22 4) 0 nil mac 0 1;
-		nil
-	)
-	else if op==2 then
-		let larpreq->l in
+// vstrcmp: [Sstr1 Istart1 Sstr2 Istart2 Ilen] I(-1,0,1)
+//          Compares two strings/buffers
+fun checkarp l src=
+	if l!=nil then                          // List not null
+		let hd l->[ip _ cb] in                // Make tuple [ ip _ cb ] from first item of l
 		(
-			set larpreq=filterarpip larpreq src;
-			checkarp l src
-		)
-	; 0
+			if !vstrcmp src 8+14 ip 0 4 then    // Match 4 first chars of IP with FIXME
+        let strsub src 8+8 6 -> mac in
+        (
+          //Secho "[ARP] Have MAC: "; MACecho mac 0 0;
+          //Secho " for IP: "; IPecho ip 0 4;
+          set larp=[ip mac]::larp;            // Add (ip, MAC) to ARP table
+          call cb [mac]
+        );
+			checkarp tl l src                       // Recursive call with list without first item
+		);
+	nil // return value: null
+;;
+
+// Called when receiving an ARP request/reply
+fun cbnetarp src mac=
+  //Secho "<a "; MACecho mac 0 1;
+  let strget src 8+7-> op in                // Get Type at offset 7 in Packet
+    if op==1 then       // Type == ARP_Request
+    (
+      Secho "[ARP][Request] From MAC "; MACecho src 16 0; 
+      Secho " / IP "; IPecho src 22 0;
+      Secho " for IP "; IPecho src 32 1;
+      if !vstrcmp src 32 netip 0 4 then        // Requested IP matches ours
+        // Reply to ARP request
+        // - strsub src 16 6 is Destination MAC
+        // - strsub src 22 4 is Destination IP
+        Secho "[ARP][Request] Reply ! "; MACecho mymac 0 1; 
+        netSend (mkarp ARPANS strsub src 16 6 strsub src 22 4) 0 nil mac 0 1;
+      nil
+    )
+    else if op==2 then  // Type == ARP_Reply
+    (
+      Secho "[ARP][Reply] Got MAC "; MACecho mac 0 0;
+      Secho  " for IP "; IPecho (strsub src 8+14 4) 0 1;
+      let larpreq->l in                       // Copy larpreq into l
+      (
+        set larpreq=filterarpip larpreq src;  // Remove pending request from larpreq if IP matches
+        checkarp l src                        // Call checkarp with old larpreq (calls CB if IP matches)
+      )
+    );0
 ;;
 
 fun subnet_ ip i=
@@ -68,26 +91,48 @@ fun subnet_ ip i=
 fun subnet ip=
 	//Secho "test subnet "; IPecho ip 0 1;
 	/*Iecholn */ subnet_ ip 3;;
-	
-	
-fun arpreq ip cb=
-	let /* IPecho */ (if subnet ip then ip else netgateway) /* 0 1 */ -> ip in
-	let listswitchstr larp ip -> mac in
-	if mac!=nil then call cb [mac]
-	else
-	(
-		sendarp ip;
-		set larpreq=[ip time cb]::larpreq;	// ### attention à la taille de la liste
-		0
-	);;
 
+// Make an ARP request
+fun arpreq ip cb=
+  //Secho "[ARP] Request for IP: "; IPecho ip 0 4;
+	let /* IPecho */ (if subnet ip then ip else netgateway) /* 0 1 */ -> ip in
+  (
+	  let listswitchstr larp ip -> mac in     // Get MAC matching IP from local ARP table (larp)
+    (
+	    if mac!=nil then                      // MAC Found => Call callback now !
+      (
+        Secho "[ARP] Local match. MAC: "; MACecho mac 0 1;
+        call cb [mac]
+      )
+      else                                  // MAC not found, find MAC first, add to pending list
+	    (
+        Secholn "[ARP] Send request";
+		    sendarp ip;                         // Send ARP request
+          // Prepend to pending ARP requests list
+		    set larpreq=[ip time cb]::larpreq;	// ### attention à la taille de la liste
+		    0
+	    )
+    )
+  )
+;;
+
+// Filter ARP list 
 fun filterarp l dt =
-	if l!=nil then let hd l->[ip t _] in if (time-t)>dt then filterarp tl l dt
-	else
-	(
-		sendarp ip;
-		(hd l)::filterarp tl l dt
-	);;
+	if l!=nil then                    // List not empty
+    let hd l -> [ip t _] in         // Get list first item: ip and insertion time
+    (
+      if (time-t)>dt then           // Timeout => Pop item and keep going
+      (
+        Secho "[ARP] Timeout for IP :"; IPecho ip 0 4; 
+        filterarp tl l dt
+      )
+      else
+	    (
+		    sendarp ip;                 // Send ARP request (again ?)
+		    (hd l)::filterarp tl l dt   // Keep item in list and keep going 
+      )
+    )
+;;
 
 fun arptime =
 	set larpreq=filterarp larpreq 10;;

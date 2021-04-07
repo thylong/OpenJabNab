@@ -4,17 +4,30 @@
 #include tcp_protos.mtl
 #include udp_protos.mtl
 #include arp_protos.mtl
-
-proto cbnetarp 2 ;;
+#include icmp_protos.mtl
+#include igmp_protos.mtl
 
 fun net src mac=
+	// Get Ethernet Type 0x08xx
 	let strget src 7 -> p in
 	(
-		if p==6 then cbnetarp src mac // ARP
+		// Check 0x06 in 0x0806
+		if p==6 then 
+			cbnetarp src mac // ARP
+		// Check 0x00 in 0x0800
 		else if p==0 then
+			// Get IPv4 Protocol
 			let strget src 17 -> ip in
-			if ip==6 then cbnettcp src mac
-			else if ip==17 then cbnetudp src mac;
+			(
+				if ip==6 then 
+					cbnettcp src mac
+				else if ip==17 then 
+					cbnetudp src mac
+				else if ip==1 then
+					cbneticmp src mac
+				else if ip==2 then
+					cbnetigmp src mac
+			);
 		0
 	);
 // 	buttoncheckevent; // don't understand why there should be a buttoncheckevent here, it's already in the loop !

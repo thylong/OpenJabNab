@@ -1,0 +1,97 @@
+#include arp_protos.mtl
+
+const ICMP_PING_REQUEST = 8;;
+const ICMP_PING_REPLY   = 0;;
+
+fun icmpMake type code destip id sNb content=
+	// IP LLC SNAP Header (8 Bytes)
+	//    Magic (3 Bytes)                           0xAA 0xAA 0x03
+  //    Filler (3 Bytes)                          0x00 0x00 0x00
+  //    EtherType (2 Bytes)                       0x80 0x00 (IPv4)
+	// IPv4 Header (24 Bytes)
+	//    Version (4bits) + IHL (4 bits)	          0x45
+	//    DSCP (6bits) + ECN (2bit)	                0x00
+	//    Length (2Bytes)                           0x00 0x00 (filled by driver)
+	//    ID (2Bytes)                               0x00 0x00 (filled by driver)
+	//    Flags (3bits) + Fragment Offset (13bits)  0x00 0x00
+	//    TTL (1Byte)                               1
+	//    Protocol (1Byte)                          0x01 (ICMP)
+	//    Checksum (2Bytes)                         0x00 0x00 (autocomputed)
+	//    Source IPv4 (4Bytes)                      netip 
+	//    Destination IPv4 (4Bytes)                 <destip> 
+	//    Options (0 Bytes)                          
+  // ICMP Frame
+  //    Type (1Byte)                              <type>
+  //    Code (1Byte)                              <code>
+  //    Checksum (2Bytes)                         0x00 0x00 (autocomputed)
+  //    ID (2Bytes)                               <id>
+  //    Seq number (2Bytes)                       <sNb>
+
+  //strputchk <data> <offset> <value>
+  //netChk    <data> <offset> <length> <val>
+
+  let strcatlist 
+    // Ethernet Header (14) (REMOVE ME)
+  //IGMP_MAC_IPv4MCAST::netMac::"\$08\$00"::
+    // IP SNAP (8)
+  "\$AA\$AA\$03\$00\$00\$00\$08\$00"::
+    // IPv4 Header (20)
+  "\$45\$00\$00\$00\$00\$00\$00\$00\$40\1\$00\$00"::
+  netip::
+  destip::
+    // ICMP
+  (ctoa type)::
+  (ctoa code)::
+  "\$00\$00\$00\$00\$00\$00"
+  ::content
+  ::nil -> icmp in
+  (
+    // Use 14 if Using Ethernet Header
+    // Use  8 if using IP SNAP
+      // IP Header
+    strputword icmp 8+2 20+8+(strlen content);  // Total length in IP Header
+    strputchk icmp  8+10 (netChk icmp 8 20 0);  // IP Header checksum
+      // ICMP Packet
+    strputword icmp 8+20+4 id;                  
+    strputword icmp 8+20+6 sNb;
+    strputchk icmp  8+20+2 (netChk icmp 8+20 8+(strlen content) 0);
+    icmp
+  )
+;;
+
+// Called when receiving an ICMP request/reply
+// netSend <data> <offset> <length>
+fun cbneticmp src mac=
+  //Secho "<P "; MACecho mac 0 1; dump src;
+  let strget src 8+20 -> type in
+    let (strsub src 8+12 4) -> srcIp in
+      if type == ICMP_PING_REQUEST then
+      (
+        //Secho "[ICMP] Ping from "; IPecho srcIp 0 1;
+        let strgetword src 8+20+4 -> id in
+          let strgetword src 8+20+6 -> sNb in
+            let strsub src 8+20+8 ((strlen src)-28) ->content in
+          (
+            //Secho "[ICMP] Reply to "; IPecho srcIp 0 1;
+            netSend (/* dump */icmpMake ICMP_PING_REPLY 0x00 srcIp id sNb content) 0 nil mac 0 1;
+            0
+          );
+        0
+      )
+			else if type == ICMP_PING_REPLY then
+			(
+				Secho "[ICMP] Ping reply from "; MACecho mac 0 0; 
+				Secho " for "; IPecho srcIp 0 1;
+				0
+			)
+;;
+
+fun icmpSend2 mac ip=
+	//Secho "[ICMP] Send Ping to "; IPecho ip 0 1;
+	netSend (/* dump */icmpMake ICMP_PING_REQUEST 0x00 ip 0x01 0x01 "Nabaztag") 0 nil mac 0 1;
+	0
+;;
+
+fun icmpSend ip=
+	arpreq ip fixarg2 #icmpSend2 ip
+;;

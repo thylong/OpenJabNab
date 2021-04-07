@@ -1,0 +1,86 @@
+#include arp_protos.mtl
+
+const IGMP_MEMBERSHIP_QUERY   = 0x11;;
+const IGMP_MEMBERSHIP_REPORT  = 0x22;;
+const IGMP_LEAVE_GROUP        = 0x17;;
+
+const IGMP_CHANGE_TO_INCLUDE_MODE = 3;;
+const IGMP_CHANGE_TO_EXCLUDE_MODE = 4;;
+
+const IGMP_MAC_IPv4MCAST      = "\$01\$00\$5e\$00\$00\$16";;
+const IGMP_IP4_ROUTER         = "\224\0\0\22";;
+const IGMP_IP4_SELF           = "\224\0\0\179";;
+
+fun igmpMake type op ip =
+	// IP LLC SNAP Header
+	//    Magic (3 Bytes)                           0xAA 0xAA 0x03
+  //    Filler (3 Bytes)                          0x00 0x00 0x00
+  //    EtherType (2 Bytes)                       0x80 0x00 (IPv4)
+	// IPv4 Header
+	//    Version (4bits) + IHL (4 bits)	          0x46
+	//    DSCP (6bits) + ECN (2bit)	                0x00
+	//    Length (2Bytes)                           0x00 0x00 (filled by driver)
+	//    ID (2Bytes)                               0x00 0x00 (filled by driver)
+	//    Flags (3bits) + Fragment Offset (13bits)  0x00 0x00
+	//    TTL (1Byte)                               1
+	//    Protocol (1Byte)                          0x02 (IGMP)
+	//    Checksum (2Bytes)                         0x00 0x00 (autocomputed)
+	//    Source IPv4 (4Bytes)                      netip 
+	//    Destination IPv4 (4Bytes)                 224.0.0.22 
+	//    Options (4Bytes)                          0x94 0x04 0x00 0x00
+  // IGMP Frame (16 Bytes)
+  //    Type (1Byte)                              <type>
+  //    Reserved (1Byte)                          0x00
+  //    Checksum (2Bytes)                         0x00 0x00 (autocomputed)
+  //    Reserved (2Bytes)                         0x00 0x00
+  //    Number of Group Records (2Bytes)          0x00 0x00
+  //    Group Record
+  //      Record Type (1Byte)                     <op>
+  //      Aux Data Length (1Byte)                 0x00
+  //      Number of Sources (2Bytes)              0x00 0x00
+  //      Multicast address (4Bytes)              <ip>
+
+  //strputchk <data> <offset> <value>
+  //netChk    <data> <offset> <length> <val>
+
+  let strcatlist 
+    // Ethernet Header (14) (REMOVE ME)
+  //IGMP_MAC_IPv4MCAST::netMac::"\$08\$00"::
+    // IP SNAP (8)
+  "\$AA\$AA\$03\$00\$00\$00\$08\$00"::
+    // IPv4 Header (24)
+  "\$46\$00\$00\$00\$00\$00\$00\$00\1\2\$00\$00"::
+  netip::
+  IGMP_IP4_ROUTER::
+  "\$94\$04\$00\$00"::
+    // IGMP
+  (ctoa type)::
+  "\$00\$00\$00\$00\$00\0\1"::
+  (ctoa op)::
+  "\$00\$00\$00"::
+  ip
+  ::nil -> igmp in
+  (
+    // Use 14 if Using Ethernet Header
+    // Use  8 if using IP SNAP
+      // IP Header
+    strputword igmp 8+2 24+16;                  // Total length in IP Header
+    strputchk  igmp 8+10 (netChk igmp 8 24 0);  // IP Header checksum
+      // IGMP Packet
+    strputchk igmp 8+24+2 (netChk igmp 8+24 16 0);
+    igmp
+  )
+;;
+
+fun igmpSend op ip=
+  Secho ">I "; Iecho op; IPecho ip 0 1;
+  //dump igmpMake IGMP_MEMBERSHIP_REPORT op ip;
+	netSend (dump igmpMake IGMP_MEMBERSHIP_REPORT op ip) 0 nil IGMP_MAC_IPv4MCAST 0 1;
+  nil
+;;
+	
+// Called when receiving an IGMP request/reply
+fun cbnetigmp src mac=
+  Secho "<I "; MACecho mac 0 1; dump src;
+	0
+;;

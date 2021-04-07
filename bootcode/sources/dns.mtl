@@ -20,7 +20,7 @@ var SrvAnswerL = nil;;
 const DNSLOCAL=1597;;
 
 // debug
-fun Dnsw s = Secholn strcatlist "[dns] " :: s :: nil ;;
+fun Dnsw s = Secholn strcatlist "[DNS] " :: s :: nil ;;
 
 
 // skippe une question dans la section 2.
@@ -183,7 +183,6 @@ fun dnsreq domain cb=
 	set dnsid=(if dnsid==nil then time_ms else (dnsid+1));
 	let listswitchstr ldns domain -> [ ip time_valid ] in
 	(
-		sendarpgrat;
 		if (ip!=nil && time < time_valid) then 
 		(
 			Dnsw "ip dans le cache"; 
@@ -192,7 +191,8 @@ fun dnsreq domain cb=
 		else 
 		(
 			Dnsw "ip pas dans le cache"; 
-			let dump question dnsid domain -> tramedns in
+			//let dump question dnsid domain -> tramedns in
+			let question dnsid domain -> tramedns in
 			(
 				Dnsw strcatlist "on fait une requete dns pour le domaine " :: domain :: nil;
 				if (nil!=ip) then // il y a une reponse dans le cache mais elle est périmée
@@ -259,7 +259,8 @@ fun cbnetdns msg mac ipfrom=
 		else
 		(
 			if ip!=nil then
-				set ldns = [ x.domainD [ ip (time + ttl)] ]::ldns	// ### attention à la taille de la liste
+				set ldns = [ x.domainD [ ip (time + 0)] ]::ldns // Override with TTL=0 to force DNS request
+				//set ldns = [ x.domainD [ ip (time + ttl)] ]::ldns	// ### attention à la taille de la liste
 			else
 				(Dnsw "ip est nil"; nil);
 			call x.cbD [ip]
@@ -284,7 +285,7 @@ fun dnstime=
 	if time-d.timeoutD>=0 then
 	(
 		set d.timeoutD=nil;
-		Dnsw strcatlist "dnstime, timeout pour la requete d'id " :: (itoa d.idD) :: nil;
+		Dnsw strcatlist "dnstime, timeout pour la requete d'id " :: (itoa d.idD) :: " netstate " :: (itoa netState) :: nil;
 		// s'il y a un dns "de secours", on l'utilise. sinon, on appelle la cb avec nil
 		if (dnsHasAnotherServer d) then
 			( dnsAskNextServer d; 0 )
