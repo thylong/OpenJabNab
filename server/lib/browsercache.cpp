@@ -5,10 +5,9 @@
 
 BrowserCache::BrowserCache()
 {
-	diskCache = new QNetworkDiskCache();
   QString cachePath = GlobalSettings::GetString("Directories/NetworkCacheDir",
                   QCoreApplication::applicationDirPath().append("/cache/"));
-	diskCache->setCacheDirectory(QDir(cachePath).absolutePath());
+	diskCache.setCacheDirectory(QDir(cachePath).absolutePath());
 }
 
 void BrowserCache::Init(QObject * parent)
@@ -18,14 +17,10 @@ void BrowserCache::Init(QObject * parent)
 
 void BrowserCache::Close()
 {
-	delete Instance().diskCache;
-	Instance().diskCache = nullptr;
 }
 
 BrowserCache::~BrowserCache()
 {
-	if(diskCache)
-		delete diskCache;
 }
 
 BrowserCache & BrowserCache::Instance()
@@ -36,5 +31,5 @@ BrowserCache & BrowserCache::Instance()
 
 QNetworkDiskCache * BrowserCache::GetCache()
 {
-	return Instance().diskCache;
+	return &(Instance().diskCache);
 }

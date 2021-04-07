@@ -22,7 +22,7 @@ protected:
 	virtual ~BrowserCache();
 
 private:
-	QNetworkDiskCache * diskCache;
+	QNetworkDiskCache diskCache;
 };
 
 #endif
