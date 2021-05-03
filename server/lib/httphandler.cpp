@@ -98,8 +98,11 @@ void HttpHandler::HandleHTTPRequest()
 			{
 				//QByteArray answer = "Content-Type: text/xml\n\n" + apianswer->GetData();
 				QByteArray answer = apianswer->GetData();
-				incomingHttpSocket->write(answer);
-				LogDump(answer, "Violet Api Answer");
+				if(answer.size() && incomingHttpSocket)
+				{
+					incomingHttpSocket->write(answer);
+					LogDump(answer, "Violet Api Answer");
+				}
 			}
 		}
 		else
