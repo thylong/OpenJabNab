@@ -8,7 +8,6 @@ $ips = $ojnAPI->getApiMapped('plugin/stats/getbunniesip?'.$ojnAPI->getToken());
 $timezones = array();
 
 $n_err = 0;
-define('GEO_MAX_CONSECUTIVE_ERRORS',10);
 foreach($ips as $bunny => $ip)
 {
 	$ip = str_replace('::ffff:','',$ip); // Remove IPv6 > IPv4 mapping
