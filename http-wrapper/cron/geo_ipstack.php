@@ -8,37 +8,31 @@ $ips = $ojnAPI->getApiMapped('plugin/stats/getbunniesip?'.$ojnAPI->getToken());
 $timezones = array();
 
 $n_err = 0;
+define('GEO_MAX_CONSECUTIVE_ERRORS',10);
 foreach($ips as $bunny => $ip)
 {
 	$ip = str_replace('::ffff:','',$ip); // Remove IPv6 > IPv4 mapping
-	$url = 'https://api.ipgeolocation.io/ipgeo?apiKey='.IPGEOLOCATION_APIKEY.'&ip='.$ip.'&fields=latitude,longitude,country_code2,languages'; // 1000 req/day limit
+	$url = 'http://api.ipstack.com/'.$ip.'?access_key='.IPSTACK_APIKEY; // 10000 req/month limit
 	//var_dump($url);
 	if(strstr($ip,'ffff'))
 	{
 		echo 'Invalid IP for bunny '.$bunny.' : '.$ip."\n";
 	}
 
-	$data = file_get_contents($url,false, stream_context_create(['http' => ['ignore_errors' => true]]));
-	foreach($http_response_header as $h)
-	{
-		if(strstr($h,'HTTP/1.1') && $h != 'HTTP/1.1 200 OK')
-		{
-			var_dump($url);
-			var_dump($data);	
-			if(++$n_err > GEO_MAX_CONSECUTIVE_ERRORS)
-				break;
-			else
-				continue;
-		}
-	}
-				
 	$jdata = json_decode(file_get_contents($url));
-	//var_dump($jdata);
+	if(isset($jdata->success) && !$jdata->success)
+	{	
+		var_dump($url);
+		var_dump($jdata);	
+		if(++$n_err > GEO_MAX_CONSECUTIVE_ERRORS)
+			break;
+		else
+			continue;
+	}
 	$n_err = 0;
 	$long = $jdata->latitude;
 	$lat = $jdata->longitude;
-	$langs = explode(',',$jdata->languages);
-	$lang = $jdata->country_code2.'/'.(!empty($langs) ? $langs[0] :'UNK');
+	$lang = $jdata->country_code.'/'.$jdata->location->languages[0]->code;
 	if(!empty($lat) && !empty($long) && !empty($lang))
 	{
 		$t = isset($tzs[$bunny]) ? $tzs[$bunny] : "Unknow";
