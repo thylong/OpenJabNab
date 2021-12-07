@@ -1,160 +1,168 @@
 <?php
 require_once 'common.php';
-if(0):
-  $cities = array('Grenoble, FR','Paris, FR');
-else:
-  $cities = array();
-  $ojnAPI = getAPI();
-  $list = $ojnAPI->getApiList('plugin/weather/getCitiesList?'.$ojnAPI->getToken());
-  foreach($list as $l)
-  {
-    if(!empty($l->key) && !empty($l->value))
-    {
-      $woeid = (int)$l->key;
-      if(!isset($cities[$woeid]))
-        $cities[$woeid] = array('woeid'=>$woeid,'location'=>(string)$l->value);
-    }
-  }
-  var_dump(count($cities));
-  //die();
-endif;
-$weather = array();
+if(empty($_GET['httpCron'])) echo '<pre>';
+define('WEATHER_FAKE_CITY_LIST',false);
+define('WEATHER_FAKE_JSON_DATA',true);
+define('WEATHER_UNKNOWN_CODE', 3200);
 
-function buildBaseString($baseURI, $method, $params) {
-    $r = array();
-    ksort($params);
-    foreach($params as $key => $value) {
-        $r[] = "$key=" . rawurlencode($value);
-    }
-    return $method . "&" . rawurlencode($baseURI) . '&' . rawurlencode(implode('&', $r));
-}
-
-function buildAuthorizationHeader($oauth) {
-    $r = 'Authorization: OAuth ';
-    $values = array();
-    foreach($oauth as $key=>$value) {
-        $values[] = "$key=\"" . rawurlencode($value) . "\"";
-    }
-    $r .= implode(', ', $values);
-    return $r;
-}
-
-function fetchData($city)
+function normalizeWeatherCode($code)
 {
-  $url = 'https://weather-ydn-yql.media.yahoo.com/forecastrss';
-  $app_id = YWEATHER_APPID;
-  $consumer_key = YWEATHER_KEY;
-  $consumer_secret = YWEATHER_SECRET;
-  if(is_array($city))
-  {
-    $query = array(
-      'woeid' => $city['woeid'],
-      'format' => 'json',
-      'u' => 'c',
-    );
-  }
-  else
-  {
-    $query = array(
-      'location' => $city,
-      'format' => 'json',
-      'u' => 'c',
-    );
-  }
-  $oauth = array(
-    'oauth_consumer_key' => $consumer_key,
-    'oauth_nonce' => uniqid(mt_rand(1, 1000)),
-    'oauth_signature_method' => 'HMAC-SHA1',
-    'oauth_timestamp' => time(),
-    'oauth_version' => '1.0'
+  $codes = array(
+               // From https://www.weatherapi.com/docs/weather_conditions.json
+               // code,day,night,icon
+    1000 => 1, // 1000,Sunny,Clear,113
+    1003 => 8, // 1003,"Partly cloudy","Partly cloudy",116
+    1006 => 8, // 1006,Cloudy,Cloudy,119
+    1009 => 8, // 1009,Overcast,Overcast,122
+    1030 => 2, // 1030,Mist,Mist,143
+    1063 => 2, // 1063,"Patchy rain possible","Patchy rain possible",176
+    1066 => 3, // 1066,"Patchy snow possible","Patchy snow possible",179
+    1069 => 5, // 1069,"Patchy sleet possible","Patchy sleet possible",182
+    1072 => 5, // 1072,"Patchy freezing drizzle possible","Patchy freezing drizzle possible",185
+    1087 => 4, // 1087,"Thundery outbreaks possible","Thundery outbreaks possible",200
+    1114 => 3, // 1114,"Blowing snow","Blowing snow",227
+    1117 => 3, // 1117,Blizzard,Blizzard,230
+    1135 => 6, // 1135,Fog,Fog,248
+    1147 => 6, // 1147,"Freezing fog","Freezing fog",260
+    1150 => 2, // 1150,"Patchy light drizzle","Patchy light drizzle",263
+    1153 => 2, // 1153,"Light drizzle","Light drizzle",266
+    1168 => 2, // 1168,"Freezing drizzle","Freezing drizzle",281
+    1171 => 2, // 1171,"Heavy freezing drizzle","Heavy freezing drizzle",284
+    1180 => 2, // 1180,"Patchy light rain","Patchy light rain",293
+    1183 => 2, // 1183,"Light rain","Light rain",296
+    1186 => 2, // 1186,"Moderate rain at times","Moderate rain at times",299
+    1189 => 2, // 1189,"Moderate rain","Moderate rain",302
+    1192 => 2, // 1192,"Heavy rain at times","Heavy rain at times",305
+    1195 => 2, // 1195,"Heavy rain","Heavy rain",308
+    1198 => 2, // 1198,"Light freezing rain","Light freezing rain",311
+    1201 => 2, // 1201,"Moderate or heavy freezing rain","Moderate or heavy freezing rain",314
+    1204 => 3, // 1204,"Light sleet","Light sleet",317
+    1207 => 3, // 1207,"Moderate or heavy sleet","Moderate or heavy sleet",320
+    1210 => 3, // 1210,"Patchy light snow","Patchy light snow",323
+    1213 => 3, // 1213,"Light snow","Light snow",326
+    1216 => 3, // 1216,"Patchy moderate snow","Patchy moderate snow",329
+    1219 => 3, // 1219,"Moderate snow","Moderate snow",332
+    1222 => 3, // 1222,"Patchy heavy snow","Patchy heavy snow",335
+    1225 => 3, // 1225,"Heavy snow","Heavy snow",338
+    1237 => 3, // 1237,"Ice pellets","Ice pellets",350
+    1240 => 2, // 1240,"Light rain shower","Light rain shower",353
+    1243 => 2, // 1243,"Moderate or heavy rain shower","Moderate or heavy rain shower",356
+    1246 => 2, // 1246,"Torrential rain shower","Torrential rain shower",359
+    1249 => 5, // 1249,"Light sleet showers","Light sleet showers",362
+    1252 => 5, // 1252,"Moderate or heavy sleet showers","Moderate or heavy sleet showers",365
+    1255 => 5, // 1255,"Light snow showers","Light snow showers",368
+    1258 => 3, // 1258,"Moderate or heavy snow showers","Moderate or heavy snow showers",371
+    1261 => 3, // 1261,"Light showers of ice pellets","Light showers of ice pellets",374
+    1264 => 3, // 1264,"Moderate or heavy showers of ice pellets","Moderate or heavy showers of ice pellets",377
+    1273 => 4, // 1273,"Patchy light rain with thunder","Patchy light rain with thunder",386
+    1276 => 4, // 1276,"Moderate or heavy rain with thunder","Moderate or heavy rain with thunder",389
+    1279 => 3, // 1279,"Patchy light snow with thunder","Patchy light snow with thunder",392
+    1282 => 3, // 1282,"Moderate or heavy snow with thunder","Moderate or heavy snow with thunder",395
   );
-
-  $base_info = buildBaseString($url, 'GET', array_merge($query, $oauth));
-  $composite_key = rawurlencode($consumer_secret) . '&';
-  $oauth_signature = base64_encode(hash_hmac('sha1', $base_info, $composite_key, true));
-  $oauth['oauth_signature'] = $oauth_signature;
-
-  $header = array(
-    buildAuthorizationHeader($oauth),
-    'X-Yahoo-App-Id: ' . $app_id
-  );
-  $options = array(
-    CURLOPT_HTTPHEADER => $header,
-    CURLOPT_HEADER => false,
-    CURLOPT_URL => $url . '?' . http_build_query($query),
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_SSL_VERIFYPEER => false
-  );
-  //var_dump($options);
-
-  $ch = curl_init();
-  curl_setopt_array($ch, $options);
-  $response = curl_exec($ch);
-  curl_close($ch);
-  return $response;
+  return isset($codes[$code]) ? $codes[$code] : 0;
 }
 
-$json_dbg = '{"location":{"woeid":593720,"city":"Grenoble","region":" Rhone-Alpes","country":"France","lat":45.18034,"long":5.72188,"timezone_id":"Europe/Paris"},"current_observation":{"wind":{"chill":14,"direction":225,"speed":7.0},"atmosphere":{"humidity":44,"visibility":16.1,"pressure":930.0,"rising":0},"astronomy":{"sunrise":"6:34 am","sunset":"8:36 pm"},"condition":{"text":"Showers","code":11,"temperature":14},"pubDate":1556218800},"forecasts":[{"day":"Thu","date":1556143200,"low":10,"high":21,"text":"Rain","code":12},{"day":"Fri","date":1556229600,"low":4,"high":12,"text":"Rain","code":12},{"day":"Sat","date":1556316000,"low":7,"high":13,"text":"Showers","code":11},{"day":"Sun","date":1556402400,"low":5,"high":10,"text":"Scattered Showers","code":39},{"day":"Mon","date":1556488800,"low":4,"high":14,"text":"Mostly Cloudy","code":28},{"day":"Tue","date":1556575200,"low":5,"high":17,"text":"Partly Cloudy","code":30},{"day":"Wed","date":1556661600,"low":6,"high":17,"text":"Partly Cloudy","code":30},{"day":"Thu","date":1556748000,"low":8,"high":17,"text":"Partly Cloudy","code":30},{"day":"Fri","date":1556834400,"low":8,"high":16,"text":"Showers","code":11},{"day":"Sat","date":1556920800,"low":8,"high":17,"text":"Scattered Showers","code":39}]}';
+function getCitiesList($srv_name)
+{
+  if(WEATHER_FAKE_CITY_LIST):
+    $cities = array('Grenoble, FR','Paris, FR');
+  else:
+    $cities = array();
+    $ojnAPI = getAPI();
+    $list = $ojnAPI->getApiList('plugin/weather/getCitiesList?'.$ojnAPI->getToken());
+    //var_dump($list);
+    foreach($list as $l)
+    {
+      /*if(!empty($l->key) && !empty($l->value))
+      {
+        $woeid = (int)$l->key;
+        if(!isset($cities[$woeid]))
+          $cities[$woeid] = array('woeid'=>$woeid,'location'=>(string)$l->value);
+      }*/
+      $cities[] = (string)$l->key;
+    }
+    //var_dump(count($cities));
+  endif;
+  return array_unique($cities);
+}
 
+$weather = array();
+$cities = getCitiesList('WeatherAPI');
+
+$n_err = 0;
 foreach($cities as $c)
 {
-    //$json = json_decode($json_dbg);
-    $json = json_decode(fetchData($c));
-    //var_dump($json);
-    if(!isset($json->location) || !isset($json->current_observation))
+    var_dump($c);
+    $url = 'http://api.weatherapi.com/v1/forecast.json?key='.WEATHERAPI_KEY.'&days=2&q='.$c.'&alerts=yes&aqi=yes';
+    if(WEATHER_FAKE_JSON_DATA)
+      $data = file_get_contents('weather_weatherapi.json');
+    else
     {
-        echo 'Skipping city: '.(is_array($c) ? $c['woeid'].'/'.$c['location'] : $c).'. API Anwser was'.$json."\n";
+      $data = file_get_contents($url,false, stream_context_create(['http' => ['ignore_errors' => true]]));
+      foreach($http_response_header as $h)
+      {
+        if(strstr($h,'HTTP/1.1') && $h != 'HTTP/1.1 200 OK')
+        {
+          var_dump($url);
+          var_dump($data);
+          if(++$n_err > WEATHER_MAX_CONSECUTIVE_ERRORS)
+            break;
+          else
+            continue;
+        }
+      }
+    }
+
+    $json = json_decode($data);
+    //var_dump($json);
+    $n_err = 0;
+    if(!isset($json->location) || !isset($json->current))
+    {
+        echo 'Skipping city: '.$c.'. API Anwser was'.$json."\n";
         continue;
     }
+    $c_time = $json->location->localtime_epoch;
 
-    $current = array('forecast' => NULL,'code'=>3200);
-    if(isset($json->current_observation->pubDate))
-      $current['date'] = $json->current_observation->pubDate;
+    $current['date'] = $json->current->last_updated_epoch; // as timestamp, use ->last_updated to get Y-M-D H:i
                                 //date("d/m/Y h:i:s",$json->current_observation->pubDate),
-    if(isset($json->current_observation->condition))
-    {
-      $current['code'] = $json->current_observation->condition->code;
-      $current['temp'] = $json->current_observation->condition->temperature;
-    }
-    if(isset($json->current_observation->wind))
-      $current['wind'] = $json->current_observation->wind->speed;
-    //echo 'Current date:'.date("d/m/Y h:i:s",$json->current_observation->pubDate)."\n";
+    $current['code'] = normalizeWeatherCode($json->current->condition->code);
+    $current['temp'] = $json->current->temp_c;
+    $current['wind'] = $json->current->wind_kph;
     $forecasts = array();
-    foreach($json->forecasts as $f)
+    foreach($json->forecast as $f_array)
     {
-        //echo "\t".'Forecast date:'.date("d/m/Y h:i:s",$f->date)."\n";
-        $tmp = array('date' => $f->date,
-                                //date("d/m/Y h:i:s",$f->date),
-                      'code' => $f->code,
-                      'min' => $f->low,
-                      'max' => $f->high,
+      foreach($f_array as $f)
+      {
+        //echo "\t".'Forecast date:'.date("d/m/Y h:i:s",$f->date_epoch)."\n";
+        //var_dump($f);
+        $tmp = array('date' => $f->date_epoch,
+                      'code' => normalizeWeatherCode($f->day->condition->code),
+                      'wind' => $f->day->maxwind_kph,
+                      'min' => $f->day->mintemp_c,
+                      'max' => $f->day->maxtemp_c,
                      );
-        if(date("YMD",$f->date) == date("YMD",$current['date']))
-        {
-            //echo "\t\t Today's forecast !\n";
+        //if(date("YMD",$f->date_epoch) == date('YMD',$c_time) || $f->date_epoch > $c_time)
+        {/*
+            //echo "\t\t Today's or next forecast !\n";
             $current['forecast'] = $tmp;
         }
-        else if($f->date > $current['date'])
-        {
+        else if($f->date_epoch > $c_time)
+        {*/
             //echo "\t\t Next forecast !\n";
-            $forecasts[$f->date] = $tmp;
+            $forecasts[$f->date_epoch] = $tmp;
         }
-        else if($f->date <= $current['date']) // equal date should be covered by YMD check
-        {
-            //echo "\t\t Previous forecast. Skip\n";
-        }
+      }
     }
-    //var_dump($forecasts);
     ksort($forecasts);
 
-    $weather[$json->location->woeid] = array(
-        'id'    => $json->location->woeid,
-        'city'     => $json->location->city,
+    $weather[$c] = array(
+        'city'     => $json->location->name,
+        'lat'      => $json->location->lat,
+        'lon'      => $json->location->lon,
         'current'  => $current,
-        'forecast' => array_shift($forecasts),
+        'forecast' => $forecasts,
     );
-    echo '.';
 }
-//var_dump($weather);
-file_put_contents(ROOT_LOCAL."/plugins/weather/weather.json",json_encode($weather));
+var_dump($weather);
+file_put_contents(ROOT_LOCAL."/plugins/weather/cache_weatherapi.json",json_encode($weather));
 ?>

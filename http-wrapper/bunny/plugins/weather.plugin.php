@@ -11,8 +11,9 @@ if(!empty($_GET['rtag'])) {
 if(!empty($_POST)) {
 	if(isset($_POST['weather_city'])) {
 		$_SESSION['subtab'] = "weather_cities";
-		list($code, $name) = preg_split("/\|/", $_POST['weather_city']);
-		Message::AddFromApi($ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/weather/addcity?city=".urlencode($code)."&name=".urlencode($name)."&".$ojnAPI->getToken()));
+		$city = $_POST['weather_city'];
+		$name = $city;
+		Message::AddFromApi($ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/weather/addcity?city=".urlencode($city)."&name=".urlencode($name)."&".$ojnAPI->getToken()));
 		$reload = true;
 	}
 	if(!empty($_POST['scheduleT']) && !empty($_POST['scheduleC'])) {
@@ -109,7 +110,7 @@ if($reload)
 
 <div class="tab-content pt-2">
 	<div class="tab-pane<?php echo $_SESSION['subtab'] == 'weather_cities' ? ' active' : '' ?>" id="cities">
-		<div class="alert alert-success">
+		<!--div class="alert alert-success">
 			<?php echo __tr('To use this plugin, you need to retrieve the code associated to your city') ?>
 			<ol>
 				<li><?php echo __tr('Enter the name of your city in the first text field') ?></li>
@@ -117,19 +118,19 @@ if($reload)
 				<li><?php echo __tr('Choose the best matching city in the list, and click on "%1"', __tr("Use this city")) ?>"</li>
 				<li><?php echo __tr('Save') ?></li>
 			</ol>
-		</div>
+		</div-->
 
 		<form method="post">
-      <div class="form-group row">
-        <label class="col-sm-2 col-form-label" for="weather_search"><?php echo __tr("Add a city") ?></label>
-        <div class="col-sm-2 input-group">
-					<input type="text" name="weather_search" id="weather_search" class="form-control" value="">
-				</div>
+			<div class="form-group row">
+				<label class="col-sm-2 col-form-label" for="weather_city"><?php echo __tr("Add a city") ?></label>
 				<div class="col-sm-2 input-group">
-					<a onclick="launchSearch()" class="btn btn-sm btn-primary text-light"><?php echo __tr('Search the location code') ?></a>
+					<input type="text" name="weather_city" id="weather_city" class="form-control" value="">
 				</div>
+				<!--div class="col-sm-2 input-group">
+					<a onclick="launchSearch()" class="btn btn-sm btn-primary text-light"><?php echo __tr('Search the location code') ?></a>
+				</div-->
 			</div>
-      <div class="form-group row">
+			<!--div class="form-group row">
 				<div class="col-sm-8 offset-sm-2 input-group" id="weather_results"></div>
 				<script type="text/javascript">
 				function launchSearch()
@@ -145,9 +146,9 @@ if($reload)
 					$('#weather_city').val(id + "|" + name);
 				}
 				</script>
-			</div>
+			</div-->
 
-      <div class="form-group row">
+			<!--div class="form-group row">
 				<input name="weather_city" type="hidden" id="weather_city" value="">
 				<label class="col-sm-2 col-form-label" for="weather_search"><?php echo __tr("Location ID") ?></label>
 				<div class="col-sm-2 input-group">
@@ -156,18 +157,18 @@ if($reload)
 				<div class="col-sm-4 input-group">
 					<p class="col-form-label help-block"><?php echo __tr('Location ID used by Yahoo weather.') ?></p>
 				</div>
+			</div-->
+			<div class="form-group row">
+				<div class="col-sm-1 offset-sm-2">
+					<button class="btn btn-primary" type="submit"><?php echo __tr("Add") ?></button>
+				</div>
 			</div>
-      <div class="form-group row">
-        <div class="col-sm-1 offset-sm-2">
-          <button class="btn btn-primary" type="submit"><?php echo __tr("Add") ?></button>
-        </div>
-      </div>
 		</form>
 		<hr />
 		<form method="post">
-      <div class="form-group row">
-        <label class="col-sm-2 col-form-label" for="lang"><?php echo __tr("Language") ?></label>
-        <div class="col-sm-2 input-group">
+      		<div class="form-group row">
+        		<label class="col-sm-2 col-form-label" for="lang"><?php echo __tr("Language") ?></label>
+        		<div class="col-sm-2 input-group">
 					<select name="lang" class="form-control">
 						<?php foreach($Langs as $k => $v): ?>
 							<option value="<?php echo $k ?>"<?php if($lang == $k): ?> selected="selected"<?php endif; ?>><?php echo $v ?></option>
@@ -183,12 +184,12 @@ if($reload)
 		<?php if(!empty($pList)): ?>
 		<hr />
 		<h5><?php echo __tr('Cities') ?></h5>
-    <table class="table table-bordered table-striped span11">
-      <tr>
-        <th><?php echo __tr('City') ?></th>
-        <th class="col-sm-1"><?php echo __tr('Code') ?></th>
-        <th class="col-sm-3"><?php echo __tr('Actions') ?></th>
-      </tr>
+		<table class="table table-bordered table-striped span11">
+			<tr>
+				<th><?php echo __tr('City') ?></th>
+				<th class="col-sm-1"><?php echo __tr('Code') ?></th>
+				<th class="col-sm-3"><?php echo __tr('Actions') ?></th>
+			</tr>
 			<?php foreach($pList as $code => $item): ?>
 			<tr>
 				<td><?php echo urldecode($item) ?></td>
