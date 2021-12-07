@@ -24,15 +24,15 @@ foreach($ips as $bunny => $ip)
 		if(strstr($h,'HTTP/1.1') && $h != 'HTTP/1.1 200 OK')
 		{
 			var_dump($url);
-			var_dump($data);	
+			var_dump($data);
 			if(++$n_err > GEO_MAX_CONSECUTIVE_ERRORS)
 				break;
 			else
 				continue;
 		}
 	}
-				
-	$jdata = json_decode(file_get_contents($url));
+
+	$jdata = json_decode($data);
 	//var_dump($jdata);
 	$n_err = 0;
 	$long = $jdata->latitude;
