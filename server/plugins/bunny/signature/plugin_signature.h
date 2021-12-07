@@ -3,32 +3,32 @@
 
 #include "plugininterface.h"
 
-class PluginSignature : public PluginInterface
+class PluginSignature
+  : public PluginInterface
 {
-	Q_OBJECT
-	Q_INTERFACES(PluginInterface)
-    Q_PLUGIN_METADATA(IID "ojn.plugin.bunny.signature" )
+  Q_OBJECT
+  Q_INTERFACES(PluginInterface)
+  Q_PLUGIN_METADATA(IID "ojn.plugin.bunny.signature" )
 
 public:
-	PluginSignature();
-	virtual ~PluginSignature();
+  PluginSignature();
 
-	virtual bool Init();
+  virtual bool Init(void) override;
+  virtual void BeforeSendMessage(Bunny *, MessagePacket *, QString) override;
 
-	void BeforeSendMessage(Bunny *, MessagePacket *, QString);
-
-	QString GetVersion() { return "1.0.0"; }
-
-	// API
-	virtual void InitApiCalls();
-
-	PLUGIN_BUNNY_API_CALL(Api_Config);
-	PLUGIN_BUNNY_API_CALL(Api_Sound);
-	PLUGIN_API_CALL(Api_PluginSound);
+  virtual const QString GetVersion() { return "1.0.0"; }
 
 private:
-	QByteArray GetBroadcastHTTPUserPath(Bunny *, QString);
-	QMap<QString, QVariant> pluginSounds;
+  virtual ~PluginSignature() = default;
+
+  QByteArray GetBroadcastHTTPUserPath(Bunny *, QString);
+  QMap<QString, QVariant> pluginSounds;
+
+  // API
+  virtual void InitApiCalls(void) override;
+  PLUGIN_API_CALL(Api_PluginSound);
+  PLUGIN_BUNNY_API_CALL(Api_Config);
+  PLUGIN_BUNNY_API_CALL(Api_Sound);
 };
 
 #endif

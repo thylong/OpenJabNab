@@ -2,51 +2,50 @@
 #define _PLUGINHALLOWEEN_H_
 
 #include "plugininterface.h"
-	
-class PluginHalloween : public PluginInterface
+
+class PluginHalloween
+  : public PluginInterface
 {
-	Q_OBJECT
-	Q_INTERFACES(PluginInterface)
+  Q_OBJECT
+  Q_INTERFACES(PluginInterface)
   Q_PLUGIN_METADATA(IID "ojn.plugin.bunny.halloween" )
-  
-private slots:
-	QString OnApiSpeak(Bunny *, QVariant);
+
 public:
-	PluginHalloween();
-	virtual ~PluginHalloween();
+  PluginHalloween();
 
-	void OnBunnyConnect(Bunny *);
-	void OnBunnyDisconnect(Bunny *);
-	virtual void OnCron(Bunny *, QVariant, unsigned int);
-	//bool OnRFID(Bunny *, QByteArray const&);
-	//bool OnVoiceCommand(Bunny *, QString const&, QStringList const&);
-	QString GetVersion() { return "1.0.0"; }
-	QHash<QString, QString> GetChangelog()
-	{
-		QHash<QString, QString> revisions;
-		revisions.insert("1.0.0", "Initial version (clone from surprise)");
-		return revisions;
-	}
-	QStringList GetLanguages() { return QStringList() << "fr" << "en" << "es" << "it" << "de"; }
+  virtual void OnBunnyConnect(Bunny *) override;
+  virtual void OnBunnyDisconnect(Bunny *) override;
+  virtual void OnCron(Bunny *, QVariant, unsigned int) override;
 
-	
-	void InitApiCalls();
-        QHash<QString, QString> GetExtendedApiFunctions()
-        {
-                QHash<QString, QString> list;
-                list.insert("speak", "");
-                return list;
-        }
+  virtual const QString GetVersion(void) override { return "1.0.0"; }
+  virtual const QStringList GetLanguages(void) override { return QStringList() << "fr" << "en" << "es" << "it" << "de"; }
+  virtual const QHash<QString, QString> GetChangelog(void) override
+  {
+    QHash<QString, QString> revisions;
+    revisions.insert("1.0.0", "Initial version (clone from surprise)");
+    return revisions;
+  }
 
-	
-protected:
-	bool PlaySound(Bunny *);
-	void createCron(Bunny *, int, int);
-	int GetRandomizedDelay(unsigned int, unsigned int);
+  virtual const QHash<QString, QString> GetExtendedApiFunctions(void) override
+  {
+    QHash<QString, QString> list;
+    list.insert("speak", "");
+    return list;
+  }
 
-	//PLUGIN_BUNNY_API_CALL(Api_RFID);
-	PLUGIN_BUNNY_API_CALL(Api_Sound);
-	//PLUGIN_BUNNY_API_CALL(Api_Folder);
+private:
+  virtual ~PluginHalloween() = default;
+
+  QString OnApiSpeak(Bunny *, QVariant);
+
+  bool PlaySound(Bunny *);
+  void createCron(Bunny *, int, int);
+  int GetRandomizedDelay(unsigned int, unsigned int);
+
+  virtual void InitApiCalls(void) override;
+  PLUGIN_BUNNY_API_CALL(Api_Sound);
+  //PLUGIN_BUNNY_API_CALL(Api_RFID);
+  //PLUGIN_BUNNY_API_CALL(Api_Folder);
 };
 
 #endif

@@ -2,7 +2,7 @@
 
 #include <QNetworkAccessManager>
 
-#include "ttsinterface.h"
+#include "tts/ttsinterface.h"
 
 class TTSbluemix : public TTSInterface
 {

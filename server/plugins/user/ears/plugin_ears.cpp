@@ -1,13 +1,17 @@
 #include "plugin_ears.h"
+
 #include "bunny.h"
 #include "bunnymanager.h"
-#include "ambientpacket.h"
+#include "packets/ambientpacket.h"
+#include "packets/messagepacket.h"
 #include "translator.h"
-#include "messagepacket.h"
 
-PluginEars::PluginEars():PluginInterface("ears", "Ears Pairing with another Bunny",BunnyV2Plugin | EarsPlugin ) { }
-
-PluginEars::~PluginEars() {}
+PluginEars::PluginEars()
+	: PluginInterface("ears", "Ears Pairing with another Bunny",
+										BunnyV2Plugin | EarsPlugin
+									 )
+{
+}
 
 bool PluginEars::OnEarsMove(Bunny * b, int l, int r) {
 	/* Get Setting */

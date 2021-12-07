@@ -1,21 +1,21 @@
-#include "plugin_nab2nab.h"
-#include "bunny.h"
-#include "messagepacket.h"
-#include "ttsmanager.h"
-#include "translator.h"
-
 #include <QDateTime>
 #include <QDebug>
 
-PluginNab2nab::PluginNab2nab():PluginInterface("nab2nab", "Send message to another bunny", BunnyV2Plugin | RfidPlugin | RecordPlugin | MessagePlugin)
+#include "plugin_nab2nab.h"
+
+#include "bunny.h"
+#include "packets/messagepacket.h"
+#include "tts/ttsmanager.h"
+#include "translator.h"
+
+PluginNab2nab::PluginNab2nab()
+	: PluginInterface("nab2nab", "Send message to another bunny",
+										BunnyV2Plugin | RfidPlugin | RecordPlugin | MessagePlugin
+									 )
 {
 	announceText.append(Translator::tr("Never"));
 	announceText.append(Translator::tr("On repeat"));
 	announceText.append(Translator::tr("Always"));
-}
-
-PluginNab2nab::~PluginNab2nab()
-{
 }
 
 void PluginNab2nab::OnBunnyConnect(Bunny * b)

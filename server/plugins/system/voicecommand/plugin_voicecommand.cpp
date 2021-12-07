@@ -1,22 +1,24 @@
 #include "plugin_voicecommand.h"
+
 #include <memory>
+
 #include <QRegExp>
 #include <QProcess>
-#include <QNetworkAccessManager>
 #include <QNetworkRequest>
 #include <QNetworkReply>
 #include <QUrl>
 
 #include <QFileInfo>
 #include <QFile>
+
 #include "account.h"
 #include "accountmanager.h"
 #include "bunny.h"
 #include "dbmanager.h"
-#include "translator.h"
-#include "ttsmanager.h"
-#include "messagepacket.h"
 #include "log.h"
+#include "packets/messagepacket.h"
+#include "tts/ttsmanager.h"
+#include "translator.h"
 
 PluginVoiceCommand::PluginVoiceCommand()
   : PluginInterface("voicecommand", "Voice recognition", SystemPlugin | SystemAfterPlugin)
@@ -292,6 +294,7 @@ void PluginVoiceCommand::recognitionFinished(QNetworkReply* rep)
   }
 }
 
+/*
 bool PluginVoiceCommand::OnVoiceBeforeBunny(QString const& command, QString const& otherCmds)
 {
 	if(command == otherCmds)
@@ -309,6 +312,7 @@ bool PluginVoiceCommand::OnVoiceAfterBunny(QString const& command, QString const
 	}
 	return true;
 }
+*/
 
 QString PluginVoiceCommand::makeLanguage(QString lng)
 {
@@ -326,8 +330,6 @@ QString PluginVoiceCommand::makeLanguage(QString lng)
 
 	return l;
 }
-
-PluginVoiceCommand::~PluginVoiceCommand() {}
 
 void PluginVoiceCommand::InitApiCalls()
 {
@@ -714,4 +716,3 @@ PLUGIN_API_CALL(PluginVoiceCommand::Api_Language)
 		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }
-

@@ -1,15 +1,20 @@
 #include <QDateTime>
 #include <QMapIterator>
+
+#include "plugin_dico.h"
+
 #include "bunny.h"
 #include "bunnymanager.h"
 #include "cron.h"
-#include "messagepacket.h"
-#include "plugin_dico.h"
-#include "ttsmanager.h"
-#include "translator.h"
 #include "log.h"
+#include "packets/messagepacket.h"
+#include "tts/ttsmanager.h"
+#include "translator.h"
 
-PluginDico::PluginDico():PluginInterface("dico", "Dictionary", BunnyV2Plugin | PremiumPlugin | VoicePlugin | ApiPlugin)
+PluginDico::PluginDico()
+	: PluginInterface("dico", "Dictionary",
+										BunnyV2Plugin | PremiumPlugin | VoicePlugin | ApiPlugin
+									 )
 {
 }
 
@@ -28,12 +33,7 @@ QStringList PluginDico::cleanWords(QString str, Bunny * b)
 	{
 		words.removeAll(remove.trimmed());
 	}
-
 	return words;
-}
-
-PluginDico::~PluginDico()
-{
 }
 
 bool PluginDico::spellWord(Bunny * b, QString str)
@@ -88,12 +88,4 @@ bool PluginDico::OnVoiceCommand(Bunny * b, QString const& command, QStringList c
 		return true;
 	}
 	return false;
-}
-
-/*******
- * API *
- *******/
-
-void PluginDico::InitApiCalls()
-{
 }

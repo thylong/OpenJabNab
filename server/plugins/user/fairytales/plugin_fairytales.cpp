@@ -2,23 +2,25 @@
 #include <QMapIterator>
 #include <QRandomGenerator>
 #include <QTime>
+
 #include "plugin_fairytales.h"
+
 #include "account.h"
 #include "bunny.h"
-#include "cron.h"
 #include "bunnymanager.h"
-#include "messagepacket.h"
+#include "cron.h"
+#include "packets/messagepacket.h"
 #include "translator.h"
 
 PluginFairytale::PluginFairytale():PluginInterface("fairytales", "Fairy tales and nursery rhymes", BunnyV2Plugin | SingleClickPlugin | DoubleClickPlugin | ZtampPlugin | CronPlugin | RfidPlugin | VoicePlugin)
 {
 /*
-            "La nuit avant noël":"http://d39g8zahit2xdb.cloudfront.net/nab/contes/stephy-la-nuit-avant-noel-conte-noel-illustre.mp3",
-            "La valse des loups":"http://d39g8zahit2xdb.cloudfront.net/nab/contes/stephy-la-valse-des-loups-conte-illustre.mp3",
-            "Le petit chaperon rouge":"http://d39g8zahit2xdb.cloudfront.net/nab/contes/stephy-le-petit-chaperon-rouge-conte-illustre.mp3",
-            "Le rock de la sorcière":"http://d39g8zahit2xdb.cloudfront.net/nab/contes/stephy-le-rock-de-la-sorciere-conte-illustre.mp3",
-            "Le vilain petit canard":"http://d39g8zahit2xdb.cloudfront.net/nab/contes/stephy-le-vilain-petit-canard-conte-illustre.mp3",
-            "Petit moustique":"http://d39g8zahit2xdb.cloudfront.net/nab/contes/stephy-petit-moustique-conte-illustre.mp3"
+	"La nuit avant noël":"http://d39g8zahit2xdb.cloudfront.net/nab/contes/stephy-la-nuit-avant-noel-conte-noel-illustre.mp3",
+	"La valse des loups":"http://d39g8zahit2xdb.cloudfront.net/nab/contes/stephy-la-valse-des-loups-conte-illustre.mp3",
+	"Le petit chaperon rouge":"http://d39g8zahit2xdb.cloudfront.net/nab/contes/stephy-le-petit-chaperon-rouge-conte-illustre.mp3",
+	"Le rock de la sorcière":"http://d39g8zahit2xdb.cloudfront.net/nab/contes/stephy-le-rock-de-la-sorciere-conte-illustre.mp3",
+	"Le vilain petit canard":"http://d39g8zahit2xdb.cloudfront.net/nab/contes/stephy-le-vilain-petit-canard-conte-illustre.mp3",
+	"Petit moustique":"http://d39g8zahit2xdb.cloudfront.net/nab/contes/stephy-petit-moustique-conte-illustre.mp3"
 */
 }
 

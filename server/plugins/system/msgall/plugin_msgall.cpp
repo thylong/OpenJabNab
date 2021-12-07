@@ -1,16 +1,16 @@
 #include "plugin_msgall.h"
-#include "bunny.h"
-#include "account.h"
-#include "bunnymanager.h"
-#include "translator.h"
-#include "ttsmanager.h"
-#include "messagepacket.h"
 
-PluginMsgall::PluginMsgall():PluginInterface("msgall", "Send a message to all the bunnies connected on the server",SystemPlugin | MessagePlugin)
+#include "account.h"
+#include "bunny.h"
+#include "bunnymanager.h"
+#include "packets/messagepacket.h"
+#include "translator.h"
+#include "tts/ttsmanager.h"
+
+PluginMsgall::PluginMsgall()
+  : PluginInterface("msgall", "Send a message to all the bunnies connected on the server", SystemPlugin | MessagePlugin)
 {
 }
-
-PluginMsgall::~PluginMsgall() {}
 
 /*******
  * API *

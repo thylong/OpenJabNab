@@ -4,41 +4,42 @@
 #include <QMap>
 #include "plugininterface.h"
 
-class PluginWebradio : public PluginInterface
+class PluginWebradio
+  : public PluginInterface
 {
-	Q_OBJECT
-	Q_INTERFACES(PluginInterface)
-    Q_PLUGIN_METADATA(IID "ojn.plugin.user.webradio" )
+  Q_OBJECT
+  Q_INTERFACES(PluginInterface)
+  Q_PLUGIN_METADATA(IID "ojn.plugin.user.webradio" )
 
 public:
-	PluginWebradio();
-	virtual ~PluginWebradio();
-	virtual bool Init();
-	void OnCron(Bunny *, QVariant, unsigned int);
-	virtual bool OnRFID(Bunny *, QByteArray const&);
-	virtual bool OnRFID(Ztamp *, Bunny *);
-	bool OnVoiceCommand(Bunny *, QString const&, QStringList const&);
-	QString GetVersion() { return "2.1.1"; }
+  PluginWebradio();
+  virtual bool Init(void) override;
 
-	bool OnClick(Bunny *, PluginInterface::ClickType);
+  virtual void OnBunnyConnect(Bunny *) override;
+  virtual void OnBunnyDisconnect(Bunny *) override;
+  virtual bool OnClick(Bunny *, PluginInterface::ClickType) override;
+  virtual void OnCron(Bunny *, QVariant, unsigned int) override;
+  virtual bool OnVoiceCommand(Bunny *, QString const&, QStringList const&) override;
+  virtual bool OnRFID(Bunny *, QByteArray const&) override;
+  virtual bool OnRFID(Ztamp *, Bunny *) override;
 
-	void OnBunnyConnect(Bunny *);
-	void OnBunnyDisconnect(Bunny *);
-
-	// API
-	void InitApiCalls();
-
-	PLUGIN_BUNNY_API_CALL(Api_RFID);
-	PLUGIN_BUNNY_API_CALL(Api_Preset);
-	PLUGIN_BUNNY_API_CALL(Api_Schedule);
-	PLUGIN_BUNNY_API_CALL(Api_Url);
-	PLUGIN_API_CALL(Api_PluginPreset);
-
+  virtual const QString GetVersion(void) override { return "2.1.1"; }
 private:
-	bool streamWebradio(Bunny *, QString);
-	bool streamPresetWebradio(Bunny *, QString);
-	QMap<QString, QVariant> presets;
-	QString getRadioName(QString);
+  virtual ~PluginWebradio();
+
+  bool streamWebradio(Bunny *, QString);
+  bool streamPresetWebradio(Bunny *, QString);
+  QMap<QString, QVariant> presets;
+  QString getRadioName(QString);
+
+  // API
+  void InitApiCalls();
+
+  PLUGIN_API_CALL(Api_PluginPreset);
+  PLUGIN_BUNNY_API_CALL(Api_RFID);
+  PLUGIN_BUNNY_API_CALL(Api_Preset);
+  PLUGIN_BUNNY_API_CALL(Api_Schedule);
+  PLUGIN_BUNNY_API_CALL(Api_Url);
 };
 
 #endif

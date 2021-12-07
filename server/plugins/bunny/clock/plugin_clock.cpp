@@ -1,17 +1,20 @@
 #include <QDateTime>
 #include <QMapIterator>
 #include <QRandomGenerator>
+
+#include "plugin_clock.h"
+
 #include "bunny.h"
 #include "bunnymanager.h"
 #include "cron.h"
-#include "messagepacket.h"
-#include "plugin_clock.h"
-#include "ttsmanager.h"
-#include "sentencemanager.h"
-#include "translator.h"
 #include "log.h"
+#include "packets/messagepacket.h"
+#include "sentencemanager.h"
+#include "tts/ttsmanager.h"
+#include "translator.h"
 
-PluginClock::PluginClock():PluginInterface("clock", "Clock", BunnyV1Plugin | BunnyV2Plugin | SingleClickPlugin | DoubleClickPlugin | CronPlugin | VoicePlugin | ApiPlugin)
+PluginClock::PluginClock()
+	: PluginInterface("clock", "Clock", BunnyV1Plugin | BunnyV2Plugin | SingleClickPlugin | DoubleClickPlugin | CronPlugin | VoicePlugin | ApiPlugin)
 {
 	Cron::Register(this, 30, 0, 0, NULL, Cron::Classic);
 	// Check available folders
@@ -448,4 +451,3 @@ PLUGIN_BUNNY_API_CALL(PluginClock::Api_Voice)
 		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }
-

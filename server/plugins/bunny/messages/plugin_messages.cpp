@@ -5,27 +5,26 @@
 #include <QRegExp>
 #include <QUrl>
 #include <memory>
-#include "bunny.h"
-#include "ambientpacket.h"
-#include "bunnymanager.h"
-#include "httprequest.h"
-#include "log.h"
-#include "cron.h"
-#include "messagepacket.h"
-#include "settings.h"
-#include "ttsmanager.h"
-#include "translator.h"
-#include "ztampmanager.h"
-#include "pluginmanager.h"
+
 #include "plugin_messages.h"
 
-PluginMessages::PluginMessages():PluginInterface("messages", "Repeat previous messages", BunnyV2Plugin | RfidPlugin | SingleClickPlugin | DoubleClickPlugin | VoicePlugin | CronPlugin )
+#include "bunny.h"
+#include "bunnymanager.h"
+#include "cron.h"
+#include "httprequest.h"
+#include "log.h"
+#include "packets/ambientpacket.h"
+#include "packets/messagepacket.h"
+#include "pluginmanager.h"
+#include "settings.h"
+#include "tts/ttsmanager.h"
+#include "translator.h"
+#include "ztampmanager.h"
+
+PluginMessages::PluginMessages()
+	: PluginInterface("messages", "Repeat previous messages", BunnyV2Plugin | RfidPlugin | SingleClickPlugin | DoubleClickPlugin | VoicePlugin | CronPlugin )
 {
 	PluginStateChanged();
-}
-
-PluginMessages::~PluginMessages()
-{
 }
 
 void PluginMessages::MessageNotification(Bunny * b)
@@ -220,11 +219,6 @@ int PluginMessages::CountMessages(Bunny * b, QString plugin)
 		}
 	}
 	return count;
-}
-
-bool PluginMessages::Init()
-{
-	return true;
 }
 
 void PluginMessages::OnCron(Bunny * b, QVariant v, unsigned int)

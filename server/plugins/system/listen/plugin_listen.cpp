@@ -1,14 +1,14 @@
 #include "plugin_listen.h"
-#include "ambientpacket.h"
-#include "messagepacket.h"
+
 #include "bunny.h"
+#include "packets/ambientpacket.h"
+#include "packets/messagepacket.h"
 #include "translator.h"
 
-PluginListen::PluginListen():PluginInterface("listen", "Manage Bunny's availability to ear sounds",SystemPlugin)
+PluginListen::PluginListen()
+	: PluginInterface("listen", "Manage Bunny's availability to ear sounds",SystemPlugin)
 {
 }
-
-PluginListen::~PluginListen() {}
 
 void PluginListen::OnBunnyConnect(Bunny * b)
 {
@@ -107,4 +107,3 @@ PLUGIN_BUNNY_API_CALL(PluginListen::Api_Config)
 		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }
-

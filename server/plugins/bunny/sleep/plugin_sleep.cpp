@@ -6,13 +6,17 @@
 #include "nabaztagmanager.h"
 #include "cron.h"
 #include "log.h"
-#include "messagepacket.h"
-#include "packet.h"
+#include "packets/packet.h"
+#include "packets/messagepacket.h"
+#include "packets/sleeppacket.h"
 #include "settings.h"
-#include "sleeppacket.h"
 #include "translator.h"
 
-PluginSleep::PluginSleep():PluginInterface("sleep", "Advanced sleep and wake up",BunnyV1Plugin | BunnyV2Plugin | CronPlugin | SingleClickPlugin | DoubleClickPlugin | RfidPlugin | EarsPlugin | VoicePlugin) {}
+PluginSleep::PluginSleep()
+	: PluginInterface("sleep", "Advanced sleep and wake up",
+										BunnyV1Plugin | BunnyV2Plugin | CronPlugin | SingleClickPlugin | DoubleClickPlugin | RfidPlugin | EarsPlugin | VoicePlugin)
+{
+}
 
 PluginSleep::~PluginSleep()
 {
@@ -21,11 +25,7 @@ PluginSleep::~PluginSleep()
 
 bool PluginSleep::OnVoiceCommand(Bunny * b, QString const& command, QStringList const&)
 {
-	if(getPertinence(Translator::tr("sleep", b), command))
-	{
-		return true;
-	}
-	return false;
+	return getPertinence(Translator::tr("sleep", b), command);
 }
 
 bool PluginSleep::OnRFID(Bunny * b, QByteArray const& tag)

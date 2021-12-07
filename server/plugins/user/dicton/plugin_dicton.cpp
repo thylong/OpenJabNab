@@ -1,19 +1,23 @@
+#include <memory>
+
 #include <QDateTime>
 #include <QCryptographicHash>
 #include <QXmlStreamReader>
 #include <QMapIterator>
 #include <QRegExp>
 #include <QUrl>
-#include <memory>
+
+#include "plugin_dicton.h"
+#include "plugin_dicton_data.h"
+
 #include "bunny.h"
 #include "bunnymanager.h"
 #include "httprequest.h"
-#include "log.h"
 #include "cron.h"
-#include "messagepacket.h"
-#include "plugin_dicton.h"
+#include "log.h"
+#include "packets/messagepacket.h"
 #include "settings.h"
-#include "ttsmanager.h"
+#include "tts/ttsmanager.h"
 #include "translator.h"
 
 PluginDicton::PluginDicton():PluginInterface("dicton", "Dicton",BunnyV2Plugin | SingleClickPlugin | DoubleClickPlugin | CronPlugin | MessagePlugin | ApiPlugin | RfidPlugin)

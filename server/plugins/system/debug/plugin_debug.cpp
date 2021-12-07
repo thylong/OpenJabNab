@@ -1,27 +1,21 @@
 #include <QDateTime>
 #include <QStringList>
 #include <QtSql/QtSql>
-#include "dbmanager.h"
-#include "plugin_debug.h"
-#include "ambientpacket.h"
+#include <QDate>
+#include <QMap>
+
 #include "bunny.h"
 #include "bunnymanager.h"
 #include "cron.h"
+#include "dbmanager.h"
 #include "log.h"
 #include "settings.h"
-#include <QDate>
-#include <QMap>
-#include "bunny.h"
-#include "messagepacket.h"
-#include "packet.h"
-#include "sleeppacket.h"
 #include "translator.h"
 
-PluginDebug::PluginDebug():PluginInterface("debug", "Help debug", SystemPlugin)
-{
-}
+#include "plugin_debug.h"
 
-PluginDebug::~PluginDebug()
+PluginDebug::PluginDebug()
+	: PluginInterface("debug", "Help debug", SystemPlugin)
 {
 }
 

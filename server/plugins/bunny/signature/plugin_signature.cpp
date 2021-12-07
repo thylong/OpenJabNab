@@ -1,13 +1,12 @@
 #include <QCryptographicHash>
+
 #include "plugin_signature.h"
-#include "messagepacket.h"
+
+#include "packets/messagepacket.h"
 #include "translator.h"
 
-PluginSignature::PluginSignature():PluginInterface("signature", "Add signature before or after a message", BunnyV2Plugin)
-{
-}
-
-PluginSignature::~PluginSignature()
+PluginSignature::PluginSignature()
+	: PluginInterface("signature", "Add signature before or after a message", BunnyV2Plugin)
 {
 }
 
@@ -367,4 +366,3 @@ PLUGIN_API_CALL(PluginSignature::Api_PluginSound)
 		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }
-

@@ -4,18 +4,24 @@
 #include "plugininterface.h"
 #include "pluginmessageinterface.h"
 
-class PluginMsgall : public PluginInterface, PluginMessageInterface
+class PluginMsgall
+  : public PluginInterface
+  , private PluginMessageInterface
 {
-	Q_OBJECT
-	Q_INTERFACES(PluginInterface PluginMessageInterface)
+  Q_OBJECT
+  Q_INTERFACES(PluginInterface PluginMessageInterface)
 
-    Q_PLUGIN_METADATA(IID "ojn.plugin.system.msgall")
+  Q_PLUGIN_METADATA(IID "ojn.plugin.system.msgall")
 
 public:
-	PluginMsgall();
-	virtual ~PluginMsgall();
-void InitApiCalls();
-	PLUGIN_API_CALL(Api_Say);
+  PluginMsgall();
+
+private:
+  virtual ~PluginMsgall() = default;
+
+  // API
+  virtual void InitApiCalls() override;
+  PLUGIN_API_CALL(Api_Say);
 };
 
 #endif

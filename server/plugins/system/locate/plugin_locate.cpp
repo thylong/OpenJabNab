@@ -1,16 +1,17 @@
 #include <QDateTime>
 #include <QStringList>
-#include "plugin_locate.h"
-#include "messagepacket.h"
-#include "packet.h"
+
 #include "bunny.h"
 #include "bunnymanager.h"
+#include "dbmanager.h"
 #include "log.h"
 #include "settings.h"
 #include "translator.h"
-#include "dbmanager.h"
 
-PluginLocate::PluginLocate():PluginInterface("locate", "Manage Locate requests", RequiredPlugin)
+#include "plugin_locate.h"
+
+PluginLocate::PluginLocate()
+	: PluginInterface("locate", "Manage Locate requests", RequiredPlugin)
 {
 	bool changed = false;
 	QStringList bad = GetSettings("Server/List", QStringList()).toStringList();
@@ -30,6 +31,21 @@ PluginLocate::PluginLocate():PluginInterface("locate", "Manage Locate requests",
 	}
 	customList << "PingServer" << "BroadServer" << "XmppServer" << "ListeningXmppPort" << "ListeningXmppAltPort" << "XmppTcpIdleTime"  << "XmppVioletPlatformComponent" << "XmppVioletObjectsComponent" << "VioletAppletComponent" << "XmppVioletPlatformClient";
 	configList << "wifi_ssid" << "wifi_auth" << "wifi_crypt" << "wifi_key" << "server_url" << "dhcp" << "ip" << "mask" << "gateway" << "dns_server";
+}
+
+
+const QHash<QString, QString> PluginLocate::GetChangelog(void)
+{
+	QHash<QString, QString> revisions;
+	revisions.insert("1.2.1", "Save bootcode version in bunny");
+	revisions.insert("1.3.0", "Get platform for bad configured bunnies");
+	revisions.insert("1.3.1", "Better API");
+	revisions.insert("1.3.2", "Add API to change bunny config");
+	revisions.insert("1.4.0", "Add function to remotely reconfigure bunny");
+	revisions.insert("1.5.0", "Add new fields in locate string");
+	revisions.insert("1.6.0", "Add relocate feature, and list of bunnies");
+	revisions.insert("1.6.1", "Add feature to change wifi setup");
+	return revisions;
 }
 
 void PluginLocate::OnBunnyConnect(Bunny * b)
@@ -439,4 +455,3 @@ PLUGIN_BUNNY_API_CALL(PluginLocate::Api_GetCustomLocateSetting)
 	}
 	return new ApiAnswers::Error(QString("'%1' is not a setting for this plugin").arg(hParam));
 }
-

@@ -1,40 +1,42 @@
 #ifndef _PLUGINTTS_H_
 #define _PLUGINTTS_H_
 
-#include "apimanager.h"
 #include "plugininterface.h"
 
-class PluginTTS : public PluginInterface
+class PluginTTS
+  : public PluginInterface
 {
-	Q_OBJECT
-	Q_INTERFACES(PluginInterface)
-    Q_PLUGIN_METADATA(IID "ojn.plugin.bunny.tts" )
-
-private slots:
-	QString OnApiSay(Bunny *, QVariant);
+  Q_OBJECT
+  Q_INTERFACES(PluginInterface)
+  Q_PLUGIN_METADATA(IID "ojn.plugin.bunny.tts")
 
 public:
-	PluginTTS();
-	virtual ~PluginTTS() {};
-	QString GetVersion() { return "1.2.0"; }
-	QHash<QString, QString> GetChangelog()
-	{
-		QHash<QString, QString> revisions;
-		revisions.insert("1.2.0", "Add support for Nabaztag V1");
-		return revisions;
-	}
-	QHash<QString, QString> GetExtendedApiFunctions()
-	{
-		QHash<QString, QString> list;
-		list.insert("say", "string");
-		return list;
-	}
+  PluginTTS();
 
-	// API
-	void InitApiCalls();
-	PLUGIN_BUNNY_API_CALL(Api_Say);
+  QString OnApiSay(Bunny *, QVariant);
+
+  virtual const QString GetVersion(void) override { return "1.2.0"; }
+  virtual const QHash<QString, QString> GetChangelog(void) override
+  {
+    QHash<QString, QString> revisions;
+    revisions.insert("1.2.0", "Add support for Nabaztag V1");
+    return revisions;
+  }
+  virtual const QHash<QString, QString> GetExtendedApiFunctions(void) override
+  {
+    QHash<QString, QString> list;
+    list.insert("say", "string");
+    return list;
+  }
+
 private:
-	bool sayText(Bunny *b, const QString& str);
+  virtual ~PluginTTS() = default;
+
+  bool sayText(Bunny *b, const QString& str);
+
+  // API
+  void InitApiCalls();
+  PLUGIN_BUNNY_API_CALL(Api_Say);
 };
 
 #endif

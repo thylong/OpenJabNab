@@ -1,15 +1,19 @@
-#include <QMap>
 #include <QMapIterator>
 #include <QTime>
+
 #include "plugin_webradio.h"
+
 #include "account.h"
 #include "bunny.h"
-#include "cron.h"
 #include "bunnymanager.h"
-#include "messagepacket.h"
+#include "cron.h"
+#include "packets/messagepacket.h"
 #include "translator.h"
 
-PluginWebradio::PluginWebradio():PluginInterface("webradio", "WebRadio", BunnyV2Plugin | SingleClickPlugin | DoubleClickPlugin | ZtampPlugin | CronPlugin | RfidPlugin)
+PluginWebradio::PluginWebradio()
+	: PluginInterface("webradio", "WebRadio",
+										BunnyV2Plugin | SingleClickPlugin | DoubleClickPlugin | ZtampPlugin | CronPlugin | RfidPlugin
+									 )
 {
 }
 
@@ -730,4 +734,3 @@ PLUGIN_API_CALL(PluginWebradio::Api_RemovePluginPreset)
 	return new ApiAnswers::Ok(Translator::tr("Remove preset '%1'", account).arg(hRequest.GetArg("name")));
 }
 */
-

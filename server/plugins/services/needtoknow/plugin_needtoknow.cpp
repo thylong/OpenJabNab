@@ -1,3 +1,5 @@
+#include <memory>
+
 #include <QDateTime>
 #include <QRegExp>
 #include <QCryptographicHash>
@@ -6,24 +8,36 @@
 #include <QNetworkReply>
 #include <QMapIterator>
 #include <QRegExp>
-#include <memory>
+
+#include "plugin_needtoknow.h"
+
 #include "bunny.h"
 #include "bunnymanager.h"
-#include "httprequest.h"
-#include "log.h"
 #include "cron.h"
-#include "messagepacket.h"
-#include "plugin_needtoknow.h"
+#include "log.h"
+#include "packets/messagepacket.h"
 #include "settings.h"
-#include "ttsmanager.h"
+#include "tts/ttsmanager.h"
 #include "translator.h"
 
 #define RANDOMIZEDRATIO 20
 
 PluginNeedtoknow::PluginNeedtoknow()
-: PluginInterface("needtoknow", "Need to know", BunnyV2Plugin | SingleClickPlugin | DoubleClickPlugin | CronPlugin | RfidPlugin | MessagePlugin | ApiPlugin)
-, _http(this)
+	: PluginInterface("needtoknow", "Need to know",
+										BunnyV2Plugin | SingleClickPlugin | DoubleClickPlugin | CronPlugin | RfidPlugin | MessagePlugin | ApiPlugin
+									 )
+	, _http(this)
 {
+}
+
+const QHash<QString, QString> PluginNeedtoknow::GetChangelog(void)
+{
+	QHash<QString, QString> revisions;
+	revisions.insert("1.0.0", "Initial release");
+	revisions.insert("1.0.1", "Add some API");
+	revisions.insert("1.0.2", "Bug fix in API");
+	revisions.insert("1.0.3", "Fix encoding and remove details");
+	return revisions;
 }
 
 QString PluginNeedtoknow::OnApiGet(Bunny *b, QVariant v)
@@ -35,10 +49,6 @@ QString PluginNeedtoknow::OnApiGet(Bunny *b, QVariant v)
 	}
 	getNTKPage(b, language, true);
 	return QString();
-}
-
-PluginNeedtoknow::~PluginNeedtoknow()
-{
 }
 
 int PluginNeedtoknow::GetRandomizedDelay(unsigned int delay)

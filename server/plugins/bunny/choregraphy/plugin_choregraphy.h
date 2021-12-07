@@ -3,35 +3,33 @@
 
 #include "plugininterface.h"
 
-class PluginChoregraphy : public PluginInterface
+class PluginChoregraphy
+  : public PluginInterface
 {
-	Q_OBJECT
-	Q_INTERFACES(PluginInterface)
-    Q_PLUGIN_METADATA(IID "ojn.plugin.bunny.choregraphy" )
+  Q_OBJECT
+  Q_INTERFACES(PluginInterface)
+  Q_PLUGIN_METADATA(IID "ojn.plugin.bunny.choregraphy" )
 
 public:
-	PluginChoregraphy();
-	virtual ~PluginChoregraphy();
+  PluginChoregraphy();
 
-	virtual bool Init();
+  virtual void BeforeSendMessage(Bunny *, MessagePacket *, QString) override;
 
-	void BeforeSendMessage(Bunny *, MessagePacket *, QString);
+  virtual const QString GetVersion(void) override { return "1.0.0"; }
+  virtual const QStringList GetLanguages(void) override { return QStringList() << "all"; }
+  virtual const QHash<QString, QString> GetChangelog(void) override
+  {
+    QHash<QString, QString> revisions;
+    revisions.insert("1.0.0", "Initial revision");
+    return revisions;
+  }
 
-	QString GetVersion() { return "1.0.0"; }
-	QHash<QString, QString> GetChangelog()
-	{
-		QHash<QString, QString> revisions;
-		revisions.insert("1.0.0", "Initial revision");
-		return revisions;
-	}
+private:
+  virtual ~PluginChoregraphy() = default;
 
-	QStringList GetLanguages() { return QStringList() << "all"; }
-
-	// API
-	virtual void InitApiCalls();
-
-	PLUGIN_BUNNY_API_CALL(Api_Config);
-
+  // API
+  virtual void InitApiCalls();
+  PLUGIN_BUNNY_API_CALL(Api_Config);
 };
 
 #endif

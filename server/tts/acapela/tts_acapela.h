@@ -2,9 +2,9 @@
 
 #include <QNetworkAccessManager>
 
-#include "ttsinterface.h"
+#include "tts/ttsinterface.h"
 
-class TTSacapela 
+class TTSacapela
   : public TTSInterface
 {
   Q_OBJECT

@@ -2,6 +2,7 @@
 #include <QCoreApplication>
 #include <QDataStream>
 #include <QFlag>
+
 #include "account.h"
 #include "settings.h"
 #include "log.h"
@@ -194,4 +195,3 @@ QDir * Account::GetUserDir()
 	userDir.setNameFilters(filters);
 	return new QDir(userDir);
 }
-

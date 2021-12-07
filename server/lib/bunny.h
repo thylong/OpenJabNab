@@ -7,16 +7,15 @@
 #include <QString>
 #include <QVariant>
 #include <QRegExp>
-#include "apihandler.h"
 
+#include "apihandler.h"
 #include "global.h"
-#include "packet.h"
-//#include "accountmanager.h"
+#include "packets/packet.h"
 #include "plugininterface.h"
 
 class XmppHandler;
 
-class OJN_EXPORT Bunny 
+class OJN_EXPORT Bunny
 	: public ApiHandler<Bunny>
 {
 	friend class BunnyManager;

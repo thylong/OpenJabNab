@@ -1,51 +1,51 @@
 #ifndef _PLUGINCALLURL_H_
 #define _PLUGINCALLURL_H_
 
-#include <QUrl>
-#include <QMultiMap>
-#include <QTextStream>
 #include "plugininterface.h"
 
-class PluginCallURL : public PluginInterface
+class PluginCallURL
+  : public PluginInterface
 {
-	Q_OBJECT
-	Q_INTERFACES(PluginInterface)
-    Q_PLUGIN_METADATA(IID "ojn.plugin.tool.callurl" )
+  Q_OBJECT
+  Q_INTERFACES(PluginInterface)
+  Q_PLUGIN_METADATA(IID "ojn.plugin.tool.callurl")
 
 public:
-	PluginCallURL();
-	virtual ~PluginCallURL();
+  PluginCallURL();
 
-	bool OnClick(Bunny *, PluginInterface::ClickType);
-	bool OnRFID(Bunny * b, QByteArray const& tag);
-	void OnCron(Bunny *, QVariant, unsigned int);
-	void OnBunnyConnect(Bunny *);
-	void OnBunnyDisconnect(Bunny *);
-	void AfterBunnyUnregistered(Bunny *) {};
-	void CallURL(Bunny *, QString);
-	bool OnEarsMove(Bunny *, int, int);
-	bool OnVoiceCommand(Bunny *, QString const&, QStringList const&);
+  void CallURL(Bunny *, QString) ;
 
-	QString GetVersion() { return "2.0.5"; }
-	QHash<QString, QString> GetChangelog()
-	{
-		QHash<QString, QString> revisions;
-		revisions.insert("2.0.5", "Add supported languages informations");
-		return revisions;
-	}
-	QStringList GetLanguages() { return QStringList() << "all"; }
+  virtual bool OnClick(Bunny *, PluginInterface::ClickType) override;
+  virtual bool OnRFID(Bunny * b, QByteArray const& tag) override;
+  virtual void OnCron(Bunny *, QVariant, unsigned int) override;
+  virtual void OnBunnyConnect(Bunny *) override;
+  virtual void OnBunnyDisconnect(Bunny *) override;
+  virtual bool OnEarsMove(Bunny *, int, int) override;
+  virtual bool OnVoiceCommand(Bunny *, QString const&, QStringList const&) override;
 
-	// API
-	void InitApiCalls();
-	PLUGIN_BUNNY_API_CALL(Api_Url);
-	PLUGIN_BUNNY_API_CALL(Api_Schedule);
-	PLUGIN_BUNNY_API_CALL(Api_RFID);
-	PLUGIN_BUNNY_API_CALL(Api_Voice);
-	PLUGIN_BUNNY_API_CALL(Api_Ear);
-	PLUGIN_API_CALL(Api_Config);
+  virtual const QString GetVersion(void) override { return "2.0.5"; }
+  virtual const QStringList GetLanguages(void) override { return QStringList() << "all"; }
+  virtual const QHash<QString, QString> GetChangelog(void) override
+  {
+    QHash<QString, QString> revisions;
+    revisions.insert("2.0.5", "Add supported languages informations");
+    return revisions;
+  }
+
 private:
-	QString GetURL(Bunny *, QString);
-	QString MakeNextName(Bunny *);
+  virtual ~PluginCallURL();
+
+  QString GetURL(Bunny *, QString);
+  QString MakeNextName(Bunny *);
+
+  // API
+  void InitApiCalls();
+  PLUGIN_API_CALL(Api_Config);
+  PLUGIN_BUNNY_API_CALL(Api_Url);
+  PLUGIN_BUNNY_API_CALL(Api_Schedule);
+  PLUGIN_BUNNY_API_CALL(Api_RFID);
+  PLUGIN_BUNNY_API_CALL(Api_Voice);
+  PLUGIN_BUNNY_API_CALL(Api_Ear);
 };
 
 #endif

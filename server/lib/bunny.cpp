@@ -5,25 +5,25 @@
 #include <QDateTime>
 #include <QtSql/QtSql>
 
+#include "account.h"
 #include "accountmanager.h"
-#include "dbmanager.h"
-#include "ambientpacket.h"
-#include "chorconfigpacket.h"
-#include "serviceconfigpacket.h"
-#include "messagepacket.h"
-#include "choregraphy.h"
 #include "bunny.h"
+#include "choregraphy.h"
 #include "cron.h"
-#include "log.h"
+#include "dbmanager.h"
 #include "httprequest.h"
+#include "log.h"
+#include "packets/ambientpacket.h"
+#include "packets/chorconfigpacket.h"
+#include "packets/serviceconfigpacket.h"
+#include "packets/messagepacket.h"
+#include "packets/sleeppacket.h"
 #include "plugininterface.h"
 #include "pluginmanager.h"
-#include "sleeppacket.h"
-#include "xmpphandler.h"
-#include "account.h"
-#include "translator.h"
-#include "ttsmanager.h"
 #include "settings.h"
+#include "translator.h"
+#include "tts/ttsmanager.h"
+#include "xmpphandler.h"
 
 #define SINGLE_CLICK_PLUGIN_SETTINGNAME "singleClickPlugin"
 #define DOUBLE_CLICK_PLUGIN_SETTINGNAME "doubleClickPlugin"
@@ -874,7 +874,7 @@ void Bunny::SaveConfig()
 		{
 			//LogDebug(QString("Updating Bunny %1/%2 in DB").arg(QString(GetID())).arg(GetBunnyName()));
 			q = "UPDATE bunny set`settings`=:settings, `server_id`=:server, `account_id`=(SELECT `id` FROM account WHERE `username`=:username) WHERE `mac`=:mac";
-		} 
+		}
 		else if(nb == 0)
 		{
 			//LogDebug(QString("Adding new Bunny in DB for %1/%2").arg(QString(GetID())).arg(GetBunnyName()));
@@ -897,7 +897,7 @@ void Bunny::SaveConfig()
 			{
 				LogError(QString("2/2 Impossible to save bunny in DB : %1").arg(query2.lastError().driverText()));
 			}
-			else 
+			else
 				needSave = false;
 		}
 	}

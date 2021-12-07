@@ -4,7 +4,8 @@
 #include <QMultiMap>
 #include <QTextStream>
 #include <QThread>
-#include "ttsinterface.h"
+
+#include "tts/ttsinterface.h"
 
 class TTSPico : public TTSInterface
 {

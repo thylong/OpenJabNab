@@ -1,17 +1,19 @@
+#include <memory>
+
 #include <QDir>
 #include <QCryptographicHash>
-#include <memory>
+
 #include "plugin_tts.h"
+
 #include "bunny.h"
 #include "bunnymanager.h"
-#include "httprequest.h"
-#include "messagepacket.h"
+#include "packets/messagepacket.h"
 #include "settings.h"
 #include "translator.h"
-#include "ttsmanager.h"
+#include "tts/ttsmanager.h"
 
 PluginTTS::PluginTTS()
-	: PluginInterface("tts", "TTS Plugin, Send Text to Bunny", 
+	: PluginInterface("tts", "TTS Plugin, Send Text to Bunny",
 										BunnyV2Plugin | BunnyV1Plugin | ApiPlugin
 									 )
 {

@@ -1,8 +1,9 @@
 #include "plugin_packet.h"
+
 #include "account.h"
 #include "bunny.h"
-#include "ambientpacket.h"
-#include "messagepacket.h"
+#include "packets/ambientpacket.h"
+#include "packets/messagepacket.h"
 
 PluginPacket::PluginPacket():PluginInterface("packet", "Send raw packets to bunny",BunnyV2Plugin) {}
 

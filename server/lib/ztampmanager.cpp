@@ -1,10 +1,10 @@
 #include <QtSql/QtSql>
+
 #include "account.h"
-#include "ztamp.h"
-#include "ztampmanager.h"
 #include "dbmanager.h"
 #include "httprequest.h"
 #include "translator.h"
+#include "ztampmanager.h"
 
 ZtampManager::ZtampManager()
 {

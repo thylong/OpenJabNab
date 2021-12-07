@@ -1,18 +1,22 @@
+#include <memory>
+
 #include <QDateTime>
 #include <QMapIterator>
-#include <memory>
+
+#include "plugin_callurl.h"
+
 #include "bunny.h"
 #include "bunnymanager.h"
-#include "httprequest.h"
-#include "log.h"
 #include "cron.h"
-#include "messagepacket.h"
-#include "plugin_callurl.h"
+#include "log.h"
+#include "packets/messagepacket.h"
 #include "settings.h"
 #include "translator.h"
-#include "plugininterface.h"
 
-PluginCallURL::PluginCallURL():PluginInterface("callurl", "Plugin to call an URL", BunnyV2Plugin | SingleClickPlugin | DoubleClickPlugin | CronPlugin | RfidPlugin | EarsPlugin)
+PluginCallURL::PluginCallURL()
+	: PluginInterface("callurl", "Plugin to call an URL",
+										BunnyV2Plugin | SingleClickPlugin | DoubleClickPlugin | CronPlugin | RfidPlugin | EarsPlugin
+									 )
 {
 }
 

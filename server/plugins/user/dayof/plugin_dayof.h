@@ -5,37 +5,47 @@
 #include <QMultiMap>
 #include <QTextStream>
 #include <QThread>
-#include "plugininterface.h"
+
 #include "pluginmessageinterface.h"
 
-class PluginDayof : public PluginInterface, PluginMessageInterface
+class PluginDayof
+	: public PluginInterface
+	, public PluginMessageInterface
 {
 	Q_OBJECT
 	Q_INTERFACES(PluginInterface PluginMessageInterface)
   Q_PLUGIN_METADATA(IID "ojn.plugin.user.dayof" )
 
-private slots:
-	QString OnApiGet(Bunny *, QVariant);
 public:
-
 	PluginDayof();
-	virtual ~PluginDayof();
 
-	bool OnClick(Bunny *, PluginInterface::ClickType);
-	void OnCron(Bunny *, QVariant, unsigned int);
-	void OnBunnyConnect(Bunny *);
-	void OnBunnyDisconnect(Bunny *);
-	bool OnVoiceCommand(Bunny *, QString const&, QStringList const&);
+
+	QString OnApiGet(Bunny *, QVariant);
+
+	virtual bool OnClick(Bunny *, PluginInterface::ClickType);
+	virtual void OnCron(Bunny *, QVariant, unsigned int);
+	virtual void OnBunnyConnect(Bunny *);
+	virtual void OnBunnyDisconnect(Bunny *);
+	virtual bool OnVoiceCommand(Bunny *, QString const&, QStringList const&);
 	virtual bool OnRFID(Bunny *, QByteArray const&);
-	QString GetVersion() { return "1.0.1"; }
 
-	QStringList GetLanguages() { return QStringList() << "fr" ; }
-	QHash<QString, QString> GetExtendedApiFunctions()
+	virtual const QString GetVersion(void) override { return "1.0.1"; }
+	virtual const QStringList GetLanguages(void) override { return QStringList() << "fr" ; }
+	virtual const QHash<QString, QString> GetExtendedApiFunctions(void) override
 	{
 		QHash<QString, QString> list;
 		list.insert("get", "");
 		return list;
 	}
+
+private:
+	virtual ~PluginDayof();
+
+	void sayDayof(Bunny *, bool);
+	void sayDayof(Bunny *);
+	void InitData();
+
+	QMap<int, QMultiMap<int, QString> > data;
 
 	// API
 	void InitApiCalls();
@@ -43,13 +53,7 @@ public:
 	PLUGIN_BUNNY_API_CALL(Api_Schedule);
 	PLUGIN_BUNNY_API_CALL(Api_Language);
 
-private:
-	void sayDayof(Bunny *, bool);
-	void sayDayof(Bunny *);
-	void InitData();
-
-	QMap<int, QMultiMap<int, QString> > data;
 };
-#include "plugin_dayof_inline.h"
+
 
 #endif

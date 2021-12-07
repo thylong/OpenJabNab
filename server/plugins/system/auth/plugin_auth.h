@@ -20,24 +20,17 @@ public:
 
 	virtual bool DoAuth(XmppHandler * xmpp, QByteArray const& data, Bunny ** pBunny, QByteArray & answer);
 
-	QString GetVersion() { return "1.1.0"; }
-	QHash<QString, QString> GetChangelog()
-	{
-		QHash<QString, QString> revisions;
-		revisions.insert("1.0.1", "Add reboot bunny on low bootcode");
-		revisions.insert("1.0.2", "Add reboot bunny on buggy bootcode");
-		revisions.insert("1.0.3", "Update settings instantly");
-		revisions.insert("1.1.0", "Identify bunny at first packet");
-		return revisions;
-	}
-	QStringList GetLanguages() { return QStringList() << "all"; }
+	virtual const QString GetVersion(void) override { return "1.1.0"; }
+	virtual const QStringList GetLanguages(void) override { return QStringList() << "all"; }
+	virtual const QHash<QString, QString> GetChangelog(void) override;
 
-	void InitApiCalls();
+private:
+	// API
+	virtual void InitApiCalls(void) override;
 	PLUGIN_API_CALL(Api_Config);
 	PLUGIN_API_CALL(Api_SelectAuth);
 	PLUGIN_API_CALL(Api_GetListOfAuths);
 
-private:
 	int currentId;
 	int minBootcode;
 	QStringList badBootcodes;

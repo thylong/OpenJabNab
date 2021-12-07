@@ -9,7 +9,6 @@ add_subdirectory(ledcustom/)
 add_subdirectory(messages/)
 add_subdirectory(signature/)
 add_subdirectory(sleep/)
-add_subdirectory(volume/)
 add_subdirectory(surprise/)
 add_subdirectory(taichi/)
-
+add_subdirectory(volume/)

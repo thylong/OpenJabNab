@@ -3,7 +3,7 @@
 
 #include "apihandler.h"
 
-class Account; 
+class Account;
 class Bunny;
 class Ztamp;
 class HTTPRequest;
@@ -71,26 +71,18 @@ protected:
 
   virtual ~PluginApiHandler() = default; // for polymorphism
 private:
-  PLUGIN_API_CALL(Api_helpPlugin)
+
+  template<typename T>
+  ApiAnswers::Answer* apiHelp(const T& map)
   {
     QMap<QString,QVariant> ret;
-    for (const auto& it: _pluginApi.apiCalls)
+    for (const auto& it: map)
       ret.insert(it.first,it.second.first.join(','));
     return new ApiAnswers::MappedList(ret);
   }
-  PLUGIN_BUNNY_API_CALL(Api_helpBunny)
-  {
-    QMap<QString,QVariant> ret;
-    for (const auto& it: _bunnyApi.apiCalls)
-      ret.insert(it.first,it.second.first.join(','));
-    return new ApiAnswers::MappedList(ret);
-  }
-  PLUGIN_ZTAMP_API_CALL(Api_helpZtamp)
-  {
-    QMap<QString,QVariant> ret;
-    for (const auto& it: _ztampApi.apiCalls)
-      ret.insert(it.first,it.second.first.join(','));
-    return new ApiAnswers::MappedList(ret);
-  }
+
+  PLUGIN_API_CALL(Api_helpPlugin)       { return apiHelp(_pluginApi.apiCalls); }
+  PLUGIN_BUNNY_API_CALL(Api_helpBunny)  { return apiHelp(_bunnyApi.apiCalls);  }
+  PLUGIN_ZTAMP_API_CALL(Api_helpZtamp)  { return apiHelp(_ztampApi.apiCalls);  }
 };
 #endif

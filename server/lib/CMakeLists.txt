@@ -13,34 +13,35 @@ add_library(${PROJECT_NAME} SHARED
 
   account.cpp
   accountmanager.cpp
-  ambientpacket.cpp
+
   apimanager.cpp
   browsercache.cpp
   browserclient.cpp
   bunny.cpp
   bunnymanager.cpp
-  chorconfigpacket.cpp
   choregraphy.cpp
-  configpacket.cpp
   cron.cpp
   dbmanager.cpp
   httphandler.cpp
   httprequest.cpp
   iq.cpp
   log.cpp
-  messagepacket.cpp
   nabaztagmanager.cpp
-  packet.cpp
+  packets/packet.cpp
+  packets/ambientpacket.cpp
+  packets/chorconfigpacket.cpp
+  packets/configpacket.cpp
+  packets/messagepacket.cpp
+  packets/serviceconfigpacket.cpp
+  packets/sleeppacket.cpp
   pluginmanager.cpp
   QsLog/QsLog.cpp
   QsLog/QsLogDest.cpp
   QsLog/QsLogDestFile.cpp
   QsLog/QsLogDestConsole.cpp
-  serviceconfigpacket.cpp
   settings.cpp
   sentencemanager.cpp
-  sleeppacket.cpp
-  ttsmanager.cpp
+  tts/ttsmanager.cpp
   translator.cpp
   xmpphandler.cpp
   ztamp.cpp

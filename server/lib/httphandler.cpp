@@ -120,7 +120,7 @@ void HttpHandler::HandleHTTPRequest()
 		{
 			if(uri.contains("rfid.jsp"))
 			{
-				LogError(QString("No action associated to RFID tag %1 for bunny %2").arg(request.GetArg("sn"), request.GetArg("t")));
+				LogError(QString("No action associated to RFID tag %1 for bunny %2").arg(request.GetArg("t"), request.GetArg("sn")));
 				request.reply = "404 Not Found";
 			}
 			else

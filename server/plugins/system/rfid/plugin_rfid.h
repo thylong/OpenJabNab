@@ -2,35 +2,38 @@
 #define _PLUGINRFID_H_
 
 #include "plugininterface.h"
-#include "httprequest.h"
 
-class PluginRFID : public PluginInterface
+class PluginRFID
+  : public PluginInterface
 {
-	Q_OBJECT
-	Q_INTERFACES(PluginInterface)
-    Q_PLUGIN_METADATA(IID "ojn.plugin.system.rfid" )
+  Q_OBJECT
+  Q_INTERFACES(PluginInterface)
+  Q_PLUGIN_METADATA(IID "ojn.plugin.system.rfid" )
 
 public:
-	PluginRFID();
-	virtual ~PluginRFID() {};
-	virtual bool HttpRequestHandle(HTTPRequest &);
-	void OnInitPacket(const Bunny *, AmbientPacket &, SleepPacket &);
+  PluginRFID();
 
-	QString GetVersion() { return "1.1.0"; }
-	QHash<QString, QString> GetChangelog()
-	{
-		QHash<QString, QString> revisions;
-		revisions.insert("1.1.0", "Add support for bad bunnies");
-		return revisions;
-	}
-	QStringList GetLanguages() { return QStringList() << "all"; }
+  virtual bool HttpRequestHandle(HTTPRequest &) override;
+  virtual void OnInitPacket(const Bunny *, AmbientPacket &, SleepPacket &) override;
 
-	void InitApiCalls();
-protected:
-        PLUGIN_BUNNY_API_CALL(Api_Config);
-	PLUGIN_API_CALL(Api_GetLastTag);
-	PLUGIN_API_CALL(Api_GetLastTagForBunny);
-	PLUGIN_BUNNY_API_CALL(Api_GetLastBunnyTag);
+  virtual const QString GetVersion(void) override { return "1.1.0"; }
+  virtual const QStringList GetLanguages(void) override { return QStringList() << "all"; }
+  virtual const QHash<QString, QString> GetChangelog(void) override
+  {
+    QHash<QString, QString> revisions;
+    revisions.insert("1.1.0", "Add support for bad bunnies");
+    return revisions;
+  }
+
+private:
+  virtual ~PluginRFID() = default;
+
+  // API
+  virtual void InitApiCalls(void) override;
+  PLUGIN_API_CALL(Api_GetLastTag);
+  PLUGIN_API_CALL(Api_GetLastTagForBunny);
+  PLUGIN_BUNNY_API_CALL(Api_Config);
+  PLUGIN_BUNNY_API_CALL(Api_GetLastBunnyTag);
 };
 
 #endif

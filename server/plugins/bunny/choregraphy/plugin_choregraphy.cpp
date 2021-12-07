@@ -1,16 +1,15 @@
 #include <QRegExp>
 #include <QRandomGenerator>
+
 #include "plugin_choregraphy.h"
-#include "messagepacket.h"
+
+#include "packets/messagepacket.h"
 #include "translator.h"
 
 // P_L "+QString::number(QRandomGenerator::global()->generate() % 8).toLatin1()
 
-PluginChoregraphy::PluginChoregraphy():PluginInterface("choregraphy", "Play choregraphy during sound playback", BunnyV2Plugin | DevPlugin)
-{
-}
-
-PluginChoregraphy::~PluginChoregraphy()
+PluginChoregraphy::PluginChoregraphy()
+	: PluginInterface("choregraphy", "Play choregraphy during sound playback", BunnyV2Plugin | DevPlugin)
 {
 }
 
@@ -30,11 +29,6 @@ void PluginChoregraphy::BeforeSendMessage(Bunny * b, MessagePacket * m, QString 
 		message.replace(rx, "\\1PL " + choregraphy + "\nMW");
 		m->SetMessage(message.toLatin1());
 	}
-}
-
-bool PluginChoregraphy::Init()
-{
-	return true;
 }
 
 void PluginChoregraphy::InitApiCalls()

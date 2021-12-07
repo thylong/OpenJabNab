@@ -3,37 +3,43 @@
 
 #include <QDateTime>
 #include <QMap>
+
 #include "plugininterface.h"
 
-typedef struct {
-	Bunny * bunny;
-	unsigned int volume;
-	QDateTime date;
-} ListenElement;
-
-class PluginListen : public PluginInterface
+class PluginListen
+  : public PluginInterface
 {
-	Q_OBJECT
-	Q_INTERFACES(PluginInterface)
+  Q_OBJECT
+  Q_INTERFACES(PluginInterface)
 
-    Q_PLUGIN_METADATA(IID "ojn.plugin.system.listen" )
+  Q_PLUGIN_METADATA(IID "ojn.plugin.system.listen" )
 
 public:
-	PluginListen();
-	virtual ~PluginListen();
+  PluginListen();
 
-	bool XmppBunnyMessage(Bunny *, QByteArray const&);
-	void OnBunnyConnect(Bunny *);
-	void OnInitPacket(const Bunny *, AmbientPacket &, SleepPacket &);
-	void SendListeningGain(Bunny *);
-	QStringList GetLanguages() { return QStringList() << "all"; }
-	QString GetVersion() { return "1.0.0"; }
+  virtual void OnBunnyConnect(Bunny *) override;
+  virtual bool XmppBunnyMessage(Bunny *, QByteArray const&) override;
+  virtual void OnInitPacket(const Bunny *, AmbientPacket &, SleepPacket &) override;
 
-	void InitApiCalls();
-	PLUGIN_BUNNY_API_CALL(Api_Config);
+  virtual const QString GetVersion(void) override { return "1.0.0"; }
+  virtual const QStringList GetLanguages(void) override { return QStringList() << "all"; }
 
 private:
-	QMap<QByteArray, ListenElement> listenList;
+  virtual ~PluginListen() = default;
+
+  void SendListeningGain(Bunny *);
+
+  // API
+  virtual void InitApiCalls(void) override;
+  PLUGIN_BUNNY_API_CALL(Api_Config);
+
+  typedef struct {
+    Bunny * bunny;
+    unsigned int volume;
+    QDateTime date;
+  } ListenElement;
+
+  QMap<QByteArray, ListenElement> listenList;
 };
 
 #endif

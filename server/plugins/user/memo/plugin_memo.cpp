@@ -1,17 +1,20 @@
+#include <memory>
+
 #include <QDateTime>
 #include <QCryptographicHash>
 #include <QMapIterator>
 #include <QRegExp>
-#include <memory>
+
+#include "plugin_memo.h"
+
 #include "bunny.h"
 #include "bunnymanager.h"
+#include "cron.h"
 #include "httprequest.h"
 #include "log.h"
-#include "cron.h"
-#include "messagepacket.h"
-#include "plugin_memo.h"
+#include "packets/messagepacket.h"
 #include "settings.h"
-#include "ttsmanager.h"
+#include "tts/ttsmanager.h"
 #include "translator.h"
 
 PluginMemo::PluginMemo():PluginInterface("memo", "Memo", BunnyV1Plugin | BunnyV2Plugin | CronPlugin)
@@ -214,4 +217,3 @@ PLUGIN_BUNNY_API_CALL(PluginMemo::Api_Schedule)
 		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }
-

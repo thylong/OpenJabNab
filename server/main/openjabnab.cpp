@@ -17,12 +17,11 @@
 #include "log.h"
 #include "nabaztagmanager.h"
 #include "openjabnab.h"
-//#include "netdump.h"
 #include "pluginmanager.h"
 #include "settings.h"
 #include "sentencemanager.h"
 #include "translator.h"
-#include "ttsmanager.h"
+#include "tts/ttsmanager.h"
 #include "xmpphandler.h"
 #include "ztamp.h"
 #include "ztampmanager.h"
@@ -151,7 +150,7 @@ OpenJabNab::OpenJabNab(int argc, char ** argv)
 					//LogDebug(QString("Should delete XMPPHandler 0x%1").arg((quintptr)*it, QT_POINTER_SIZE * 2, 16, QChar('0')));
 					(*it)->cleanup();
 					it = _xmppHandlers.erase(it);
-				}				
+				}
 				else
 					++it;
 			}

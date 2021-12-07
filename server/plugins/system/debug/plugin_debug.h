@@ -6,27 +6,30 @@
 #include <QPair>
 #include <QStringList>
 #include <QTime>
+
 #include "plugininterface.h"
-#include "httprequest.h"
 
-class PluginDebug : public PluginInterface
+class PluginDebug
+  : public PluginInterface
 {
-	Q_OBJECT
-	Q_INTERFACES(PluginInterface)
+  Q_OBJECT
+  Q_INTERFACES(PluginInterface)
 
-    Q_PLUGIN_METADATA(IID "ojn.plugin.system.debug" )
+  Q_PLUGIN_METADATA(IID "ojn.plugin.system.debug" )
 
 public:
-	PluginDebug();
-	virtual ~PluginDebug();
-	void InitApiCalls();
-	bool XmppBunnyMessage(Bunny *, QByteArray const&);
-	QString GetVersion() { return "0.1.0"; }
+  PluginDebug();
 
-protected:
-	PLUGIN_BUNNY_API_CALL(Api_Info);
-	PLUGIN_API_CALL(Api_Config);
+  virtual bool XmppBunnyMessage(Bunny *, QByteArray const&) override;
+  virtual const QString GetVersion(void) override { return "0.1.0"; }
+
 private:
+  virtual ~PluginDebug() = default;
+
+  // API
+  void InitApiCalls();
+  PLUGIN_API_CALL(Api_Config);
+  PLUGIN_BUNNY_API_CALL(Api_Info);
 };
 
 #endif

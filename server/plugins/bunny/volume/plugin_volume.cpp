@@ -1,33 +1,48 @@
 #include <QDateTime>
 #include <QStringList>
+#include <QDate>
+#include <QMap>
+
 #include "plugin_volume.h"
-#include "ambientpacket.h"
+
 #include "bunny.h"
 #include "bunnymanager.h"
 #include "cron.h"
 #include "log.h"
+#include "packets/packet.h"
+#include "packets/ambientpacket.h"
+#include "packets/messagepacket.h"
+#include "packets/sleeppacket.h"
 #include "settings.h"
-#include <QDate>
-#include <QMap>
-#include "bunny.h"
-#include "messagepacket.h"
-#include "packet.h"
-#include "sleeppacket.h"
 #include "translator.h"
-#include "ttsmanager.h"
+#include "tts/ttsmanager.h"
 
 // Sound from 0 to 255
 // 0 = sound volume managed by rear button
 // 1 = very loud
 // 255 = no sound
 
-PluginVolume::PluginVolume():PluginInterface("volume", "Change sound volume", BunnyV2Plugin | CronPlugin | ApiPlugin | DevPlugin)
+PluginVolume::PluginVolume()
+	: PluginInterface("volume", "Change sound volume",
+										BunnyV2Plugin | CronPlugin | ApiPlugin | DevPlugin
+									 )
 {
 }
 
 PluginVolume::~PluginVolume()
 {
 	Cron::UnregisterAll(this);
+}
+
+const QHash<QString, QString> PluginVolume::GetChangelog(void)
+{
+	QHash<QString, QString> revisions;
+	revisions.insert("1.2.1", "Add supported languages informations");
+	revisions.insert("1.2.2", "Add test function");
+	revisions.insert("1.3.0", "Add API");
+	revisions.insert("1.3.1", "Bug fix in scheduler");
+	revisions.insert("1.3.2", "Bug fixes");
+	return revisions;
 }
 
 QString PluginVolume::OnApiSet(Bunny *b, QVariant v)
@@ -184,7 +199,7 @@ PLUGIN_BUNNY_API_CALL(PluginVolume::Api_Schedule)
 			CleanCrons(bunny);
 			RegisterCrons(bunny);
 			return new ApiAnswers::Ok(Translator::tr("Add schedule at '%1' to bunny '%2'", account).arg(time, QString(bunny->GetID())));
-		}	
+		}
 		return new ApiAnswers::Error(Translator::tr("Schedule at '%1' already exists for bunny '%2'", account).arg(time, QString(bunny->GetID())));
 	}
 	else if(action == "del")
@@ -349,7 +364,7 @@ PLUGIN_BUNNY_API_CALL(PluginVolume::Api_AddChange)
 		RegisterCrons(bunny);
 		//UpdateState(bunny);
         	return new ApiAnswers::Ok(QString("Add sound change at '%1' to bunny '%2'").arg(hRequest.GetArg("time"), QString(bunny->GetID())));
-    	}	
+    	}
     	return new ApiAnswers::Error(QString("Webcast at '%1' already exists for bunny '%2'").arg(hRequest.GetArg("time"), QString(bunny->GetID())));
 }
 

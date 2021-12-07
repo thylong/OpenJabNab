@@ -5,6 +5,7 @@
 #include <QMultiMap>
 #include <QTextStream>
 #include <QThread>
+
 #include "plugininterface.h"
 
 #define PLUGIN_WEATHER_UNKNOW    0
@@ -47,84 +48,82 @@
 #define PLUGIN_WEATHER_TOMORROW_WIND      "plugin_weather_tomorrow_wind"
 #define PLUGIN_WEATHER_TOMORROW_CLOUD     "plugin_weather_tomorrow_cloud"
 
-class PluginWeather : public PluginInterface
+class PluginWeather
+  : public PluginInterface
 {
-	friend class PluginWeather_Worker;
-	Q_OBJECT
-	Q_INTERFACES(PluginInterface)
-  Q_PLUGIN_METADATA(IID "ojn.plugin.services.weather" )
-
-private slots:
-	QString OnApiGet(Bunny *, QVariant);
-	//void analyseXml(QNetworkReply*);
-	//void analyseDone(bool, Bunny*, QByteArray);
+  friend class PluginWeather_Worker;
+  Q_OBJECT
+  Q_INTERFACES(PluginInterface)
+  Q_PLUGIN_METADATA(IID "ojn.plugin.services.weather")
 
 public:
-	PluginWeather();
-	virtual ~PluginWeather();
-	bool OnClick(Bunny *, PluginInterface::ClickType);
-	bool OnVoiceCommand(Bunny *, QString const&, QStringList const&);
-	bool OnRFID(Bunny * b, QByteArray const& tag);
-	void OnCron(Bunny *, QVariant, unsigned int);
-	void OnBunnyConnect(Bunny *);
-	void OnBunnyDisconnect(Bunny *);
-	void AfterBunnyUnregistered(Bunny *) {};
-	QString GetVersion() { return "2.2.2"; }
-	QHash<QString, QString> GetChangelog()
-	{
-		QHash<QString, QString> revisions;
-		revisions.insert("2.2.1", "Improved name of city pronunciation");
-		revisions.insert("2.2.2", "Use language defined for plugin");
-		return revisions;
-	}
+  PluginWeather();
 
-	int GetWeatherFromCode(int);
-	QString GetTranslatedWeather(int, QString, QString);
-	int GetWindFromSpeed(int);
-	QString GetTranslatedWind(int, QString);
-	QString insertWindData(QString, int);
-	QString insertWeatherData(QString, QString, QString, int, int);
+  QString OnApiGet(Bunny *, QVariant);
 
-	QStringList GetLanguages() { return QStringList() << "fr" << "en" << "es" << "it" << "de"; }
-        QHash<QString, QString> GetExtendedApiFunctions()
-        {
-                QHash<QString, QString> list;
-                list.insert("get", "");
-                return list;
-        }
+  virtual bool OnClick(Bunny *, PluginInterface::ClickType) override;
+  virtual bool OnVoiceCommand(Bunny *, QString const&, QStringList const&) override;
+  virtual bool OnRFID(Bunny * b, QByteArray const& tag) override;
+  virtual void OnCron(Bunny *, QVariant, unsigned int) override;
+  virtual void OnBunnyConnect(Bunny *) override;
+  virtual void OnBunnyDisconnect(Bunny *) override;
 
-	QHash<QString, QString> GetVoiceCommands(QString);
+  virtual const QString GetVersion(void) const { return "2.2.2"; }
+  virtual const QStringList GetLanguages(void) const { return QStringList() << "fr" << "en" << "es" << "it" << "de"; }
+  virtual const QHash<QString, QString> GetChangelog(void) const
+  {
+    QHash<QString, QString> revisions;
+    revisions.insert("2.2.1", "Improved name of city pronunciation");
+    revisions.insert("2.2.2", "Use language defined for plugin");
+    return revisions;
+  }
+  virtual const QHash<QString, QString> GetExtendedApiFunctions(void) const
+  {
+    QHash<QString, QString> list;
+    list.insert("get", "");
+    return list;
+  }
 
-	// API
-	void InitApiCalls();
-	PLUGIN_BUNNY_API_CALL(Api_setDefaultCity);
-	PLUGIN_BUNNY_API_CALL(Api_AddWebcast);
-	PLUGIN_BUNNY_API_CALL(Api_RemoveWebcast);
-	PLUGIN_BUNNY_API_CALL(Api_ListWebcast);
-	PLUGIN_BUNNY_API_CALL(Api_addCity);
-	PLUGIN_BUNNY_API_CALL(Api_removeCity);
-	PLUGIN_BUNNY_API_CALL(Api_getCitiesList);
-	PLUGIN_BUNNY_API_CALL(Api_getDefaultCity);
-	PLUGIN_BUNNY_API_CALL(Api_AddRFID);
-	PLUGIN_BUNNY_API_CALL(Api_RemoveRFID);
-	PLUGIN_BUNNY_API_CALL(Api_ListRFID);
-	PLUGIN_BUNNY_API_CALL(Api_getLang);
-	PLUGIN_BUNNY_API_CALL(Api_setLang);
-	PLUGIN_BUNNY_API_CALL(Api_getFrequency);
-	PLUGIN_BUNNY_API_CALL(Api_setFrequency);
-
-	PLUGIN_API_CALL(Api_setConditionGroup);
-	PLUGIN_API_CALL(Api_getConditionGroup);
-	PLUGIN_API_CALL(Api_setCondition);
-	PLUGIN_API_CALL(Api_getCondition);
-	PLUGIN_API_CALL(Api_getConditions);
-	PLUGIN_API_CALL(Api_setTranslation);
-	PLUGIN_API_CALL(Api_getTranslation);
-	PLUGIN_API_CALL(Api_Translation);
- 	PLUGIN_API_CALL(Api_GetAllCitiesList);
+  QHash<QString, QString> GetVoiceCommands(QString);
 
 private:
-	void getWeatherForCity(Bunny *, QString);
+  virtual ~PluginWeather();
+
+  int GetWeatherFromCode(int);
+  QString GetTranslatedWeather(int, QString, QString);
+  int GetWindFromSpeed(int);
+  QString GetTranslatedWind(int, QString);
+  QString insertWindData(QString, int);
+  QString insertWeatherData(QString, QString, QString, int, int);
+  void getWeatherForCity(Bunny *, QString);
+
+  // API
+  void InitApiCalls();
+  PLUGIN_BUNNY_API_CALL(Api_setDefaultCity);
+  PLUGIN_BUNNY_API_CALL(Api_AddWebcast);
+  PLUGIN_BUNNY_API_CALL(Api_RemoveWebcast);
+  PLUGIN_BUNNY_API_CALL(Api_ListWebcast);
+  PLUGIN_BUNNY_API_CALL(Api_addCity);
+  PLUGIN_BUNNY_API_CALL(Api_removeCity);
+  PLUGIN_BUNNY_API_CALL(Api_getCitiesList);
+  PLUGIN_BUNNY_API_CALL(Api_getDefaultCity);
+  PLUGIN_BUNNY_API_CALL(Api_AddRFID);
+  PLUGIN_BUNNY_API_CALL(Api_RemoveRFID);
+  PLUGIN_BUNNY_API_CALL(Api_ListRFID);
+  PLUGIN_BUNNY_API_CALL(Api_getLang);
+  PLUGIN_BUNNY_API_CALL(Api_setLang);
+  PLUGIN_BUNNY_API_CALL(Api_getFrequency);
+  PLUGIN_BUNNY_API_CALL(Api_setFrequency);
+
+  PLUGIN_API_CALL(Api_setConditionGroup);
+  PLUGIN_API_CALL(Api_getConditionGroup);
+  PLUGIN_API_CALL(Api_setCondition);
+  PLUGIN_API_CALL(Api_getCondition);
+  PLUGIN_API_CALL(Api_getConditions);
+  PLUGIN_API_CALL(Api_setTranslation);
+  PLUGIN_API_CALL(Api_getTranslation);
+  PLUGIN_API_CALL(Api_Translation);
+  PLUGIN_API_CALL(Api_GetAllCitiesList);
 };
 
 #endif

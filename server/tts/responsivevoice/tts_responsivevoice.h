@@ -3,9 +3,9 @@
 
 #include <QNetworkAccessManager>
 
-#include "ttsinterface.h"
+#include "tts/ttsinterface.h"
 
-class TTSresponsivevoice 
+class TTSresponsivevoice
   : public TTSInterface
 {
   Q_OBJECT
@@ -22,4 +22,3 @@ private:
 };
 
 #endif
-

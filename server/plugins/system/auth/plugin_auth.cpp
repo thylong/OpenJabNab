@@ -1,11 +1,12 @@
 #include <QDateTime>
 #include <QStringList>
 #include <QRandomGenerator>
+
 #include "plugin_auth.h"
 #include "account.h"
 #include "bunny.h"
 #include "bunnymanager.h"
-#include "messagepacket.h"
+#include "packets/messagepacket.h"
 #include "iq.h"
 #include "log.h"
 #include "settings.h"
@@ -17,6 +18,16 @@ PluginAuth::PluginAuth():PluginAuthInterface("auth", "Manage Authentication proc
 	minBootcode = GetSettings("Bootcode", 0).toInt();
 	badBootcodes = GetSettings("Bad", QStringList()).toStringList();
 	currentId = 1;
+}
+
+const QHash<QString, QString> PluginAuth::GetChangelog(void)
+{
+	QHash<QString, QString> revisions;
+	revisions.insert("1.0.1", "Add reboot bunny on low bootcode");
+	revisions.insert("1.0.2", "Add reboot bunny on buggy bootcode");
+	revisions.insert("1.0.3", "Update settings instantly");
+	revisions.insert("1.1.0", "Identify bunny at first packet");
+	return revisions;
 }
 
 void PluginAuth::OnBunnyConnect(Bunny * b)
@@ -354,5 +365,3 @@ PLUGIN_API_CALL(PluginAuth::Api_Config)
 		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }
-
-

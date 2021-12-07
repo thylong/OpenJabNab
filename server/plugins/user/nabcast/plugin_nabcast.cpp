@@ -1,3 +1,5 @@
+#include <memory>
+
 #include <QDateTime>
 #include <QCryptographicHash>
 #include <QRandomGenerator>
@@ -5,19 +7,23 @@
 #include <QMapIterator>
 #include <QRegExp>
 #include <QUrl>
-#include <memory>
+
+#include "plugin_nabcast.h"
+
 #include "bunny.h"
 #include "bunnymanager.h"
+#include "cron.h"
 #include "httprequest.h"
 #include "log.h"
-#include "cron.h"
-#include "messagepacket.h"
-#include "plugin_nabcast.h"
+#include "packets/messagepacket.h"
 #include "settings.h"
-#include "ttsmanager.h"
+#include "tts/ttsmanager.h"
 #include "translator.h"
 
-PluginNabcast::PluginNabcast():PluginInterface("nabcast", "Nabcazts", BunnyV2Plugin | ZtampPlugin | SingleClickPlugin | DoubleClickPlugin  | CronPlugin | RfidPlugin | VoicePlugin)
+PluginNabcast::PluginNabcast()
+	: PluginInterface("nabcast", "Nabcazts",
+										BunnyV2Plugin | ZtampPlugin | SingleClickPlugin | DoubleClickPlugin  | CronPlugin | RfidPlugin | VoicePlugin
+									 )
 {
 }
 
@@ -427,7 +433,7 @@ PLUGIN_BUNNY_API_CALL(PluginNabcast::Api_getFilesList)
 {
 	Q_UNUSED(account);
 	Q_UNUSED(hRequest);
-	
+
 	int libraryMode = bunny->GetPluginSetting(GetName(), QString("library"), (int)(MixedLibrary | PrivateLibrary)).toInt();
 	if(libraryMode & MixedLibrary)
 		return new ApiAnswers::List(GetUserDir(bunny)->entryList() + nabcastFolder.entryList());

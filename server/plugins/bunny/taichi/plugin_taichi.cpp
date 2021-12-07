@@ -1,13 +1,12 @@
 #include "plugin_taichi.h"
-#include "ambientpacket.h"
-#include "messagepacket.h"
+
 #include "bunny.h"
+#include "packets/ambientpacket.h"
+#include "packets/messagepacket.h"
 
 PluginTaichi::PluginTaichi():PluginInterface("taichi", "Manage Bunny's Taichi",BunnyV2Plugin | BunnyV1Plugin | RfidPlugin)
 {
 }
-
-PluginTaichi::~PluginTaichi() {}
 
 void PluginTaichi::OnBunnyConnect(Bunny * b)
 {
@@ -127,4 +126,3 @@ PLUGIN_BUNNY_API_CALL(PluginTaichi::Api_SetRFID)
 		return new ApiAnswers::Ok(QString("Remove RFID for bunny '%2'").arg(QString(bunny->GetID())));
 	}
 }
-

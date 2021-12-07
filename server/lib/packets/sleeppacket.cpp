@@ -15,9 +15,7 @@ SleepPacket * SleepPacket::Parse(QByteArray const& buffer)
 	if (value > 1)
 		throw QString("Bad SleepPacket value : %1").arg(QString(buffer.toHex()));
 
-	SleepPacket * s = new SleepPacket;
-	s->sleep = value;
-	return s;
+	return new SleepPacket(value ? Sleep : Wake_Up);
 }
 
 QByteArray SleepPacket::GetInternalData() const

@@ -3,12 +3,12 @@
 
 #include <QDateTime>
 #include <QObject>
+
 #include "pluginmanager.h"
 #include "bunny.h"
 
 class PluginMessageInterface
 {
-public:
 protected:
 	bool SaveMessage(Bunny *, QStringList);
 	bool SaveMessage(Bunny *, QString);

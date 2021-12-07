@@ -1,19 +1,34 @@
 #include <QMapIterator>
 #include <QRandomGenerator>
+
 #include "plugin_surprise.h"
+
 #include "accountmanager.h"
 #include "bunny.h"
 #include "cron.h"
-#include "messagepacket.h"
+#include "packets/messagepacket.h"
 #include "translator.h"
-#include "ttsmanager.h"
+#include "tts/ttsmanager.h"
 
 // +/- 20% - 30min => rand(24,36)
 #define RANDOMIZEDRATIO 20
 
-PluginSurprise::PluginSurprise():PluginInterface("surprise", "Moods (Send random sounds at random intervals)",BunnyV1Plugin | BunnyV2Plugin | ApiPlugin | CronPlugin | RfidPlugin | VoicePlugin ) {}
+PluginSurprise::PluginSurprise()
+	: PluginInterface("surprise", "Moods (Send random sounds at random intervals)",
+										BunnyV1Plugin | BunnyV2Plugin | ApiPlugin | CronPlugin | RfidPlugin | VoicePlugin
+									 )
+{
+}
 
-PluginSurprise::~PluginSurprise() {}
+const QHash<QString, QString> GetChangelog(void)
+{
+	QHash<QString, QString> revisions;
+	revisions.insert("2.3.0", "Rename plugin to avoid mistakes");
+	revisions.insert("2.3.1", "Insert a minimum time to avoid crash");
+	revisions.insert("2.4.0", "Add support for Nabaztag V1");
+	revisions.insert("2.4.1", "Fix bug for mp3 file listing");
+	return revisions;
+}
 
 void PluginSurprise::createCron(Bunny * b, int frequency, QString surprise)
 {
@@ -501,4 +516,3 @@ PLUGIN_BUNNY_API_CALL(PluginSurprise::Api_RFID)
 		return new ApiAnswers::Error(Translator::tr("Bad argument '%1' for plugin %2", account).arg("action", GetName()));
 	}
 }
-

@@ -1,19 +1,23 @@
+#include <memory>
+
 #include <QDateTime>
 #include <QCryptographicHash>
 #include <QXmlStreamReader>
 #include <QMapIterator>
 #include <QRegExp>
 #include <QUrl>
-#include <memory>
+
+#include "plugin_dayof.h"
+#include "plugin_dayof_inline.h"
+
 #include "bunny.h"
 #include "bunnymanager.h"
+#include "cron.h"
 #include "httprequest.h"
 #include "log.h"
-#include "cron.h"
-#include "messagepacket.h"
-#include "plugin_dayof.h"
+#include "packets/messagepacket.h"
 #include "settings.h"
-#include "ttsmanager.h"
+#include "tts/ttsmanager.h"
 #include "translator.h"
 
 PluginDayof::PluginDayof()
@@ -76,7 +80,7 @@ void PluginDayof::sayDayof(Bunny * b, bool save)
 	QStringList files;
 	if(b->IsConnected())
 	{
-		
+
 		QDateTime currentDay = Translator::GetCurrentTime(b->GetGlobalSetting("TimeZone","UTC").toString());
 		int month = currentDay.toString("M").toInt();
 		int day = currentDay.toString("d").toInt();

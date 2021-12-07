@@ -1,16 +1,12 @@
 #include <QCoreApplication>
 #include <QDateTime>
 #include <QtSql/QtSql>
-#include "ambientpacket.h"
+
 #include "ztamp.h"
 #include "bunny.h"
 #include "log.h"
-#include "httprequest.h"
-#include "plugininterface.h"
 #include "pluginmanager.h"
 #include "dbmanager.h"
-#include "sleeppacket.h"
-#include "xmpphandler.h"
 #include "translator.h"
 #include "bunnymanager.h"
 
@@ -125,7 +121,7 @@ void Ztamp::SaveConfig()
 		{
 			//LogDebug(QString("Updating Ztamp %1/%2 in DB").arg(QString(GetID())).arg(GetZtampName()));
 			q = "UPDATE ztamp set`settings`=:settings, `server_id`=:server, `accounts`=:accounts WHERE `serial`=:serial";
-		} 
+		}
 		else if(nb == 0)
 		{
 			//LogDebug(QString("Adding new Ztamp in DB for %1/%2").arg(QString(GetID())).arg(GetZtampName()));
@@ -148,7 +144,7 @@ void Ztamp::SaveConfig()
 			{
 				LogError(QString("2/2 Impossible to save Ztamp in DB : %1").arg(query2.lastError().driverText()));
 			}
-			else 
+			else
 				needSave = false;
 		}
 	}

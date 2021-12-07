@@ -12,7 +12,7 @@
 #include "pluginmanager.h"
 #include "sentencemanager.h"
 #include "translator.h"
-#include "ttsmanager.h"
+#include "tts/ttsmanager.h"
 #include "version.h"
 
 PluginInterface * statsPlugin;
@@ -40,7 +40,7 @@ API_CALL(ApiManager::Api_About)
 	ret["version"] = __version;
 	ret["git_rev"] = __git_rev;
 	ret["build_date"] = __build_date;
-	ret["build_time"] = __build_time;	
+	ret["build_time"] = __build_time;
 	return new ApiAnswers::MappedList(ret);
 }
 

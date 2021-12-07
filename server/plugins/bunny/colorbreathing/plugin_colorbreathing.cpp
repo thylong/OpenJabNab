@@ -1,14 +1,16 @@
 #include <QDateTime>
-#include <QStringList>
+
 #include "plugin_colorbreathing.h"
-#include "ambientpacket.h"
+
 #include "bunny.h"
 #include "bunnymanager.h"
 #include "log.h"
+#include "packets/ambientpacket.h"
 #include "settings.h"
 #include "translator.h"
 
-PluginColorbreathing::PluginColorbreathing():PluginInterface("colorbreathing", "Change breathing color", BunnyV1Plugin | BunnyV2Plugin | ApiPlugin)
+PluginColorbreathing::PluginColorbreathing()
+	: PluginInterface("colorbreathing", "Change breathing color", BunnyV1Plugin | BunnyV2Plugin | ApiPlugin)
 {
 	availableColorsV2["none"]   = 0;
 	availableColorsV2["blue"]   = 1;
@@ -20,14 +22,14 @@ PluginColorbreathing::PluginColorbreathing():PluginInterface("colorbreathing", "
 	availableColorsV2["white"]  = 7;
 
 	availableColorsV1["none"]   = 0;
-	availableColorsV1["red"]   = 1;
+	availableColorsV1["red"]   	= 1;
 	availableColorsV1["green"]  = 2;
-	availableColorsV1["yellow"]   = 3;
-	availableColorsV1["blue"]    = 4;
+	availableColorsV1["yellow"] = 3;
+	availableColorsV1["blue"]   = 4;
 	availableColorsV1["violet"] = 5;
-	availableColorsV1["cyan"] = 6;
+	availableColorsV1["cyan"] 	= 6;
 	availableColorsV1["white"]  = 7;
-	availableColorsV1["orange"]  = 0xf;
+	availableColorsV1["orange"] = 0xf;
 }
 
 /*
@@ -199,4 +201,3 @@ PLUGIN_BUNNY_API_CALL(PluginColorbreathing::Api_GetColorList)
 		return new ApiAnswers::Error(Translator::tr("Unknown bunny version", account));
 	}
 }
-

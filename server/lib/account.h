@@ -18,9 +18,29 @@ class OJN_EXPORT Account
 	friend class AccountManager;
 	friend class File2Db;
 public:
-	enum SpecialAccount { Guest, DefaultAdmin };
-	enum Right { None = 0x0, Read = 0x1, Write = 0x2, ReadWrite = 0x3};
-	enum Access { AcGlobal = 0x0, AcAccount = 0x1, AcBunnies = 0x2, AcZtamps = 0x3, AcPluginsBunny = 0x4, AcPluginsZtamp = 0x5, AcPlugins= 0x6, AcServer = 0x7};
+	enum SpecialAccount 
+	{ 
+		Guest, 
+		DefaultAdmin 
+	};
+	enum Right 
+	{ 
+		None = 0x0, 
+		Read = 0x1, 
+		Write = 0x2, 
+		ReadWrite = 0x3
+	};
+	enum Access 
+	{ 
+		AcGlobal = 0x0, 
+		AcAccount = 0x1, 
+		AcBunnies = 0x2, 
+		AcZtamps = 0x3, 
+		AcPluginsBunny = 0x4, 
+		AcPluginsZtamp = 0x5, 
+		AcPlugins= 0x6, 
+		AcServer = 0x7
+	};
 	Q_DECLARE_FLAGS(Rights, Right);
 
 	static void Init() { InitApiCalls(); }

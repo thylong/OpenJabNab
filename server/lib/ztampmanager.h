@@ -2,17 +2,16 @@
 #define _ZTAMPMANAGER_H_
 
 #include <QHash>
-#include <QVector>
+
 #include "global.h"
 #include "apihandler.h"
-
 #include "ztamp.h"
 
-class Account;
-class Ztamp;
-class HTTPRequest;
 class PluginInterface;
-class OJN_EXPORT ZtampManager : public ApiHandler<ZtampManager>
+class Ztamp;
+
+class OJN_EXPORT ZtampManager
+	: public ApiHandler<ZtampManager>
 {
 	friend class PluginAuth;
 	friend class ApiManager;
@@ -23,12 +22,9 @@ public:
 	static Ztamp * GetZtamp(PluginInterface *, QByteArray const&);
 	static void PluginStateChanged(PluginInterface *);
 	static inline void Init() { InitApiCalls(); };
-	static void LoadZtamps();
-	static void SaveZtamps();
+	static inline void LoadZtamps() { Instance().LoadAllZtamps(); }
+	static inline void SaveZtamps() { Instance().SaveAllZtamps(); }
 	static void Close();
-
-	// API
-	static void InitApiCalls();
 
 	int GetZtampCount();
 
@@ -38,6 +34,7 @@ protected:
 	static void PluginUnloaded(PluginInterface *);
 
 	// API
+	static void InitApiCalls();
 	API_CALL(Api_GetListOfZtamps);
 	API_CALL(Api_GetListOfAllZtamps);
 	API_CALL(Api_RemoveZtamp);
@@ -49,16 +46,5 @@ private:
 	QDir ztampsDir;
 	static QHash<QByteArray, Ztamp *> listOfZtamps;
 };
-
-inline void ZtampManager::LoadZtamps()
-{
-	Instance().LoadAllZtamps();
-}
-
-
-inline void ZtampManager::SaveZtamps()
-{
-	Instance().SaveAllZtamps();
-}
 
 #endif

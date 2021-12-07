@@ -2,16 +2,11 @@
 #include <QHostAddress>
 #include <QRegExp>
 
-
-
 #include "bunny.h"
-#include "bunnymanager.h"
 #include "iq.h"
 #include "log.h"
-#include "messagepacket.h"
 #include "pluginmanager.h"
 #include "settings.h"
-#include "ttsmanager.h"
 #include "xmpphandler.h"
 
 unsigned short XmppHandler::msgNb = 0;
@@ -336,7 +331,7 @@ void XmppHandler::HandleBunnyXmppMessage()
 			{
 				//bindTimer->start(GlobalSettings::GetInt("Timeout/Bind")*1000);
 				_lastBindTime = std::chrono::system_clock::now();
-				
+
 				QByteArray from = rx.cap(1).toLatin1();
 				QByteArray id = rx.cap(2).toLatin1();
 				WriteToBunnyAndLog("<presence from='"+from+"' to='"+from+"' id='"+id+"'/>");

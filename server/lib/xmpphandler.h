@@ -7,8 +7,8 @@
 #include <QObject>
 #include <QTimer>
 #include <QTcpSocket>
+
 #include "global.h"
-#include "packet.h"
 
 class Bunny;
 class PluginManager;

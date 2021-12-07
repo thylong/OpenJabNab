@@ -5,14 +5,13 @@
 #include <QHash>
 #include <QString>
 #include <QVariant>
-#include "apihandler.h"
 
 #include "global.h"
-#include "packet.h"
+#include "apihandler.h"
+#include "packets/packet.h"
 #include "plugininterface.h"
 
-//class XmppHandler;
-class OJN_EXPORT Ztamp 
+class OJN_EXPORT Ztamp
 	: public ApiHandler<Ztamp>
 {
 	friend class ZtampManager;

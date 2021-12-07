@@ -1,22 +1,24 @@
-#include <QMap>
 #include <QMapIterator>
 #include <QTime>
 #include <QRandomGenerator>
+
 #include "plugin_lafontaine.h"
+
 #include "account.h"
 #include "bunny.h"
-#include "cron.h"
 #include "bunnymanager.h"
-#include "messagepacket.h"
+#include "cron.h"
+#include "packets/messagepacket.h"
 #include "translator.h"
 
-/*
-http://www.arena80.it/pagine/fiabesonore.asp
-*/
-
-PluginLafontaine::PluginLafontaine():PluginInterface("lafontaine", "Fairy tales and nursery rhymes", BunnyV2Plugin | SingleClickPlugin | DoubleClickPlugin | ZtampPlugin | CronPlugin | RfidPlugin | VoicePlugin)
+PluginLafontaine::PluginLafontaine()
+	: PluginInterface("lafontaine", "Fairy tales and nursery rhymes",
+										BunnyV2Plugin | SingleClickPlugin | DoubleClickPlugin | ZtampPlugin | CronPlugin | RfidPlugin | VoicePlugin
+									 )
 {
 /*
+http://www.arena80.it/pagine/fiabesonore.asp
+
 La cigale et la fourmi => STE-001.mp3
 Le corbeau et le renard => STE-002.mp3
 La grenouille qui veut se faire aussi grosse que le b&oelig;uf => STE-003.mp3
@@ -58,7 +60,6 @@ Les deux pigeons => STE-039.mp3
 L&rsquo;huître et les plaideurs => STE-040.mp3
 Le vieillard et les trois jeunes hommes => STE-041.mp3
 Les compagnons d&rsquo;Ulysse => STE-042.mp3
-
 */
 }
 

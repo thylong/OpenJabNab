@@ -1,23 +1,31 @@
+#include <memory>
+
 #include <QDateTime>
 #include <QCryptographicHash>
 #include <QXmlStreamReader>
 #include <QMapIterator>
 #include <QRegExp>
 #include <QUrl>
-#include <memory>
-#include "bunny.h"
+
+#include "plugin_music.h"
+
 #include "accountmanager.h"
+#include "bunny.h"
 #include "bunnymanager.h"
+#include "cron.h"
 #include "httprequest.h"
 #include "log.h"
-#include "cron.h"
-#include "messagepacket.h"
-#include "plugin_music.h"
+#include "packets/messagepacket.h"
 #include "settings.h"
-#include "ttsmanager.h"
+#include "tts/ttsmanager.h"
 #include "translator.h"
 
-PluginMusic::PluginMusic():PluginInterface("music", "Music", BunnyV2Plugin | ZtampPlugin | SingleClickPlugin | DoubleClickPlugin  | CronPlugin | RfidPlugin | VoicePlugin) {}
+PluginMusic::PluginMusic()
+	: PluginInterface("music", "Music",
+										BunnyV2Plugin | ZtampPlugin | SingleClickPlugin | DoubleClickPlugin  | CronPlugin | RfidPlugin | VoicePlugin
+	)
+{
+}
 
 bool PluginMusic::Init()
 {

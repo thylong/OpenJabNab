@@ -1,21 +1,27 @@
+#include <memory>
+
+#include <QNetworkReply>
 #include <QDateTime>
 #include <QRegExp>
 #include <QMapIterator>
 #include <QXmlStreamReader>
-#include <memory>
+
+#include "plugin_rss.h"
+
 #include "bunny.h"
 #include "bunnymanager.h"
+#include "cron.h"
 #include "httprequest.h"
 #include "log.h"
-#include "cron.h"
-#include "messagepacket.h"
-#include "plugin_rss.h"
+#include "packets/messagepacket.h"
 #include "settings.h"
-#include "plugininterface.h"
+#include "tts/ttsmanager.h"
 #include "translator.h"
-#include "ttsmanager.h"
 
-PluginRss::PluginRss():PluginInterface("rss", "RSS Reader", BunnyV2Plugin | CronPlugin | RfidPlugin | SingleClickPlugin | PremiumPlugin | VoicePlugin | MessagePlugin | DevPlugin )
+PluginRss::PluginRss()
+	: PluginInterface("rss", "RSS Reader",
+										BunnyV2Plugin | CronPlugin | RfidPlugin | SingleClickPlugin | PremiumPlugin | VoicePlugin | MessagePlugin | DevPlugin
+									 )
 {
 }
 
@@ -51,7 +57,7 @@ void PluginRss::readFeed(QString feed, Bunny * b, bool)
 	QUrl url(feed);
 	LogDebug(QString("GET %1").arg(url.toString()));
 	QNetworkAccessManager *manager = new QNetworkAccessManager(this);
-	connect(manager, SIGNAL(finished(QNetworkReply*)),this, SLOT(analyseXml(QNetworkReply*)));
+	QObject::connect(manager, &QNetworkAccessManager::finished, this, &PluginRss::analyseXml);
 	manager->setProperty("bunny", b->GetID());
 	manager->setProperty("feed", feed);
 	manager->get(QNetworkRequest(url));

@@ -1,447 +1,52 @@
 #ifndef _PLUGINDICTON_H_
 #define _PLUGINDICTON_H_
 
-#include <QMap>
-#include <QMultiMap>
-#include <QTextStream>
-#include <QThread>
 #include "plugininterface.h"
 #include "pluginmessageinterface.h"
 
-class PluginDicton : public PluginInterface, PluginMessageInterface
+class PluginDicton
+  : public PluginInterface
+  , private PluginMessageInterface
 {
-	Q_OBJECT
-	Q_INTERFACES(PluginInterface PluginMessageInterface)
+  Q_OBJECT
+  Q_INTERFACES(PluginInterface PluginMessageInterface)
   Q_PLUGIN_METADATA(IID "ojn.plugin.bunny.dicton" )
 
-private slots:
-	QString OnApiGet(Bunny *, QVariant);
 public:
+  PluginDicton();
 
-	PluginDicton();
-	virtual ~PluginDicton();
+  QString OnApiGet(Bunny *, QVariant);
 
-	bool OnClick(Bunny *, PluginInterface::ClickType);
-	void OnCron(Bunny *, QVariant, unsigned int);
-	void OnBunnyConnect(Bunny *);
-	void OnBunnyDisconnect(Bunny *);
-	bool OnVoiceCommand(Bunny *, QString const&, QStringList const&);
-	virtual bool OnRFID(Bunny *, QByteArray const&);
-	QString GetVersion() { return "1.0.3"; }
+  virtual bool OnClick(Bunny *, PluginInterface::ClickType) override;
+  virtual void OnCron(Bunny *, QVariant, unsigned int) override;
+  virtual void OnBunnyConnect(Bunny *) override;
+  virtual void OnBunnyDisconnect(Bunny *) override;
+  virtual bool OnVoiceCommand(Bunny *, QString const&, QStringList const&) override;
+  virtual bool OnRFID(Bunny *, QByteArray const&) override;
 
-	QStringList GetLanguages() { return QStringList() << "fr" ; }
-        QHash<QString, QString> GetExtendedApiFunctions()
-        {
-                QHash<QString, QString> list;
-                list.insert("get", "");
-                return list;
-        }
-
-
-	// API
-	void InitApiCalls();
-	PLUGIN_BUNNY_API_CALL(Api_RFID);
-	PLUGIN_BUNNY_API_CALL(Api_Schedule);
-	PLUGIN_BUNNY_API_CALL(Api_Language);
+  virtual const QString GetVersion(void) override { return "1.0.3"; }
+  virtual const QStringList GetLanguages(void) override { return QStringList() << "fr" ; }
+  virtual const QHash<QString, QString> GetExtendedApiFunctions(void) override
+  {
+    QHash<QString, QString> list;
+    list.insert("get", "");
+    return list;
+  }
 
 private:
-	void sayDicton(Bunny *, bool);
-	void sayDicton(Bunny *);
-	void InitData();
+  virtual ~PluginDicton();
 
-	QMap<int, QMap<int, QString> > data;
+  void sayDicton(Bunny *, bool);
+  void sayDicton(Bunny *);
+  void InitData();
+
+  QMap<int, QMap<int, QString> > data;
+
+  // API
+  void InitApiCalls();
+  PLUGIN_BUNNY_API_CALL(Api_RFID);
+  PLUGIN_BUNNY_API_CALL(Api_Schedule);
+  PLUGIN_BUNNY_API_CALL(Api_Language);
 };
-
-inline void PluginDicton::InitData()
-{
-	QMap<int, QString> data_janvier;
-	data_janvier.insert(1,QString::fromUtf8(QString("Année neigeuse, année fructueuse.").toLatin1()));
-	data_janvier.insert(2,QString::fromUtf8(QString("Au mois de janvier, mieux vaut voir le loup dans les champs, qu'un homme en chemise.").toLatin1()));
-	data_janvier.insert(3,QString::fromUtf8(QString("Beaux jours de janvier trompent l'homme en février.").toLatin1()));
-	data_janvier.insert(4,QString::fromUtf8(QString("Brouillard en janvier, année ensoleillée.").toLatin1()));
-	data_janvier.insert(5,QString::fromUtf8(QString("Brouillard en janvier, année mouillée").toLatin1()));
-	data_janvier.insert(6,QString::fromUtf8(QString("Brouillard en janvier, froid en mai").toLatin1()));
-	data_janvier.insert(7,QString::fromUtf8(QString("Cadeau de janvier, ingratitude de février.").toLatin1()));
-	data_janvier.insert(8,QString::fromUtf8(QString("Dieu te garde d'un bon janvier.").toLatin1()));
-	data_janvier.insert(9,QString::fromUtf8(QString("En janvier, le paysage n'a rien").toLatin1()));
-	data_janvier.insert(10,QString::fromUtf8(QString("Garde toi du mois de janvier comme un voleur au grenier. S'il fait vent, nous aurons la guerre, et si l'on voit épais brouillards, mortalité de toute part.").toLatin1()));
-	data_janvier.insert(11,QString::fromUtf8(QString("Garde-toi du printemps de janvier !").toLatin1()));
-	data_janvier.insert(12,QString::fromUtf8(QString("Il vaut mieux voir un voleur dans son grenier qu'un laboureur en chemise en janvier").toLatin1()));
-	data_janvier.insert(13,QString::fromUtf8(QString("janvier amasse les souches, février les brûle toutes").toLatin1()));
-	data_janvier.insert(14,QString::fromUtf8(QString("janvier d'eau chiche fait le paysan riche.").toLatin1()));
-	data_janvier.insert(15,QString::fromUtf8(QString("janvier frileux gèle la merlesse sur les oeufs.").toLatin1()));
-	data_janvier.insert(16,QString::fromUtf8(QString("janvier frileux, gèle l'oiseau sur ses oeufs.").toLatin1()));
-	data_janvier.insert(17,QString::fromUtf8(QString("janvier ne veut pas voir pisser un rat.").toLatin1()));
-	data_janvier.insert(18,QString::fromUtf8(QString("janvier sec et sage, est un bon présage.").toLatin1()));
-	data_janvier.insert(19,QString::fromUtf8(QString("janvier sec et beau, remplit cuve et tonneaux.").toLatin1()));
-	data_janvier.insert(20,QString::fromUtf8(QString("Le mauvais An entre en nageant").toLatin1()));
-	data_janvier.insert(21,QString::fromUtf8(QString("Les douze jours qui vont de Noël aux Rois, donnent le temps des douze mois.").toLatin1()));
-	data_janvier.insert(22,QString::fromUtf8(QString("Les douze premiers jours de janvier, indiquent le temps qu'il fera les douze mois de l'année.").toLatin1()));
-	data_janvier.insert(23,QString::fromUtf8(QString("Les hivers les plus froids, sont ceux qui prennent vers les Rois").toLatin1()));
-	data_janvier.insert(24,QString::fromUtf8(QString("L'or du soleil en janvier, est or que l'on ne doit envier.").toLatin1()));
-	data_janvier.insert(25,QString::fromUtf8(QString("Mi-janvier, Mi-paille").toLatin1()));
-	data_janvier.insert(26,QString::fromUtf8(QString("Mieux vaut voir chien enragé que chaud soleil en janvier (ou janvier-février)").toLatin1()));
-	data_janvier.insert(27,QString::fromUtf8(QString("Neige en janvier, blé au grenier.").toLatin1()));
-	data_janvier.insert(28,QString::fromUtf8(QString("Neige de janvier vaut fumier.").toLatin1()));
-	data_janvier.insert(29,QString::fromUtf8(QString("On a vu le plus mauvais temps quand janvier montre les dents.").toLatin1()));
-	data_janvier.insert(30,QString::fromUtf8(QString("Pluie de juillet, eau en janvier.").toLatin1()));
-	data_janvier.insert(31,QString::fromUtf8(QString("Pluie qui dure en janvier suffit pour toute l'année").toLatin1()));
-	data.insert(1, data_janvier);
-	QMap<int, QString> data_fevrier;
-	data_fevrier.insert(1,QString::fromUtf8(QString("A mi-février, mi-grenier").toLatin1()));
-	data_fevrier.insert(2,QString::fromUtf8(QString("Au mois de février, chaque bête cherche son pareil").toLatin1()));
-	data_fevrier.insert(3,QString::fromUtf8(QString("Au mois de février, chaque herbe fait son pied.").toLatin1()));
-	data_fevrier.insert(4,QString::fromUtf8(QString("Beau février c'est disette au grenier.").toLatin1()));
-	data_fevrier.insert(5,QString::fromUtf8(QString("Beaux jours de janvier trompent l'homme en février.").toLatin1()));
-	data_fevrier.insert(6,QString::fromUtf8(QString("Cadeau de janvier, ingratitude de février.").toLatin1()));
-	data_fevrier.insert(7,QString::fromUtf8(QString("Crapaud qui chante en février a l'Hiver derrière lui.").toLatin1()));
-	data_fevrier.insert(8,QString::fromUtf8(QString("Eau de février vaut jus de fumier (ou eau de fumier).").toLatin1()));
-	data_fevrier.insert(9,QString::fromUtf8(QString("En février, civelles, en mars, bonnes et belles, En avril, fi d'elles.").toLatin1()));
-	data_fevrier.insert(10,QString::fromUtf8(QString("En février, la feuille au groseiller.").toLatin1()));
-	data_fevrier.insert(11,QString::fromUtf8(QString("En février le tonnerre fait tenir l'huile dans une cuillére.").toLatin1()));
-	data_fevrier.insert(12,QString::fromUtf8(QString("En février, les agneaux naissent plus beaux.").toLatin1()));
-	data_fevrier.insert(13,QString::fromUtf8(QString("En février toute oie de bonne race pond sur le fumier").toLatin1()));
-	data_fevrier.insert(14,QString::fromUtf8(QString("février avec neige nous garantit un bel été").toLatin1()));
-	data_fevrier.insert(15,QString::fromUtf8(QString("février, bon mois pour semer carottes et pois.").toLatin1()));
-	data_fevrier.insert(16,QString::fromUtf8(QString("février doit remplir les fossés, et mars, après, les quitter séchés.").toLatin1()));
-	data_fevrier.insert(17,QString::fromUtf8(QString("février, entre tous les mois, le plus court et le moins courtois.").toLatin1()));
-	data_fevrier.insert(18,QString::fromUtf8(QString("février est de tous les mois, le plus court et le plus mâtois").toLatin1()));
-	data_fevrier.insert(19,QString::fromUtf8(QString("février et mars trop chauds, mettent le printemps au tombeau.").toLatin1()));
-	data_fevrier.insert(20,QString::fromUtf8(QString("février finit vite et commence bien.").toLatin1()));
-	data_fevrier.insert(21,QString::fromUtf8(QString("février, le plus court des mois, est de tous le pire à la fois.").toLatin1()));
-	data_fevrier.insert(22,QString::fromUtf8(QString("février n'a pas deux jours pareils").toLatin1()));
-	data_fevrier.insert(23,QString::fromUtf8(QString("février neigeux, Eté avantageux").toLatin1()));
-	data_fevrier.insert(24,QString::fromUtf8(QString("février n'est jamais si dur et si méchant qu'il ne nous fasse don de sept jours de printemps.").toLatin1()));
-	data_fevrier.insert(25,QString::fromUtf8(QString("février qui gèle et tonne annonce un bel automne").toLatin1()));
-	data_fevrier.insert(26,QString::fromUtf8(QString("février remplit les fossés, c'est à mars de les assécher.").toLatin1()));
-	data_fevrier.insert(27,QString::fromUtf8(QString("février remplit les fossés, mars les vide.").toLatin1()));
-	data_fevrier.insert(28,QString::fromUtf8(QString("février rigoureux effraie les frileux.").toLatin1()));
-	data.insert(2, data_fevrier);
-	QMap<int, QString> data_mars;
-	data_mars.insert(1,QString::fromUtf8(QString("A mars poudreux, avril pluvieux.").toLatin1()));
-	data_mars.insert(2,QString::fromUtf8(QString("Au commencement, à la fin, mars a du poison.").toLatin1()));
-	data_mars.insert(3,QString::fromUtf8(QString("Autant de brouillard en mars que de gelées en mai.").toLatin1()));
-	data_mars.insert(4,QString::fromUtf8(QString("Autant de brumes en mars, autant de fruits en mai").toLatin1()));
-	data_mars.insert(5,QString::fromUtf8(QString("Autant de gelées en mars, autant de rosées en avril.").toLatin1()));
-	data_mars.insert(6,QString::fromUtf8(QString("Brouillard en mars, gelée en mai.").toLatin1()));
-	data_mars.insert(7,QString::fromUtf8(QString("C'est en mars que le Printemps chante, et que les rhumatismes commencent (ou augmentent).").toLatin1()));
-	data_mars.insert(8,QString::fromUtf8(QString("De mars la verdure, mauvaise augure.").toLatin1()));
-	data_mars.insert(9,QString::fromUtf8(QString("Des fleurs de mars ne tient pas compte, non plus que des filles sans honte.").toLatin1()));
-	data_mars.insert(10,QString::fromUtf8(QString("Des fleurs que mars verra, peu de fruits on mangera.").toLatin1()));
-	data_mars.insert(11,QString::fromUtf8(QString("Des fleurs qui s'ouvrent en mars, on n'a que le regard.").toLatin1()));
-	data_mars.insert(12,QString::fromUtf8(QString("En février, civelles, en mars, bonnes et belles, En avril, fi d'elles.").toLatin1()));
-	data_mars.insert(13,QString::fromUtf8(QString("En mars, autant de gelées, en avril autant de poussées.").toLatin1()));
-	data_mars.insert(14,QString::fromUtf8(QString("En mars, firmament très éloigné, changement de temps peu éloigné. ").toLatin1()));
-	data_mars.insert(15,QString::fromUtf8(QString("En mars les vaches au pré , si ce n'est pour manger, c'est pour s'y gratter.").toLatin1()));
-	data_mars.insert(16,QString::fromUtf8(QString("En mars, manteau de neige dans les près, manteau de foin prochain été").toLatin1()));
-	data_mars.insert(17,QString::fromUtf8(QString("En mars, quand il fait beau, prends ton manteau.").toLatin1()));
-	data_mars.insert(18,QString::fromUtf8(QString("En mars, quand il tonne chacun s'en étonne.").toLatin1()));
-	data_mars.insert(19,QString::fromUtf8(QString("En mars, quand le merle a sifflé, l'hiver s'en est allé").toLatin1()));
-	data_mars.insert(20,QString::fromUtf8(QString("En mars, vent ou pluie, que chacun veille sur lui.").toLatin1()));
-	data_mars.insert(21,QString::fromUtf8(QString("Entre mars et avril, on sait si le coucou est mort ou en vie.").toLatin1()));
-	data_mars.insert(22,QString::fromUtf8(QString("février et mars trop chauds, mettent le printemps au tombeau.").toLatin1()));
-	data_mars.insert(23,QString::fromUtf8(QString("février remplit les fossés, c'est à mars de les assécher.").toLatin1()));
-	data_mars.insert(24,QString::fromUtf8(QString("février remplit les fossés, mars les vide.").toLatin1()));
-	data_mars.insert(25,QString::fromUtf8(QString("Fleur marsière ne tient guère.").toLatin1()));
-	data_mars.insert(26,QString::fromUtf8(QString("Hâle de mars, pluie d'avril, rosée de mai, font d'août et septembre les plus beaux mois de l'année.").toLatin1()));
-	data_mars.insert(27,QString::fromUtf8(QString("La vigne dit : En mars me lie, en mars me taille, en mars il faut qu'on me travaille.").toLatin1()));
-	data_mars.insert(28,QString::fromUtf8(QString("Le bourgeon de mars rempli les chars, celui d'avril le baril, celui de mai le chai.").toLatin1()));
-	data_mars.insert(29,QString::fromUtf8(QString("Le soleil de mars, donne des rhumes tenaces.").toLatin1()));
-	data_mars.insert(30,QString::fromUtf8(QString("Malgré le mauvais temps, mars prépare en secret le printemps.").toLatin1()));
-	data_mars.insert(31,QString::fromUtf8(QString("mars avec ses marteaux, dans leur mère tue leur veaux.").toLatin1()));
-	data.insert(3, data_mars);
-	QMap<int, QString> data_avril;
-	data_avril.insert(1,QString::fromUtf8(QString(" Pluie de Saint-Hugues à Sainte-Sophie, Remplit granges et fournils.").toLatin1()));
-	data_avril.insert(2,QString::fromUtf8(QString(" Au moment où  commence avril, L'esprit doit se montrer subtil").toLatin1()));
-	data_avril.insert(3,QString::fromUtf8(QString(" Comme il fait le trois, Il fait le mois.").toLatin1()));
-	data_avril.insert(4,QString::fromUtf8(QString(" Si les quatre premiers jours d'avril sont venteux il y en aura pour quarante jours.").toLatin1()));
-	data_avril.insert(5,QString::fromUtf8(QString(" A la Sainte-Irène s'il fait beau, Il y aura moins de vin que d'eau.").toLatin1()));
-	data_avril.insert(6,QString::fromUtf8(QString(" Au jour de Saint-Prudence, S'il fait du vent, les moutons dansent.").toLatin1()));
-	data_avril.insert(7,QString::fromUtf8(QString(" Au sept d'avril, après le coucou, c'est le rossignol qui chante.").toLatin1()));
-	data_avril.insert(8,QString::fromUtf8(QString(" S'il pleut à l'Annonciation, Pluie en août à foison.").toLatin1()));
-	data_avril.insert(9,QString::fromUtf8(QString(" A la Sainte-Marie, toutes les aubépines sont fleuries.").toLatin1()));
-	data_avril.insert(10,QString::fromUtf8(QString(" Quand avril est froid et pluvieux, Les moissons n'en vont que mieux.").toLatin1()));
-	data_avril.insert(11,QString::fromUtf8(QString(" avril fait la fleur, mai en a l'honneur.").toLatin1()));
-	data_avril.insert(12,QString::fromUtf8(QString(" A Saint-Jules, les sansonnets tiennent ménages dans les clochers.").toLatin1()));
-	data_avril.insert(13,QString::fromUtf8(QString(" avril frais et mai chaud, Remplissent les granges jusqu'en haut.").toLatin1()));
-	data_avril.insert(14,QString::fromUtf8(QString(" Lorsqu'arrive la Saint-Valérien, l'arbre bourgeonne et les fruits ne sont plus loin.").toLatin1()));
-	data_avril.insert(15,QString::fromUtf8(QString(" Quand de Saint-Paterne vient la saison, la chaleur vient pour de bon.").toLatin1()));
-	data_avril.insert(16,QString::fromUtf8(QString(" Saint-Druon pluvieux, an fromenteux.").toLatin1()));
-	data_avril.insert(17,QString::fromUtf8(QString(" avril froid, pain et vin donne, mai froid les moissonne.").toLatin1()));
-	data_avril.insert(18,QString::fromUtf8(QString(" Lune d'avril Ne passe pas sans gelée.").toLatin1()));
-	data_avril.insert(19,QString::fromUtf8(QString(" A Sainte-léonide, Chaque blé pousse rapide.").toLatin1()));
-	data_avril.insert(20,QString::fromUtf8(QString(" A Sainte Théodore, Fleurit chaque bouton d'or.").toLatin1()));
-	data_avril.insert(21,QString::fromUtf8(QString(" A Saint-Anselme, Dernières fleurs sème.").toLatin1()));
-	data_avril.insert(22,QString::fromUtf8(QString(" Pluie le jour de Sainte-Opportune, Ni cerises, ni prunes.").toLatin1()));
-	data_avril.insert(23,QString::fromUtf8(QString(" Quand il pleut le jour de Saint-Georges, Sur cent cerises, on a quatorze.").toLatin1()));
-	data_avril.insert(24,QString::fromUtf8(QString(" avril a trente jours. Si trente et un il avait, Personne ne s'en plaindrait.").toLatin1()));
-	data_avril.insert(25,QString::fromUtf8(QString(" Entre Georges et Marquet, un jour de l'hiver se met.").toLatin1()));
-	data_avril.insert(26,QString::fromUtf8(QString(" Saint-Clet ferme la porte aux derniers pois.").toLatin1()));
-	data_avril.insert(27,QString::fromUtf8(QString(" A la Sainte-Zita, Le froid ne dure pas.").toLatin1()));
-	data_avril.insert(28,QString::fromUtf8(QString(" A Saint-Aimé, point de moutons affamés.").toLatin1()));
-	data_avril.insert(29,QString::fromUtf8(QString(" Caprices d'avril font tomber les fleurs, Et trembler les laboureurs.").toLatin1()));
-	data_avril.insert(30,QString::fromUtf8(QString(" A la Saint-Robert Tout arbre est vert.").toLatin1()));
-	data.insert(4, data_avril);
-	QMap<int, QString> data_mai;
-	data_mai.insert(1,QString::fromUtf8(QString(" De la pluie le premier jour de mai, Ote aux fourrages de la qualité").toLatin1()));
-	data_mai.insert(2,QString::fromUtf8(QString(" Au jour de la Saint-Boris, par malheur, c'est un mauvais vendangeur.").toLatin1()));
-	data_mai.insert(3,QString::fromUtf8(QString(" Qui n'a pas semé à la Sainte-Croix, Au lieu d'un grain en mettra trois.").toLatin1()));
-	data_mai.insert(4,QString::fromUtf8(QString(" mai fait ou défait.").toLatin1()));
-	data_mai.insert(5,QString::fromUtf8(QString(" Sainte Judith voit pinson au nid.").toLatin1()));
-	data_mai.insert(6,QString::fromUtf8(QString(" S'il fait beau à la petite Saint-Jean, année fructueuse en froment.").toLatin1()));
-	data_mai.insert(7,QString::fromUtf8(QString(" mai frileux: an langoureux. mai fleuri: an réjoui. mai venteux: an douteux.").toLatin1()));
-	data_mai.insert(8,QString::fromUtf8(QString(" Au mois de mai il faudrait qu'il ne plût jamais.").toLatin1()));
-	data_mai.insert(9,QString::fromUtf8(QString(" Rosée de mai, fait tout beau ou tout laid.").toLatin1()));
-	data_mai.insert(10,QString::fromUtf8(QString(" C'est à la Saint-Antonin, Que vend son vin le malin.").toLatin1()));
-	data_mai.insert(11,QString::fromUtf8(QString(" Attention, le premier des saints de glace, souvent tu en gardes la trace.").toLatin1()));
-	data_mai.insert(12,QString::fromUtf8(QString(" Les trois saints au sang de navet, Pancrace, Mamert et Servais, Sont bien nommés les saints de glace, Mamert, Servais et Pancrace.").toLatin1()));
-	data_mai.insert(13,QString::fromUtf8(QString(" Avant Saint-Servais, point d'été, après Saint-Servais, plus de gelée.").toLatin1()));
-	data_mai.insert(14,QString::fromUtf8(QString(" Saint-Boniface nous ôte la boue, Ou il nous en met jusqu'au cou.").toLatin1()));
-	data_mai.insert(15,QString::fromUtf8(QString(" A la Sainte-Denise, Finie la bise.").toLatin1()));
-	data_mai.insert(16,QString::fromUtf8(QString(" A la Saint-Honoré, S'il fait gelée, Le vin diminue de moitié").toLatin1()));
-	data_mai.insert(17,QString::fromUtf8(QString(" S'il tonne au jour de Saint-Pascal, Sans grêle, ce n'est pas un mal.").toLatin1()));
-	data_mai.insert(18,QString::fromUtf8(QString(" Bon fermier, à Sainte-Juliette, doit vendre ses poulettes.").toLatin1()));
-	data_mai.insert(19,QString::fromUtf8(QString(" Craignez le petit Yvonnet, le pire de tous quand il s'y met.").toLatin1()));
-	data_mai.insert(20,QString::fromUtf8(QString(" A Saint-Gobain, le bois prend feuilles, La futaie pousse à vue d'oeil.").toLatin1()));
-	data_mai.insert(21,QString::fromUtf8(QString(" Si elle gèle, Sainte-Quitère emporte tout dans son grand tablier.").toLatin1()));
-	data_mai.insert(22,QString::fromUtf8(QString(" En mai, Fleurit le hêtre et chante le geai.").toLatin1()));
-	data_mai.insert(23,QString::fromUtf8(QString(" Saint-Didier ramasse tout dans son devantier.").toLatin1()));
-	data_mai.insert(24,QString::fromUtf8(QString(" après Sainte-Angèle, le jardinier ne craint plus le gel.").toLatin1()));
-	data_mai.insert(25,QString::fromUtf8(QString(" S'il pleut à la Saint-Urbain, C'est quarante jours de pluie en chemin.").toLatin1()));
-	data_mai.insert(26,QString::fromUtf8(QString(" Quand il pleut à la Saint-Philippe, Le pauvre n'a pas besoin du riche.").toLatin1()));
-	data_mai.insert(27,QString::fromUtf8(QString(" A la Saint-Hildevert, Est mort tout arbre qui n'est pas vert.").toLatin1()));
-	data_mai.insert(28,QString::fromUtf8(QString(" Soleil de Saint-Germain, Nous promet du bon vin.").toLatin1()));
-	data_mai.insert(29,QString::fromUtf8(QString(" Celui qui s'allége avant le mois de mai, Certainement ne sait pas ce qu'il fait.").toLatin1()));
-	data_mai.insert(30,QString::fromUtf8(QString(" Lorsque mai est trop jardinier, cela ne remplit pas le grenier.").toLatin1()));
-	data_mai.insert(31,QString::fromUtf8(QString(" S'il pleut le jour de Sainte-Pétronille, le blé diminue jusqu'à la faucille.").toLatin1()));
-	data.insert(5, data_mai);
-	QMap<int, QString> data_juin;
-	data_juin.insert(1,QString::fromUtf8(QString(" A la Saint-Fortuné, grande hannetonnée.").toLatin1()));
-	data_juin.insert(2,QString::fromUtf8(QString(" A la Saint-Pothin, bonhomme, sême ton sarrasin.").toLatin1()));
-	data_juin.insert(3,QString::fromUtf8(QString(" A la Sainte-Clotilde, de fleur en buisson, Abeille butine à foison.").toLatin1()));
-	data_juin.insert(4,QString::fromUtf8(QString(" En juin, brume obscure, Trois jours seulement dure.").toLatin1()));
-	data_juin.insert(5,QString::fromUtf8(QString(" Prépare autant de tonneaux qu'en juin tu compteras de beaux jours.").toLatin1()));
-	data_juin.insert(6,QString::fromUtf8(QString(" Les bains que prend Saint-Norbert, Inondent toute la terre.").toLatin1()));
-	data_juin.insert(7,QString::fromUtf8(QString(" En juin trop de pluie et le grenier vide s'ennuie.").toLatin1()));
-	data_juin.insert(8,QString::fromUtf8(QString(" Saint-mars mouillé au petit jour, C'est de la pluie pour tout le jour.").toLatin1()));
-	data_juin.insert(9,QString::fromUtf8(QString(" A Saint-Félicien, mouche à miel n'a plus de bien.").toLatin1()));
-	data_juin.insert(10,QString::fromUtf8(QString(" A la Saint-Landry, s'il tonne restera vide la tonne.").toLatin1()));
-	data_juin.insert(11,QString::fromUtf8(QString(" Le soleil de Saint-Barnabé, à Saint-Médard casse le nez.").toLatin1()));
-	data_juin.insert(12,QString::fromUtf8(QString(" Qui naît à la Saint-Basilide ne sera jamais invalide.").toLatin1()));
-	data_juin.insert(13,QString::fromUtf8(QString(" Qui sème sa salade à Saint-Antoine en a comme la barbe d'un moine.").toLatin1()));
-	data_juin.insert(14,QString::fromUtf8(QString(" A Saint-Rufin, Cerises à plein jardin.").toLatin1()));
-	data_juin.insert(15,QString::fromUtf8(QString(" Pluie de Saint-Guy, c'est tout l'an qui rit.").toLatin1()));
-	data_juin.insert(16,QString::fromUtf8(QString(" Pluie de Saint-Aurélien, Belle avoine et mauvais foin.").toLatin1()));
-	data_juin.insert(17,QString::fromUtf8(QString(" S'il pleut à la Saint-François-Régis, le vin diminue jusqu'à la lie.").toLatin1()));
-	data_juin.insert(18,QString::fromUtf8(QString(" Pluie de Saint-léonce pour trente jours s'annonce.").toLatin1()));
-	data_juin.insert(19,QString::fromUtf8(QString(" Saint-Gervais, quand il est beau, Tire Médard et Barnabé de l'eau.").toLatin1()));
-	data_juin.insert(20,QString::fromUtf8(QString(" Pluie d'orage à la Saint-Sylvère, C'est beaucoup de vin dans le verre.").toLatin1()));
-	data_juin.insert(21,QString::fromUtf8(QString(" Pleurs de femmes et pluies d'été gros ruisseaux n'ont jamais fait.").toLatin1()));
-	data_juin.insert(22,QString::fromUtf8(QString(" A la Saint-Alban, On peut poser ses vêtements.").toLatin1()));
-	data_juin.insert(23,QString::fromUtf8(QString(" Qui pêche en juin, pêche fretin.").toLatin1()));
-	data_juin.insert(24,QString::fromUtf8(QString(" Pluie de Saint-Jean noie les noisettes, mais beau temps de Saint-Pierre les rachète.").toLatin1()));
-	data_juin.insert(25,QString::fromUtf8(QString(" S'il fait beau à la Saint-Guillaume, auras du blé plus que de chaume.").toLatin1()));
-	data_juin.insert(26,QString::fromUtf8(QString(" En juin trop de pluie, et le jardinier s'ennuie.").toLatin1()));
-	data_juin.insert(27,QString::fromUtf8(QString(" S'il pleut en juin, le jardinier ronge son poing.").toLatin1()));
-	data_juin.insert(28,QString::fromUtf8(QString(" A la Saint-Fabien, bon foin jaunit bien.").toLatin1()));
-	data_juin.insert(29,QString::fromUtf8(QString(" Saint-Pierre et Paul pluvieux, Est pour trente jours dangereux.").toLatin1()));
-	data_juin.insert(30,QString::fromUtf8(QString(" Lorsqu'en juin on voit sa fin, Saint-Martial souvent lave le chemin.").toLatin1()));
-	data.insert(6, data_juin);
-	QMap<int, QString> data_juillet;
-	data_juillet.insert(1,QString::fromUtf8(QString("Au mois de juillet, bouche noire, gosier sec.").toLatin1()));
-	data_juillet.insert(2,QString::fromUtf8(QString("Au mois de juillet, ni veste, ni corset").toLatin1()));
-	data_juillet.insert(3,QString::fromUtf8(QString("Au mois de juillet, on met la faux au sillon").toLatin1()));
-	data_juillet.insert(4,QString::fromUtf8(QString("Au mois de juin et de juillet, qui se marie, fort peu fait.").toLatin1()));
-	data_juillet.insert(5,QString::fromUtf8(QString("avril, quelques nids, mai, ils sont tous faits, juin, ils sont biens communs, juillet, ils sont tous cueillis.").toLatin1()));
-	data_juillet.insert(6,QString::fromUtf8(QString("Ciel de juillet rouge au matin, veut un pluvieux voisin.").toLatin1()));
-	data_juillet.insert(7,QString::fromUtf8(QString("De juillet, la chaleur fait de septembre la valeur").toLatin1()));
-	data_juillet.insert(8,QString::fromUtf8(QString("En juillet, faucille au poignet").toLatin1()));
-	data_juillet.insert(9,QString::fromUtf8(QString("En juillet jusqu'au dernier mets ton blé dans le grenier").toLatin1()));
-	data_juillet.insert(10,QString::fromUtf8(QString("En juillet mois d'abondance, le pauvre a toujours sa pitance.").toLatin1()));
-	data_juillet.insert(11,QString::fromUtf8(QString("En juillet pluie du matin est bonne au grain.").toLatin1()));
-	data_juillet.insert(12,QString::fromUtf8(QString("En juin, juillet et août, ni femme (ou ni huitres) ni choux.").toLatin1()));
-	data_juillet.insert(13,QString::fromUtf8(QString("En mi-juillet, pluie ou vent font mal au froment").toLatin1()));
-	data_juillet.insert(14,QString::fromUtf8(QString("Entre juillet et août, le boire est de bon goût.").toLatin1()));
-	data_juillet.insert(15,QString::fromUtf8(QString("Frais juillet épaisse tourte, met peu de vin dans la coupe").toLatin1()));
-	data_juillet.insert(16,QString::fromUtf8(QString("juillet, c'est le mois de la moisson, vite on dépouille les sillons").toLatin1()));
-	data_juillet.insert(17,QString::fromUtf8(QString("juillet doit rôtir ce que septembre mûrira.").toLatin1()));
-	data_juillet.insert(18,QString::fromUtf8(QString("Jamais en juillet sècheresse n'a causé la moindre tristesse").toLatin1()));
-	data_juillet.insert(19,QString::fromUtf8(QString("juillet ensoleillé remplit cave et grenier.").toLatin1()));
-	data_juillet.insert(20,QString::fromUtf8(QString("juillet et août, ni femmes ni choux").toLatin1()));
-	data_juillet.insert(21,QString::fromUtf8(QString("juillet, orage de nuit, peu de mal, mais que de bruit !").toLatin1()));
-	data_juillet.insert(22,QString::fromUtf8(QString("juillet sans orage, famine au village.").toLatin1()));
-	data_juillet.insert(23,QString::fromUtf8(QString("Les abeilles en juillet ne valent grain de millet.").toLatin1()));
-	data_juillet.insert(24,QString::fromUtf8(QString("mai, juin, juillet, bouche fraîche, le reste net.").toLatin1()));
-	data_juillet.insert(25,QString::fromUtf8(QString("Ne vous plaignez pas s'il tonne en juillet ; car en ce mois s'il ne tonnait, guerre et famine il y aurait.").toLatin1()));
-	data_juillet.insert(26,QString::fromUtf8(QString("On ne sait si juillet est bon qu'après - Faîtes la moisson").toLatin1()));
-	data_juillet.insert(27,QString::fromUtf8(QString("Petite pluie du matin en juillet est bonne pour le vin").toLatin1()));
-	data_juillet.insert(28,QString::fromUtf8(QString("Pluie de juillet, eau en janvier.").toLatin1()));
-	data_juillet.insert(29,QString::fromUtf8(QString("Pluie du matin, en juillet est bonne au vin").toLatin1()));
-	data_juillet.insert(30,QString::fromUtf8(QString("Pour avoir un beau navet, juillet doit le trouver fait.").toLatin1()));
-	data_juillet.insert(31,QString::fromUtf8(QString("Quand juillet commencera, ta faux affûteras").toLatin1()));
-	data.insert(7, data_juillet);
-	QMap<int, QString> data_aout;
-	data_aout.insert(1,QString::fromUtf8(QString("A la mi-août, les noix ont le ventre roux.").toLatin1()));
-	data_aout.insert(2,QString::fromUtf8(QString("A la mi-août, l'hiver se noue.").toLatin1()));
-	data_aout.insert(3,QString::fromUtf8(QString("août couve, septembre fait naître").toLatin1()));
-	data_aout.insert(4,QString::fromUtf8(QString("août mûrit les fruits, septembre les cueille.").toLatin1()));
-	data_aout.insert(5,QString::fromUtf8(QString("août mûrit, septembre vendange, en ces deux mois, tout bien s'arrange.").toLatin1()));
-	data_aout.insert(6,QString::fromUtf8(QString("août pluvieux, celliers vineux.").toLatin1()));
-	data_aout.insert(7,QString::fromUtf8(QString("août sans pluie fait maigrir la vache").toLatin1()));
-	data_aout.insert(8,QString::fromUtf8(QString("Au mois d'août, femmes retirez-vous.").toLatin1()));
-	data_aout.insert(9,QString::fromUtf8(QString("Au mois d'août il fait bon aller chercher salade au jardin").toLatin1()));
-	data_aout.insert(10,QString::fromUtf8(QString("Au mois d'août, le vent est fou.").toLatin1()));
-	data_aout.insert(11,QString::fromUtf8(QString("Au mois d'août, n'ôte ta flanelle qu'en cas de chaleur torrentielle !").toLatin1()));
-	data_aout.insert(12,QString::fromUtf8(QString("Ce que le mois d'août ne mûrira pas, ce n'est pas septembre qui le fera.").toLatin1()));
-	data_aout.insert(13,QString::fromUtf8(QString("C'est le mois d'août qui donne bon goût").toLatin1()));
-	data_aout.insert(14,QString::fromUtf8(QString("Chaleur d'août, c'est du bien partout").toLatin1()));
-	data_aout.insert(15,QString::fromUtf8(QString("Coupe ton bois en pleine lune d'août, il sera sain comme un os").toLatin1()));
-	data_aout.insert(16,QString::fromUtf8(QString("Dieu nous garde de la fange d'août, et de la poussière de mai.").toLatin1()));
-	data_aout.insert(17,QString::fromUtf8(QString("En août et en vendanges (ou : comme aux vendanges), il y a ni fêtes, ni dimanches.").toLatin1()));
-	data_aout.insert(18,QString::fromUtf8(QString("En août, il fait bon aller chercher salade et ciboule").toLatin1()));
-	data_aout.insert(19,QString::fromUtf8(QString("En août, les gélines sont sourdes (car ce mois là, les poules sont silencieuses).").toLatin1()));
-	data_aout.insert(20,QString::fromUtf8(QString("En août, le vent est fou").toLatin1()));
-	data_aout.insert(21,QString::fromUtf8(QString("En août, quiconque dormira sur midi s'en repentira").toLatin1()));
-	data_aout.insert(22,QString::fromUtf8(QString("En mai la boue, épis en août").toLatin1()));
-	data_aout.insert(23,QString::fromUtf8(QString("En novembre fou engendre, en août gît sa femme.").toLatin1()));
-	data_aout.insert(24,QString::fromUtf8(QString("Entre juillet et août, le boire est de bon goût.").toLatin1()));
-	data_aout.insert(25,QString::fromUtf8(QString("Il faut cueillir les choux, l'un des trois premier jours d'août.").toLatin1()));
-	data_aout.insert(26,QString::fromUtf8(QString("Jamais d'août la sécheresse n'amènera la richesse").toLatin1()));
-	data_aout.insert(27,QString::fromUtf8(QString("juillet et août, ni femmes ni choux").toLatin1()));
-	data_aout.insert(28,QString::fromUtf8(QString("Les deux Notre-Dame : Pèriode qui va du 15 août (Assomption) au 4 sept. (Nativité) :").toLatin1()));
-	data_aout.insert(29,QString::fromUtf8(QString("Les oeufs pondus entre les deux Notre-Dame, se gardent plus longtemps que les autres.").toLatin1()));
-	data_aout.insert(30,QString::fromUtf8(QString("Pluie de Notre-Dame, fait tout vin ou tout châtaigne.").toLatin1()));
-	data_aout.insert(31,QString::fromUtf8(QString("Entre les deux Notre-Dame, jamais serpent n'a osé se montrer").toLatin1()));
-	data.insert(8, data_aout);
-	QMap<int, QString> data_septembre;
-	data_septembre.insert(1,QString::fromUtf8(QString("août mûrit, septembre vendange, en ces deux mois, tout bien s'arrange.").toLatin1()));
-	data_septembre.insert(2,QString::fromUtf8(QString("Au mois de septembre, le feignant peut aller se pendre").toLatin1()));
-	data_septembre.insert(3,QString::fromUtf8(QString("Beau septembre emplira les chambres").toLatin1()));
-	data_septembre.insert(4,QString::fromUtf8(QString("Ce que le mois d'août ne mûrira pas, ce n'est pas septembre qui le fera.").toLatin1()));
-	data_septembre.insert(5,QString::fromUtf8(QString("Du premier au 8, l'hirondelle fuit.").toLatin1()));
-	data_septembre.insert(6,QString::fromUtf8(QString("En septembre, il fait bon être tout le jour dans la campagne").toLatin1()));
-	data_septembre.insert(7,QString::fromUtf8(QString("En septembre, la bruine, est toujours bonne à la vigne.").toLatin1()));
-	data_septembre.insert(8,QString::fromUtf8(QString("En septembre, le raisin ou la figue pendent.").toLatin1()));
-	data_septembre.insert(9,QString::fromUtf8(QString("En septembre, les feignants peuvent s'aller pendre.").toLatin1()));
-	data_septembre.insert(10,QString::fromUtf8(QString("En septembre pluie fine est bonne pour la vigne").toLatin1()));
-	data_septembre.insert(11,QString::fromUtf8(QString("En septembre, quand tu entends la grive chanter, cherche la maison pour t'abriter ou du bois pour te chauffer").toLatin1()));
-	data_septembre.insert(12,QString::fromUtf8(QString("En septembre se coupe ce qui pend.").toLatin1()));
-	data_septembre.insert(13,QString::fromUtf8(QString("En septembre, si brume reste en haut, il pleuvra à seau").toLatin1()));
-	data_septembre.insert(14,QString::fromUtf8(QString("En septembre, s'il tonne, la vendange est bonne").toLatin1()));
-	data_septembre.insert(15,QString::fromUtf8(QString("En septembre si trois jours il tonne, c'est un nouveau bail pour l'automne.").toLatin1()));
-	data_septembre.insert(16,QString::fromUtf8(QString("En septembre si tu es prudent, achète grains et vêtements.").toLatin1()));
-	data_septembre.insert(17,QString::fromUtf8(QString("En septembre, sois prudent, achète bois et vêtement !").toLatin1()));
-	data_septembre.insert(18,QString::fromUtf8(QString("En septembre, tous les fruits valent le prendre").toLatin1()));
-	data_septembre.insert(19,QString::fromUtf8(QString("Etoiles filantes en septembre, tonneaux petits en novembre").toLatin1()));
-	data_septembre.insert(20,QString::fromUtf8(QString("juillet doit rôtir ce que septembre mûrira").toLatin1()));
-	data_septembre.insert(21,QString::fromUtf8(QString("Le coq, en septembre, chantant la matinée, annonce une abondante rosée.").toLatin1()));
-	data_septembre.insert(22,QString::fromUtf8(QString("Nuées de septembre, pluie de novembre, gel en décembre").toLatin1()));
-	data_septembre.insert(23,QString::fromUtf8(QString("Orages de septembre, Neige en décembre").toLatin1()));
-	data_septembre.insert(24,QString::fromUtf8(QString("Pluie de septembre est bonne à semailles et à vigne").toLatin1()));
-	data_septembre.insert(25,QString::fromUtf8(QString("Pluie de septembre, joie du paysan").toLatin1()));
-	data_septembre.insert(26,QString::fromUtf8(QString("Pour vendanger il faut attendre au moins la fin de septembre.").toLatin1()));
-	data_septembre.insert(27,QString::fromUtf8(QString("Quand août n'est pas pluvieux, septembre est souvent radieux").toLatin1()));
-	data_septembre.insert(28,QString::fromUtf8(QString("Quand beaucoup d'étoiles filent en septembre, les tonneaux sont trop petits en novembre").toLatin1()));
-	data_septembre.insert(29,QString::fromUtf8(QString("Qu'en septembre il tonne, la vendange est bonne").toLatin1()));
-	data_septembre.insert(30,QString::fromUtf8(QString("septembre emporte les ponts ou tarit les fontaines (ou septembre emporte les ponts ou tarit les fonts)").toLatin1()));
-	data.insert(9, data_septembre);
-	QMap<int, QString> data_octobre;
-	data_octobre.insert(1,QString::fromUtf8(QString("Beaucoup de pluie en octobre, beaucoup de vent en décembre.").toLatin1()));
-	data_octobre.insert(2,QString::fromUtf8(QString("Bise à la Saint-Michel (29/09), octobre sec.").toLatin1()));
-	data_octobre.insert(3,QString::fromUtf8(QString("Brouillards d'octobre et pluvieux novembre (ou : pluie de novembre) font bon décembre.").toLatin1()));
-	data_octobre.insert(4,QString::fromUtf8(QString("Brouillard d'octobre, pluie de novembre, beaucoup de biens du ciel font descendre.").toLatin1()));
-	data_octobre.insert(5,QString::fromUtf8(QString("Brumes d'octobre et pluvieux novembre font ensemble un bon décembre").toLatin1()));
-	data_octobre.insert(6,QString::fromUtf8(QString("En octobre, brume passe, beau temps passe.").toLatin1()));
-	data_octobre.insert(7,QString::fromUtf8(QString("En octobre, il faut que l'homme vite s'habille quand le mûrier se déshabille.").toLatin1()));
-	data_octobre.insert(8,QString::fromUtf8(QString("En octobre, mieux vaut faire le feu que labourer par temps mou.").toLatin1()));
-	data_octobre.insert(9,QString::fromUtf8(QString("En octobre, qui n'a pas de manteau doit en trouver un bientôt.").toLatin1()));
-	data_octobre.insert(10,QString::fromUtf8(QString("En octobre, qui ne fume rien ne récolte rien.").toLatin1()));
-	data_octobre.insert(11,QString::fromUtf8(QString("En octobre, s'il tonne c'est la nouvelle bonne").toLatin1()));
-	data_octobre.insert(12,QString::fromUtf8(QString("En octobre, si tu es prudent, achète grains et vêtements").toLatin1()));
-	data_octobre.insert(13,QString::fromUtf8(QString("En octobre tonnerre, vendanges prospères.").toLatin1()));
-	data_octobre.insert(14,QString::fromUtf8(QString("Froid d'octobre tue les chenilles.").toLatin1()));
-	data_octobre.insert(15,QString::fromUtf8(QString("Gelée d'octobre rend le vigneron sobre.").toLatin1()));
-	data_octobre.insert(16,QString::fromUtf8(QString("octobre à moitié pluvieux rend le labour joyeux.").toLatin1()));
-	data_octobre.insert(17,QString::fromUtf8(QString("octobre à moitié pluvieux rend le laboureur joyeux, mais le vendangeur soucieux met de coté son vin vieux.").toLatin1()));
-	data_octobre.insert(18,QString::fromUtf8(QString("octobre en bruine, hiver en ruine.").toLatin1()));
-	data_octobre.insert(19,QString::fromUtf8(QString("octobre en brumes, mois à rhumes.").toLatin1()));
-	data_octobre.insert(20,QString::fromUtf8(QString("octobre ensoleillé, décembre emmitouflé").toLatin1()));
-	data_octobre.insert(21,QString::fromUtf8(QString("octobre est bon, s'il est de saison").toLatin1()));
-	data_octobre.insert(22,QString::fromUtf8(QString("octobre glacé, fait vermine trépasser.").toLatin1()));
-	data_octobre.insert(23,QString::fromUtf8(QString("octobre le vaillant surmène le paysan (ou : octobre le vaillant, fatigue son paysan)").toLatin1()));
-	data_octobre.insert(24,QString::fromUtf8(QString("octobre n'est jamais passé sans qu'il y ait cidre brassé").toLatin1()));
-	data_octobre.insert(25,QString::fromUtf8(QString("Pluie abondante pendant l'automne annonce printemps sec. (dicton breton)").toLatin1()));
-	data_octobre.insert(26,QString::fromUtf8(QString("Quand le vent est au nord le jour de la Saint-Michel (29/09), le mois d'octobre est au sec.").toLatin1()));
-	data_octobre.insert(27,QString::fromUtf8(QString("Quand octobre prend sa fin, dans la cuve est le raisin.").toLatin1()));
-	data_octobre.insert(28,QString::fromUtf8(QString("Quand d'octobre vient la fin, Toussaint est au matin.").toLatin1()));
-	data_octobre.insert(29,QString::fromUtf8(QString("S'il neige en octobre, l'Hiver sera sobre.").toLatin1()));
-	data_octobre.insert(30,QString::fromUtf8(QString("Si octobre s'emplit de vent, du froid tu patiras longtemps.").toLatin1()));
-	data_octobre.insert(31,QString::fromUtf8(QString("Tonnerre en octobre, vendanges peu sobres.").toLatin1()));
-	data.insert(10, data_octobre);
-	QMap<int, QString> data_novembre;
-	data_novembre.insert(1,QString::fromUtf8(QString("A la mi-novembre passée, il peut venter et neiger").toLatin1()));
-	data_novembre.insert(2,QString::fromUtf8(QString("Brouillards d'octobre et pluvieux novembre, font bon décembre.").toLatin1()));
-	data_novembre.insert(3,QString::fromUtf8(QString("Brouillard d'octobre, pluie de novembre, beaucoup de biens du ciel font descendre.").toLatin1()));
-	data_novembre.insert(4,QString::fromUtf8(QString("Brouillard en novembre, l'hiver sera tendre.").toLatin1()));
-	data_novembre.insert(5,QString::fromUtf8(QString("Brumes d'octobre et pluvieux novembre font ensemble un bon décembre").toLatin1()));
-	data_novembre.insert(6,QString::fromUtf8(QString("Chaleur en novembre (ou de la chaleur) cause de bien des gens la mort (ou encore : Chaleur de novembre nuit fort et provoque de bien des gens la mort)").toLatin1()));
-	data_novembre.insert(7,QString::fromUtf8(QString("En novembre, bon paysan va vendre son poulain.").toLatin1()));
-	data_novembre.insert(8,QString::fromUtf8(QString("En novembre fou engendre, en août gît sa femme.").toLatin1()));
-	data_novembre.insert(9,QString::fromUtf8(QString("En novembre, si la première neige ne prend pas, de l'Hiver elle ne prendra.").toLatin1()));
-	data_novembre.insert(10,QString::fromUtf8(QString("Etoiles filantes en septembre, tonneaux petits en novembre").toLatin1()));
-	data_novembre.insert(11,QString::fromUtf8(QString("Le mois des brumes (novembre) réchauffe par-devant et refroidit par-derrière.").toLatin1()));
-	data_novembre.insert(12,QString::fromUtf8(QString("Le mois de novembre est malsain, il fait tousser dés la Toussaint.").toLatin1()));
-	data_novembre.insert(13,QString::fromUtf8(QString("Le vent de novembre arrache la dernière feuille.").toLatin1()));
-	data_novembre.insert(14,QString::fromUtf8(QString("novembre, mois des brumes, réchauffe par-devant et refroidit par-derrière.").toLatin1()));
-	data_novembre.insert(15,QString::fromUtf8(QString("novembre, mois mort, vêts-toi plus fort ! (ou : novembre est le mois des morts, si tu ne veux pas mourir encore, habille-toi plus fort !)").toLatin1()));
-	data_novembre.insert(16,QString::fromUtf8(QString("Nuées de septembre, pluie de novembre, gel en décembre").toLatin1()));
-	data_novembre.insert(17,QString::fromUtf8(QString("Quand il tonne entre Toussaint et Noël, l'Hiver est en retard.").toLatin1()));
-	data_novembre.insert(18,QString::fromUtf8(QString("Quand l'eau sort au mois mort (novembre), toute l'année, elle sort.").toLatin1()));
-	data_novembre.insert(19,QString::fromUtf8(QString("Quand en novembre il a tonné, l'Hiver est avorté").toLatin1()));
-	data_novembre.insert(20,QString::fromUtf8(QString("Quand novembre aura fleurs nouvelles, morte saison sera cruelle.").toLatin1()));
-	data_novembre.insert(21,QString::fromUtf8(QString("Quelque temps qu'il fasse en novembre, commence le feu dans ta chambre !").toLatin1()));
-	data_novembre.insert(22,QString::fromUtf8(QString("Tonnerre de novembre remplit le grenier").toLatin1()));
-	data_novembre.insert(23,QString::fromUtf8(QString("Vent de novembre est mauvais sur l'eau.").toLatin1()));
-	data_novembre.insert(24,QString::fromUtf8(QString("En novembre, bon paysan va vendre son poulain.").toLatin1()));
-	data_novembre.insert(25,QString::fromUtf8(QString("En novembre fou engendre, en août gît sa femme.").toLatin1()));
-	data_novembre.insert(26,QString::fromUtf8(QString("En novembre, si la première neige ne prend pas, de l'Hiver elle ne prendra.").toLatin1()));
-	data_novembre.insert(27,QString::fromUtf8(QString("Etoiles filantes en septembre, tonneaux petits en novembre").toLatin1()));
-	data_novembre.insert(28,QString::fromUtf8(QString("Le mois des brumes (novembre) réchauffe par-devant et refroidit par-derrière.").toLatin1()));
-	data_novembre.insert(29,QString::fromUtf8(QString("Le mois de novembre est malsain, il fait tousser dés laToussaint.").toLatin1()));
-	data_novembre.insert(30,QString::fromUtf8(QString("Le vent de novembre arrache la dernière feuille.").toLatin1()));
-	data.insert(11, data_novembre);
-	QMap<int, QString> data_decembre;
-	data_decembre.insert(2,QString::fromUtf8(QString("Au temps de l'Avent, les coqs chantent par tous les temps.").toLatin1()));
-	data_decembre.insert(3,QString::fromUtf8(QString("Avents fleuris, abondance de fruits.").toLatin1()));
-	data_decembre.insert(4,QString::fromUtf8(QString("Beaucoup de pluie en octobre, beaucoup de vent en décembre.").toLatin1()));
-	data_decembre.insert(5,QString::fromUtf8(QString("Brouillards d'octobre et pluvieux novembre (ou pluie de novembre), font bon décembre.").toLatin1()));
-	data_decembre.insert(6,QString::fromUtf8(QString("Brouillard d'octobre, pluie de novembre, beaucoup de biens du ciel font décembre.").toLatin1()));
-	data_decembre.insert(7,QString::fromUtf8(QString("Brumes d'octobre et pluvieux novembre font ensemble un bon décembre").toLatin1()));
-	data_decembre.insert(8,QString::fromUtf8(QString("Chaque chose en son temps, les navets et les choux pour le mois de l'Avent.").toLatin1()));
-	data_decembre.insert(9,QString::fromUtf8(QString("Dans l'Avent, le temps chaud remplit caves et tonneaux").toLatin1()));
-	data_decembre.insert(10,QString::fromUtf8(QString("décembre aux pieds blancs s'en vient, an de neige et an de bien.").toLatin1()));
-	data_decembre.insert(11,QString::fromUtf8(QString("décembre de froid trop chiche, ne fait pas le paysan riche.").toLatin1()));
-	data_decembre.insert(12,QString::fromUtf8(QString("décembre prend, il ne rend (ou : et ne rend)").toLatin1()));
-	data_decembre.insert(13,QString::fromUtf8(QString("décembre trop beau, Eté dans l'eau.").toLatin1()));
-	data_decembre.insert(14,QString::fromUtf8(QString("De la Toussaint à la fin de l'Avent, jamais trop de puie ou de vent").toLatin1()));
-	data_decembre.insert(15,QString::fromUtf8(QString("En décembre, fait du bois et endors toi.").toLatin1()));
-	data_decembre.insert(16,QString::fromUtf8(QString("décembre froid, si la neige abonde en une année féconde, le laboureur a foi.").toLatin1()));
-	data_decembre.insert(17,QString::fromUtf8(QString("En décembre, journée courte, longue nuit ; l'abeille se tait, le jonc gémit.").toLatin1()));
-	data_decembre.insert(18,QString::fromUtf8(QString("En décembre, les pieds dans la cendre.").toLatin1()));
-	data_decembre.insert(19,QString::fromUtf8(QString("En décembre, pour que l'année aille comme il se doit, il convient que les champs s'enneigent par deux fois.").toLatin1()));
-	data_decembre.insert(20,QString::fromUtf8(QString("En décembre, quand le jour croît, aussi fait le froid.").toLatin1()));
-	data_decembre.insert(21,QString::fromUtf8(QString("Froid et neige de décembre, du blé à revendre.").toLatin1()));
-	data_decembre.insert(22,QString::fromUtf8(QString("Il fait bon semer dans les Avents, mais il ne faut pas le dire aux enfants.").toLatin1()));
-	data_decembre.insert(23,QString::fromUtf8(QString("Il faut les Avents froids et secs, si l'on veut boire sec.").toLatin1()));
-	data_decembre.insert(24,QString::fromUtf8(QString("La neige des Avents, a de longues dents.").toLatin1()));
-	data_decembre.insert(25,QString::fromUtf8(QString("La neige de l'Avent, gèle très facilement.").toLatin1()));
-	data_decembre.insert(26,QString::fromUtf8(QString("Le mois de l'Avent est de pluie et de vent, tire ton bonner jusqu'aux dents").toLatin1()));
-	data_decembre.insert(27,QString::fromUtf8(QString("Le tonnerre en décembre annonce pour l'an qui vient aux bêtes et aux gens abondance de biens.").toLatin1()));
-	data_decembre.insert(28,QString::fromUtf8(QString("Neige de décembre est engrais pour la terre.").toLatin1()));
-	data_decembre.insert(29,QString::fromUtf8(QString("Nuées de septembre, pluie de novembre, gel en décembre").toLatin1()));
-	data_decembre.insert(30,QString::fromUtf8(QString("octobre ensoleillé, décembre emmitouflé").toLatin1()));
-	data_decembre.insert(31,QString::fromUtf8(QString("Orages de septembre, Neige en décembre").toLatin1()));
-	data.insert(12, data_decembre);
-}
 
 #endif

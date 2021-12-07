@@ -1,3 +1,5 @@
+#include <memory>
+
 #include <QDateTime>
 #include <QCryptographicHash>
 #include <QRandomGenerator>
@@ -6,23 +8,24 @@
 #include <QNetworkReply>
 #include <QMapIterator>
 #include <QRegExp>
-#include <memory>
+#include <QJsonDocument>
+
+#include "plugin_weather.h"
+
 #include "account.h"
 #include "bunny.h"
 #include "bunnymanager.h"
-#include "httprequest.h"
-#include "log.h"
 #include "cron.h"
-#include "messagepacket.h"
+#include "log.h"
+#include "packets/messagepacket.h"
 #include "sentencemanager.h"
-#include "plugin_weather.h"
 #include "settings.h"
 #include "translator.h"
-#include "ttsmanager.h"
+#include "tts/ttsmanager.h"
 
-#include <QJsonDocument>
-
-PluginWeather::PluginWeather():PluginInterface("weather", "Current weather and forecasts", BunnyV2Plugin | ApiPlugin | SingleClickPlugin | CronPlugin | RfidPlugin | VoicePlugin | DevPlugin)
+PluginWeather::PluginWeather()
+	: PluginInterface("weather", "Current weather and forecasts",
+					          BunnyV2Plugin | ApiPlugin | SingleClickPlugin | CronPlugin | RfidPlugin | VoicePlugin | DevPlugin)
 {
 }
 
@@ -89,23 +92,16 @@ bool PluginWeather::OnVoiceCommand(Bunny * b, QString const& command, QStringLis
 
 QHash<QString, QString> PluginWeather::GetVoiceCommands(QString lng)
 {
-        QHash<QString, QString> list;
+  QHash<QString, QString> list;
 	foreach(QString keyword, Translator::tr("weather,forecast,forecasts", lng).split(","))
 	{
-               	list.insert(keyword, Translator::tr("Say weather for default city", lng));
+    list.insert(keyword, Translator::tr("Say weather for default city", lng));
 	}
 	return list;
 }
 
 void PluginWeather::getWeatherForCity(Bunny * b, QString ville)
 {
-	int villeId = ville.toInt();
-	if(QString::number(villeId) != ville)
-	{
-    LogDebug("Bunny " + QString(b->GetID()) + " has an invalid city : " + ville);
-    return;
-  }
-
   QFile jsonFile(GetLocalHTTPFolder()->absoluteFilePath("weather.json"));
   if(!jsonFile.open(QIODevice::ReadOnly))
   {

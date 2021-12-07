@@ -5,16 +5,15 @@
 #include <QMetaMethod>
 
 #include "account.h"
-#include "ambientpacket.h"
-#include "nabaztagmanager.h"
-#include "pluginmanager.h"
 #include "bunny.h"
-#include "httprequest.h"
-//#include "netdump.h"
-#include "settings.h"
 #include "bunnymanager.h"
+#include "httprequest.h"
+#include "nabaztagmanager.h"
+#include "packets/ambientpacket.h"
+#include "pluginmanager.h"
+#include "settings.h"
 #include "translator.h"
-#include "ttsmanager.h"
+#include "tts/ttsmanager.h"
 
 NabaztagManager::NabaztagManager()
 {
@@ -31,7 +30,7 @@ NabaztagManager::NabaztagManager()
     defaultBytecode = readFile(fileName);
   }
   {
-    // FIXME Changing the template REQUIRES changing the values in the 
+    // FIXME Changing the template REQUIRES changing the values in the
     // "Fix file offset" section of getAMsgForADP()
     QString nadpFile = "amsg_tpl.nadp";
     QString fileName = QDir(nabPath).absoluteFilePath(nadpFile);
@@ -58,7 +57,7 @@ QByteArray NabaztagManager::getAMsgForADP(const size_t trame, QString filename)
   //qDebug() << "Payload length" << QByteArray::fromHex(encodeHexInt(payload.length(),6));
   //const auto& sz = _amsgBytecode.length() + payload.length();
   //qDebug() << "Sz            " << QByteArray::fromHex(encodeHexInt(sz,6));
-  QByteArray r  = QByteArray::fromHex("05") 
+  QByteArray r  = QByteArray::fromHex("05")
                 + QByteArray::fromHex(encodeHexInt( 0x000000, 6 ))
                 + "amber"
                 + QByteArray::fromHex(encodeHexInt( trame, 8 ))
@@ -78,7 +77,7 @@ QByteArray NabaztagManager::getAMsgForADP(const size_t trame, QString filename)
   r.replace(sz_off,3,QByteArray::fromHex(encodeHexInt(sz,6)));
   qDebug() << "Sz       :" << QByteArray::fromHex(encodeHexInt(sz,6));
   //Fix Checksum
-  const auto cs_off=r.length() - 5; // 
+  const auto cs_off=r.length() - 5; //
   qDebug() << "Checksum :" << QByteArray::fromHex(encodeHexInt( checksum(r), 2));
   r.replace(cs_off,1,QByteArray::fromHex(encodeHexInt( checksum(r), 2)));
   return buildPacket(r);
@@ -320,7 +319,7 @@ void NabaztagManager::handlePing(const HTTPRequest& request, QTcpSocket * s)
                                           // 8XXX or 9XXX Ears movement
   //size_t ts  = request.GetArg("ts");    // Unknown
   //size_t tc  = request.GetArg("tc");    // Unknown. Services ? Trame counter ?
-  //size_t tn  = request.GetArg("tn");    // Unknown 
+  //size_t tn  = request.GetArg("tn");    // Unknown
 
   Bunny * n = BunnyManager::GetBunny(sn.toLatin1());
   bool log = n->GetGlobalSetting("DumpLog",false).toBool();
@@ -503,4 +502,3 @@ void NabaztagManager::InitApiCalls()
 void NabaztagManager::Close()
 {
 }
-

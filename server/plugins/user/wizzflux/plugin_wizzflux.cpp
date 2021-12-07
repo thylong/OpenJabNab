@@ -4,15 +4,19 @@
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>
 #include <QNetworkReply>
-#include "account.h"
+
 #include "plugin_wizzflux.h"
+
+#include "account.h"
 #include "bunny.h"
-#include "cron.h"
 #include "bunnymanager.h"
-#include "messagepacket.h"
+#include "cron.h"
+#include "packets/messagepacket.h"
 
 PluginWizzflux::PluginWizzflux()
-  : PluginInterface("wizzflux", "Various Flux by Wizz.cc", BunnyV2Plugin | ZtampPlugin |SingleClickPlugin | DoubleClickPlugin | CronPlugin | RfidPlugin) 
+  : PluginInterface("wizzflux", "Various Flux by Wizz.cc",
+										BunnyV2Plugin | ZtampPlugin |SingleClickPlugin | DoubleClickPlugin | CronPlugin | RfidPlugin
+									 )
 {
 	srand(time(NULL));
 	Flist = GetSettings("ListFlux", QStringList()).toStringList();
@@ -33,11 +37,6 @@ PluginWizzflux::PluginWizzflux()
 PluginWizzflux::~PluginWizzflux()
 {
     Cron::UnregisterAll(this);
-}
-
-bool PluginWizzflux::Init()
-{
-	return true;
 }
 
 void PluginWizzflux::OnCron(Bunny * b, QVariant v, unsigned int)
