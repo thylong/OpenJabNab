@@ -215,8 +215,8 @@ void PluginSleep::RegisterCrons(Bunny * b)
 	QList<SleepTime> sleeps = getSleepTimes(b->GetPluginSetting(GetName(), QString("SleepList"), QStringList()).toStringList());
 	foreach(SleepTime sleep, sleeps)
 	{
-		Cron::RegisterWeekly(this, (Qt::DayOfWeek)(sleep.wakeOn), sleep.wakeAt, b, Cron::Classic, QVariant(), "OnCronWakeUp");
-		Cron::RegisterWeekly(this, (Qt::DayOfWeek)(sleep.sleepOn), sleep.sleepAt, b, Cron::Classic, QVariant(), "OnCronSleep");
+		Cron::RegisterWeekly(this, (Qt::DayOfWeek)(sleep.wakeOn), sleep.wakeAt, b, Cron::Classic, QVariant(), [&](Bunny*b, QVariant d, Cron::CronType t) { this->OnCronWakeUp(b,d,t); });
+		Cron::RegisterWeekly(this, (Qt::DayOfWeek)(sleep.sleepOn), sleep.sleepAt, b, Cron::Classic, QVariant(), [&](Bunny*b, QVariant d, Cron::CronType t) { this->OnCronSleep(b,d,t); });
 	}
 }
 
