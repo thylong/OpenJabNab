@@ -2036,15 +2036,15 @@ API_CALL(Bunny::Api_getAllCronList)
 		return new ApiAnswers::Error(Translator::tr("Access denied", account));
 
 	QString crons = "<crons>";
-	std::list<CronElement>::iterator i;
-	std::list<CronElement> list = Cron::ListAllBunnyCron(this);
+	std::list<Cron::CronElement>::iterator i;
+	std::list<Cron::CronElement> list = Cron::ListAllBunnyCron(this);
 	for (i = list.begin(); i != list.end(); ++i)
 	{
 		crons += "<cron>";
 		crons += "<type>" + QString::number((*i).type) + "</type>";
 		crons += "<plugin>" + (*i).plugin->GetName() + "</plugin>";
 		crons += "<next_run>" + QString::number((*i).next_run) + "</next_run>";
-		crons += "<callback>" + QString((*i).callback) + "</callback>";
+		crons += "<callback>" /*+ QString((*i).callback) +*/ "</callback>";
 		crons += "<interval>" + QString::number((*i).interval) + "</interval>";
 		crons += "<day>" + QString::number((*i).day) + "</day>";
 		crons += "<month>" + QString::number((*i).month) + "</month>";

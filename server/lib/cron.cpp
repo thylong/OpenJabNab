@@ -10,17 +10,32 @@
 #include "bunnymanager.h"
 #include "translator.h"
 
-Cron::Cron() {
-	LogInfo("Cron Started...");
+Cron::Cron()
+	: _tmr(nullptr)
+{
+	LogDebug("Starting Cron service...");
 	// Conmpute next slot
-	int now = QDateTime::currentDateTime().toTime_t();
-	QTimer::singleShot(1000 * (60 - (now%60)), this, SLOT(OnTimer()));
+	_tmr = new QTimer(this);
+	QObject::connect(_tmr,&QTimer::timeout, this, &Cron::OnTimer);
+	_tmr->start(60*1000);
+	/*int now = QDateTime::currentDateTime().toTime_t();
+	QTimer::singleShot(1000 * (60 - (now%60)), this, &Cron::OnTimer);
+	*/
 	lastGivenID = 0;
+}
+
+Cron::~Cron()
+{
+	if(!_tmr) return;
+	_tmr->stop();
+	delete _tmr;
+	_tmr = nullptr;
 }
 
 void Cron::OnTimer()
 {
 	unsigned int now = QDateTime::currentDateTime().toTime_t();
+	//LogDebug(QString("Time %1: %2").arg(QDateTime::currentDateTime().toString()).arg(CronElements.size()));
 
 	// Find elements to run
 	while(!CronElements.empty() && (CronElements.front().next_run <= now))
@@ -32,16 +47,18 @@ void Cron::OnTimer()
 		{
 			if(e.bunny != NULL)
 			{
-				LogCron(e.plugin->GetName() + "::" + e.callback, e.bunny->GetID());
+				LogCron(e.plugin->GetName() + "::"  "e.callback", e.bunny->GetID());
 				//CronLog::Log("BC", e.plugin->GetName() + "::" + e.callback);
-				e.bunny->SetGlobalSetting("LastCron", QString("%1 - %2->%3").arg(QDateTime::currentDateTime().toString("dd/MM/yyyy hh:mm:ss"), e.plugin->GetName(), e.callback));
+				e.bunny->SetGlobalSetting("LastCron", QString("%1 - %2->%3").arg(QDateTime::currentDateTime().toString("dd/MM/yyyy hh:mm:ss"), e.plugin->GetName(), "e.callback"));
 			}
 			else
 			{
-				LogCron(e.plugin->GetName() + "::" + e.callback);
+				LogCron(e.plugin->GetName() + "::" "e.callback");
 				//CronLog::Log("-C", e.plugin->GetName() + "::" + e.callback);
 			}
-			QMetaObject::invokeMethod(e.plugin, e.callback, Q_ARG(Bunny*, e.bunny), Q_ARG(QVariant, e.data), Q_ARG(unsigned int, e.type));
+			//LogDebug("Run Cron !");
+			e.callback(e.bunny,e.data,(Cron::CronType)e.type);
+			//QMetaObject::invokeMethod(e.plugin, e.callback, Q_ARG(Bunny*, e.bunny), Q_ARG(QVariant, e.data), Q_ARG(unsigned int, e.type));
 		}
 		else
 		{
@@ -67,16 +84,16 @@ void Cron::OnTimer()
 	}
 
 	// Compute next slot
-	now = QDateTime::currentDateTime().toTime_t();
-	QTimer::singleShot(1000 * (60 - (now%60)), this, SLOT(OnTimer()));
+	//now = QDateTime::currentDateTime().toTime_t();
+	//QTimer::singleShot(1000 * (60 - (now%60)), this, &Cron::OnTimer);
 }
 
-std::list<CronElement> Cron::ListAllCron()
+std::list<Cron::CronElement> Cron::ListAllCron()
 {
 	return Instance().CronElements;
 }
 
-std::list<CronElement> Cron::ListAllBunnyCron(Bunny * b)
+std::list<Cron::CronElement> Cron::ListAllBunnyCron(Bunny * b)
 {
 /*
 	std::list<CronElement> list;
@@ -142,35 +159,27 @@ QTime Cron::mkTime(QString s)
 
 void Cron::LogDebugCron(CronElement const& e)
 {
-	if(e.bunny->GetGlobalSetting("CronDebug", false).toBool())
-	{
-		QString bunny = QString(e.bunny->GetID());
-		QString caller = "";
-		if(e.plugin != NULL)
-		{
-			caller = e.plugin->GetName();
-		}
-		else
-		{
-			caller = "system";
-		}
-		if(e.callback != NULL)
-		{
-			caller += "::" + QString(e.callback);
-		}
-		else
-		{
-			caller += "::onCron";
-		}
-		caller += "(" + e.data.toString() + ")";
-		QString time = QDateTime::fromTime_t(e.next_run).toString("yyyy-MM-dd hh:mm:ss");
-		if(e.interval > 0)
-		{
-			time += " (" + QString::number(e.interval) + "s)";
-		}
+	if(!e.bunny->GetGlobalSetting("CronDebug", false).toBool())
+		return;
 
-		LogCron(QString("Bunny %1 - Schedule %2 on %3").arg(bunny, caller, time));
+	QString bunny = QString(e.bunny->GetID());
+	QString caller = e.plugin ? e.plugin->GetName() : "system";
+	if(e.callback != NULL)
+	{
+		caller += "::" + QString("cb");//e.callback);
 	}
+	else
+	{
+		caller += "::onCron";
+	}
+	caller += "(" + e.data.toString() + ")";
+	QString time = QDateTime::fromTime_t(e.next_run).toString("yyyy-MM-dd hh:mm:ss");
+	if(e.interval > 0)
+	{
+		time += " (" + QString::number(e.interval) + "s)";
+	}
+
+	LogCron(QString("Bunny %1 - Schedule %2 on %3").arg(bunny, caller, time));
 }
 
 void Cron::AddCron(CronElement const& e)
@@ -181,9 +190,10 @@ void Cron::AddCron(CronElement const& e)
 	while(i != CronElements.end() && i->next_run < e.next_run) // Find position
 		i++;
 	CronElements.insert(i,e);
+	//LogDebug(QString("Add! %1").arg(CronElements.size()));
 }
 
-unsigned int Cron::Register(PluginInterface * p, unsigned int interval, unsigned int offsetH, unsigned int offsetM, Bunny * b, unsigned int type, QVariant data, const char * callback)
+unsigned int Cron::Register(PluginInterface * p, unsigned int interval, unsigned int offsetH, unsigned int offsetM, Bunny * b, unsigned int type, QVariant data, Callback_t cb)
 {
 	if(interval > 24*60)
 	{
@@ -208,7 +218,7 @@ unsigned int Cron::Register(PluginInterface * p, unsigned int interval, unsigned
 
 	CronElement e;
 	e.interval = interval * 60;
-	e.callback = callback;
+	e.callback = cb;
 	e.plugin = p;
 	e.bunny = b;
 	e.data = data;
@@ -238,7 +248,7 @@ unsigned int Cron::Register(PluginInterface * p, unsigned int interval, unsigned
 	return id;
 }
 
-unsigned int Cron::RegisterOneShot(PluginInterface * p, unsigned int interval, Bunny * b, unsigned int type, QVariant data, const char * callback)
+unsigned int Cron::RegisterOneShot(PluginInterface * p, unsigned int interval, Bunny * b, unsigned int type, QVariant data, Callback_t cb)
 {
 	if(!p)
 	{
@@ -253,7 +263,7 @@ unsigned int Cron::RegisterOneShot(PluginInterface * p, unsigned int interval, B
 
 	CronElement e;
 	e.interval = 0;
-	e.callback = callback;
+	e.callback = cb;
 	e.plugin = p;
 	e.bunny = b;
 	e.data = data;
@@ -267,11 +277,11 @@ unsigned int Cron::RegisterOneShot(PluginInterface * p, unsigned int interval, B
 	time = time.addSecs(interval*60);
 	theCron.AddCron(e);
 
-	//LogInfo(QString("Cron Register : %1 - %2").arg(p->GetVisualName(),time.toString()));
+	//LogDebug(QString("Cron Register : %1 - %2").arg(p->GetVisualName(),time.toString()));
 	return id;
 }
 
-unsigned int Cron::RegisterDaily(PluginInterface * p, QTime const& time, Bunny * b, unsigned int type, QVariant data, const char * callback)
+unsigned int Cron::RegisterDaily(PluginInterface * p, QTime const& time, Bunny * b, unsigned int type, QVariant data, Callback_t cb)
 {
 	if(!p)
 	{
@@ -291,7 +301,7 @@ unsigned int Cron::RegisterDaily(PluginInterface * p, QTime const& time, Bunny *
 
 	CronElement e;
 	e.interval = 24 * 60 * 60; // DAILY
-	e.callback = callback;
+	e.callback = cb;
 	e.plugin = p;
 	e.bunny = b;
 	e.data = data;
@@ -321,7 +331,7 @@ unsigned int Cron::RegisterDaily(PluginInterface * p, QTime const& time, Bunny *
 	return id;
 }
 
-unsigned int Cron::RegisterWeekly(PluginInterface * p, Qt::DayOfWeek day, QTime const& time, Bunny * b, unsigned int type, QVariant data, const char * callback)
+unsigned int Cron::RegisterWeekly(PluginInterface * p, Qt::DayOfWeek day, QTime const& time, Bunny * b, unsigned int type, QVariant data, Callback_t cb)
 {
 	if(!p)
 	{
@@ -336,7 +346,7 @@ unsigned int Cron::RegisterWeekly(PluginInterface * p, Qt::DayOfWeek day, QTime 
 
 	CronElement e;
 	e.interval = 7 * 24 * 60 * 60; // Weekly
-	e.callback = callback;
+	e.callback = cb;
 	e.plugin = p;
 	e.bunny = b;
 	e.data = data;
@@ -370,7 +380,7 @@ unsigned int Cron::RegisterWeekly(PluginInterface * p, Qt::DayOfWeek day, QTime 
 	return id;
 }
 
-unsigned int Cron::RegisterMonthly(PluginInterface * p, int day, QTime const& time, Bunny * b, unsigned int type, QVariant data, const char * callback)
+unsigned int Cron::RegisterMonthly(PluginInterface * p, int day, QTime const& time, Bunny * b, unsigned int type, QVariant data, Callback_t cb)
 {
 	if(!p)
 	{
@@ -386,7 +396,7 @@ unsigned int Cron::RegisterMonthly(PluginInterface * p, int day, QTime const& ti
 	CronElement e;
 	e.interval = 0; // Monthly
 	e.day = day;
-	e.callback = callback;
+	e.callback = cb;
 	e.plugin = p;
 	e.bunny = b;
 	e.data = data;
@@ -536,7 +546,7 @@ API_CALL(Cron::Api_cron)
 				crons += "<plugin>" + ((*i).plugin != NULL ? (*i).plugin->GetName() : "") + "</plugin>";
 				crons += "<bunny>" + ((*i).bunny != NULL ? (*i).bunny->GetID() : "") + "</bunny>";
 				crons += "<next_run>" + QString::number((*i).next_run) + "</next_run>";
-				crons += "<callback>" + QString((*i).callback) + "</callback>";
+				crons += "<callback>" /*+ QString((*i).callback) +*/ "</callback>";
 				crons += "<interval>" + QString::number((*i).interval) + "</interval>";
 				crons += "<day>" + QString::number((*i).day) + "</day>";
 				crons += "<month>" + QString::number((*i).month) + "</month>";
