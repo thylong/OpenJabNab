@@ -8,13 +8,17 @@
 #include <QCoreApplication>
 #include "nabaztagmanager.h"
 
-TEST_CASE("Hi","[Lib][v1][Msg]")
+TEST_CASE("LoadByteCode","[Lib][v1][Msg]")
 {
-  int argc=1; char* argv[] = {"./v1_msg"};
+  int argc=1; char* argv[] = {(char*)"./v1_msg"};
   auto* qapp = new QCoreApplication(argc,argv);
+  GlobalSettings::Init("data/conf/");
+
   auto& nabMgr = NabaztagManager::Instance();
   nabMgr.Init();
+  // Load template bytecode to play ADP file later
   REQUIRE(nabMgr.loadAMsgBytecode("data/lib/v1/template.nadp"));
+  // Play empty.adp
   {
     const auto& bc = nabMgr.getAMsgForADP(0x01, "data/lib/v1/adp/empty.adp");
     REQUIRE_FALSE(bc.isEmpty());
@@ -23,6 +27,7 @@ TEST_CASE("Hi","[Lib][v1][Msg]")
     //qDebug() << ref_bc;
     REQUIRE(bc == ref_bc);
   }
+  // Play empty2.adp
   {
     const auto& bc = nabMgr.getAMsgForADP(0x01, "data/lib/v1/adp/empty2.adp");
     REQUIRE_FALSE(bc.isEmpty());
@@ -32,5 +37,5 @@ TEST_CASE("Hi","[Lib][v1][Msg]")
     REQUIRE(bc == ref_bc);
   }
   nabMgr.Close();
-  delete qapp; 
+  delete qapp;
 }

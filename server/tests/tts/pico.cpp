@@ -10,9 +10,9 @@
 
 #define OVERWRITE_FILES false
 
-TEST_CASE("TestAllVoices","[TTS][PicoTTS]")
+TEST_CASE("Pico - TestAllVoices","[TTS][PicoTTS]")
 {
-  int argc=1; char* argv[] = {"./test_tts_pico"};
+  int argc=1; char* argv[] = {(char*)"./test_tts_pico"};
   auto* qapp = new QCoreApplication(argc,argv);
   GlobalSettings::Init("data/conf/");
 
@@ -36,12 +36,12 @@ TEST_CASE("TestAllVoices","[TTS][PicoTTS]")
       }
     }
   }
-  delete qapp; 
+  delete qapp;
 }
 
-TEST_CASE("TestVoices","[TTS][PicoTTS]")
+TEST_CASE("Pico - TestVoices","[TTS][PicoTTS]")
 {
-  int argc=1; char* argv[] = {"./test_tts_pico"};
+  int argc=1; char* argv[] = {(char*)"./test_tts_pico"};
   auto* qapp = new QCoreApplication(argc,argv);
   GlobalSettings::Init("data/conf/");
 
@@ -92,6 +92,5 @@ TEST_CASE("TestVoices","[TTS][PicoTTS]")
       }
     }
   }
-  delete qapp; 
+  delete qapp;
 }
-
