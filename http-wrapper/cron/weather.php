@@ -7,6 +7,18 @@ define('WEATHER_UNKNOWN_CODE', 3200);
 
 function normalizeWeatherCode($code)
 {
+  /* From plugin_weater.h
+      #define PLUGIN_WEATHER_UNKNOW    0
+      #define PLUGIN_WEATHER_SUNNY     1
+      #define PLUGIN_WEATHER_RAIN      2
+      #define PLUGIN_WEATHER_SNOW      3
+      #define PLUGIN_WEATHER_STORM     4
+      #define PLUGIN_WEATHER_RAINSNOW  5
+      #define PLUGIN_WEATHER_FOG       6
+      #define PLUGIN_WEATHER_WIND      7
+      #define PLUGIN_WEATHER_CLOUD     8
+  */
+
   $codes = array(
                // From https://www.weatherapi.com/docs/weather_conditions.json
                // code,day,night,icon
@@ -141,6 +153,8 @@ foreach($cities as $c)
                       'min' => $f->day->mintemp_c,
                       'max' => $f->day->maxtemp_c,
                      );
+        $k = date("YMD",$f->date_epoch) == date('YMD',$c_time) ? "current" : "tomorrow";
+        $forecasts[$k] = $tmp;
         //if(date("YMD",$f->date_epoch) == date('YMD',$c_time) || $f->date_epoch > $c_time)
         {/*
             //echo "\t\t Today's or next forecast !\n";
@@ -149,7 +163,6 @@ foreach($cities as $c)
         else if($f->date_epoch > $c_time)
         {*/
             //echo "\t\t Next forecast !\n";
-            $forecasts[$f->date_epoch] = $tmp;
         }
       }
     }

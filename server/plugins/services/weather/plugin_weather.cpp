@@ -102,7 +102,7 @@ QHash<QString, QString> PluginWeather::GetVoiceCommands(QString lng)
 
 void PluginWeather::getWeatherForCity(Bunny * b, QString ville)
 {
-  QFile jsonFile(GetLocalHTTPFolder()->absoluteFilePath("weather.json"));
+  QFile jsonFile(GetLocalHTTPFolder()->absoluteFilePath("cache_weatherapi.json"));
   if(!jsonFile.open(QIODevice::ReadOnly))
   {
     LogDebug("No Weather data file");
@@ -118,18 +118,6 @@ void PluginWeather::getWeatherForCity(Bunny * b, QString ville)
   const auto& sCity = jsonC["city"].toString();
   //LogDebug(QString("Got Weather data for city: %1: %2 !").arg(ville).arg(sCity));
 
-  const auto& jsonCur = jsonC["current"].toObject();
-  const auto& jsonFor = jsonC["forecast"].toObject();
-  const auto& current = jsonCur["code"].toInt();
-  const auto& iWind   = jsonCur["wind"].toInt();
-  const auto& iCurrentTemp = jsonCur["temp"].toInt();
-  const auto forecastT = jsonFor["code"].toInt();
-	if(current == 3200 && forecastT == 3200)
-	{
-		LogError(QString("Unknow weather in %1 for bunny %2").arg(sCity, QString(b->GetID())));
-    return;
-	}
-
 	QString language = b->GetPluginSetting(GetName(), "Lang","fr").toString();
 	if(!GetLanguages().contains(language))
 	{
@@ -140,12 +128,15 @@ void PluginWeather::getWeatherForCity(Bunny * b, QString ville)
 
   QByteArray message;
 	// city, code, temp1, temp2
-	if(current != 3200)
+	if(jsonC.contains("current"))
 	{
-		int code = GetWeatherFromCode(current);
+		const auto& jsonCur = jsonC["current"].toObject();
+		int code = GetWeatherFromCode(jsonCur["code"].toInt());
 		QString msg = GetTranslatedWeather(code, "current", language);
 		if(msg.length())
 		{
+			const auto& iWind   = jsonCur["wind"].toDouble();
+			const auto& iCurrentTemp = jsonCur["temp"].toDouble();
 			QString sWind = insertWindData(GetTranslatedWind(GetWindFromSpeed(iWind), language), iWind);
 			QString string = insertWeatherData(msg, sCity, sWind, iCurrentTemp, 0);
 			TTSAnswer currentMsg = TTSManager::CreateSound(string, voice, language);
@@ -153,38 +144,26 @@ void PluginWeather::getWeatherForCity(Bunny * b, QString ville)
  			message += "MU " + currentMsg.file.toLatin1() + "\nMW\n";
 		}
 	}
-
-  if(jsonCur.contains("forecast"))
+	const auto& jsonFor = jsonC["forecast"].toObject();
+	for(auto jsonForI = jsonFor.constBegin(); jsonForI != jsonFor.constEnd(); jsonForI++)
 	{
-    const auto& jsonForC = jsonCur["forecast"].toObject();
+    const auto& jsonForK = jsonForI.key();
+		const auto& jsonForC = jsonForI.value();
     const auto forecastC = jsonForC["code"].toInt();
-    if(forecastC != 3200)
-    {
-      int code = GetWeatherFromCode(forecastC);
-      QString msg = GetTranslatedWeather(code, "forecast", language);
-      if(msg.length())
-      {
-        const auto forecastL = jsonForC["min"].toInt();
-        const auto forecastH = jsonForC["max"].toInt();
-        QString string = insertWeatherData(msg, sCity, NULL, forecastL, forecastH);
-        TTSAnswer forecastMsg = TTSManager::CreateSound(string, voice, language);
-        TTSLog(b->GetID(), GetName(), forecastMsg);
-        message += "MU " + forecastMsg.file.toLatin1() + "\nMW\n";
-      }
-    }
-  }
-  if(forecastT != 3200)
-	{
-		int code = GetWeatherFromCode(forecastT);
-		QString msg = GetTranslatedWeather(code, "tomorrow", language);
+    if(forecastC == 0)
+			continue; // FIXME !!
+		int code = GetWeatherFromCode(forecastC);
+		QString msg = GetTranslatedWeather(code, (jsonForK == "current" ? "forecast" : "tomorrow"), language);
 		if(msg.length())
-    {
-      const auto forecastL = jsonFor["min"].toInt();
-      const auto forecastH = jsonFor["max"].toInt();
-			QString string = insertWeatherData(msg, sCity, NULL, forecastL, forecastH);
+		{
+			const auto forecastL = jsonForC["min"].toDouble();
+			const auto forecastH = jsonForC["max"].toDouble();
+			const auto& iWind    = jsonForC["wind"].toDouble();
+			QString sWind = insertWindData(GetTranslatedWind(GetWindFromSpeed(iWind), language), iWind);
+			QString string = insertWeatherData(msg, sCity, sWind, forecastL, forecastH);
 			TTSAnswer forecastMsg = TTSManager::CreateSound(string, voice, language);
 			TTSLog(b->GetID(), GetName(), forecastMsg);
- 			message += "MU " + forecastMsg.file.toLatin1() + "\nMW\n";
+			message += "MU " + forecastMsg.file.toLatin1() + "\nMW\n";
 		}
   }
   if(b->IsIdle())
@@ -728,7 +707,7 @@ PLUGIN_BUNNY_API_CALL(PluginWeather::Api_setFrequency)
 
 int PluginWeather::GetWeatherFromCode(int code)
 {
-	return GetSettings("Conditions/" + QString::number(code), 0).toInt();
+	return code; // GetSettings("Conditions/" + QString::number(code), 0).toInt(); // Bypass Mapping, already done in PHP cron script
 }
 
 QString PluginWeather::GetTranslatedWeather(int code, QString time, QString lng)
@@ -825,109 +804,4 @@ QString PluginWeather::GetTranslatedWind(int code, QString lng)
 5 neige
 6 brouillard
 7 vent
-*/
-
-/*
-Code 	Description
-0 	tornade
-1 	tempête tropicale
-2 	ouragan
-3 	orages violents
-4 	orages
-5 	la pluie et la neige
-6 	la pluie et la neige fondue mixte
-7 	mélée de neige et le grésil
-8 	bruine verglaçante
-9 	bruine
-10 	pluie verglaçante
-11 	douches
-12 	douches
-13 	averses de neige
-14 	légères averses de neige
-15 	poudrerie
-16 	neige
-17 	grêle
-18 	neige fondue
-19 	poussière
-20 	brumeux
-21 	brume
-22 	enfumé
-23 	de tempête
-24 	venteux
-25 	froid
-26 	nuageux
-27 	la plupart du temps nuageux (nuit)
-28 	la plupart du temps nuageux (jour)
-29 	partiellement nuageux (nuit)
-30 	partiellement nuageux (jour)
-31 	effacer (nuit)
-32 	ensoleillé
-33 	équitable (nuit)
-34 	équitable (jour)
-35 	la pluie et la grêle mixte
-36 	chaud
-37 	orages isolés
-38 	orages dispersés
-39 	orages dispersés
-40 	averses intermittentes
-41 	fortes chutes de neige
-42 	averses de neige éparses
-43 	fortes chutes de neige
-44 	partiellement nuageux
-45 	orages
-46 	averses de neige
-47 	orages isolés
-3200 	pas disponible
-*/
-
-/*
-<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
-		<rss version="2.0" xmlns:yweather="http://xml.weather.yahoo.com/ns/rss/1.0" xmlns:geo="http://www.w3.org/2003/01/geo/wgs84_pos#">
-			<channel>
-
-<title>Yahoo! Weather - Bucharest, RO</title>
-<link>http://us.rd.yahoo.com/dailynews/rss/weather/Bucharest__RO/ *http://weather.yahoo.com/forecast/ROXX0003_c.html</link>
-<description>Yahoo! Weather for Bucharest, RO</description>
-<language>en-us</language>
-<lastBuildDate>Thu, 31 Jan 2013 4:58 pm ET</lastBuildDate>
-<ttl>60</ttl>
-<yweather:location city="Bucharest" region=""   country="Romania"/>
-<yweather:units temperature="C" distance="km" pressure="mb" speed="km/h"/>
-<yweather:wind chill="1"   direction="0"   speed="0" />
-<yweather:atmosphere humidity="96"  visibility="1"  pressure="1011"  rising="0" />
-<yweather:astronomy sunrise="7:33 am"   sunset="5:17 pm"/>
-<image>
-<title>Yahoo! Weather</title>
-<width>142</width>
-<height>18</height>
-<link>http://weather.yahoo.com</link>
-<url>http://l.yimg.com/a/i/brand/purplelogo//uh/us/news-wea.gif</url>
-</image>
-<item>
-<title>Conditions for Bucharest, RO at 4:58 pm ET</title>
-<geo:lat>44.43</geo:lat>
-<geo:long>26.1</geo:long>
-<link>http://us.rd.yahoo.com/dailynews/rss/weather/Bucharest__RO/ *http://weather.yahoo.com/forecast/ROXX0003_c.html</link>
-<pubDate>Thu, 31 Jan 2013 4:58 pm ET</pubDate>
-<yweather:condition  text="Cloudy"  code="26"  temp="1"  date="Thu, 31 Jan 2013 4:58 pm ET" />
-<description><![CDATA[
-<img src="http://l.yimg.com/a/i/us/we/52/26.gif"/><br />
-<b>Current Conditions:</b><br />
-Cloudy, 1 C<BR />
-<BR /><b>Forecast:</b><BR />
-Thu - Mostly Clear. High: 6 Low: -2<br />
-Fri - Partly Cloudy/Wind. High: 8 Low: -1<br />
-<br />
-<a href="http://us.rd.yahoo.com/dailynews/rss/weather/Bucharest__RO/ *http://weather.yahoo.com/forecast/ROXX0003_c.html">Full Forecast at Yahoo! Weather</a><BR/><BR/>
-(provided by <a href="http://www.weather.com" >The Weather Channel</a>)<br/>
-]]></description>
-<yweather:forecast day="Thu" date="31 Jan 2013" low="-2" high="6" text="Mostly Clear" code="33" />
-<yweather:forecast day="Fri" date="1 Feb 2013" low="-1" high="8" text="Partly Cloudy/Wind" code="24" />
-<guid isPermaLink="false">ROXX0003_2013_02_01_7_00_ET</guid>
-</item>
-</channel>
-</rss>
-
-<!-- api10.weather.ch1.yahoo.com Thu Jan 31 16:02:54 PST 2013 -->
-
 */
