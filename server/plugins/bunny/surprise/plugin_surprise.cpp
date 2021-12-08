@@ -20,7 +20,7 @@ PluginSurprise::PluginSurprise()
 {
 }
 
-const QHash<QString, QString> GetChangelog(void)
+const QHash<QString, QString> PluginSurprise::GetChangelog(void)
 {
 	QHash<QString, QString> revisions;
 	revisions.insert("2.3.0", "Rename plugin to avoid mistakes");
