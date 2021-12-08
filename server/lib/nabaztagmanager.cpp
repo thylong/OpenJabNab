@@ -38,6 +38,13 @@ NabaztagManager::NabaztagManager()
   }
 }
 
+/**
+ * @brief Load Audio Message bytecode, for future use
+ *
+ * @param file  Input bytecode
+ * @return true on success
+ * @return false when bytecode was not found or is empty
+ */
 bool NabaztagManager::loadAMsgBytecode(const QString& file)
 {
   //qDebug() << "NabaztagManager::loadAMsgByteCode, filename: " << file;
@@ -46,38 +53,49 @@ bool NabaztagManager::loadAMsgBytecode(const QString& file)
   return !_amsgBytecode.isEmpty();
 }
 
+/**
+ * @brief Merge pre-loaded audio message bytecode and ADP file
+ *
+ * @param trame       Frame ID, usually 0x01 (0x00 if it's the first frame)
+ * @param filename    ADP file to play
+ * @return QByteArray Packet to send to the Nabaztag
+ */
 QByteArray NabaztagManager::getAMsgForADP(const size_t trame, QString filename)
 {
   if(filename.startsWith("broadcast"))
-  {
     filename.replace("broadcast/ojn_local/", GlobalSettings::Get("Config/RealHttpRoot", QString()).toString());
-  }
+
   const QByteArray& payload = readFile(filename);
   //qDebug() << "AMsg length" << QByteArray::fromHex(encodeHexInt(_amsgBytecode.length(),6));
   //qDebug() << "Payload length" << QByteArray::fromHex(encodeHexInt(payload.length(),6));
   //const auto& sz = _amsgBytecode.length() + payload.length();
   //qDebug() << "Sz            " << QByteArray::fromHex(encodeHexInt(sz,6));
-  QByteArray r  = QByteArray::fromHex("05")
-                + QByteArray::fromHex(encodeHexInt( 0x000000, 6 ))
-                + "amber"
-                + QByteArray::fromHex(encodeHexInt( trame, 8 ))
-                + QByteArray::fromHex("01")
-                //+ QByteArray::fromHex(encodeHexInt( _amsgBytecode.length(), 8 ))
-                + _amsgBytecode
-                + payload
-                + QByteArray::fromHex("00") // Will fix later
-                + "mind";
+                                                                    // Sz   - Desc
+  QByteArray r  = QByteArray::fromHex("05")                         // 1    - Frame Type 0x05 => Replace Bytecode
+                + QByteArray::fromHex(encodeHexInt( 0x000000, 6 ))  // 6    - Size
+                + "amber"                                           // 5    - Magic Header
+                + QByteArray::fromHex(encodeHexInt( trame, 8 ))     // 8    - Frame ID
+                + QByteArray::fromHex("01")                         // 1    - Transition Flag: 0x01: Do it now
+//+ QByteArray::fromHex(encodeHexInt( _amsgBytecode.length(), 8 ))  // 8    - Bytecode length N_bc (FIXME: Missing I don't know why)
+                + _amsgBytecode                                     // N_bc - Assembled VASM program
+                                                                    // 8    - Number of audio files in payload (FIXME: Missing I don't know why, probably due to used template)
+                                                                    // For each ADP file (current template for ADP only supports one file )
+                                                                    // 8    - ADP file length (FIXME: Missing I don't know why, probably due to used template)
+                + payload                                           //      - ADP file data
+                + QByteArray::fromHex("00")                         // 1    - Checksum (Set to 00 for now, Will fix later)
+                + "mind";                                           // 4    - Magic Footer
+
   // Fix file offset
-  const auto foff_off = 0x1E3+1+6+5+8+1-1-6;
-  const auto foff = 0x000000DF + payload.length();
+  const auto foff_off = 0x1E3+1+6+5+8+1-1-6;                        // File offset location in r (FIXME: change value if not using amsg_tpl.nadp)
+  const auto foff = 0x000000DF + payload.length();                  // Value: 0xDF=223
   r.replace(foff_off,4,QByteArray::fromHex(encodeHexInt(foff,8)));
   // Fix Size
-  const auto sz = r.length()-4;
-  const auto sz_off=1;
+  const auto sz_off=1;                                              // Size location in r
+  const auto sz = r.length()-4;                                     // Size value
   r.replace(sz_off,3,QByteArray::fromHex(encodeHexInt(sz,6)));
   qDebug() << "Sz       :" << QByteArray::fromHex(encodeHexInt(sz,6));
-  //Fix Checksum
-  const auto cs_off=r.length() - 5; //
+  // Fix Checksum
+  const auto cs_off=r.length() - 5;                                 // Checksum location in r
   qDebug() << "Checksum :" << QByteArray::fromHex(encodeHexInt( checksum(r), 2));
   r.replace(cs_off,1,QByteArray::fromHex(encodeHexInt( checksum(r), 2)));
   return buildPacket(r);
@@ -197,66 +215,26 @@ QByteArray NabaztagManager::readFile(QString filename)
   return QByteArray();
 }
 
-QByteArray NabaztagManager::getMidBytecode()
-{
-  return QByteArray::fromHex("00020500ac00417e02ac0062ac006b0000ac006eac004f7e05c50085009d002801FFc4017e05b80085009e00289c003501ffa8010404a7458004a00047ad00050514ac00417d0500000514ac00417d05ad82000101ae00ae10adb0b2ad01ffb601af007e01c10085009e00747e01b0ad");
-}
-
-QByteArray NabaztagManager::getAdpBytecode()
-{
-  return QByteArray::fromHex("00020500ac00417e02ac0062ac006b0000ac006eac004f7e05c50085009d002801FFc4017e05b80085009e00289c003501ffa8010404a7458004a00047ad00050514ac00417d0500000514ac00417d05ad82000101ae00ae10adb0b2ad01ffb601b1007e01c10085009e00747e01b2ad");
-}
-
 QByteArray NabaztagManager::buildPacket(const QList<QByteArray>& list)
 {
-  QByteArray ret = QByteArray::fromHex("7F");
+  QByteArray ret = QByteArray::fromHex("7F"); // Add Header
   foreach(QByteArray message, list)
   {
     ret += message;
   }
-  ret += QByteArray::fromHex("FF") + QByteArray::fromHex("0A") + NabaztagManager::getSignature();
+  ret += QByteArray::fromHex("FF")            // Add Footer
+       + QByteArray::fromHex("0A")            // Add Newline
+       + NabaztagManager::getSignature();     // Add OJN Signature
   return ret;
 }
 
 QByteArray NabaztagManager::buildPacket(const QByteArray& message)
 {
-  QByteArray ret = QByteArray::fromHex("7F");
-  ret += message;
-  ret += QByteArray::fromHex("FF") + QByteArray::fromHex("0A") + NabaztagManager::getSignature();
-  return ret;
-}
-
-QByteArray NabaztagManager::insertAdpFile(QString filename, int trame)
-{
-  if(filename.startsWith("broadcast"))
-  {
-    filename.replace("broadcast/ojn_local/", GlobalSettings::Get("Config/RealHttpRoot", QString()).toString());
-  }
-  QByteArray file = readFile(filename);
-  // Header
-  //QByteArray ret = QByteArray::fromHex("7F");
-  // Bytecode to play adp file
-  QByteArray ret = QByteArray::fromHex("05") + QByteArray::fromHex(encodeHexInt( file.length() + 139, 6 ));
-  //LogDebug(QString::number( file.length()));
-  //LogDebug(QString(file));
-  ret += "amber";
-  // Trame ID, transition flag
-  ret += QByteArray::fromHex(encodeHexInt( trame, 8 )) + QByteArray::fromHex("01");
-  // Bytecode
-  ret += QByteArray::fromHex(encodeHexInt( getAdpBytecode().length(), 8 )) + getAdpBytecode();
-  // Nbr music
-  if(file.length() > 0)
-  {
-    ret += QByteArray::fromHex(encodeHexInt( 1, 8 ));
-    ret += QByteArray::fromHex(encodeHexInt( file.length(), 8 ));
-    ret += file;
-  }
-  else
-  {
-    ret += QByteArray::fromHex(encodeHexInt( 0, 8 ));
-    //ret += QByteArray::fromHex(encodeHexInt( 0, 8 ));
-  }
-  ret += QByteArray::fromHex(encodeHexInt( checksum(ret + "mind"), 2)) + "mind";
+  QByteArray ret = QByteArray::fromHex("7F"); // Add Header
+  ret += message;                             // Packet payload
+  ret += QByteArray::fromHex("FF")            // Add Footer
+       + QByteArray::fromHex("0A")            // Add Newline
+       + NabaztagManager::getSignature();     // Add OJN Signature
   return ret;
 }
 
@@ -404,7 +382,6 @@ void NabaztagManager::handlePing(const HTTPRequest& request, QTcpSocket * s)
           if(!n->IsSleeping() || n->GetGlobalSetting("Insomniac",false).toBool())
           {
             LogDebug("Nabaztag " + QString(n->GetID()) + " Play ADP file: " + filePlugin);
-            //answer = NabaztagManager::buildPacket( NabaztagManager::insertAdpFile(filePlugin, 1) )
             answer = getAMsgForADP(1,filePlugin);
           }
         }

@@ -13,7 +13,7 @@
 class Account;
 class HTTPRequest;
 class PluginInterface;
-class OJN_EXPORT NabaztagManager 
+class OJN_EXPORT NabaztagManager
   : public ApiHandler<NabaztagManager>
 {
   friend class PluginAuth;
@@ -21,29 +21,29 @@ class OJN_EXPORT NabaztagManager
   friend class PluginManager;
 
 public:
-  enum Color 
-  { 
-    ColorOff        =  0, 
-    ColorRed        =  1, 
-    ColorGreen      =  2, 
-    ColorYellow     =  3, 
-    ColorBlue       =  4, 
-    ColorPurple     =  5, 
-    ColorCyan       =  6, 
-    ColorWhite      =  7, 
-    ColorPaleWhite  =  8, 
-    ColorPaleRed    =  9, 
-    ColorPaleGreen  = 10, 
-    ColorPaleYellow = 11, 
-    ColorPaleBlue   = 12, 
-    ColorPalePruple = 13, 
-    ColorPaleCyan   = 14, 
+  enum Color
+  {
+    ColorOff        =  0,
+    ColorRed        =  1,
+    ColorGreen      =  2,
+    ColorYellow     =  3,
+    ColorBlue       =  4,
+    ColorPurple     =  5,
+    ColorCyan       =  6,
+    ColorWhite      =  7,
+    ColorPaleWhite  =  8,
+    ColorPaleRed    =  9,
+    ColorPaleGreen  = 10,
+    ColorPaleYellow = 11,
+    ColorPaleBlue   = 12,
+    ColorPalePruple = 13,
+    ColorPaleCyan   = 14,
     ColorOrange     = 15
   };
 
-  enum Services 
-  { 
-    ServiceNone         = 0, 
+  enum Services
+  {
+    ServiceNone         = 0,
     ServiceWeather      = 1,  // 0..5
     ServiceStockMarket  = 2,  // 0..6
     ServiceTraffic      = 3,  // 0..6
@@ -79,13 +79,10 @@ private:
   NabaztagManager();
   static QByteArray buildPacket(const QList<QByteArray>& list);
   static QByteArray buildPacket(const QByteArray& msg);
-  static QByteArray getAdpBytecode();
-  static QByteArray getMidBytecode();
   static QByteArray setDelay(int);
   static QByteArray setServiceData(Bunny *);
   static int checksum(QByteArray);
   static QByteArray loadBytecode(QString, Bunny *);
-  static QByteArray insertAdpFile(QString, int);
   static QByteArray encodeHexInt(int, int);
 
   QMap<Bunny *, QString> byteCodes;
