@@ -20,7 +20,6 @@ class PluginNeedtoknow
 public:
   PluginNeedtoknow();
 
-  QString OnApiGet(Bunny *, QVariant);
   void analyseDone(bool, Bunny*, QStringList, bool);
 
   virtual bool OnClick(Bunny *, PluginInterface::ClickType) override;
@@ -39,6 +38,9 @@ public:
     list.insert("get", "");
     return list;
   }
+
+public slots:
+  QString OnApiGet(Bunny *, QVariant);
 
 private:
   virtual ~PluginNeedtoknow() = default;

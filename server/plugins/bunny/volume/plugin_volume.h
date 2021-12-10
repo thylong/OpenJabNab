@@ -19,9 +19,6 @@ class PluginVolume
 public:
   PluginVolume();
 
-  QString OnApiGet(Bunny *, QVariant);
-  QString OnApiSet(Bunny *, QVariant);
-
   virtual void OnInitPacket(const Bunny *, AmbientPacket &, SleepPacket &) override;
   virtual void OnCron(Bunny *, QVariant, unsigned int) override;
   virtual void OnBunnyConnect(Bunny *) override;
@@ -38,6 +35,10 @@ public:
     list.insert("get", "xml");
     return list;
   }
+
+public slots:
+  QString OnApiGet(Bunny *, QVariant);
+  QString OnApiSet(Bunny *, QVariant);
 
 private:
   virtual ~PluginVolume();

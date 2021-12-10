@@ -59,8 +59,6 @@ class PluginWeather
 public:
   PluginWeather();
 
-  QString OnApiGet(Bunny *, QVariant);
-
   virtual bool OnClick(Bunny *, PluginInterface::ClickType) override;
   virtual bool OnVoiceCommand(Bunny *, QString const&, QStringList const&) override;
   virtual bool OnRFID(Bunny * b, QByteArray const& tag) override;
@@ -85,6 +83,9 @@ public:
   }
 
   QHash<QString, QString> GetVoiceCommands(QString);
+
+public slots:
+  QString OnApiGet(Bunny *, QVariant);
 
 private:
   virtual ~PluginWeather();

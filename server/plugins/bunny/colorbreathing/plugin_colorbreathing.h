@@ -32,13 +32,14 @@ public:
     return list;
   }
 
+public slots:
+  QString OnApiColor(Bunny *, QVariant);
+  QString OnApiSaveandset(Bunny *, QVariant);
+
 private:
   virtual ~PluginColorbreathing() = default;
 
   void SetServices(Bunny *);
-
-  QString OnApiColor(Bunny *, QVariant);
-  QString OnApiSaveandset(Bunny *, QVariant);
 
   virtual void InitApiCalls() override;
   PLUGIN_BUNNY_API_CALL(Api_GetColorList);

@@ -13,8 +13,6 @@ class PluginSurprise
 public:
   PluginSurprise();
 
-  QString OnApiSpeak(Bunny *, QVariant);
-
   virtual void OnBunnyConnect(Bunny *) override;
   virtual void OnBunnyDisconnect(Bunny *) override;
   virtual void OnCron(Bunny *, QVariant, unsigned int) override;
@@ -29,6 +27,9 @@ public:
     list.insert("speak", "");
     return list;
   }
+
+public slots:
+  QString OnApiSpeak(Bunny *, QVariant);
 
 private:
   virtual ~PluginSurprise() = default;

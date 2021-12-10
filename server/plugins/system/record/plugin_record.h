@@ -30,10 +30,12 @@ public:
     return list;
   }
 
+public slots:
+  QString OnApiList(Bunny *, QVariant);
+
 private:
   virtual ~PluginRecord() = default;
 
-  QString OnApiList(Bunny *, QVariant);
   QStringList GetRecordList(Bunny *, int, int);
 
   // API

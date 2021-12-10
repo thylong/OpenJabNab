@@ -33,10 +33,11 @@ public:
     return list;
   }
 
+public slots:
+  QString OnApiSpeak(Bunny *, QVariant);
+
 private:
   virtual ~PluginHalloween() = default;
-
-  QString OnApiSpeak(Bunny *, QVariant);
 
   bool PlaySound(Bunny *);
   void createCron(Bunny *, int, int);

@@ -13,8 +13,6 @@ class PluginDico
 public:
   PluginDico();
 
-  QString OnApiSpell(Bunny *, QVariant);
-
   virtual bool OnVoiceCommand(Bunny*, QString const&, QStringList const&) override;
 
   virtual const QString GetVersion(void) override { return "1.0.4"; }
@@ -25,6 +23,9 @@ public:
     list.insert("spell", "string");
     return list;
   }
+
+public slots:
+  QString OnApiSpell(Bunny *, QVariant);
 
 private:
   virtual ~PluginDico() = default;

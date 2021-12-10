@@ -13,8 +13,6 @@ class PluginTTS
 public:
   PluginTTS();
 
-  QString OnApiSay(Bunny *, QVariant);
-
   virtual const QString GetVersion(void) override { return "1.2.0"; }
   virtual const QHash<QString, QString> GetChangelog(void) override
   {
@@ -28,6 +26,9 @@ public:
     list.insert("say", "string");
     return list;
   }
+
+public slots:
+  QString OnApiSay(Bunny *, QVariant);
 
 private:
   virtual ~PluginTTS() = default;

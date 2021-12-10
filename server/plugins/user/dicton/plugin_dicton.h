@@ -15,8 +15,6 @@ class PluginDicton
 public:
   PluginDicton();
 
-  QString OnApiGet(Bunny *, QVariant);
-
   virtual bool OnClick(Bunny *, PluginInterface::ClickType) override;
   virtual void OnCron(Bunny *, QVariant, unsigned int) override;
   virtual void OnBunnyConnect(Bunny *) override;
@@ -32,6 +30,9 @@ public:
     list.insert("get", "");
     return list;
   }
+
+public slots:
+  QString OnApiGet(Bunny *, QVariant);
 
 private:
   virtual ~PluginDicton();

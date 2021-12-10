@@ -41,11 +41,13 @@ public:
     return list;
   }
 
+public slots:
+  QString OnApiGet(Bunny *, QVariant);
+
 private:
   virtual ~PluginClock();
 
   enum Type { Type_Voice, Type_HourlyBell, Type_SemiHourlyBell, Type_None};
-  QString OnApiGet(Bunny *, QVariant);
 
   // API
   virtual void InitApiCalls(void) override;

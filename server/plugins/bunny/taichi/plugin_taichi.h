@@ -13,8 +13,6 @@ class PluginTaichi
 public:
   PluginTaichi();
 
-  QString OnApiTaichi(Bunny *, QVariant);
-
   virtual void OnBunnyConnect(Bunny *);
   virtual void OnBunnyDisconnect(Bunny *);
   virtual void OnInitPacket(const Bunny *, AmbientPacket &, SleepPacket &);
@@ -36,6 +34,9 @@ public:
     list.insert("taichi", "");
     return list;
   }
+
+public slots:
+  QString OnApiTaichi(Bunny *, QVariant);
 
 private:
   virtual ~PluginTaichi() = default;
