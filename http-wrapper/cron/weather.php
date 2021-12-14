@@ -2,8 +2,150 @@
 require_once 'common.php';
 if(empty($_GET['httpCron'])) echo '<pre>';
 define('WEATHER_FAKE_CITY_LIST',false);
-define('WEATHER_FAKE_JSON_DATA',true);
-define('WEATHER_UNKNOWN_CODE', 3200);
+define('WEATHER_FAKE_JSON_DATA',false);
+
+define('WEATHER_MAX_CONSECUTIVE_ERRORS', 10);
+
+define('WEATHER_CACHE_WRITE',true);
+define('WEATHER_CACHE_FILE', ROOT_LOCAL.'/plugins/weather/cache_weatherapi.json');
+define('WEATHER_CACHE_VALIDITY_S', 24*60*60);
+
+function getCitiesList($srv_name)
+{
+  if(WEATHER_FAKE_CITY_LIST):
+    $cities = array('Grenoble, FR','Paris, FR');
+  else:
+    $cities = array();
+    $ojnAPI = getAPI();
+    $list = $ojnAPI->getApiList('plugin/weather/getCitiesList?'.$ojnAPI->getToken());
+    //var_dump($list);
+    foreach($list as $l)
+    {
+      /*if(!empty($l->key) && !empty($l->value))
+      {
+        $woeid = (int)$l->key;
+        if(!isset($cities[$woeid]))
+          $cities[$woeid] = array('woeid'=>$woeid,'location'=>(string)$l->value);
+      }*/
+      $cities[] = (string)$l->key;
+    }
+    //var_dump(count($cities));
+  endif;
+  return array_unique($cities);
+}
+
+$weather = array();
+$cities = getCitiesList('WeatherAPI');
+
+if(file_exists(WEATHER_CACHE_FILE) && !isset($_GET['skipCache']))
+{
+  var_dump(WEATHER_CACHE_FILE);
+  $cache = json_decode(file_get_contents(WEATHER_CACHE_FILE));
+}
+else
+  $cache = array();
+
+$now = time();
+
+$n_err = 0;
+foreach($cities as $c)
+{
+    var_dump($c);
+
+    // Check cache first
+    if(!empty($cache->$c))
+    {
+      var_dump("  In Cache !!");
+      //var_dump($cache->$c);
+      if(($now - $cache->$c->current->date) <= WEATHER_CACHE_VALIDITY_S)
+      {
+        var_dump('  => Cache is still valid, skip');
+        $weather[$c] = $cache->$c;
+        continue;
+      }
+      var_dump('  => Cache is too old');
+    } else
+      var_dump('  Not in cache');
+    var_dump('  => Refresh cache for '.$c);
+
+    // Refresh cache !
+    $url = 'http://api.weatherapi.com/v1/forecast.json?key='.WEATHERAPI_KEY.'&days=2&q='.urlencode($c).'&alerts=yes&aqi=yes';
+    if(WEATHER_FAKE_JSON_DATA)
+      $data = file_get_contents('weather_weatherapi.json');
+    else
+    {
+      $data = file_get_contents($url,false, stream_context_create(['http' => ['ignore_errors' => true]]));
+      foreach($http_response_header as $h)
+      {
+        if(strstr($h,'HTTP/1.1') && $h != 'HTTP/1.1 200 OK')
+        {
+          var_dump($url);
+          var_dump($data);
+          if(++$n_err > WEATHER_MAX_CONSECUTIVE_ERRORS)
+            break;
+          else
+            continue;
+        }
+      }
+    }
+
+    $json = json_decode($data);
+    //var_dump($json);
+    $n_err = 0;
+    if(!isset($json->location) || !isset($json->current))
+    {
+        echo '  => Skipping city: '.$c.'. API Anwser was'.$json."\n";
+        continue;
+    }
+    $c_time = $json->location->localtime_epoch;
+
+    $current['date'] = $json->current->last_updated_epoch; // as timestamp, use ->last_updated to get Y-M-D H:i
+                                //date("d/m/Y h:i:s",$json->current_observation->pubDate),
+    $current['code'] = normalizeWeatherCode($json->current->condition->code);
+    $current['temp'] = $json->current->temp_c;
+    $current['wind'] = $json->current->wind_kph;
+    $forecasts = array();
+    foreach($json->forecast as $f_array)
+    {
+      foreach($f_array as $f)
+      {
+        //echo "\t".'Forecast date:'.date("d/m/Y h:i:s",$f->date_epoch)."\n";
+        //var_dump($f);
+        $tmp = array('date' => $f->date_epoch,
+                      'code' => normalizeWeatherCode($f->day->condition->code),
+                      'wind' => $f->day->maxwind_kph,
+                      'min' => $f->day->mintemp_c,
+                      'max' => $f->day->maxtemp_c,
+                     );
+        $k = date("YMD",$f->date_epoch) == date('YMD',$c_time) ? "current" : "tomorrow";
+        $forecasts[$k] = $tmp;
+        //if(date("YMD",$f->date_epoch) == date('YMD',$c_time) || $f->date_epoch > $c_time)
+        {/*
+            //echo "\t\t Today's or next forecast !\n";
+            $current['forecast'] = $tmp;
+        }
+        else if($f->date_epoch > $c_time)
+        {*/
+            //echo "\t\t Next forecast !\n";
+        }
+      }
+    }
+    ksort($forecasts);
+
+    $weather[$c] = array(
+        'city'     => $json->location->name,
+        'lat'      => $json->location->lat,
+        'lon'      => $json->location->lon,
+        'current'  => $current,
+        'forecast' => $forecasts,
+    );
+}
+
+var_dump($weather);
+if(WEATHER_CACHE_WRITE)
+  file_put_contents(WEATHER_CACHE_FILE,json_encode($weather));
+else
+  var_dump("Skip Caching values");
 
 function normalizeWeatherCode($code)
 {
@@ -74,108 +216,4 @@ function normalizeWeatherCode($code)
   return isset($codes[$code]) ? $codes[$code] : 0;
 }
 
-function getCitiesList($srv_name)
-{
-  if(WEATHER_FAKE_CITY_LIST):
-    $cities = array('Grenoble, FR','Paris, FR');
-  else:
-    $cities = array();
-    $ojnAPI = getAPI();
-    $list = $ojnAPI->getApiList('plugin/weather/getCitiesList?'.$ojnAPI->getToken());
-    //var_dump($list);
-    foreach($list as $l)
-    {
-      /*if(!empty($l->key) && !empty($l->value))
-      {
-        $woeid = (int)$l->key;
-        if(!isset($cities[$woeid]))
-          $cities[$woeid] = array('woeid'=>$woeid,'location'=>(string)$l->value);
-      }*/
-      $cities[] = (string)$l->key;
-    }
-    //var_dump(count($cities));
-  endif;
-  return array_unique($cities);
-}
-
-$weather = array();
-$cities = getCitiesList('WeatherAPI');
-
-$n_err = 0;
-foreach($cities as $c)
-{
-    var_dump($c);
-    $url = 'http://api.weatherapi.com/v1/forecast.json?key='.WEATHERAPI_KEY.'&days=2&q='.$c.'&alerts=yes&aqi=yes';
-    if(WEATHER_FAKE_JSON_DATA)
-      $data = file_get_contents('weather_weatherapi.json');
-    else
-    {
-      $data = file_get_contents($url,false, stream_context_create(['http' => ['ignore_errors' => true]]));
-      foreach($http_response_header as $h)
-      {
-        if(strstr($h,'HTTP/1.1') && $h != 'HTTP/1.1 200 OK')
-        {
-          var_dump($url);
-          var_dump($data);
-          if(++$n_err > WEATHER_MAX_CONSECUTIVE_ERRORS)
-            break;
-          else
-            continue;
-        }
-      }
-    }
-
-    $json = json_decode($data);
-    //var_dump($json);
-    $n_err = 0;
-    if(!isset($json->location) || !isset($json->current))
-    {
-        echo 'Skipping city: '.$c.'. API Anwser was'.$json."\n";
-        continue;
-    }
-    $c_time = $json->location->localtime_epoch;
-
-    $current['date'] = $json->current->last_updated_epoch; // as timestamp, use ->last_updated to get Y-M-D H:i
-                                //date("d/m/Y h:i:s",$json->current_observation->pubDate),
-    $current['code'] = normalizeWeatherCode($json->current->condition->code);
-    $current['temp'] = $json->current->temp_c;
-    $current['wind'] = $json->current->wind_kph;
-    $forecasts = array();
-    foreach($json->forecast as $f_array)
-    {
-      foreach($f_array as $f)
-      {
-        //echo "\t".'Forecast date:'.date("d/m/Y h:i:s",$f->date_epoch)."\n";
-        //var_dump($f);
-        $tmp = array('date' => $f->date_epoch,
-                      'code' => normalizeWeatherCode($f->day->condition->code),
-                      'wind' => $f->day->maxwind_kph,
-                      'min' => $f->day->mintemp_c,
-                      'max' => $f->day->maxtemp_c,
-                     );
-        $k = date("YMD",$f->date_epoch) == date('YMD',$c_time) ? "current" : "tomorrow";
-        $forecasts[$k] = $tmp;
-        //if(date("YMD",$f->date_epoch) == date('YMD',$c_time) || $f->date_epoch > $c_time)
-        {/*
-            //echo "\t\t Today's or next forecast !\n";
-            $current['forecast'] = $tmp;
-        }
-        else if($f->date_epoch > $c_time)
-        {*/
-            //echo "\t\t Next forecast !\n";
-        }
-      }
-    }
-    ksort($forecasts);
-
-    $weather[$c] = array(
-        'city'     => $json->location->name,
-        'lat'      => $json->location->lat,
-        'lon'      => $json->location->lon,
-        'current'  => $current,
-        'forecast' => $forecasts,
-    );
-}
-var_dump($weather);
-file_put_contents(ROOT_LOCAL."/plugins/weather/cache_weatherapi.json",json_encode($weather));
 ?>
