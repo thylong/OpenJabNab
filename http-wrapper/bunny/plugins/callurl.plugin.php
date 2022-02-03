@@ -232,7 +232,7 @@ if($reload)
 
 		<?php if(!empty($pList)): ?>
 		<hr />
-		<h5><?php echo __tr('URL List') ?></h5>
+		<h5><?php echo __tr('URL List') ?> (<?php echo count($pList); ?>)</h5>
 		<table class="table table-bordered table-striped span11">
 			<tr>
 				<th class="col-sm-2"><?php echo __tr('Name') ?></th>
@@ -372,7 +372,7 @@ if($reload)
 		</form>
 
 		<?php if(!empty($Assoc)): ?>
-		<h5><?php echo __tr('Associations') ?></h5>
+		<h5><?php echo __tr('Associations') ?> (<?php echo count($Assoc); ?>)</h5>
 		<table class="table table-bordered table-stripe">
 			<tr>
 				<th><?php echo __tr('Url') ?></th>
