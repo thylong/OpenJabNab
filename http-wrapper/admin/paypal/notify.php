@@ -1,6 +1,16 @@
 <?php
 include('../include/tools.inc.php');
 
+function pay_log($msg,$die=false)
+{
+  $msg = "\n".date('Y/m/d H:i:s').' '.$msg;
+  file_put_contents(PAYPAL_LOG_FILE,file_get_contents(PAYPAL_LOG_FILE).$msg);
+  if(isset($_GET['verbose']))
+    var_dump($msg);
+  if($die)
+    die();
+}
+
 $post = file_get_contents('php://input');
 if(!empty($_GET['fake']))
 {
@@ -30,11 +40,12 @@ if(!empty($_GET['fake']))
   }
 }
 if(empty($post))
-  die('No input');
+  pay_log('[Fatal] No input',true);
 
 // Log
 if(PAYPAL_LOG_NOTIFY)
-  file_put_contents('pay.txt',file_get_contents('pay.txt')."\n".date('Y/m/d H:i:s').' '.$post);
+  file_put_contents(PAYPAL_TXN_LOG_FILE,file_get_contents(PAYPAL_TXN_LOG_FILE)."\n".date('Y/m/d H:i:s').' '.$post);
+//pay_log('[Txn] '.$post);
 
 if(PAYPAL_VALIDATE_NOTIFY)
 {
@@ -54,17 +65,22 @@ if(PAYPAL_VALIDATE_NOTIFY)
   // curl_setopt($ch, CURLOPT_CAINFO, dirname(__FILE__) . '/cacert.pem');
   if ( !($res = curl_exec($ch)) ) {
     // error_log("Got " . curl_error($ch) . " when processing IPN data");
-    die('cURL error: '. curl_error($ch));
+    pay_log('[Fatal] cURL error: '. curl_error($ch),true);
     curl_close($ch);
   }
   curl_close($ch);
 
   if(PAYPAL_LOG_NOTIFY)
-    file_put_contents('pay.txt',file_get_contents('pay.txt').' '.$res);
+    file_put_contents(PAYPAL_TXN_LOG_FILE,file_get_contents(PAYPAL_TXN_LOG_FILE).' '.$res);
+  //pay_log('[TxnValid] '.$res);
 
     // IPN invalid, log for manual investigation
   if (strcmp ($res, "VERIFIED") != 0)
-    die('Invalid IPN');
+    pay_log('[Fatal] Invalid IPN: '.$res,true);
+} else if(PAYPAL_LOG_NOTIFY)
+{
+  file_put_contents(PAYPAL_TXN_LOG_FILE,file_get_contents(PAYPAL_TXN_LOG_FILE).' PAYPAL_VALIDATE_NOTIFY is disabled');
+  //pay_log('[TxnValid] PAYPAL_VALIDATE_NOTIFY is disabled');
 }
 
 // Start parsing !
@@ -77,7 +93,7 @@ if(isset($_GET['verbose']))
 
 $link = getSQL();
 if (!$link)
-  die('Connexion SQL impossible : ' . mysqli_error());
+  pay_log('[Fatal] Connexion SQL impossible : ' . mysqli_error(),true);
 $charset = cleanKey($link,$raw,'charset','utf-8','utf-8');
 $txn_id = cleanKey($link,$raw,'txn_id','',$charset);
 $txn_type = cleanKey($link,$raw,'txn_type','',$charset);
@@ -101,13 +117,13 @@ $rx = mysqli_query($link,$r);
 $res = mysqli_fetch_assoc($rx);
 if(!empty($res['cnt']) && !isset($_GET['nocheck']))
 {
-  // FIXME: Log error
-  die('Paypal Transaction already registered in database: '.$txn_id);
+  pay_log('[Fatal] Paypal Transaction already registered in database: '.$txn_id,true);
 }
 
 if($username == "guest")
 {
-  foreach(array('paypal_txn'=>'pay_email','don'=>'email','premium'=>'email') as $table => $field)
+  // FIXME: Get username for premium
+  foreach(array('paypal_txn'=>'pay_email','don'=>'email'/*,'premium'=>'email'*/) as $table => $field)
   {
     if(isset($_GET['verbose'])) echo 'Trying to find username from email in '.$table.' table...'."\n";
     $r = 'SELECT username, count(username) as nb
@@ -117,7 +133,7 @@ if($username == "guest")
           GROUP BY username
           ORDER BY nb DESC';
     if(isset($_GET['verbose'])) var_dump($r);
-    $rx = mysqli_query($link,$r) or die('SQL Error'.mysqli_error($link));
+    $rx = mysqli_query($link,$r) or pay_log('[Fatal] SQL Error: '.mysqli_error($link),true);
     if($res = mysqli_fetch_assoc($rx))
     {
       $username = $res['username'];
@@ -132,12 +148,12 @@ $r = 'INSERT INTO paypal_txn(date,txn_id,txn_date,txn_gross,txn_fee,txn_currency
 .'"'.$pay_email.'","'.$pay_id.'","'.$type.'","'.$username.'","'.$note.'","'.$raw_str.'");';
 if(isset($_GET['verbose'])) var_dump($r);
 if(!isset($_GET['nosql']))
-  mysqli_query($link,$r) or die('SQL Error'.mysqli_error($link));
+  mysqli_query($link,$r) or pay_log('[Fatal] SQL Error'.mysqli_error($link),true);
 
 $items = array();
 
 if(!in_array($txn_type, array('web_accept','cart','recurring_payment')))
-  die('Unsupported Paypal transaction: '.$txn_type);
+  pay_log('Unsupported Paypal transaction: '.$txn_type,true);
 
 // Premium
 $nb = (int)getKey($raw,'num_cart_items',0,$charset);
@@ -155,9 +171,7 @@ for($i=0;$i<$nb;$i++)
   $a['quantity'] = (int)getKey($raw,'quantity'.($i+1),0,$charset);
   if(empty($a['duration']) || empty($a['type']) || empty($a['user']) || empty($a['quantity']))
   {
-    // FIXME: Log error
-    echo '[Error] Missing key: duration/type/user/quantity'."\n";
-    var_dump($a);
+    pay_log('[Error] Missing key: duration/type/user/quantity'."\n".print_r($a,true));
     continue;
   }
   // Validate duration
@@ -179,7 +193,7 @@ for($i=0;$i<$nb;$i++)
       $a['duration'] = 732;
       break;
     default:
-      // FIXME: Log error
+      pay_log('[Error] Unknown duration: '.$a['duration']);
       continue 2;
   }
   // Validate Type
@@ -199,8 +213,7 @@ for($i=0;$i<$nb;$i++)
       $items['premium'][] = $a;
       break;
     default:
-      // FIXME: Log error
-      echo '[Error] Unsupported type: '.$a['type']."\n";
+      pay_log('[Error] Unsupported type: '.$a['type']);
       continue 2;
   }
 }
@@ -223,55 +236,54 @@ if(isset($_GET['verbose']))
 if(!empty($items['donation']))
 {
   foreach($items['donation'] as $a)
-  $sql = 'INSERT INTO don(id,date,name,email,username,value,txn_id)'."\n";
-    for($i=0;$i<$a['quantity'];$i++)
-      $sql .= '    VALUES(NULL,NOW(),\''.$a['name'].'\',\''.$a['email'].'\',\''.$a['user'].'\','.$a['value'].',\''.$txn_id.'\'),'."\n";
-  $sql = rtrim(trim($sql),',');
-  if(isset($_GET['verbose'])) var_dump($sql);
-  if(!isset($_GET['nosql']))
-    $res = mysqli_query($link, $sql) or die(mysqli_error($link));
-  if(!$res)
   {
-    // FIXME Log error
+    $sql = 'INSERT INTO don(id,date,name,email,username,value,txn_id)'."\n";
+      for($i=0;$i<$a['quantity'];$i++)
+        $sql .= '    VALUES(NULL,NOW(),\''.$a['name'].'\',\''.$a['email'].'\',\''.$a['user'].'\','.$a['value'].',\''.$txn_id.'\'),'."\n";
+    $sql = rtrim(trim($sql),',');
+    if(isset($_GET['verbose'])) var_dump($sql);
+    if(!isset($_GET['nosql']))
+      $res = mysqli_query($link, $sql) or pay_log('[Fatal] SQL Error: '.mysqli_error($link),true);
+    pay_log('[Success] Added donation for user \''.$a['user'].'\', txn id: '.$txn_id);
   }
 }
 
 if(!empty($items['gift']))
 {
-  $sql = 'INSERT INTO gift(id,date,code,start_date,days,username,buyer,txn_id)'."\n";
   foreach($items['gift'] as $a)
+  {
+    $sql = 'INSERT INTO gift(id,date,code,start_date,days,username,buyer,txn_id)'."\n";
     for($i=0;$i<$a['quantity'];$i++)
       $sql .= '    VALUES(NULL,NOW(),\''.generateGiftCode().'\',NULL,'.$a['duration'].',NULL,\''.$a['user'].'\',\''.$txn_id.'\'),'."\n";
-  $sql = rtrim(trim($sql),',');
-  if(isset($_GET['verbose'])) var_dump($sql);
-  if(!isset($_GET['nosql']))
-    $res = mysqli_query($link, $sql) or die(mysqli_error($link));
-  if(!$res)
-  {
-    // FIXME Log error
+    $sql = rtrim(trim($sql),',');
+    if(isset($_GET['verbose'])) var_dump($sql);
+    if(!isset($_GET['nosql']))
+      $res = mysqli_query($link, $sql) or pay_log('[Fatal] SQL Error: '.mysqli_error($link),true);
+    pay_log('[Success] Added gift for user \''.$a['user'].'\', txn id: '.$txn_id);
   }
 }
 
 if(!empty($items['premium']))
 {
   foreach($items['premium'] as $a)
-  $sql = 'INSERT INTO premium(id,date,username,days,txn_id)'."\n";
-    for($i=0;$i<$a['quantity'];$i++)
-      $sql .= '    VALUES(NULL,NOW(),\''.$a['user'].'\','.$a['duration'].',\''.$txn_id.'\'),'."\n";
-  $sql = rtrim(trim($sql),',');
-  if(isset($_GET['verbose'])) var_dump($sql);
-  if(!isset($_GET['nosql']))
-    $res = mysqli_query($link, $sql) or die(mysqli_error($link));
-  if(!$res)
   {
-    // FIXME Log error
+    $sql = 'INSERT INTO premium(id,date,username,days,txn_id)'."\n";
+      for($i=0;$i<$a['quantity'];$i++)
+        $sql .= '    VALUES(NULL,NOW(),\''.$a['user'].'\','.$a['duration'].',\''.$txn_id.'\'),'."\n";
+    $sql = rtrim(trim($sql),',');
+    if(isset($_GET['verbose'])) var_dump($sql);
+    if(!isset($_GET['nosql']))
+      $res = mysqli_query($link, $sql) or pay_log('[Fatal] SQL Error: '.mysqli_error($link),true);
+    pay_log('[Success] Added premium for user \''.$a['user'].'\', txn id: '.$txn_id);
   }
 }
 if($link)
   mysqli_close($link);
 
-if(isset($_GET['verbose']))
-  echo '[Info] Updating statuses now...'."\n";
-$res = file_get_contents(HOSTNAME.'/cron/vip_status.php?http_cron');
-var_dump($res);
+if(!isset($_GET['nocron']))
+{
+  if(isset($_GET['verbose'])) echo '[Info] Updating statuses now...'."\n";
+  $res = file_get_contents(HOSTNAME.'/cron/vip_status.php?http_cron');
+  if(isset($_GET['verbose'])) var_dump($res);
+}
 ?>
