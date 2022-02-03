@@ -1,17 +1,11 @@
 <?php
 require_once "../include/common.php";
-if(!isset($_SESSION['token']) || !$Infos['isAdmin'])
-  header('Location: index.php');
+require_once "../include/tools.inc.php";
 
-$version = 2;
-
-$link = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+$link = getSQL();
 if (!$link) {
     die('Connexion impossible : ' . mysqli_error());
 }
-$max = 50;
-require_once('../include/encode.functions.php');
-require_once('../include/decode.functions.php');
 
 $sql = "SELECT account.*, SUM(value) AS don FROM account LEFT JOIN don ON don.username=account.username ";
 if(isset($_GET['accid']))
@@ -21,6 +15,11 @@ if(isset($_GET['accid']))
 else if(isset($_GET['acc']))
 {
   $sql .= "WHERE account.username=\"".$_GET['acc']."\"";
+}
+else if(isset($_GET['name']))
+{
+  $name = mysqli_real_escape_string($link,trim($_GET['name']));
+  $sql .= "WHERE account.username=\"".$name."\"";
 }
 else
 {
@@ -40,6 +39,8 @@ else
   header("Location: index.php");
   exit();
 }
+require_once('../include/encode.functions.php');
+require_once('../include/decode.functions.php');
 
 $ASettings = decodeAccountSettings($account['settings']);
 
@@ -69,46 +70,85 @@ require_once(ROOT_SITE.'/include/message.php');
         <i class="icon-user"></i> <?php echo __tr('Account %1, cleaned data', $account['username']) ?>
       </h5>
       <div class="card-body">
+      <h5><?php echo __tr('Database data'); ?></h5>
+          <?php foreach($account as $k => $v): ?>
+          <div class="form-group row">
+            <label class="col-md-4 col-form-label" for="<?php echo $k; ?>"><?php echo $k; ?></label>
+            <div class="col-md-8">
+              <input type="text" class="form-control" name="<?php echo $k; ?>" value="<?php echo $v; ?>"<?php echo $disable_edit; ?> />
+            </div>
+          </div>
+          <?php endforeach; ?>
+          <div class="form-group row">
+            <div class="col-md-8 offset-md-4">
+              <input type="hidden" name="update" value="go">
+              <button type="submit" class="btn btn-sm btn-primary "<?php echo $disable_edit; ?> ><?php echo __tr('Update and reload') ?></button>
+            </div>
+          </div>
+        </form>
+        <hr />
+        <form class="form-horizontal" method="post">
+          <h5><?php echo __tr('Account Settings'); ?></h5>
+          <?php foreach($ASettings as $k => $v): ?>
+          <div class="form-group row">
+            <label class="col-md-4 col-form-label" for="<?php echo $k; ?>"><?php echo $k; ?></label>
+            <div class="col-md-8">
+            <?php if(is_array($v)): ?>
+              <textarea class="form-control" name="<?php echo $k; ?>" disabled><?php if(!empty($v)) var_dump($v); ?></textarea>
+            <?php else: ?>
+              <input type="text" class="form-control" name="<?php echo $k; ?>" value="<?php echo $v; ?>"<?php echo $disable_edit; ?> />
+            <?php endif; ?>
+            </div>
+          </div>
+          <?php endforeach; ?>
+          <div class="form-group row">
+            <div class="col-md-8 offset-md-4">
+              <input type="hidden" name="update" value="go">
+              <button type="submit" class="btn btn-sm btn-primary "<?php echo $disable_edit; ?> ><?php echo __tr('Update and reload') ?></button>
+            </div>
+          </div>
+        </form>
+        <hr />
         <form id="edit-profile" method="post">
           <div class="form-group row">
             <label class="col-md-4 col-form-label" for="id"><?php echo __tr('ID') ?></label>
-            <div class="col-md-5">
+            <div class="col-md-8">
               <input type="text" class="form-control" name="id" value="<?php echo $account['id'] ?>"<?php echo $disable_edit; ?> />
             </div>
           </div>
           <div class="form-group row">
             <label class="col-md-4 col-form-label" for="username"><?php echo __tr('Login') ?></label>
-            <div class="col-md-5">
+            <div class="col-md-8">
               <input type="text" class="form-control" name="username" value="<?php echo $ASettings['login'] ?>"<?php echo $disable_edit; ?> />
             </div>
           </div>
           <div class="form-group row">
             <label class="col-md-4 col-form-label" for="firstname"><?php echo __tr('Display name') ?></label>
-            <div class="col-md-5">
+            <div class="col-md-8">
               <input type="text" class="form-control" name="displayname" value="<?php echo $ASettings['username'] ?>"<?php echo $disable_edit; ?> />
             </div>
           </div>
           <div class="form-group row">
             <label class="col-md-4 col-form-label" for="language"><?php echo __tr('Language') ?></label>
-            <div class="col-md-5">
+            <div class="col-md-8">
               <input type="text" class="form-control" name="language" value="<?php echo $ASettings['language'] ?>"<?php echo $disable_edit; ?> />
             </div>
           </div>
           <div class="form-group row">
             <label class="col-md-4 col-form-label" for="email"><?php echo __tr('Email address') ?></label>
-            <div class="col-md-5">
+            <div class="col-md-8">
               <input type="text" class="form-control" name="email" value="<?php echo $ASettings['email'] ?>"<?php echo $disable_edit; ?> />
             </div>
           </div>
           <div class="form-group row">
             <label class="col-md-4 col-form-label" for="npwd"><?php echo __tr('Password') ?></label>
-            <div class="col-md-5">
+            <div class="col-md-8">
               <input type="text" class="form-control" name="npwd" value="<?php echo $ASettings['pwd_hash']; ?>"<?php echo $disable_edit; ?> />
             </div>
           </div>
           <div class="form-group row">
             <label class="col-md-4 col-form-label" for="status"><?php echo __tr('Status') ?></label>
-            <div class="col-md-5">
+            <div class="col-md-8">
               <input type="text" class="form-control" name="status" value="<?php echo __tr($account['status']) ?>"<?php echo $disable_edit; ?> />
             </div>
           </div>
@@ -153,44 +193,44 @@ require_once(ROOT_SITE.'/include/message.php');
           </div>
           <div class="form-group row">
             <label class="col-md-4 col-form-label" for="nlogin"><?php echo __tr('Number of login') ?></label>
-            <div class="col-md-5">
+            <div class="col-md-8">
               <input type="text" class="form-control" name="nlogin" value="<?php echo $ASettings['loginCount'] ?>"<?php echo $disable_edit; ?> />
             </div>
           </div>
           <div class="form-group row">
             <label class="col-md-4 col-form-label" for="lastlogin"><?php echo __tr('Last login') ?></label>
-            <div class="col-md-5">
+            <div class="col-md-8">
               <input type="text" class="form-control" name="lastlogin" value="<?php echo date("d/m/Y H:i:s", $ASettings['lastLogin']) ?>"<?php echo $disable_edit; ?> />
             </div>
           </div>
           <div class="form-group row">
             <label class="col-md-4 col-form-label" for="nabus"><?php echo __tr('Number of abuses') ?></label>
-            <div class="col-md-5">
+            <div class="col-md-8">
               <input type="text" class="form-control" name="nabus" value="<?php echo $ASettings['abuseCount'] ?>"<?php echo $disable_edit; ?> />
             </div>
           </div>
           <div class="form-group row">
             <label class="col-md-4 col-form-label" for="lastban"><?php echo __tr('Last ban') ?></label>
-            <div class="col-md-5">
+            <div class="col-md-8">
               <input type="text" class="form-control" name="lastban" value="<?php echo date("d/m/Y H:i:s", $ASettings['startBan']) ?>"<?php echo $disable_edit; ?> />
             </div>
           </div>
           <div class="form-group row">
             <label class="col-md-4 col-form-label" for="lastip"><?php echo __tr('Last IP address') ?></label>
-            <div class="col-md-5">
+            <div class="col-md-8">
               <input type="text" class="form-control" name="lastip" value="<?php echo $account['lastip'] ?>"<?php echo $disable_edit; ?> />
             </div>
           </div>
           <div class="form-group row">
             <label class="col-md-4 col-form-label" for="donation"><?php echo __tr('Donation') ?></label>
-            <div class="col-md-5">
+            <div class="col-md-8">
               <input type="text" class="form-control" name="donation" value="<?php echo (float)$account['don'] ?> &euro;"<?php echo $disable_edit; ?> />
             </div>
           </div>
           <div class="form-group row">
             <div class="col-md-8 offset-md-4">
               <input type="hidden" name="update" value="go">
-              <button type="submit" class="btn btn-primary "<?php echo $disable_edit; ?> ><?php echo __tr('Update and reload') ?></button>
+              <button type="submit" class="btn btn-sm btn-primary "<?php echo $disable_edit; ?> ><?php echo __tr('Update and reload') ?></button>
             </div>
           </div>
         </form>
@@ -231,7 +271,7 @@ require_once(ROOT_SITE.'/include/message.php');
           <tr>
             <td><?php echo $mac ?></td>
             <td class="text-right">
-              <a class="btn btn-sm btn-warning" href="/admin/account/ztamp_expert.php?mac=<?php echo $mac ?>"><i class="icon-large icon-search"></i> <?php echo __tr('Expert') ?></a>
+              <a class="btn btn-sm btn-warning" href="/admin/account/ztamp_expert.php?z=<?php echo $mac ?>"><i class="icon-large icon-search"></i> <?php echo __tr('Expert') ?></a>
               <a class="btn btn-sm btn-primary" href="/account/ztamp.php?z=<?php echo $mac ?>"><i class="icon-large icon-cog"></i> <?php echo __tr('Manage ztamp') ?></a>
               <a class="btn btn-sm btn-danger" href="?accid=<?php echo $account['id']; ?>&rm_z=<?php echo $mac; ?>"><i class="icon-large icon-trash"></i> <?php echo __tr('Free from account'); ?></a>
             </td>

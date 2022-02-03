@@ -161,6 +161,18 @@ function decodeSettings($settings, $p, $recurse=false)
   return array($p, $out);
 }
 
+function decodeZtampSettings($settings)
+{
+  // From ztamp.cpp
+  // GlobalSettings >> PluginsSettings >> listOfPlugins;
+  $p = 0;
+  $out = array();
+  list($p, $out['GlobalSettings'])  = decodeSettings($settings, $p);
+  list($p, $out['PluginsSettings']) = decodeSettings($settings, $p, true);
+  list($p, $out['listOfPlugins'])   = decodeList($settings, $p,'decodeStr');
+  return $out;
+}
+
 function decodeBunnySettings($settings)
 {
   // From bunny.cpp
@@ -211,12 +223,15 @@ function decodeAccountSettings($settings)
   return $out;
 }
 
-if (http_response_code()===false) 
+if (http_response_code()===false)
 {
   if(count($argv) != 3) die('Incorrect args');
   $data = file_get_contents($argv[2]);
   switch($argv[1])
   {
+    case 'ztamp':
+      var_dump(decodeZtampSettings($data));
+      break;
     case 'bunny':
       var_dump(decodeBunnySettings($data));
       break;

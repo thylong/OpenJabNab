@@ -49,19 +49,44 @@ $pattern = "|[\w@\"'_\-,;.:!\? ]|";
         <i class="icon-search"></i> <?php echo __tr('Bunny').' '.$bunny['mac'] ?>
       </h5>
       <div class="card-body">
+      <form class="form-horizontal" method="post">
+          <h5><?php echo __tr('Database data'); ?></h5>
+          <?php foreach($bunny as $k => $v): ?>
+          <div class="form-group row">
+            <label class="col-md-4 col-form-label" for="<?php echo $k; ?>"><?php echo $k; ?></label>
+            <div class="col-md-8">
+              <input type="text" class="form-control" name="<?php echo $k; ?>" value="<?php echo $v; ?>"<?php echo $disable_edit; ?> />
+            </div>
+          </div>
+          <?php endforeach; ?>
+          <div class="form-group row">
+            <div class="col-md-8 offset-md-4">
+              <input type="hidden" name="update" value="go">
+              <button type="submit" class="btn btn-sm btn-primary "<?php echo $disable_edit; ?> ><?php echo __tr('Update and reload') ?></button>
+            </div>
+          </div>
+        </form>
+        <hr />
         <form class="form-horizontal" method="post">
+          <h5><?php echo __tr('Global Settings'); ?></h5>
           <?php foreach($BSettings['GlobalSettings'] as $k => $v): ?>
           <div class="form-group row">
             <label class="col-md-4 col-form-label" for="<?php echo $k; ?>"><?php echo $k; ?></label>
             <div class="col-md-8">
             <?php if(is_array($v)): ?>
-              <textarea class="form-control" name="<?php echo $k; ?>"><?php if(!empty($v)) var_dump($v); ?></textarea>
+              <textarea class="form-control" name="<?php echo $k; ?>" disabled><?php if(!empty($v)) var_dump($v); ?></textarea>
             <?php else: ?>
               <input type="text" class="form-control" name="<?php echo $k; ?>" value="<?php echo $v; ?>"<?php echo $disable_edit; ?> />
             <?php endif; ?>
             </div>
           </div>
           <?php endforeach; ?>
+          <div class="form-group row">
+            <div class="col-md-8 offset-md-4">
+              <input type="hidden" name="update" value="go">
+              <button type="submit" class="btn btn-sm btn-primary "<?php echo $disable_edit; ?> ><?php echo __tr('Update and reload') ?></button>
+            </div>
+          </div>
         </form>
       </div>
     </div>
