@@ -5,7 +5,7 @@ $socket = @fsockopen(OJN_API_HOST, OJN_API_PORT);
 $url = $_SERVER['REQUEST_URI'];
 if(LOG_OJNAPI)
 {
-	$file = fopen(OJN_API_ROOT.'http-wrapper/cache/logs/openjabnab.log', 'a+');
+	$file = fopen(LOGS_SITE.'openjabnab.log', 'a+');
 	fwrite($file,'Req:'.$url."\n");
 }
 $rep = '';
