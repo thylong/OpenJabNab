@@ -295,9 +295,9 @@ void NabaztagManager::handlePing(const HTTPRequest& request, QTcpSocket * s)
                                           // 0005 Playback stopped
                                           // 01FF Unknown
                                           // 8XXX or 9XXX Ears movement
-  //size_t ts  = request.GetArg("ts");    // Unknown
-  //size_t tc  = request.GetArg("tc");    // Unknown. Services ? Trame counter ?
-  //size_t tn  = request.GetArg("tn");    // Unknown
+  //size_t ts  = request.GetArg("ts");    // Unknown - Possible: Nabaztag Status (from VASM SEND opcode)
+  //size_t tc  = request.GetArg("tc");    // Unknown. Services ? Trame counter ? - Possible: Current Bytecode ID
+  //size_t tn  = request.GetArg("tn");    // Unknown - Possible: Previous Bytecode ID
 
   Bunny * n = BunnyManager::GetBunny(sn.toLatin1());
   bool log = n->GetGlobalSetting("DumpLog",false).toBool();
