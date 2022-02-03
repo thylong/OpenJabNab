@@ -65,6 +65,8 @@ echo '<pre>';
 
 foreach($vip as $user => $date)
 {
+	if(empty($user))
+		continue;
 	$st = date_create($date) >= $now ? $status[$user] : 'User';
 	echo 'Set user "'.$user.'" status to '.$st.'. Status '.$status[$user].' expiration date: '.$date."\n";
 	$sql = 'UPDATE account
