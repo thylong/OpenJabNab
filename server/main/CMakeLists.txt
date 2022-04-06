@@ -5,12 +5,13 @@ if(WIN32)
 endif()
 
 add_executable(${PROJECT_NAME}
-#WIN32
   main.cpp
 
   openjabnab.h
   openjabnab.cpp
 )
+
+add_dependencies(${PROJECT_NAME} ojn_translations)
 
 target_link_libraries(${PROJECT_NAME}
   ${WINLIB}

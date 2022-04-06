@@ -25,7 +25,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
 find_package(Qt5 ${QT_VERSION}
-	COMPONENTS Core Network Sql REQUIRED
+  COMPONENTS Core Network Sql LinguistTools REQUIRED
 )
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/)
@@ -39,6 +39,16 @@ if(BUILD_TESTS)
 
   enable_testing()
 endif()
+
+# Prepare translations
+set(OJN_TRANSLATIONS "fr;de;es;it")
+foreach(LNG IN LISTS OJN_TRANSLATIONS)
+  list(APPEND TS_FILES ${CMAKE_CURRENT_LIST_DIR}/conf/translations/openjabnab_${LNG}.ts)
+endforeach()
+set_source_files_properties(${TS_FILES} PROPERTIES OUTPUT_LOCATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/translations)
+qt_add_translation(OJN_QMFILES ${TS_FILES})
+
+add_custom_target(ojn_translations DEPENDS ${OJN_QMFILES})
 
 add_subdirectory(lib/)
 add_subdirectory(main/)
