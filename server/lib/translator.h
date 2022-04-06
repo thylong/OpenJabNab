@@ -121,14 +121,14 @@ inline void Translator::loadTranslations()
 	{
 		LogInfo(QString("Loading %1 language").arg(lng));
 		QTranslator *t = new QTranslator();
-		if(t->load("openjabnab_" + lng + ".qm", GlobalSettings::GetConfigDir().append("translations/")))
+		if(t->load("openjabnab_" + lng + ".qm", GlobalSettings::GetConfigDir().append("/translations/")))
     {
       translators.insert(lng, t);
       LogInfo(Translator::tr("Language %1 loaded", lng).arg(lng));
     }
     else
     {
-      LogInfo(Translator::tr("Couldn't load Language %1", lng).arg(lng));
+      LogInfo(Translator::tr("Couldn't load language '%1' from file '%2', dir '%3'", lng).arg(lng).arg("openjabnab_"+lng+".qm").arg(GlobalSettings::GetConfigDir().append("/translations/")));
     }
 	}
 
