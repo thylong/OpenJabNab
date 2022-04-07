@@ -17,10 +17,12 @@ class PluginMessages
 public:
   PluginMessages();
 
+public slots:
   bool AddMessage(Bunny *, QString, QStringList, int);
   bool AddMessage(Bunny *, QString, QStringList);
   bool RemoveMessage(Bunny *, int);
 
+public:
   virtual void OnInitPacket(const Bunny *, AmbientPacket &, SleepPacket &) override;
   virtual bool OnClick(Bunny *, PluginInterface::ClickType) override;
   virtual void OnCron(Bunny * b, QVariant, unsigned int) override;
