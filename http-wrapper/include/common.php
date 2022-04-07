@@ -272,6 +272,8 @@ function bunnyVersion($mac)
 
 function getServerFeesFullfilment($TargetPerMonth = SERVER_MONTHLY_FEES)
 {
+	if($TargetPerMonth <= 0.0)
+		return array(); // Disabled
 	$link = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
 	if (!$link)
 			die('Connexion impossible : ' . mysqli_error());

@@ -2,7 +2,8 @@
 $ojnTemplate->setTitle(__tr('Dashboard'));
 if(!($user_storage = apcu_fetch(APC_PREFIX.'ojn_userstorage'))) {
   $cmd = 'du '.ROOT_LOCAL.'/users/ --max-depth=0 | cut -d"/" -f1';
-  $user_storage = round((trim(exec($cmd)) + 0) / 1024, 1);
+  $res = (int)trim(exec($cmd));
+  $user_storage = round(($res + 0.0) / 1024, 1);
   apcu_store(APC_PREFIX.'ojn_userstorage', $user_storage, 3600);
 }
 

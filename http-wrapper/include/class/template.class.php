@@ -114,7 +114,7 @@ class ojnTemplate {
 		}
 		$menu .= '  <li class="nav-item '.($active == 'stats' ? ' active' : '').'"><a class="nav-link" href="/stats.php">'.__tr("Statistics").'</a></li>'."\n";
 		$menu .= '  <li class="nav-item'.($active == 'map' ? ' active' : '').'"><a class="nav-link" href="/map.php">'.__tr("Map").'</a></li>'."\n";
-		$menu .= '  <li class="nav-item'.($active == 'wiki' ? ' active' : '').'"><a class="nav-link" href="http://wiki.openjabnab.fr">'.__tr("Wiki").'</a></li>'."\n";
+		if(defined('WIKI_URL')) $menu .= '  <li class="nav-item'.($active == 'wiki' ? ' active' : '').'"><a class="nav-link" href="'.WIKI_URL.'">'.__tr("Wiki").'</a></li>'."\n";
 		$menu .= '  <li class="nav-item'.($active == 'help/index' ? ' active' : '').'"><a class="nav-link" href="/help/">'.__tr("Help").'</a></li>'."\n";
 		$menu .= '</ul>'."\n";
 		$menu .= '<ul class="navbar-nav donate">'."\n";

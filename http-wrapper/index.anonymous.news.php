@@ -8,6 +8,7 @@
 
     $sql = "SELECT news.*, news_translation.title as tr_title, news_translation.content as tr_content FROM news LEFT JOIN news_translation ON news_translation.news=news.id AND news_translation.language='".$Infos['language']."' WHERE status=1 OR status=4 ORDER BY status DESC, date DESC;";
     $res = mysqli_query($link, $sql);
+    $news = array();
     while($row = mysqli_fetch_assoc($res))
     {
       $news[] = $row;
