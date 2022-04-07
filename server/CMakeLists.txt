@@ -46,7 +46,7 @@ foreach(LNG IN LISTS OJN_TRANSLATIONS)
   list(APPEND TS_FILES ${CMAKE_CURRENT_LIST_DIR}/conf/translations/openjabnab_${LNG}.ts)
 endforeach()
 set_source_files_properties(${TS_FILES} PROPERTIES OUTPUT_LOCATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/translations)
-qt_add_translation(OJN_QMFILES ${TS_FILES})
+qt5_add_translation(OJN_QMFILES ${TS_FILES})
 
 add_custom_target(ojn_translations DEPENDS ${OJN_QMFILES})
 
