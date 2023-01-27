@@ -243,7 +243,7 @@ require('../include/message.php');
               <div class="col-sm-3">
                 <select name="lng">
                   <?php
-                    $tr = getTranslates($_SESSION['login']);
+                    $tr = getTranslates(!empty($_SESSION['login']) ? $_SESSION['login'] : "guest");
                     $link = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
                     if (!$link) {
                         die('Connexion impossible : ' . mysqli_error());

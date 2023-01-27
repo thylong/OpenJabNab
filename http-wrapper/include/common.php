@@ -92,7 +92,7 @@ if(date("m") == 10 && date('d') >= 28) {
 	$ojnTemplate->setCSS('ojn.halloween.css');
 }
 */
-$Infos = array('token' => '','login'=>'guest','usename'=>'Guest','isAdmin'=>false,'isValid'=>true);
+$Infos = array('token' => '','login'=>'guest','usename'=>'Guest','isAdmin'=>false,'isValid'=>true,'email'=>'');
 if(isset($_SESSION['token']) && !strpos($_SERVER['REQUEST_URI'],"logout")) {
     if(isset($_SESSION['token']) && isset($_SESSION['login'])) {
 	if(!apcu_fetch(APC_PREFIX.'ojn_user_'.$_SESSION['login'])) {
@@ -108,7 +108,7 @@ if(isset($_SESSION['token']) && !strpos($_SERVER['REQUEST_URI'],"logout")) {
 			if(empty($Infos[$k]))
 				$Infos[$k] = 0;
 
-		$sFix = array('email','token');
+		$sFix = array('email','language','token');
 		foreach($sFix as $k)
 			if(empty($Infos[$k]))
 				$Infos[$k] = "";
