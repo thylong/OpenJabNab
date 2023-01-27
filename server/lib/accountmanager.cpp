@@ -169,7 +169,7 @@ void AccountManager::SaveAccounts()
 					query2.bindValue(":settings", byteArray);
 					if(!query2.exec())
 					{
-						LogError(QString("2/2 Impossible to save Account in DB : %1").arg(query2.lastError().driverText()));
+						LogError(QString("2/2 Impossible to save Account '%2'in DB : %1").arg(query2.lastError().driverText()).arg(a->GetLogin()));
 					}
 					else 
 						a->SetSaveNeeded(false);
