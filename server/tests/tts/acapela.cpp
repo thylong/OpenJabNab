@@ -8,7 +8,7 @@
 #endif
 #include <catch.hpp>
 
-#define OVERWRITE_FILES false
+#define OVERWRITE_FILES true
 
 TEST_CASE("Acapella - TestAllVoices","[TTS][Acapela]")
 {

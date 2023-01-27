@@ -15,50 +15,50 @@ TTSacapela::TTSacapela():TTSInterface("acapela", "acapela")
   v.limit = 5000;
 
 /**
-Arabic                  Leila         Mehdi           Nizar               Salma   
-Catalan                 Laia   
-Czech                   Eliska   
-Danish                  Mette         Rasmus   
-Dutch (Belgium)         Zoe           Jeroen          JeroenHappy         
-                        JeroenSad     Sofie   
-Dutch (Netherlands)     Jasmijn       Daan            Femke               Max   
-English (AU)            Tyler         Lisa   
-English (India)         Deepa   
-English (Scottish)      Rhona   
-English (UK)            Rachel        Graham          Lucy                Nizareng        Peter             
-                                      PeterHappy      PeterSad            QueenElizabeth    
+Arabic                  Leila         Mehdi           Nizar               Salma
+Catalan                 Laia
+Czech                   Eliska
+Danish                  Mette         Rasmus
+Dutch (Belgium)         Zoe           Jeroen          JeroenHappy
+                        JeroenSad     Sofie
+Dutch (Netherlands)     Jasmijn       Daan            Femke               Max
+English (AU)            Tyler         Lisa
+English (India)         Deepa
+English (Scottish)      Rhona
+English (UK)            Rachel        Graham          Lucy                Nizareng        Peter
+                                      PeterHappy      PeterSad            QueenElizabeth
 English (USA)           Sharon        Karen           Kenny               Laura           Micah
-                                      Nelly           Rod                 Ryan            Saul   
-                                      Tracy           Will                WillBadGuy      WillFromAfar    
-                                      WillHappy       WillLittleCreature  WillOldMan      WillSad    
-                                      WillUpClose    
-Faroese                 Hanna         Hanus   
-Finnish                 Sanna   
-French (Belgium)        Manon-be      Alice-be        Anais-be            Antoine-be      Bruno-be          
-                        Claire-be     Julie-be        Margaux-be   
-French (Canada)         Louise   
-French (France)         Manon         Alice           Anais               Antoine         AntoineFromAfar   
-                        AntoineHappy  AntoineSad      AntoineUpClose      Bruno           Claire   
-                        Julie         Margaux         MargauxHappy        MargauxSad    
-German                  Claudia       Andreas         ClaudiaSmile        Julia           
-                        Klaus         Sarah   
-Greek                   Dimitris      DimitrisHappy   DimitrisSad    
-Italian                 Fabiana       Chiara          Vittorio   
-Japanese                Sakura   
-Korean                  Minji   
-Mandarin                Lulu   
-Norwegian               Bente         Kari            Olav   
-Polish                  Ania   
-Portuguese (Brazil)     Marcia   
-Portuguese (Portugal)   Celia   
-Russian                 Alyona   
-Sami (North)            Biera         Elle   
-Spanish (Spain)         Ines          Maria   
-Spanish (US)            Rodrigo       Rosa   
-Swedish                 Elin          Emil            Emma                Erik   
-Swedish (Finland)       Samuel   
-Swedish (Gothenburg)    Kal   
-Swedish (Scanian)       Mia   
+                                      Nelly           Rod                 Ryan            Saul
+                                      Tracy           Will                WillBadGuy      WillFromAfar
+                                      WillHappy       WillLittleCreature  WillOldMan      WillSad
+                                      WillUpClose
+Faroese                 Hanna         Hanus
+Finnish                 Sanna
+French (Belgium)        Manon-be      Alice-be        Anais-be            Antoine-be      Bruno-be
+                        Claire-be     Julie-be        Margaux-be
+French (Canada)         Louise
+French (France)         Manon         Alice           Anais               Antoine         AntoineFromAfar
+                        AntoineHappy  AntoineSad      AntoineUpClose      Bruno           Claire
+                        Julie         Margaux         MargauxHappy        MargauxSad
+German                  Claudia       Andreas         ClaudiaSmile        Julia
+                        Klaus         Sarah
+Greek                   Dimitris      DimitrisHappy   DimitrisSad
+Italian                 Fabiana       Chiara          Vittorio
+Japanese                Sakura
+Korean                  Minji
+Mandarin                Lulu
+Norwegian               Bente         Kari            Olav
+Polish                  Ania
+Portuguese (Brazil)     Marcia
+Portuguese (Portugal)   Celia
+Russian                 Alyona
+Sami (North)            Biera         Elle
+Spanish (Spain)         Ines          Maria
+Spanish (US)            Rodrigo       Rosa
+Swedish                 Elin          Emil            Emma                Erik
+Swedish (Finland)       Samuel
+Swedish (Gothenburg)    Kal
+Swedish (Scanian)       Mia
 Turkish                 Ipek
 */
 
@@ -133,11 +133,11 @@ QString TTSacapela::CreateNewSound(QString text, QString voice, bool forceOverwr
   }
 
   // Get Authentication IDs ids
-  QNetworkRequest req(QUrl("https://www.acapela-group.com/www/static/website/demoOptionsDef.php"));
+  QNetworkRequest req(QUrl("https://www.acapela-group.com/www/static/website/demoOptionsDef_voicedemo.php"));
 
   auto* rep = _http.get(req);
   QObject::connect(rep, &QNetworkReply::finished, &loop, &QEventLoop::quit);
-  QObject::connect(rep, qOverload<QNetworkReply::NetworkError>(&QNetworkReply::error), &loop, &QEventLoop::quit);
+  QObject::connect(rep, qOverload<QNetworkReply::NetworkError>(&QNetworkReply::errorOccurred), &loop, &QEventLoop::quit);
   loop.exec();
 
   const auto& answer = rep->readAll();
@@ -149,18 +149,18 @@ QString TTSacapela::CreateNewSound(QString text, QString voice, bool forceOverwr
   }
 
   ///var vaasOptions = {"login":"AcapelaGroup_WebDemo_BUTransport","app":"AcapelaGroup_WebDemo_BUTransport","json_service_url":"https:\/\/H-IR-SSD-1.acapela-group.com\/webservices\/1-60-00\/UrlMaker.json","session":{"start":1585598183,"time":10800,"key":"2096218979-fa191161f53b76340fd0cb9a4a79217b5b0b96d6b9c6464bc361186f11e29e28"},"voice":null};
-  
+
   QString json_src = QString(answer).replace("var vaasOptions = ","");
   json_src = json_src.replace("};","}");
   json_src = json_src.replace("\\/","/");
-  
+
   //LogDebug(QString("TTS Acapela: Rep1: %1").arg(json_src));
   const auto& json_doc = QJsonDocument::fromJson(json_src.toUtf8());
   const auto& json = json_doc.object();
   //LogDebug(QString("TTS Acapela: JSON1: %1").arg(QString(json_doc.toJson())));
   delete rep;
 
-  if(!(json.contains("login") && json.contains("app") && 
+  if(!(json.contains("login") && json.contains("app") &&
        json.contains("json_service_url") && json.contains("session")
       )
     )
@@ -185,16 +185,16 @@ QString TTSacapela::CreateNewSound(QString text, QString voice, bool forceOverwr
   // https://h-ir-ssd-1.acapela-group.com/webservices/1-60-00/UrlMaker.json
   QNetworkRequest req2(QUrl(url.toStdString().c_str()));
   req2.setRawHeader("Content-type","application/x-www-form-urlencoded");
-  QByteArray ContentData;
+  QString ContentData;
   //cl_login=AcapelaGroup&cl_app=AcapelaGroup_WebDemo_HTML&session_start=1585596267&session_time=10800&session_key=2096218979-2698bdb6b51d6aeac79e2d89a856ab72ba1f01e01b1f662e92d4bef2c74dd304&req_voice=anais22k&req_text=Bonjour%2C+je+suis+Ana%C3%AFs.%0D%0A
   ContentData +=  "cl_login="+login+"&cl_app="+app;
   ContentData += "&session_start="+QString::number(start)+"&session_time="+QString::number(time)+"&session_key="+key;
   ContentData += "&req_voice="+voice+"&req_text="+QUrl::toPercentEncoding(text);
   //LogDebug(QString("ContentData: %1").arg(QString(ContentData)));
 
-  auto* rep2 = _http.post(req2,ContentData);
+  auto* rep2 = _http.post(req2,ContentData.toLatin1());
   QObject::connect(rep2, &QNetworkReply::finished, &loop, &QEventLoop::quit);
-  QObject::connect(rep2, qOverload<QNetworkReply::NetworkError>(&QNetworkReply::error), &loop, &QEventLoop::quit);
+  QObject::connect(rep2, qOverload<QNetworkReply::NetworkError>(&QNetworkReply::errorOccurred), &loop, &QEventLoop::quit);
   loop.exec();
 
   const auto& answer2 = rep2->readAll();
@@ -226,7 +226,7 @@ QString TTSacapela::CreateNewSound(QString text, QString voice, bool forceOverwr
 
   QNetworkReply* rep3 = _http.get(req3);
   QObject::connect(rep3, &QNetworkReply::finished, &loop, &QEventLoop::quit);
-  QObject::connect(rep3, qOverload<QNetworkReply::NetworkError>(&QNetworkReply::error), &loop, &QEventLoop::quit);
+  QObject::connect(rep3, qOverload<QNetworkReply::NetworkError>(&QNetworkReply::errorOccurred), &loop, &QEventLoop::quit);
   loop.exec();
 
   const auto& answer3 = rep3->readAll();
@@ -250,5 +250,3 @@ QString TTSacapela::CreateNewSound(QString text, QString voice, bool forceOverwr
 
   return ttsHTTPUrl.arg(voice, fileName).toLatin1();
 }
-
-
