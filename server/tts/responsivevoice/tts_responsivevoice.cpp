@@ -189,7 +189,7 @@ QString TTSresponsivevoice::CreateNewSound(QString text, QString voice, bool for
 
     auto* rep = _http.get(req);
     QObject::connect(rep, &QNetworkReply::finished, &loop, &QEventLoop::quit);
-    QObject::connect(rep, qOverload<QNetworkReply::NetworkError>(&QNetworkReply::error), &loop, &QEventLoop::quit);
+    QObject::connect(rep, qOverload<QNetworkReply::NetworkError>(&QNetworkReply::errorOccurred), &loop, &QEventLoop::quit);
     loop.exec();
 
     const auto answer = rep->readAll();
@@ -210,5 +210,3 @@ QString TTSresponsivevoice::CreateNewSound(QString text, QString voice, bool for
   file.close();
   return ttsHTTPUrl.arg(voice, fileName).toLatin1();
 }
-
-
