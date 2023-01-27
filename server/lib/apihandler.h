@@ -22,7 +22,7 @@ class ApiHandlerGeneric<C,R(Args...)>
 {
   friend class PluginApiHandler;
   friend class ApiHandler<C>;
-  
+
 public:
   using APICallMap_t = std::map<QString, std::pair<QStringList, std::function<R(C*,Args...)> > >;
 
@@ -37,7 +37,7 @@ public:
       //std::cout << "    No such APICall: " << sig << std::endl;
       return R{};
     }
-    
+
     //std::cout << "    Calling trampoline... " << std::endl;
     return (it->second.second)(obj,std::forward<Args>(args)...);
   }
@@ -62,12 +62,12 @@ protected:
       return;
     }
     QString funcName = rx.cap(1);
-    QStringList args = rx.cap(2).split(',', QString::SkipEmptyParts);
+    QStringList args = rx.cap(2).split(',', Qt::SkipEmptyParts);
     //std::cout << "  [ApiHandlerGeneric::registerAPICall] " << sig << " " << &fn << std::endl;
     //std::cout << "    Put into map... " << &_apicalls << std::endl;
-    _apicalls.emplace(funcName, std::make_pair(args,[fn](C* o, Args... args) -> R { 
+    _apicalls.emplace(funcName, std::make_pair(args,[fn](C* o, Args... args) -> R {
       //std::cout << "    [ApiHandlerGeneric::trampoline] " << o << " " << &fn << std::endl;
-      return (dynamic_cast<Cf*>(o)->*fn)(std::forward<Args>(args)...); 
+      return (dynamic_cast<Cf*>(o)->*fn)(std::forward<Args>(args)...);
     }));
   }
 

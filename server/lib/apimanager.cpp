@@ -186,7 +186,7 @@ ApiAnswers::Answer* ApiManager::ProcessApiCall(QString const& request, HTTPReque
 
 ApiAnswers::Answer * ApiManager::ProcessPluginApiCall(QString const& request, HTTPRequest const& hRequest, Account const& account)
 {
-	QStringList list = QString(request).split('/', QString::SkipEmptyParts);
+	QStringList list = QString(request).split('/', Qt::SkipEmptyParts);
 
 	if(list.size() != 2)
 		return new ApiAnswers::Error(Translator::tr("Malformed Plugin Api Call : %1", account).arg(hRequest.toString()));
@@ -206,7 +206,7 @@ ApiAnswers::Answer * ApiManager::ProcessPluginApiCall(QString const& request, HT
 
 ApiAnswers::Answer * ApiManager::ProcessBunnyApiCall(QString const& request, HTTPRequest const& hRequest, Account const& account)
 {
-	QStringList list = QString(request).split('/', QString::SkipEmptyParts);
+	QStringList list = QString(request).split('/', Qt::SkipEmptyParts);
 
 	if(list.size() < 2)
 		return new ApiAnswers::Error(Translator::tr("Malformed Bunny Api Call : %1", account).arg(hRequest.toString()));
@@ -251,7 +251,7 @@ ApiAnswers::Answer * ApiManager::ProcessBunnyApiCall(QString const& request, HTT
 
 ApiAnswers::Answer * ApiManager::ProcessBunnyVioletApiCall(QString const& request, HTTPRequest const& hRequest)
 {
-	QStringList list = QString(request).split('/', QString::SkipEmptyParts);
+	QStringList list = QString(request).split('/', Qt::SkipEmptyParts);
 
 	if(list.size() < 3)
 		return new ApiAnswers::Error(QString("Malformed Bunny Api Call : %1").arg(hRequest.toString()));
@@ -277,7 +277,7 @@ ApiAnswers::Answer * ApiManager::ProcessBunnyVioletApiCall(QString const& reques
 
 ApiAnswers::Answer * ApiManager::ProcessZtampApiCall(QString const& request, HTTPRequest const& hRequest, Account const& account)
 {
-	QStringList list = QString(request).split('/', QString::SkipEmptyParts);
+	QStringList list = QString(request).split('/', Qt::SkipEmptyParts);
 
 	if(list.size() < 2)
 		return new ApiAnswers::Error(Translator::tr("Malformed Ztamp Api Call : %1", account).arg(hRequest.toString()));

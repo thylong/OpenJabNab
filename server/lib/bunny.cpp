@@ -129,7 +129,7 @@ ApiAnswers::Answer * Bunny::ProcessVioletApiCall(HTTPRequest const& hRequest)
 						{
 							if(hRequest.HasArg("urlList"))
 							{
-								QByteArray message = ("ST " + hRequest.GetArg("urlList").split("|", QString::SkipEmptyParts).join("\nMW\nST ") + "\nMW\n").toLatin1();
+								QByteArray message = ("ST " + hRequest.GetArg("urlList").split("|", Qt::SkipEmptyParts).join("\nMW\nST ") + "\nMW\n").toLatin1();
 								SendPacket(MessagePacket(message), "api_stream.jsp");
 								answer->AddMessage("WEBRADIOSENT", "Your webradio has been sent");
 							}
@@ -556,7 +556,7 @@ ApiAnswers::Answer * Bunny::ProcessVioletApiCall(HTTPRequest const& hRequest)
 							{
 								if(GetVersion() == 2)
 								{
-									QByteArray message = ("ST " + hRequest.GetArg("urllist").split("|", QString::SkipEmptyParts).join("\nMW\nST ") + "\nMW\n").toLatin1();
+									QByteArray message = ("ST " + hRequest.GetArg("urllist").split("|", Qt::SkipEmptyParts).join("\nMW\nST ") + "\nMW\n").toLatin1();
 									SendPacket(MessagePacket(message), "api.jsp");
 									answer->AddMessage("WEBRADIOSENT", "Your webradio has been sent");
 								}
