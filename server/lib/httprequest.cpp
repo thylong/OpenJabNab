@@ -154,7 +154,7 @@ QByteArray HTTPRequest::ForwardTo(QString const& server)
     rep = _http.post(req,rawPostData);
   }
   QObject::connect(rep, &QNetworkReply::finished, &loop, &QEventLoop::quit);
-  QObject::connect(rep, qOverload<QNetworkReply::NetworkError>(&QNetworkReply::error), &loop, &QEventLoop::quit);
+  QObject::connect(rep, qOverload<QNetworkReply::NetworkError>(&QNetworkReply::errorOccurred), &loop, &QEventLoop::quit);
   loop.exec();
 
   if(rep->error() != QNetworkReply::NoError)

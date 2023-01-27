@@ -63,7 +63,7 @@ QString Translator::googleTranslate(QString text, QString language)
 	QNetworkAccessManager http;
 	auto* rep = http.get(req);
   QObject::connect(rep, &QNetworkReply::finished, &loop, &QEventLoop::quit);
-  QObject::connect(rep, qOverload<QNetworkReply::NetworkError>(&QNetworkReply::error), &loop, &QEventLoop::quit);
+  QObject::connect(rep, qOverload<QNetworkReply::NetworkError>(&QNetworkReply::errorOccurred), &loop, &QEventLoop::quit);
 	loop.exec();
 
 	QString content = rep->readAll();
@@ -503,4 +503,3 @@ API_CALL(Translator::Api_Translation)
 		return new ApiAnswers::Error(Translator::tr("Bad argument '%1'", account).arg("action"));
 	}
 }
-
