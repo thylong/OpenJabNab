@@ -52,10 +52,12 @@ class ojnTemplate {
       "|<!!CSS!!>|",
       "|<!!ABOUT!!>|",
       "|<!!TIME!!>|",
+      "|<!!ANALYTICS!!>|",    
     );
 
     $a = $this->Api->getAbout();
     $about = !empty($a) ? __tr("%1 %2 (Built on %3 - %4)", $a["name"],$a["git_rev"],$a["build_date"],$a["build_time"]) : "";
+    $analytics = is_file(ROOT_SITE.'include/class/stats.inc.php') ? file_get_contents(ROOT_SITE.'include/class/stats.inc.php') : '';
     
     $replace = array(
       __tr($this->titre),
@@ -68,7 +70,8 @@ class ojnTemplate {
       $this->getJS(),
       $this->getCSS(),//.'?'.time(),
       $about,
-      __tr("Page was generated in %1 seconds", round($this->loadTime(),4))
+      __tr("Page was generated in %1 seconds", round($this->loadTime(),4)),
+      $analytics
     );
 
     $template = preg_replace($pattern, $replace, $template);
