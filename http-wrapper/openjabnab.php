@@ -1,5 +1,6 @@
 <?php
-	$socket = fsockopen("127.0.0.1", 8080);
+	$socket = fsockopen("openjabnab", 8080); // for local testing
+	// $socket = fsockopen("127.0.0.1", 8080);
 	if(!$socket)
 		echo "Problem with OpenJabNab !";
 	else
@@ -53,7 +54,7 @@
 		$request = pack("LCa*", $requestlen, $type, $requestdata);
 
 		fwrite($socket, $request);
-		while (!feof($socket)) 
+		while (!feof($socket))
 			echo fgets($socket, 128);
 
 		fclose($socket);
