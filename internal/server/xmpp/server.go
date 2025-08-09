@@ -18,6 +18,8 @@ type Server struct {
     GetPassword func(user string) (string, bool)
     OnListen func(addr string)
     NonceFactory func() string
+    OnButton func(id string, clicks int)
+    OnEars   func(id string, left, right int)
 }
 
 func (s *Server) ListenAndServe(stop <-chan struct{}) error {
@@ -46,6 +48,8 @@ func (s *Server) handleConn(c net.Conn) {
     h.onIdentify = func(id string) { if s.OnConnect != nil { s.OnConnect(id) } }
     if s.GetPassword != nil { h.getPassword = s.GetPassword }
     if s.NonceFactory != nil { h.nonceFactory = s.NonceFactory }
+    if s.OnButton != nil { h.onButton = s.OnButton }
+    if s.OnEars != nil { h.onEars = s.OnEars }
 	buf := make([]byte, 4096)
 	for {
 		n, err := br.Read(buf)

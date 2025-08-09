@@ -50,6 +50,8 @@ func startServers(logger *slog.Logger, cfg *configpkg.Config) (*servers, error) 
         xs := &xmpp.Server{Addr: xaddr, Domain: cfg.OpenJabNabServers.XmppServer, Logger: logger}
         xs.OnConnect = func(id string) { if id != "" { bunMgr.Connect(id); logger.Info("bunny connected", slog.String("id", id)) } }
         xs.OnDisconnect = func(id string) { if id != "" { bunMgr.Disconnect(id); logger.Info("bunny disconnected", slog.String("id", id)) } }
+        xs.OnButton = func(id string, clicks int) { logger.Info("button", slog.String("id", id), slog.Int("clicks", clicks)) }
+        xs.OnEars = func(id string, left, right int) { logger.Info("ears", slog.String("id", id), slog.Int("left", left), slog.Int("right", right)) }
         xs.GetPassword = accMgr.GetPassword
         go func() { _ = xs.ListenAndServe(stop) }()
         logger.Info("xmpp listening", slog.String("addr", xaddr), slog.String("domain", cfg.OpenJabNabServers.XmppServer))

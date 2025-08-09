@@ -6,6 +6,7 @@ import (
     "encoding/hex"
     "log/slog"
     "regexp"
+    "strconv"
 )
 
 type handler struct {
@@ -20,6 +21,8 @@ type handler struct {
     nonce string
     nonceFactory func() string
     authUser string
+    onButton func(id string, clicks int)
+    onEars   func(id string, left, right int)
 }
 
 func newHandler(domain string, logger *slog.Logger) *handler {
@@ -148,7 +151,33 @@ func (h *handler) Process(in []byte) (out []string) {
 		return
 	}
 	// message button/ears logging not implemented here (plugins will handle later)
-	_ = reMessage
+    if reMessage.MatchString(data) {
+        // Button click: <button ...><clic>1</clic></button>
+        if has(data, "<button") {
+            clicks := capture(data, `<clic>([0-9]+)</clic>`)
+            if clicks != "" && h.onButton != nil {
+                if n, err := strconv.Atoi(clicks); err == nil {
+                    id := h.bunnyID
+                    if id == "" { id = h.authUser }
+                    if id != "" { h.onButton(id, n) }
+                }
+            }
+        }
+        // Ears move: <ears ...><left>..</left><right>..</right></ears>
+        if has(data, "<ears") {
+            l := capture(data, `<left>([0-9]+)</left>`)
+            r := capture(data, `<right>([0-9]+)</right>`)
+            if l != "" && r != "" && h.onEars != nil {
+                li, lerr := strconv.Atoi(l)
+                ri, rerr := strconv.Atoi(r)
+                if lerr == nil && rerr == nil {
+                    id := h.bunnyID
+                    if id == "" { id = h.authUser }
+                    if id != "" { h.onEars(id, li, ri) }
+                }
+            }
+        }
+    }
 	return
 }
 
