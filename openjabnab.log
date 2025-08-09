@@ -1,0 +1,3 @@
+time=2025-08-09T16:42:48.662+02:00 level=INFO msg="OpenJabNab Go bootstrap" logFile=openjabnab.log httpListener=true httpApi=true httpVioletApi=true xmppListener=true
+time=2025-08-09T16:42:48.662+02:00 level=INFO msg="httpbridge listening" addr=127.0.0.1:8080
+time=2025-08-09T16:42:52.295+02:00 level=INFO msg="Shutting down"

@@ -38,7 +38,13 @@ func main() {
 		slog.Bool("xmppListener", cfg.XmppListener),
 	)
 
-	// Block until we receive a shutdown signal. Additional servers will be wired next steps.
+	srvs, err := startServers(logger, cfg)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "failed to start servers: %v\n", err)
+		os.Exit(1)
+	}
+
 	<-ctx.Done()
+	srvs.shutdown(logger)
 	logger.Info("Shutting down")
 }
