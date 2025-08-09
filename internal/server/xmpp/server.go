@@ -15,11 +15,14 @@ type Server struct {
     // TODO: Inject account/bunny managers to verify auth and track connections
     OnConnect func(id string)
     OnDisconnect func(id string)
+    GetPassword func(user string) (string, bool)
+    OnListen func(addr string)
 }
 
 func (s *Server) ListenAndServe(stop <-chan struct{}) error {
 	ln, err := net.Listen("tcp", s.Addr)
-	if err != nil { return err }
+    if err != nil { return err }
+    if s.OnListen != nil { s.OnListen(ln.Addr().String()) }
 	defer ln.Close()
 	done := make(chan struct{})
 	go func() { <-stop; _ = ln.Close(); close(done) }()
@@ -40,8 +43,7 @@ func (s *Server) handleConn(c net.Conn) {
 	br := bufio.NewReader(c)
     h := newHandler(s.Domain, s.Logger)
     h.onIdentify = func(id string) { if s.OnConnect != nil { s.OnConnect(id) } }
-    // Provide a dummy password getter for now; to be wired via injection later
-    h.getPassword = func(user string) (string, bool) { return "", false }
+    if s.GetPassword != nil { h.getPassword = s.GetPassword }
 	buf := make([]byte, 4096)
 	for {
 		n, err := br.Read(buf)

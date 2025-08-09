@@ -41,6 +41,11 @@ type Config struct {
 		LogScreenLevel string
 		DisplayCronLog bool
 	}
+
+    Accounts struct {
+        Username string
+        Password string
+    }
 }
 
 func LoadDefault() (*Config, error) {
@@ -105,5 +110,10 @@ func Load(path string) (*Config, error) {
 	c.Log.LogFileLevel = log.Key("LogFileLevel").MustString("Debug")
 	c.Log.LogScreenLevel = log.Key("LogScreenLevel").MustString("Warning")
 	c.Log.DisplayCronLog = log.Key("DisplayCronLog").MustBool(false)
+
+    // [Accounts] optional demo/test user
+    acc := f.Section("Accounts")
+    c.Accounts.Username = acc.Key("Username").MustString("")
+    c.Accounts.Password = acc.Key("Password").MustString("")
 	return c, nil
 }

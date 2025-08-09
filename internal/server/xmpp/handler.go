@@ -1,9 +1,11 @@
 package xmpp
 
 import (
-	"encoding/base64"
-	"log/slog"
-	"regexp"
+    "crypto/rand"
+    "encoding/base64"
+    "encoding/hex"
+    "log/slog"
+    "regexp"
 )
 
 type handler struct {
@@ -15,6 +17,7 @@ type handler struct {
     onIdentify func(string)
     // Credentials (temporary static for validation)
     getPassword func(user string) (string, bool)
+    nonce string
 }
 
 func newHandler(domain string, logger *slog.Logger) *handler {
@@ -25,6 +28,7 @@ var (
 	reMessage = regexp.MustCompile(`(?s)<message[^>]*>(.*)</message>`) // greedy content
 	reIQ      = regexp.MustCompile(`(?s)<iq.*</iq>`) // any iq
 	rePresence= regexp.MustCompile(`<presence from='(.*)' id='(.*)'></presence>`) 
+    reResponse= regexp.MustCompile(`(?s)<response[^>]*>(.*?)</response>`)
 )
 
 func (h *handler) Process(in []byte) (out []string) {
@@ -46,28 +50,37 @@ func (h *handler) Process(in []byte) (out []string) {
 		}
     case 1:
         if has(data, `<auth xmlns='urn:ietf:params:xml:ns:xmpp-sasl' mechanism='DIGEST-MD5'/>`) {
-            // issue a deterministic nonce per connection for now
-            challenge := `realm="`+h.domain+`",nonce="random_number",qop="auth",charset=utf-8,algorithm=md5-sess`
+            // issue a random nonce per connection
+            if h.nonce == "" { h.nonce = genNonce() }
+            challenge := `realm="`+h.domain+`",nonce="`+h.nonce+`",qop="auth",charset=utf-8,algorithm=md5-sess`
             out = append(out, `<challenge xmlns='urn:ietf:params:xml:ns:xmpp-sasl'>`+base64.StdEncoding.EncodeToString([]byte(challenge))+`</challenge>`)
             h.step = 2
             return
         }
     case 2:
         if has(data, `<response xmlns='urn:ietf:params:xml:ns:xmpp-sasl'>`) {
-            // Extract base64 payload
-            // For brevity, accept if we find a known user and any response. Full validation can be wired with validateDigestMD5.
-            user := capture(data, `username=\"([^\"]+)\"`)
-            if user == "" { user = capture(data, `username="([^"]+)"`) }
-            if user != "" {
-                if _, ok := h.getPassword(user); ok {
-                    out = append(out, `<success xmlns='urn:ietf:params:xml:ns:xmpp-sasl'/>`)
-                    h.step = 4
-                    return
+            // Decode and validate DIGEST-MD5
+            m := reResponse.FindStringSubmatch(data)
+            if len(m) >= 2 {
+                payload, _ := base64.StdEncoding.DecodeString(m[1])
+                directive := string(payload)
+                user := capture(directive, `username="([^"]+)"`)
+                if user == "" { user = capture(directive, `username='([^']+)'`) }
+                if user != "" && h.getPassword != nil {
+                    if pw, ok := h.getPassword(user); ok {
+                        // expected digest-uri: xmpp/<domain>
+                        digestURI := "xmpp/"+h.domain
+                        if validateDigestMD5(directive, user, h.domain, pw, h.nonce, capture(directive, `cnonce="([^"]+)"`), capture(directive, `nc=([0-9a-fA-F]+)`), "auth", digestURI) {
+                            out = append(out, `<success xmlns='urn:ietf:params:xml:ns:xmpp-sasl'/>`)
+                            h.step = 4
+                            return
+                        }
+                    }
                 }
             }
-            // fallback: still accept to keep devices working until credentials are configured
-            out = append(out, `<success xmlns='urn:ietf:params:xml:ns:xmpp-sasl'/>`)
-            h.step = 4
+            // invalid auth
+            out = append(out, `<failure xmlns='urn:ietf:params:xml:ns:xmpp-sasl'><not-authorized/></failure>`)
+            h.step = 0
             return
         }
 	case 4:
@@ -141,3 +154,11 @@ func (h *handler) tryIdentify(s string) {
 }
 
 func (h *handler) getID() string { return h.bunnyID }
+
+func genNonce() string {
+    b := make([]byte, 12)
+    if _, err := rand.Read(b); err != nil {
+        return "random"
+    }
+    return hex.EncodeToString(b)
+}

@@ -18,11 +18,13 @@ type Server struct {
 	Addr    string // host:port
 	Logger  *slog.Logger
 	API     API
+    OnListen func(addr string)
 }
 
 func (s *Server) ListenAndServe(stop <-chan struct{}) error {
 	ln, err := net.Listen("tcp", s.Addr)
 	if err != nil { return err }
+    if s.OnListen != nil { s.OnListen(ln.Addr().String()) }
 	defer ln.Close()
 	done := make(chan struct{})
 	go func() {
