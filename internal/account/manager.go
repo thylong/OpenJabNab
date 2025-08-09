@@ -24,3 +24,9 @@ func (m *Manager) Validate(username, password string) bool {
     }
     return false
 }
+
+func (m *Manager) GetPassword(username string) (string, bool) {
+    m.mu.RLock(); defer m.mu.RUnlock()
+    pw, ok := m.users[username]
+    return pw, ok
+}

@@ -40,6 +40,8 @@ func (s *Server) handleConn(c net.Conn) {
 	br := bufio.NewReader(c)
     h := newHandler(s.Domain, s.Logger)
     h.onIdentify = func(id string) { if s.OnConnect != nil { s.OnConnect(id) } }
+    // Provide a dummy password getter for now; to be wired via injection later
+    h.getPassword = func(user string) (string, bool) { return "", false }
 	buf := make([]byte, 4096)
 	for {
 		n, err := br.Read(buf)
