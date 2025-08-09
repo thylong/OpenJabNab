@@ -20,6 +20,7 @@ type Server struct {
     NonceFactory func() string
     OnButton func(id string, clicks int)
     OnEars   func(id string, left, right int)
+    Dump func(cat string, data []byte)
 }
 
 func (s *Server) ListenAndServe(stop <-chan struct{}) error {
@@ -58,12 +59,14 @@ func (s *Server) handleConn(c net.Conn) {
 			s.Logger.Warn("xmpp read error", slog.String("err", err.Error()))
 			return
 		}
-		out := h.Process(buf[:n])
+        if s.Dump != nil { s.Dump("XMPP Bunny", buf[:n]) }
+        out := h.Process(buf[:n])
 		for _, resp := range out {
-			if _, err := c.Write([]byte(resp)); err != nil {
+            if _, err := c.Write([]byte(resp)); err != nil {
 				s.Logger.Warn("xmpp write error", slog.String("err", err.Error()))
 				return
 			}
+            if s.Dump != nil { s.Dump("XMPP To Bunny", []byte(resp)) }
 		}
 	}
     if s.OnDisconnect != nil { s.OnDisconnect(h.getID()) }

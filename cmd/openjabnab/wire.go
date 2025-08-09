@@ -12,6 +12,7 @@ import (
     "OpenJabNab/internal/server/httpbridge"
     "OpenJabNab/internal/server/xmpp"
     "OpenJabNab/internal/stats"
+    "OpenJabNab/internal/netdump"
 )
 
 type servers struct {
@@ -36,9 +37,12 @@ func startServers(logger *slog.Logger, cfg *configpkg.Config) (*servers, error) 
     apiMgr.Accounts = api.DefaultAccountsAPI{A: accMgr}
     stop := make(chan struct{})
 
+    dumper := netdump.New(logger, cfg.Log.NetworkDump)
+
     if cfg.HttpListener {
         addr := fmt.Sprintf("127.0.0.1:%d", cfg.OpenJabNabServers.ListeningHttpPort)
         hb := httpbridge.New(addr, logger, apiMgr)
+        hb.Dump = dumper.Log
         go func() { _ = hb.ListenAndServe(stop) }()
         logger.Info("httpbridge listening", slog.String("addr", addr))
     } else {
@@ -53,6 +57,7 @@ func startServers(logger *slog.Logger, cfg *configpkg.Config) (*servers, error) 
         xs.OnButton = func(id string, clicks int) { logger.Info("button", slog.String("id", id), slog.Int("clicks", clicks)) }
         xs.OnEars = func(id string, left, right int) { logger.Info("ears", slog.String("id", id), slog.Int("left", left), slog.Int("right", right)) }
         xs.GetPassword = accMgr.GetPassword
+        xs.Dump = dumper.Log
         go func() { _ = xs.ListenAndServe(stop) }()
         logger.Info("xmpp listening", slog.String("addr", xaddr), slog.String("domain", cfg.OpenJabNabServers.XmppServer))
     } else {

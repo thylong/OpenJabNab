@@ -40,6 +40,7 @@ type Config struct {
 		LogFileLevel   string
 		LogScreenLevel string
 		DisplayCronLog bool
+		NetworkDump    bool
 	}
 
     Accounts struct {
@@ -110,6 +111,7 @@ func Load(path string) (*Config, error) {
 	c.Log.LogFileLevel = log.Key("LogFileLevel").MustString("Debug")
 	c.Log.LogScreenLevel = log.Key("LogScreenLevel").MustString("Warning")
 	c.Log.DisplayCronLog = log.Key("DisplayCronLog").MustBool(false)
+	c.Log.NetworkDump = log.Key("NetworkDump").MustBool(true)
 
     // [Accounts] optional demo/test user
     acc := f.Section("Accounts")

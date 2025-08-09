@@ -19,6 +19,7 @@ type Server struct {
 	Logger  *slog.Logger
 	API     API
     OnListen func(addr string)
+    Dump func(cat string, data []byte)
 }
 
 func (s *Server) ListenAndServe(stop <-chan struct{}) error {
@@ -62,12 +63,13 @@ func (s *Server) handleConn(c net.Conn) {
 		s.Logger.Warn("bad frame length", slog.Int("len", length))
 		return
 	}
-	frame := make([]byte, length)
+    frame := make([]byte, length)
 	copy(frame[:4], lenBuf)
 	if _, err := io.ReadFull(br, frame[4:]); err != nil {
 		s.Logger.Warn("read frame failed", slog.String("err", err.Error()))
 		return
 	}
+    if s.Dump != nil { s.Dump("Api Call", frame) }
 	req, err := Decode(frame)
 	if err != nil {
 		s.Logger.Warn("decode failed", slog.String("err", err.Error()))
@@ -79,10 +81,11 @@ func (s *Server) handleConn(c net.Conn) {
 	}
 	// For now, we just write raw data as the legacy server did for API; plugins may write plain strings.
 	// If content-type is significant, we could prepend HTTP headers; the PHP wrapper expects raw body.
-	if _, err := c.Write(data); err != nil {
+    if _, err := c.Write(data); err != nil {
 		s.Logger.Warn("write failed", slog.String("err", err.Error()))
 		return
 	}
+    if s.Dump != nil { s.Dump("Api Answer", data) }
 	_ = ct // reserved for future use
 }
 
