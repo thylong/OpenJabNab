@@ -10,12 +10,36 @@ type Manager struct {
 	Logger *slog.Logger
 	// Inject services/managers here as needed
 	Stats StatsProvider
+
+    Plugins  PluginAPI
+    Bunnies  BunnyAPI
+    Ztamps   ZtampAPI
+    Accounts AccountsAPI
 }
 
 type StatsProvider interface {
 	BunnyTotals() (total int, connected int)
 	ZtampTotal() int
 	PluginTotals() (total int, enabled int)
+}
+
+// Subsystem APIs (stubs for now). They should return an XML fragment already formatted
+// for inclusion into the api envelope, or an error which will be wrapped as <error>.
+type PluginAPI interface {
+    Process(accountToken string, request string, get map[string]string) (xmlFragment []byte, err error)
+}
+
+type BunnyAPI interface {
+    Process(accountToken string, request string, get map[string]string) (xmlFragment []byte, err error)
+    ProcessViolet(request string, get map[string]string) (xmlFragment []byte, err error)
+}
+
+type ZtampAPI interface {
+    Process(accountToken string, request string, get map[string]string) (xmlFragment []byte, err error)
+}
+
+type AccountsAPI interface {
+    Process(accountToken string, request string, get map[string]string) (xmlFragment []byte, err error)
 }
 
 type apiEnvelope struct {
@@ -35,7 +59,65 @@ func (m *Manager) Process(rawURI string, uri string, get map[string]string) (con
         return "text/xml; charset=utf-8", m.violetApi(rawURI, get)
     }
     if strings.HasPrefix(uri, "/ojn_api/") {
-        return "text/xml; charset=utf-8", m.stdApi(strings.TrimPrefix(uri, "/ojn_api/"), get)
+        // Route by subnamespace
+        sub := strings.TrimPrefix(uri, "/ojn_api/")
+        // Extract token if present
+        token := get["token"]
+        switch {
+        case strings.HasPrefix(sub, "global/"):
+            return "text/xml; charset=utf-8", m.stdApi(sub, get)
+        case strings.HasPrefix(sub, "plugins/"):
+            if m.Plugins == nil {
+                return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment("Plugins API not implemented"))
+            }
+            frag, err := m.Plugins.Process(token, strings.TrimPrefix(sub, "plugins/"), get)
+            if err != nil { return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment(err.Error())) }
+            return "text/xml; charset=utf-8", m.wrapAPI(frag)
+        case strings.HasPrefix(sub, "plugin/"):
+            if m.Plugins == nil {
+                return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment("Plugin API not implemented"))
+            }
+            frag, err := m.Plugins.Process(token, strings.TrimPrefix(sub, "plugin/"), get)
+            if err != nil { return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment(err.Error())) }
+            return "text/xml; charset=utf-8", m.wrapAPI(frag)
+        case strings.HasPrefix(sub, "bunnies/"):
+            if m.Bunnies == nil {
+                return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment("Bunnies API not implemented"))
+            }
+            frag, err := m.Bunnies.Process(token, strings.TrimPrefix(sub, "bunnies/"), get)
+            if err != nil { return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment(err.Error())) }
+            return "text/xml; charset=utf-8", m.wrapAPI(frag)
+        case strings.HasPrefix(sub, "bunny/"):
+            if m.Bunnies == nil {
+                return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment("Bunny API not implemented"))
+            }
+            frag, err := m.Bunnies.Process(token, strings.TrimPrefix(sub, "bunny/"), get)
+            if err != nil { return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment(err.Error())) }
+            return "text/xml; charset=utf-8", m.wrapAPI(frag)
+        case strings.HasPrefix(sub, "ztamps/"):
+            if m.Ztamps == nil {
+                return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment("Ztamps API not implemented"))
+            }
+            frag, err := m.Ztamps.Process(token, strings.TrimPrefix(sub, "ztamps/"), get)
+            if err != nil { return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment(err.Error())) }
+            return "text/xml; charset=utf-8", m.wrapAPI(frag)
+        case strings.HasPrefix(sub, "ztamp/"):
+            if m.Ztamps == nil {
+                return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment("Ztamp API not implemented"))
+            }
+            frag, err := m.Ztamps.Process(token, strings.TrimPrefix(sub, "ztamp/"), get)
+            if err != nil { return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment(err.Error())) }
+            return "text/xml; charset=utf-8", m.wrapAPI(frag)
+        case strings.HasPrefix(sub, "accounts/"):
+            if m.Accounts == nil {
+                return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment("Accounts API not implemented"))
+            }
+            frag, err := m.Accounts.Process(token, strings.TrimPrefix(sub, "accounts/"), get)
+            if err != nil { return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment(err.Error())) }
+            return "text/xml; charset=utf-8", m.wrapAPI(frag)
+        default:
+            return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment("Unknown Api Call"))
+        }
     }
     // Unknown path for now; return simple text
     return "text/plain", []byte("404 Not Found")
@@ -87,3 +169,8 @@ func (m *Manager) wrapViolet(inner []byte) []byte {
 }
 
 func itoa(i int) string { return strconvItoa(i) }
+
+func (m *Manager) errFragment(msg string) []byte {
+    // Minimal sanitization; full CDATA handling can be added later
+    return []byte(`<error>` + msg + `</error>`)
+}
