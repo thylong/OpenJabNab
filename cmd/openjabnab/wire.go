@@ -7,6 +7,8 @@ import (
 
     "OpenJabNab/internal/api"
     configpkg "OpenJabNab/internal/config"
+    "OpenJabNab/internal/account"
+    "OpenJabNab/internal/bunny"
     "OpenJabNab/internal/server/httpbridge"
     "OpenJabNab/internal/server/xmpp"
     "OpenJabNab/internal/stats"
@@ -17,9 +19,17 @@ type servers struct {
 }
 
 func startServers(logger *slog.Logger, cfg *configpkg.Config) (*servers, error) {
-    // Use a basic stats provider; replace with real managers as they are ported
+    // Managers
+    bunMgr := bunny.NewManager(cfg.MaxNumberOfBunnies)
+    accMgr := account.NewManager()
+    // Stats provider using config until live data is available
     statProv := stats.NewConfigStats(cfg)
+
     apiMgr := &api.Manager{Logger: logger, Stats: statProv}
+    apiMgr.Plugins = api.DefaultPluginAPI{}
+    apiMgr.Bunnies = api.DefaultBunnyAPI{B: bunMgr}
+    apiMgr.Ztamps = api.DefaultZtampAPI{}
+    apiMgr.Accounts = api.DefaultAccountsAPI{A: accMgr}
     stop := make(chan struct{})
 
     if cfg.HttpListener {

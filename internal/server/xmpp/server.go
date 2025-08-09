@@ -12,6 +12,7 @@ type Server struct {
 	Addr   string // host:port
 	Domain string
 	Logger *slog.Logger
+    // TODO: Inject account/bunny managers to verify auth and track connections
 }
 
 func (s *Server) ListenAndServe(stop <-chan struct{}) error {
