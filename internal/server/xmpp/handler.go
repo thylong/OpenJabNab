@@ -13,6 +13,8 @@ type handler struct {
 	resource string
     bunnyID string
     onIdentify func(string)
+    // Credentials (temporary static for validation)
+    validate func(user, pass string) bool
 }
 
 func newHandler(domain string, logger *slog.Logger) *handler {
@@ -49,13 +51,14 @@ func (h *handler) Process(in []byte) (out []string) {
 			h.step = 2
 			return
 		}
-	case 2:
-		if has(data, `<response xmlns='urn:ietf:params:xml:ns:xmpp-sasl'>`) {
-			// accept without verifying for now; parity goal
-			out = append(out, `<success xmlns='urn:ietf:params:xml:ns:xmpp-sasl'/>`)
-			h.step = 4
-			return
-		}
+    case 2:
+        if has(data, `<response xmlns='urn:ietf:params:xml:ns:xmpp-sasl'>`) {
+            // Very simplified validation path: accept any for now
+            // TODO: Parse and validate response with validateDigestMD5 when credentials are available.
+            out = append(out, `<success xmlns='urn:ietf:params:xml:ns:xmpp-sasl'/>`)
+            h.step = 4
+            return
+        }
 	case 4:
 		if has(data, `<stream:stream`) {
 			out = append(out, `<?xml version='1.0'?><stream:stream xmlns='jabber:client' xmlns:stream='http://etherx.jabber.org/streams' id='2' from='`+h.domain+`' version='1.0' xml:lang='en'>`+"<stream:features><bind xmlns='urn:ietf:params:xml:ns:xmpp-bind'><required/></bind><unbind xmlns='urn:ietf:params:xml:ns:xmpp-bind'/><session xmlns='urn:ietf:params:xml:ns:xmpp-session'/></stream:features>")
