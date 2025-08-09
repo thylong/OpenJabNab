@@ -8,6 +8,7 @@ import (
     "OpenJabNab/internal/api"
     configpkg "OpenJabNab/internal/config"
     "OpenJabNab/internal/server/httpbridge"
+    "OpenJabNab/internal/server/xmpp"
     "OpenJabNab/internal/stats"
 )
 
@@ -28,6 +29,15 @@ func startServers(logger *slog.Logger, cfg *configpkg.Config) (*servers, error) 
         logger.Info("httpbridge listening", slog.String("addr", addr))
     } else {
         logger.Warn("HTTP listener disabled by config")
+    }
+
+    if cfg.XmppListener {
+        xaddr := fmt.Sprintf("0.0.0.0:%d", cfg.OpenJabNabServers.ListeningXmppPort)
+        xs := &xmpp.Server{Addr: xaddr, Domain: cfg.OpenJabNabServers.XmppServer, Logger: logger}
+        go func() { _ = xs.ListenAndServe(stop) }()
+        logger.Info("xmpp listening", slog.String("addr", xaddr), slog.String("domain", cfg.OpenJabNabServers.XmppServer))
+    } else {
+        logger.Warn("XMPP listener disabled by config")
     }
 
     return &servers{stop: stop}, nil

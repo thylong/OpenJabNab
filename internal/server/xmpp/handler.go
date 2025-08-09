@@ -1,0 +1,110 @@
+package xmpp
+
+import (
+	"encoding/base64"
+	"log/slog"
+	"regexp"
+)
+
+type handler struct {
+	domain string
+	logger *slog.Logger
+	step   int
+	resource string
+}
+
+func newHandler(domain string, logger *slog.Logger) *handler {
+	return &handler{domain: domain, logger: logger}
+}
+
+var (
+	reMessage = regexp.MustCompile(`(?s)<message[^>]*>(.*)</message>`) // greedy content
+	reIQ      = regexp.MustCompile(`(?s)<iq.*</iq>`) // any iq
+	rePresence= regexp.MustCompile(`<presence from='(.*)' id='(.*)'></presence>`) 
+)
+
+func (h *handler) Process(in []byte) (out []string) {
+	data := string(in)
+	if data == " " || len(data) == 1 {
+		// ping path
+		if h.resource == "streaming" {
+			out = append(out, `<iq type='get' from='server@`+h.domain+`/idle' to='@`+h.domain+`' id='OJN-0'><query xmlns='jabber:iq:version'/></iq>`)
+		}
+		return
+	}
+	// very small subset of the auth state machine similar to PluginAuth::DoAuth
+	switch h.step {
+	case 0:
+		if has(data, "<stream:stream") {
+			out = append(out, `<?xml version='1.0'?><stream:stream xmlns='jabber:client' xmlns:stream='http://etherx.jabber.org/streams' id='1' from='`+h.domain+`' version='1.0' xml:lang='en'>`+"<stream:features><mechanisms xmlns='urn:ietf:params:xml:ns:xmpp-sasl'><mechanism>DIGEST-MD5</mechanism><mechanism>PLAIN</mechanism></mechanisms><register xmlns='http://violet.net/features/violet-register'/></stream:features>")
+			h.step = 1
+			return
+		}
+	case 1:
+		if has(data, `<auth xmlns='urn:ietf:params:xml:ns:xmpp-sasl' mechanism='DIGEST-MD5'/>`) {
+			challenge := `nonce="random_number",qop="auth",charset=utf-8,algorithm=md5-sess`
+			out = append(out, `<challenge xmlns='urn:ietf:params:xml:ns:xmpp-sasl'>`+base64.StdEncoding.EncodeToString([]byte(challenge))+`</challenge>`)
+			h.step = 2
+			return
+		}
+	case 2:
+		if has(data, `<response xmlns='urn:ietf:params:xml:ns:xmpp-sasl'>`) {
+			// accept without verifying for now; parity goal
+			out = append(out, `<success xmlns='urn:ietf:params:xml:ns:xmpp-sasl'/>`)
+			h.step = 4
+			return
+		}
+	case 4:
+		if has(data, `<stream:stream`) {
+			out = append(out, `<?xml version='1.0'?><stream:stream xmlns='jabber:client' xmlns:stream='http://etherx.jabber.org/streams' id='2' from='`+h.domain+`' version='1.0' xml:lang='en'>`+"<stream:features><bind xmlns='urn:ietf:params:xml:ns:xmpp-bind'><required/></bind><unbind xmlns='urn:ietf:params:xml:ns:xmpp-bind'/><session xmlns='urn:ietf:params:xml:ns:xmpp-session'/></stream:features>")
+			h.step = 0
+			return
+		}
+	}
+	// IQ handling subset: bind, session, sources
+	if reIQ.MatchString(data) {
+		if has(data, "<bind") {
+			h.resource = capture(data, `<resource>([^<]*)</resource>`)
+			jid := "bunny@"+h.domain+"/"+h.resource
+			out = append(out, iqReply(data, `<bind xmlns='urn:ietf:params:xml:ns:xmpp-bind'><jid>`+jid+`</jid></bind>`))
+			return
+		}
+		if has(data, `<session xmlns='urn:ietf:params:xml:ns:xmpp-session'/>`) {
+			out = append(out, iqReply(data, `<session xmlns='urn:ietf:params:xml:ns:xmpp-session'/>`))
+			return
+		}
+		if has(data, `<query xmlns="violet:iq:sources"><packet xmlns="violet:packet" format="1.0"/></query>`) {
+			// reply empty for now
+			out = append(out, iqReply(data, `<query xmlns='violet:iq:sources'><packet xmlns='violet:packet' format='1.0' ttl='604800'></packet></query>`))
+			return
+		}
+	}
+	// presence echo
+	if rePresence.MatchString(data) {
+		from := capture(data, `from='([^']*)'`)
+		id := capture(data, `id='([^']*)'`)
+		out = append(out, `<presence from='`+from+`' to='`+from+`' id='`+id+`'/>`)
+		return
+	}
+	// message button/ears logging not implemented here (plugins will handle later)
+	_ = reMessage
+	return
+}
+
+func has(s, sub string) bool { return regexp.MustCompile(regexp.QuoteMeta(sub)).FindStringIndex(s) != nil }
+
+func capture(s, rx string) string {
+	re := regexp.MustCompile(rx)
+	m := re.FindStringSubmatch(s)
+	if len(m) >= 2 { return m[1] }
+	return ""
+}
+
+func iqReply(orig string, inner string) string {
+	// naive id/from passthrough
+	id := capture(orig, ` id='([^']*)'`)
+	from := capture(orig, ` from='([^']*)'`)
+	to := capture(orig, ` to='([^']*)'`)
+	if to == "" { to = from }
+	return `<iq type='result' from='`+to+`' to='`+from+`' id='`+id+`'>`+inner+`</iq>`
+}

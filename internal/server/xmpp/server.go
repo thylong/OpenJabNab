@@ -1,0 +1,55 @@
+package xmpp
+
+import (
+	"bufio"
+	"io"
+	"log/slog"
+	"net"
+	"time"
+)
+
+type Server struct {
+	Addr   string // host:port
+	Domain string
+	Logger *slog.Logger
+}
+
+func (s *Server) ListenAndServe(stop <-chan struct{}) error {
+	ln, err := net.Listen("tcp", s.Addr)
+	if err != nil { return err }
+	defer ln.Close()
+	done := make(chan struct{})
+	go func() { <-stop; _ = ln.Close(); close(done) }()
+	for {
+		c, err := ln.Accept()
+		if err != nil {
+			select { case <-done: return nil; default: }
+			if ne, ok := err.(net.Error); ok && ne.Temporary() { continue }
+			return err
+		}
+		go s.handleConn(c)
+	}
+}
+
+func (s *Server) handleConn(c net.Conn) {
+	defer c.Close()
+	_ = c.SetDeadline(time.Now().Add(60 * time.Second))
+	br := bufio.NewReader(c)
+	h := newHandler(s.Domain, s.Logger)
+	buf := make([]byte, 4096)
+	for {
+		n, err := br.Read(buf)
+		if err != nil {
+			if err == io.EOF { return }
+			s.Logger.Warn("xmpp read error", slog.String("err", err.Error()))
+			return
+		}
+		out := h.Process(buf[:n])
+		for _, resp := range out {
+			if _, err := c.Write([]byte(resp)); err != nil {
+				s.Logger.Warn("xmpp write error", slog.String("err", err.Error()))
+				return
+			}
+		}
+	}
+}
