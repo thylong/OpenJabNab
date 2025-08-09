@@ -17,6 +17,7 @@ type Server struct {
     OnDisconnect func(id string)
     GetPassword func(user string) (string, bool)
     OnListen func(addr string)
+    NonceFactory func() string
 }
 
 func (s *Server) ListenAndServe(stop <-chan struct{}) error {
@@ -44,6 +45,7 @@ func (s *Server) handleConn(c net.Conn) {
     h := newHandler(s.Domain, s.Logger)
     h.onIdentify = func(id string) { if s.OnConnect != nil { s.OnConnect(id) } }
     if s.GetPassword != nil { h.getPassword = s.GetPassword }
+    if s.NonceFactory != nil { h.nonceFactory = s.NonceFactory }
 	buf := make([]byte, 4096)
 	for {
 		n, err := br.Read(buf)

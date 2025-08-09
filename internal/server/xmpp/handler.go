@@ -18,6 +18,8 @@ type handler struct {
     // Credentials (temporary static for validation)
     getPassword func(user string) (string, bool)
     nonce string
+    nonceFactory func() string
+    authUser string
 }
 
 func newHandler(domain string, logger *slog.Logger) *handler {
@@ -29,6 +31,7 @@ var (
 	reIQ      = regexp.MustCompile(`(?s)<iq.*</iq>`) // any iq
 	rePresence= regexp.MustCompile(`<presence from='(.*)' id='(.*)'></presence>`) 
     reResponse= regexp.MustCompile(`(?s)<response[^>]*>(.*?)</response>`)
+    reAuthPlain= regexp.MustCompile(`(?s)<auth[^>]*mechanism=['\"]PLAIN['\"][^>]*>(.*?)</auth>`)
 )
 
 func (h *handler) Process(in []byte) (out []string) {
@@ -51,10 +54,34 @@ func (h *handler) Process(in []byte) (out []string) {
     case 1:
         if has(data, `<auth xmlns='urn:ietf:params:xml:ns:xmpp-sasl' mechanism='DIGEST-MD5'/>`) {
             // issue a random nonce per connection
-            if h.nonce == "" { h.nonce = genNonce() }
+            if h.nonce == "" {
+                if h.nonceFactory != nil { h.nonce = h.nonceFactory() } else { h.nonce = genNonce() }
+            }
             challenge := `realm="`+h.domain+`",nonce="`+h.nonce+`",qop="auth",charset=utf-8,algorithm=md5-sess`
             out = append(out, `<challenge xmlns='urn:ietf:params:xml:ns:xmpp-sasl'>`+base64.StdEncoding.EncodeToString([]byte(challenge))+`</challenge>`)
             h.step = 2
+            return
+        }
+        // SASL PLAIN fallback
+        if reAuthPlain.MatchString(data) {
+            m := reAuthPlain.FindStringSubmatch(data)
+            if len(m) >= 2 {
+                payload, _ := base64.StdEncoding.DecodeString(m[1])
+                parts := splitNull([]byte(payload))
+                if len(parts) >= 3 {
+                    user := string(parts[1])
+                    pass := string(parts[2])
+                    if h.getPassword != nil {
+                        if pw, ok := h.getPassword(user); ok && pw == pass {
+                            out = append(out, `<success xmlns='urn:ietf:params:xml:ns:xmpp-sasl'/>`)
+                            h.step = 4
+                            return
+                        }
+                    }
+                }
+            }
+            out = append(out, `<failure xmlns='urn:ietf:params:xml:ns:xmpp-sasl'><not-authorized/></failure>`)
+            h.step = 0
             return
         }
     case 2:
@@ -73,6 +100,7 @@ func (h *handler) Process(in []byte) (out []string) {
                         if validateDigestMD5(directive, user, h.domain, pw, h.nonce, capture(directive, `cnonce="([^"]+)"`), capture(directive, `nc=([0-9a-fA-F]+)`), "auth", digestURI) {
                             out = append(out, `<success xmlns='urn:ietf:params:xml:ns:xmpp-sasl'/>`)
                             h.step = 4
+                            h.authUser = user
                             return
                         }
                     }
@@ -93,9 +121,11 @@ func (h *handler) Process(in []byte) (out []string) {
 	// IQ handling subset: bind, session, sources
 	if reIQ.MatchString(data) {
         h.tryIdentify(data)
-		if has(data, "<bind") {
+        if has(data, "<bind") {
 			h.resource = capture(data, `<resource>([^<]*)</resource>`)
-			jid := "bunny@"+h.domain+"/"+h.resource
+            user := h.authUser
+            if user == "" { user = "bunny" }
+            jid := user+"@"+h.domain+"/"+h.resource
 			out = append(out, iqReply(data, `<bind xmlns='urn:ietf:params:xml:ns:xmpp-bind'><jid>`+jid+`</jid></bind>`))
 			return
 		}
@@ -161,4 +191,17 @@ func genNonce() string {
         return "random"
     }
     return hex.EncodeToString(b)
+}
+
+func splitNull(b []byte) [][]byte {
+    var parts [][]byte
+    start := 0
+    for i := 0; i < len(b); i++ {
+        if b[i] == 0x00 {
+            parts = append(parts, b[start:i])
+            start = i+1
+        }
+    }
+    parts = append(parts, b[start:])
+    return parts
 }
