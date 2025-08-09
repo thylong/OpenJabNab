@@ -16,7 +16,9 @@ type servers struct {
 }
 
 func startServers(logger *slog.Logger, cfg *configpkg.Config) (*servers, error) {
-    apiMgr := &api.Manager{Logger: logger, Stats: stats.Null{}}
+    // Use a basic stats provider; replace with real managers as they are ported
+    statProv := stats.NewConfigStats(cfg)
+    apiMgr := &api.Manager{Logger: logger, Stats: statProv}
     stop := make(chan struct{})
 
     if cfg.HttpListener {
