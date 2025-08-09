@@ -40,7 +40,7 @@ func startServers(logger *slog.Logger, cfg *configpkg.Config) (*servers, error) 
     dumper := netdump.New(logger, cfg.Log.NetworkDump)
 
     if cfg.HttpListener {
-        addr := fmt.Sprintf("127.0.0.1:%d", cfg.OpenJabNabServers.ListeningHttpPort)
+        addr := fmt.Sprintf("0.0.0.0:%d", cfg.OpenJabNabServers.ListeningHttpPort)
         hb := httpbridge.New(addr, logger, apiMgr)
         hb.Dump = dumper.Log
         go func() { _ = hb.ListenAndServe(stop) }()

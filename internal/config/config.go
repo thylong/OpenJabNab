@@ -55,22 +55,27 @@ func LoadDefault() (*Config, error) {
 	if v := os.Getenv("OJN_CONFIG"); v != "" {
 		candidates = append(candidates, v)
 	}
+    // Container-friendly defaults
+    candidates = append(candidates,
+        filepath.Join("/config", "openjabnab.ini"),
+        filepath.Join("/config", "openjabnab.ini-dist"),
+    )
 	candidates = append(candidates,
 		filepath.Join("server", "openjabnab.ini"),
 		filepath.Join("server", "openjabnab.ini-dist"),
 	)
-	var lastErr error
-	for _, path := range candidates {
-		cfg, err := Load(path)
-		if err == nil {
-			return cfg, nil
-		}
-		lastErr = err
-	}
-	if lastErr == nil {
-		lastErr = errors.New("no config file found")
-	}
-	return nil, lastErr
+    var firstErr error
+    for _, path := range candidates {
+        cfg, err := Load(path)
+        if err == nil {
+            return cfg, nil
+        }
+        if firstErr == nil { firstErr = err }
+    }
+    if firstErr == nil {
+        firstErr = errors.New("no config file found")
+    }
+    return nil, firstErr
 }
 
 func Load(path string) (*Config, error) {

@@ -1,0 +1,10 @@
+**/.git
+**/node_modules
+**/target
+**/bin
+**/obj
+**/.cache
+**/.DS_Store
+**/*.log
+**/logs
+**/http-wrapper

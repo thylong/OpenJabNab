@@ -23,14 +23,14 @@ func main() {
 		os.Exit(1)
 	}
 
-	logger, closeLogger, err := logging.Init(cfg.Log.LogFile)
+    logger, closeLogger, err := logging.Init(cfg.Log.LogFile, cfg.Log.LogScreenLevel, cfg.Log.LogFileLevel)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "failed to init logger: %v\n", err)
 		os.Exit(1)
 	}
 	defer closeLogger()
 
-	logger.Info("OpenJabNab Go bootstrap",
+    logger.Info("OpenJabNab Go bootstrap",
 		slog.String("logFile", cfg.Log.LogFile),
 		slog.Bool("httpListener", cfg.HttpListener),
 		slog.Bool("httpApi", cfg.HttpApi),
