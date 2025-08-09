@@ -13,6 +13,8 @@ type Server struct {
 	Domain string
 	Logger *slog.Logger
     // TODO: Inject account/bunny managers to verify auth and track connections
+    OnConnect func(id string)
+    OnDisconnect func(id string)
 }
 
 func (s *Server) ListenAndServe(stop <-chan struct{}) error {
@@ -36,11 +38,12 @@ func (s *Server) handleConn(c net.Conn) {
 	defer c.Close()
 	_ = c.SetDeadline(time.Now().Add(60 * time.Second))
 	br := bufio.NewReader(c)
-	h := newHandler(s.Domain, s.Logger)
+    h := newHandler(s.Domain, s.Logger)
+    h.onIdentify = func(id string) { if s.OnConnect != nil { s.OnConnect(id) } }
 	buf := make([]byte, 4096)
 	for {
 		n, err := br.Read(buf)
-		if err != nil {
+    	if err != nil {
 			if err == io.EOF { return }
 			s.Logger.Warn("xmpp read error", slog.String("err", err.Error()))
 			return
@@ -53,4 +56,5 @@ func (s *Server) handleConn(c net.Conn) {
 			}
 		}
 	}
+    if s.OnDisconnect != nil { s.OnDisconnect(h.getID()) }
 }

@@ -11,10 +11,12 @@ type handler struct {
 	logger *slog.Logger
 	step   int
 	resource string
+    bunnyID string
+    onIdentify func(string)
 }
 
 func newHandler(domain string, logger *slog.Logger) *handler {
-	return &handler{domain: domain, logger: logger}
+    return &handler{domain: domain, logger: logger}
 }
 
 var (
@@ -63,6 +65,7 @@ func (h *handler) Process(in []byte) (out []string) {
 	}
 	// IQ handling subset: bind, session, sources
 	if reIQ.MatchString(data) {
+        h.tryIdentify(data)
 		if has(data, "<bind") {
 			h.resource = capture(data, `<resource>([^<]*)</resource>`)
 			jid := "bunny@"+h.domain+"/"+h.resource
@@ -81,7 +84,8 @@ func (h *handler) Process(in []byte) (out []string) {
 	}
 	// presence echo
 	if rePresence.MatchString(data) {
-		from := capture(data, `from='([^']*)'`)
+        from := capture(data, `from='([^']*)'`)
+        h.tryIdentify(data)
 		id := capture(data, `id='([^']*)'`)
 		out = append(out, `<presence from='`+from+`' to='`+from+`' id='`+id+`'/>`)
 		return
@@ -108,3 +112,18 @@ func iqReply(orig string, inner string) string {
 	if to == "" { to = from }
 	return `<iq type='result' from='`+to+`' to='`+from+`' id='`+id+`'>`+inner+`</iq>`
 }
+
+func (h *handler) tryIdentify(s string) {
+    if h.bunnyID != "" { return }
+    // Try to capture bunny id from from='BUNNY@domain/...'
+    from := capture(s, `from='([^']*)'`)
+    if from != "" {
+        id := capture(from, `^([^@]+)@`)
+        if id != "" {
+            h.bunnyID = id
+            if h.onIdentify != nil { h.onIdentify(id) }
+        }
+    }
+}
+
+func (h *handler) getID() string { return h.bunnyID }
