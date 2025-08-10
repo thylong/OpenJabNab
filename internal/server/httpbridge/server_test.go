@@ -24,8 +24,10 @@ func frame(method byte, headers, uri, body string) []byte {
 	payload := []byte{method}
 	payload = append(payload, []byte(headers)...)
 	payload = append(payload, 0)
-	payload = append(payload, []byte(uri)...)
-	payload = append(payload, 0)
+    payload = append(payload, []byte(uri)...)
+    if method != 1 { // only POST/POSTRAW have a second NUL
+        payload = append(payload, 0)
+    }
 	payload = append(payload, []byte(body)...)
 	buf := make([]byte, 4)
 	binary.LittleEndian.PutUint32(buf, uint32(len(payload)+4))

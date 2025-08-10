@@ -22,6 +22,7 @@ type Server struct {
     OnEars   func(id string, left, right int)
     Dump func(cat string, data []byte)
     BypassAuth bool
+    ReadTimeout time.Duration
 }
 
 func (s *Server) ListenAndServe(stop <-chan struct{}) error {
@@ -44,7 +45,7 @@ func (s *Server) ListenAndServe(stop <-chan struct{}) error {
 
 func (s *Server) handleConn(c net.Conn) {
 	defer c.Close()
-	_ = c.SetDeadline(time.Now().Add(60 * time.Second))
+    // Use a rolling read deadline to keep long-lived XMPP sessions alive
 	br := bufio.NewReader(c)
     h := newHandler(s.Domain, s.Logger)
     h.onIdentify = func(id string) { if s.OnConnect != nil { s.OnConnect(id) } }
@@ -53,9 +54,13 @@ func (s *Server) handleConn(c net.Conn) {
     if s.OnButton != nil { h.onButton = s.OnButton }
     if s.OnEars != nil { h.onEars = s.OnEars }
     h.bypassAuth = s.BypassAuth
-	buf := make([]byte, 4096)
+    buf := make([]byte, 4096)
 	for {
-		n, err := br.Read(buf)
+        // Refresh read deadline before each blocking read
+        d := s.ReadTimeout
+        if d <= 0 { d = 2 * time.Minute }
+        _ = c.SetReadDeadline(time.Now().Add(d))
+        n, err := br.Read(buf)
     	if err != nil {
 			if err == io.EOF { return }
 			s.Logger.Warn("xmpp read error", slog.String("err", err.Error()))
