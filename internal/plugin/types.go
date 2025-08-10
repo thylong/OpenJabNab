@@ -47,3 +47,23 @@ type ApiHandler interface {
     // If function matches, return handled=true and XML fragment
     ProcessPluginApi(function string, get map[string]string) (handled bool, xml []byte, err error)
 }
+
+// Optional lifecycle/event hooks
+type ConnectHandler interface {
+    OnConnect(bunnyID string)
+}
+
+type DisconnectHandler interface {
+    OnDisconnect(bunnyID string)
+}
+
+// RFIDHandler is called when an RFID/Ztamp tag is read by a bunny
+// tag is the raw tag identifier as a hexadecimal string when available
+type RFIDHandler interface {
+    OnRFID(bunnyID string, tag string)
+}
+
+// CronHandler is periodically invoked for background work
+type CronHandler interface {
+    OnCron()
+}

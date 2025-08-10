@@ -117,3 +117,36 @@ func (m *Manager) OnEars(id string, left, right int) {
         if h, ok := p.(EarsHandler); ok { h.OnEars(id, left, right) }
     }
 }
+
+func (m *Manager) OnConnect(id string) {
+    m.mu.RLock(); defer m.mu.RUnlock()
+    for _, p := range m.list {
+        if !m.enabled[p.Name()] { continue }
+        if h, ok := p.(ConnectHandler); ok { h.OnConnect(id) }
+    }
+}
+
+func (m *Manager) OnDisconnect(id string) {
+    m.mu.RLock(); defer m.mu.RUnlock()
+    for _, p := range m.list {
+        if !m.enabled[p.Name()] { continue }
+        if h, ok := p.(DisconnectHandler); ok { h.OnDisconnect(id) }
+    }
+}
+
+func (m *Manager) OnRFID(id string, tag string) {
+    m.mu.RLock(); defer m.mu.RUnlock()
+    for _, p := range m.list {
+        if !m.enabled[p.Name()] { continue }
+        if h, ok := p.(RFIDHandler); ok { h.OnRFID(id, tag) }
+    }
+}
+
+// OnCron triggers periodic work on all enabled plugins implementing CronHandler
+func (m *Manager) OnCron() {
+    m.mu.RLock(); defer m.mu.RUnlock()
+    for _, p := range m.list {
+        if !m.enabled[p.Name()] { continue }
+        if h, ok := p.(CronHandler); ok { h.OnCron() }
+    }
+}
