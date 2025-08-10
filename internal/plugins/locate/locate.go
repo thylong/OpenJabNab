@@ -9,9 +9,13 @@ import (
 type Plugin struct{
 	enabled bool
 	cfg *config.Config
+    settings *p.Settings
 }
 
-func New(cfg *config.Config) *Plugin { return &Plugin{enabled: true, cfg: cfg} }
+func New(cfg *config.Config) *Plugin {
+    st, _ := p.NewSettings(cfg.PluginsDir, "locate")
+    return &Plugin{enabled: true, cfg: cfg, settings: st}
+}
 
 func (pl *Plugin) Name() string { return "locate" }
 func (pl *Plugin) Type() p.PluginType { return p.RequiredPlugin }
@@ -23,9 +27,9 @@ func (pl *Plugin) HttpRequestAfter(r *p.Request) {}
 
 func (pl *Plugin) HttpRequestHandle(r *p.Request) bool {
 	if len(r.URI) >= len("/vl/locate.jsp") && r.URI[:len("/vl/locate.jsp")] == "/vl/locate.jsp" {
-		host := pl.cfg.OpenJabNabServers.XmppServer
-		xmppPort := pl.cfg.OpenJabNabServers.ListeningXmppPort
-        reply := "ping " + host + "\n" + "broad " + host + "\n" + "xmpp_domain " + host + ":" + fmt.Sprintf("%d", xmppPort) + "\n"
+        host := pl.settings.Get("locate", "XmppServer", pl.cfg.OpenJabNabServers.XmppServer)
+        xmppPortStr := pl.settings.Get("locate", "ListeningXmppPort", fmt.Sprintf("%d", pl.cfg.OpenJabNabServers.ListeningXmppPort))
+        reply := "ping " + host + "\n" + "broad " + host + "\n" + "xmpp_domain " + host + ":" + xmppPortStr + "\n"
 		r.Reply = []byte(reply)
 		return true
 	}

@@ -51,6 +51,9 @@ type Config struct {
     Auth struct {
         Bypass bool
     }
+
+    // Directory for per-plugin INI files (plugin_<name>.ini). Defaults to /config/plugins in containers.
+    PluginsDir string
 }
 
 func LoadDefault() (*Config, error) {
@@ -130,5 +133,15 @@ func Load(path string) (*Config, error) {
     // [Auth]
     auth := f.Section("Auth")
     c.Auth.Bypass = auth.Key("Bypass").MustBool(false)
+
+    // PluginsDir: env var takes precedence; default to /config/plugins, fallback to ./plugins
+    if v := os.Getenv("OJN_PLUGIN_DIR"); v != "" {
+        c.PluginsDir = v
+    } else {
+        c.PluginsDir = "/config/plugins"
+        if _, err := os.Stat(c.PluginsDir); err != nil {
+            c.PluginsDir = "plugins"
+        }
+    }
 	return c, nil
 }
