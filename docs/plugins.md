@@ -59,3 +59,64 @@ This document summarizes the available plugin APIs, their minimal behaviors, and
   - Set method: `/ojn_api/plugin/auth/setAuthMethod?name=PLAIN|DIGEST-MD5|BOTH` → `<ok/>`
   - Get method: `/ojn_api/plugin/auth/getAuthMethod` → `<method>...</method>`
 - INI settings: section `[auth]`, key `method` with values `PLAIN`, `DIGEST-MD5`, or `BOTH`.
+
+## Plugin: tts
+
+- Purpose: synthesize text to audio via pluggable providers and play on bunny.
+- APIs:
+  - List voices: `/ojn_api/plugin/tts/voices` → `<list><item id="..." lang=".." gender="..">Name</item>...</list>`
+  - Set per-bunny voice: `/ojn_api/plugin/tts/setvoice?bunny=<id>&voice=<providerVoiceId>` → `<ok/>`
+  - Get per-bunny voice: `/ojn_api/plugin/tts/getvoice?bunny=<id>` → `<voice>..</voice>`
+  - Speak: `/ojn_api/plugin/tts/speak?bunny=<id>&text=... [&voice=...]` → `<ok id="job-id"/>` (returns job id)
+  - Job status: `/ojn_api/plugin/tts/status?id=<job-id>` → `<job id=".."><state>queued|running|done|error|dropped</state>[<url>..</url>]</job>`
+  - Queue stats: `/ojn_api/plugin/tts/queue` → `<queue size="N" capacity="M"/>`
+  - Metrics: `/ojn_api/plugin/tts/stats` → queued/running/completed, errors, cache hits/miss, average synth time
+  - Health: `/ojn_api/plugin/tts/health` → `<status>ok|degraded</status>`
+- Storage & URLs:
+  - Files are written under `broadcast/tts/<voice>/<sha1(provider:voice:normalizedText)>.<ext>`
+  - Device playback uses `MU <broadcast url>\nMW\n` over XMPP.
+- Configuration:
+  - In `openjabnab.ini` `[Config]` section:
+    - `TTS = google | acapela | mock`
+  - In `[TTS]` section:
+    - `TimeoutMs` (default 15000), `MaxRetries` (2), `BackoffMs` (200), `RateLimitRPS` (5), `Workers` (2), `QueueSize` (128)
+    - `AllowedVoices` (comma-separated provider voice IDs to expose)
+  - Per-plugin INI (`plugins/plugin_tts.ini`):
+    - `[plugin] AllowedVoices=...` and `DefaultVoice=...`
+- Providers:
+  - Google Cloud TTS:
+    - Set env `GOOGLE_APPLICATION_CREDENTIALS` to service account JSON
+    - Quotas/limits apply per GCP project; configure timeouts and rate limits via `[TTS]`
+  - Acapela:
+    - Set env `ACAPELA_LOGIN`, `ACAPELA_PASSWORD`, `ACAPELA_APPLICATION`, optional `ACAPELA_BASE_URL`
+    - Respect provider quotas; configure timeouts and rate limits via `[TTS]`
+- Security:
+  - Read secrets from env/volumes only; credentials are never logged.
+
+## Samples and Docker/env
+
+- Example `[TTS]` config snippet in `openjabnab.ini`:
+
+```
+[Config]
+TTS = google
+
+[TTS]
+TimeoutMs = 15000
+MaxRetries = 2
+BackoffMs = 200
+RateLimitRPS = 5
+Workers = 2
+QueueSize = 128
+AllowedVoices = en-US-Standard-A,en-US-Standard-B
+```
+
+- Docker environment variables:
+  - Mount `openjabnab.ini` to `/config/openjabnab.ini`
+  - Set `OJN_PLUGIN_DIR=/config/plugins`, `OJN_STATE_DIR=/config/state`
+  - For Google: mount service account JSON and set `GOOGLE_APPLICATION_CREDENTIALS=/secrets/gcp-sa.json`
+  - For Acapela: set `ACAPELA_LOGIN`, `ACAPELA_PASSWORD`, `ACAPELA_APPLICATION`
+
+- RealHttpRoot/broadcast mapping:
+  - Ensure `RealHttpRoot` points to the http-wrapper root (e.g., `/app/http-wrapper/ojn_local/`)
+  - Generated audio will be under `<RealHttpRoot>/broadcast/tts/...` and served by the wrapper or native HTTP.
