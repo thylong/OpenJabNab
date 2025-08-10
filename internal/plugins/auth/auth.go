@@ -19,6 +19,7 @@ func New(cfg *cfgpkg.Config) *Plugin {
 }
 
 func (pl *Plugin) Name() string { return "auth" }
+func (pl *Plugin) VisualName() string { return "Auth" }
 func (pl *Plugin) Type() p.PluginType { return p.RequiredPlugin }
 func (pl *Plugin) Enabled() bool { return pl.enabled }
 func (pl *Plugin) SetEnabled(b bool) { pl.enabled = b }

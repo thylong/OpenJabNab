@@ -22,6 +22,7 @@ func New(cfg *cfgpkg.Config) *Plugin {
 }
 
 func (pl *Plugin) Name() string { return "tts" }
+func (pl *Plugin) VisualName() string { return "TTS" }
 func (pl *Plugin) Type() p.PluginType { return p.BunnyPlugin }
 func (pl *Plugin) Enabled() bool { return pl.enabled }
 func (pl *Plugin) SetEnabled(b bool) { pl.enabled = b }

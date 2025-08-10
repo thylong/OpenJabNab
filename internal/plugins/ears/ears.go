@@ -16,6 +16,7 @@ type Plugin struct {
 func New() *Plugin { return &Plugin{enabled: true, pos: make(map[string][2]int)} }
 
 func (pl *Plugin) Name() string { return "ears" }
+func (pl *Plugin) VisualName() string { return "Ears" }
 func (pl *Plugin) Type() p.PluginType { return p.BunnyPlugin }
 func (pl *Plugin) Enabled() bool { return pl.enabled }
 func (pl *Plugin) SetEnabled(b bool) { pl.enabled = b }

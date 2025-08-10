@@ -18,6 +18,7 @@ type Plugin struct{
 func New(prov Provider) *Plugin { return &Plugin{enabled: true, prov: prov} }
 
 func (pl *Plugin) Name() string { return "stats" }
+func (pl *Plugin) VisualName() string { return "Stats" }
 func (pl *Plugin) Type() p.PluginType { return p.SystemPlugin }
 func (pl *Plugin) Enabled() bool { return pl.enabled }
 func (pl *Plugin) SetEnabled(b bool) { pl.enabled = b }

@@ -13,6 +13,7 @@ type Plugin struct{
 func New(l *slog.Logger) *Plugin { return &Plugin{enabled: true, log: l} }
 
 func (pl *Plugin) Name() string { return "logger" }
+func (pl *Plugin) VisualName() string { return "Logger" }
 func (pl *Plugin) Type() p.PluginType { return p.SystemPlugin }
 func (pl *Plugin) Enabled() bool { return pl.enabled }
 func (pl *Plugin) SetEnabled(b bool) { pl.enabled = b }

@@ -77,6 +77,7 @@ func startServers(logger *slog.Logger, cfg *configpkg.Config) (*servers, error) 
         lp.SetPluginManager(plugins)
     }
     apiMgr.PluginNames = func() []string { return plugins.Names() }
+    apiMgr.PluginMetadata = func() []map[string]string { return plugins.Metadata() }
     apiMgr.EnabledPluginNames = func() []string { return plugins.EnabledNames() }
     apiMgr.SetPluginEnabled = func(name string, on bool) bool { return plugins.Enable(name, on) }
     apiMgr.PluginProcess = plugins.ProcessPluginApi

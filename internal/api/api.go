@@ -20,6 +20,7 @@ type Manager struct {
     // Optional: direct access to plugin manager for parity endpoints
     PluginNames func() []string
     EnabledPluginNames func() []string
+    PluginMetadata func() []map[string]string
     SetPluginEnabled func(name string, on bool) bool
     PluginProcess func(name, function string, get map[string]string) (bool, []byte, error)
 
@@ -84,6 +85,15 @@ func (m *Manager) Process(rawURI string, uri string, get map[string]string) (con
             if err != nil { return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment(err.Error())) }
             return "text/xml; charset=utf-8", m.wrapAPI(frag)
         case strings.HasPrefix(sub, "plugins-list"):
+            if m.PluginMetadata != nil {
+                meta := m.PluginMetadata()
+                inner := "<list>"
+                for _, it := range meta {
+                    inner += "<item><name>" + it["name"] + "</name><visual>" + it["visualName"] + "</visual><type>" + it["type"] + "</type><enabled>" + it["enabled"] + "</enabled></item>"
+                }
+                inner += "</list>"
+                return "text/xml; charset=utf-8", m.wrapAPI([]byte(inner))
+            }
             if m.PluginNames != nil {
                 names := m.PluginNames()
                 inner := "<list>"

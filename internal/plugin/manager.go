@@ -54,6 +54,22 @@ func (m *Manager) Names() []string {
     return out
 }
 
+// Metadata returns a slice of maps with plugin name, visualName, type, and enabled
+func (m *Manager) Metadata() []map[string]string {
+    m.mu.RLock(); defer m.mu.RUnlock()
+    out := make([]map[string]string, 0, len(m.list))
+    for _, p := range m.list {
+        item := map[string]string{
+            "name":       p.Name(),
+            "visualName": p.VisualName(),
+            "type":       PluginTypeName(p.Type()),
+            "enabled":    strconv.FormatBool(m.enabled[p.Name()]),
+        }
+        out = append(out, item)
+    }
+    return out
+}
+
 func (m *Manager) EnabledNames() []string {
     m.mu.RLock(); defer m.mu.RUnlock()
     out := make([]string, 0, len(m.list))

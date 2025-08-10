@@ -24,6 +24,7 @@ type Request struct {
 // Plugin defines the plugin interface.
 type Plugin interface {
     Name() string
+    VisualName() string
     Type() PluginType
     Enabled() bool
     SetEnabled(bool)
@@ -71,4 +72,22 @@ type CronHandler interface {
 // PacketSenderAware allows the manager to inject a safe send-to-bunny function
 type PacketSenderAware interface {
     SetPacketSender(func(bunnyID string, payload []byte) bool)
+}
+
+// PluginTypeName returns a human-readable name for the plugin type
+func PluginTypeName(t PluginType) string {
+    switch t {
+    case RequiredPlugin:
+        return "Required"
+    case SystemPlugin:
+        return "System"
+    case BunnyPlugin:
+        return "Bunny"
+    case ZtampPlugin:
+        return "Ztamp"
+    case BunnyZtampPlugin:
+        return "BunnyZtamp"
+    default:
+        return "Unknown"
+    }
 }

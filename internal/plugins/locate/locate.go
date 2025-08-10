@@ -18,6 +18,7 @@ func New(cfg *config.Config) *Plugin {
 }
 
 func (pl *Plugin) Name() string { return "locate" }
+func (pl *Plugin) VisualName() string { return "Locate" }
 func (pl *Plugin) Type() p.PluginType { return p.RequiredPlugin }
 func (pl *Plugin) Enabled() bool { return pl.enabled }
 func (pl *Plugin) SetEnabled(b bool) { pl.enabled = b }
