@@ -129,7 +129,7 @@ func TestTTS_Speak_WritesFileAndSendsPacket(t *testing.T) {
 
 	// File exists under RealHttpRoot/broadcast/tts/<voice>/<hash>.mp3
 	voice := "en-US-Standard-A"
-	sum := sha1.Sum([]byte("mock:" + voice + ":mp3:" + text))
+    sum := sha1.Sum([]byte("mock:" + voice + ":" + strings.TrimSpace(text)))
 	key := hex.EncodeToString(sum[:])
 	full := filepath.Join(dir, "broadcast", "tts", voice, key+".mp3")
 	if _, err := os.Stat(full); err != nil { t.Fatalf("expected output file: %s", full) }

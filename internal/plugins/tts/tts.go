@@ -14,6 +14,7 @@ import (
     cfgpkg "OpenJabNab/internal/config"
     p "OpenJabNab/internal/plugin"
     prov "OpenJabNab/internal/tts"
+    "log/slog"
 )
 
 type Plugin struct{
@@ -22,6 +23,7 @@ type Plugin struct{
     mu         sync.Mutex
     queue      chan speakJob
     provider   prov.Provider
+    providerName string
     outputRoot string // filesystem root where broadcast files are written
     // path under broadcast for tts files: broadcast/tts/<voice>/<hash>.mp3
     send       func(bunnyID string, payload []byte) bool
@@ -47,7 +49,9 @@ func New(cfg *cfgpkg.Config) *Plugin {
         // RealHttpRoot already ends with a path to http root (e.g., ../http-wrapper/ojn_local/)
         out = filepath.Join(cfg.RealHttpRoot, "broadcast")
     }
-    pl := &Plugin{enabled: true, settings: st, queue: make(chan speakJob, 64), provider: provider, outputRoot: out}
+    pname := cfg.TTS
+    if pname == "" { pname = "mock" }
+    pl := &Plugin{enabled: true, settings: st, queue: make(chan speakJob, 64), provider: provider, providerName: pname, outputRoot: out}
     // init rate limiter
     rps := cfg.TTSRateLimitRPS
     if rps <= 0 { rps = 5 }
@@ -138,17 +142,36 @@ func (pl *Plugin) worker() {
     for job := range pl.queue {
         // rate limit
         select { case <-pl.tokens: default: time.Sleep(pl.rateInterval) }
-        // Synthesize
+        // Compute cache key and potential target path(s)
+        nt := normalizeText(job.text)
+        sum := sha1.Sum([]byte(pl.providerName + ":" + job.voiceID + ":" + nt))
+        key := hex.EncodeToString(sum[:])
+        // Attempt cache lookup for common codecs
+        cacheHit := false
+        var rel string
+        for _, ext := range []string{"mp3", "wav", "ogg"} {
+            rel = filepath.Join("tts", sanitize(job.voiceID), key+"."+ext)
+            full := filepath.Join(pl.outputRoot, rel)
+            if _, err := os.Stat(full); err == nil { cacheHit = true; break }
+        }
+        if cacheHit {
+            if pl.send != nil {
+                path := filepath.ToSlash(filepath.Join("broadcast", rel))
+                msg := []byte("MU " + path + "\nMW\n")
+                _ = pl.send(job.bunnyID, msg)
+            }
+            slog.Default().Info("tts cache hit", slog.String("bunny", job.bunnyID), slog.String("voice", job.voiceID), slog.String("key", key))
+            continue
+        }
+        // Synthesize on miss
         timeout := time.Duration(15000) * time.Millisecond
         if ms := pl.settings.Get("plugin", "TimeoutMs", ""); ms != "" { /* allow per-plugin override via ini */ }
         ctx, cancel := context.WithTimeout(context.Background(), timeout)
         data, codec, err := pl.trySynthesize(ctx, job.text, job.voiceID)
         cancel()
         if err != nil { continue }
-        // Compute path and write
-        h := sha1.Sum([]byte("mock:" + job.voiceID + ":" + codec + ":" + job.text))
-        key := hex.EncodeToString(h[:])
-        rel := filepath.Join("tts", sanitize(job.voiceID), key+"."+sanitize(codec))
+        // Compute path and write using stable key (no codec in key; only in extension)
+        rel = filepath.Join("tts", sanitize(job.voiceID), key+"."+sanitize(codec))
         full := filepath.Join(pl.outputRoot, rel)
         _ = os.MkdirAll(filepath.Dir(full), 0o755)
         tmp := full + ".tmp"
@@ -161,6 +184,7 @@ func (pl *Plugin) worker() {
             msg := []byte("MU " + path + "\nMW\n")
             _ = pl.send(job.bunnyID, msg)
         }
+        slog.Default().Info("tts cache miss", slog.String("bunny", job.bunnyID), slog.String("voice", job.voiceID), slog.String("key", key), slog.String("codec", codec))
     }
 }
 
@@ -213,4 +237,12 @@ func sanitize(s string) string {
     }
     if len(out) == 0 { return "x" }
     return string(out)
+}
+
+func normalizeText(s string) string {
+    // Trim spaces and collapse internal whitespace minimally for cache key stability
+    s = strings.TrimSpace(s)
+    // Replace CRLF with LF
+    s = strings.ReplaceAll(s, "\r\n", "\n")
+    return s
 }
