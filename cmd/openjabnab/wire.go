@@ -28,6 +28,7 @@ import (
 
 type servers struct {
 	stop chan struct{}
+    tts  *plugtts.Plugin
 }
 
 func startServers(logger *slog.Logger, cfg *configpkg.Config) (*servers, error) {
@@ -96,7 +97,7 @@ func startServers(logger *slog.Logger, cfg *configpkg.Config) (*servers, error) 
     }
 
     if cfg.HttpNativeListener {
-        nh := &nhttp.Server{API: apiMgr, Logger: logger, Plugins: plugins, Addr: fmt.Sprintf(":%d", cfg.NativeHttpPort)}
+        nh := &nhttp.Server{API: apiMgr, Logger: logger, Plugins: plugins, Addr: fmt.Sprintf(":%d", cfg.NativeHttpPort), StaticRoot: cfg.RealHttpRoot}
         go func(){ _ = nh.Start() }()
         logger.Info("native http listening", slog.Int("port", cfg.NativeHttpPort))
     }
@@ -167,10 +168,11 @@ func startServers(logger *slog.Logger, cfg *configpkg.Config) (*servers, error) 
             }
         }
     }()
-    return &servers{stop: stop}, nil
+    return &servers{stop: stop, tts: ttsPlugin}, nil
 }
 
 func (s *servers) shutdown(logger *slog.Logger) {
+    if s.tts != nil { s.tts.Shutdown() }
 	close(s.stop)
 	time.Sleep(200 * time.Millisecond)
 }

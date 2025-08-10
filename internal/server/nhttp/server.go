@@ -15,6 +15,8 @@ type Server struct {
 	Logger  *slog.Logger
 	API     *api.Manager
 	Plugins *plug.Manager
+    // Optional static root to serve broadcast files
+    StaticRoot string
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -26,6 +28,11 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
         http.ServeFile(w, r, "/app/http-wrapper/ojn_local/bootcode/bootcode.default")
 		return
 	}
+    // Serve broadcast under static root if configured
+    if s.StaticRoot != "" && strings.HasPrefix(uri, "/broadcast/") {
+        http.ServeFile(w, r, s.StaticRoot+uri)
+        return
+    }
     // Run plugin HTTP pipeline for all URIs before API routing (parity with httpbridge)
     if s.Plugins != nil {
         preq := &plug.Request{URI: uri, RawURI: r.URL.RequestURI(), Get: map[string]string{}, Post: map[string]string{}}
