@@ -29,8 +29,15 @@ func (m *Manager) Register(p Plugin) {
         if st, err := NewSettings(m.settingsDir, name); err == nil {
             if v := st.Get("plugin", "enabled", ""); v != "" {
                 if b, err := strconv.ParseBool(v); err == nil {
-                    p.SetEnabled(b)
-                    m.enabled[name] = b
+                    // Do not allow persisted disable for Required/System plugins
+                    if !b && (p.Type() == RequiredPlugin || p.Type() == SystemPlugin) {
+                        p.SetEnabled(true)
+                        m.enabled[name] = true
+                        _ = st.Set("plugin", "enabled", "true")
+                    } else {
+                        p.SetEnabled(b)
+                        m.enabled[name] = b
+                    }
                 }
             } else {
                 // persist current state
@@ -58,6 +65,12 @@ func (m *Manager) Enable(name string, on bool) bool {
     m.mu.Lock(); defer m.mu.Unlock()
     for _, p := range m.list {
         if p.Name() == name {
+            // Prevent disabling Required/System plugins
+            if !on {
+                if t := p.Type(); t == RequiredPlugin || t == SystemPlugin {
+                    return false
+                }
+            }
             p.SetEnabled(on)
             m.enabled[name] = on
             // persist change if configured

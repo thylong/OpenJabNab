@@ -1,11 +1,10 @@
 package plugin_test
 
 import (
-	"testing"
-	"log/slog"
+    "testing"
 
-	plugman "OpenJabNab/internal/plugin"
-	pluglog "OpenJabNab/internal/plugins/logger"
+    plugman "OpenJabNab/internal/plugin"
+    plugears "OpenJabNab/internal/plugins/ears"
 )
 
 func contains(xs []string, s string) bool {
@@ -19,26 +18,26 @@ func TestPluginEnableDisablePersistsAcrossManagers(t *testing.T) {
 	// First manager: register default-enabled plugin, then disable it
 	m1 := plugman.NewManager()
 	m1.SetSettingsDir(dir)
-	m1.Register(pluglog.New(slog.Default()))
-	if !contains(m1.EnabledNames(), "logger") {
+    m1.Register(plugears.New())
+    if !contains(m1.EnabledNames(), "ears") {
 		t.Fatalf("expected logger enabled by default")
 	}
-	if ok := m1.Enable("logger", false); !ok { t.Fatalf("failed to disable plugin") }
+	if ok := m1.Enable("ears", false); !ok { t.Fatalf("failed to disable plugin") }
 
 	// Second manager: should load disabled state from disk
 	m2 := plugman.NewManager()
 	m2.SetSettingsDir(dir)
-	m2.Register(pluglog.New(slog.Default()))
-	if contains(m2.EnabledNames(), "logger") {
+    m2.Register(plugears.New())
+    if contains(m2.EnabledNames(), "ears") {
 		t.Fatalf("expected logger disabled after reload")
 	}
 
 	// Re-enable and verify a subsequent manager sees it enabled
-	if ok := m2.Enable("logger", true); !ok { t.Fatalf("failed to enable plugin in m2") }
+	if ok := m2.Enable("ears", true); !ok { t.Fatalf("failed to enable plugin in m2") }
 	m3 := plugman.NewManager()
 	m3.SetSettingsDir(dir)
-	m3.Register(pluglog.New(slog.Default()))
-	if !contains(m3.EnabledNames(), "logger") {
+	m3.Register(plugears.New())
+	if !contains(m3.EnabledNames(), "ears") {
 		t.Fatalf("expected logger enabled after re-enable and reload")
 	}
 }

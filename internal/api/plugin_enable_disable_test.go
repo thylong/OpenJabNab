@@ -9,7 +9,7 @@ import (
 
 	api "OpenJabNab/internal/api"
 	plugman "OpenJabNab/internal/plugin"
-	pluglog "OpenJabNab/internal/plugins/logger"
+	plugears "OpenJabNab/internal/plugins/ears"
 	"OpenJabNab/internal/server/httpbridge"
 )
 
@@ -25,7 +25,7 @@ func framePED(uri string) []byte {
 
 func TestPluginEnableDisable(t *testing.T) {
 	pm := plugman.NewManager()
-	pm.Register(pluglog.New(slog.Default()))
+	pm.Register(plugears.New())
 	mgr := &api.Manager{Logger: slog.Default()}
 	mgr.PluginNames = pm.Names
 	mgr.EnabledPluginNames = pm.EnabledNames
@@ -38,32 +38,32 @@ func TestPluginEnableDisable(t *testing.T) {
 	defer close(stop)
 	addr := <-bound
 
-	// list enabled
+    // list enabled
 	conn, _ := net.Dial("tcp", addr)
 	defer conn.Close()
 	_, _ = conn.Write(framePED("/ojn_api/plugins-enabled"))
 	buf := make([]byte, 1024)
 	n, _ := conn.Read(buf)
-	if !bytes.Contains(buf[:n], []byte("<item>logger</item>")) { t.Fatalf("unexpected enabled list: %s", string(buf[:n])) }
+	if !bytes.Contains(buf[:n], []byte("<item>ears</item>")) { t.Fatalf("unexpected enabled list: %s", string(buf[:n])) }
 
-	// disable
+    // disable
 	c2, _ := net.Dial("tcp", addr)
 	defer c2.Close()
-	_, _ = c2.Write(framePED("/ojn_api/plugin-disable/logger"))
+	_, _ = c2.Write(framePED("/ojn_api/plugin-disable/ears"))
 	n, _ = c2.Read(buf)
 	if !bytes.Contains(buf[:n], []byte("<ok/>")) { t.Fatalf("unexpected disable: %s", string(buf[:n])) }
 
-	// enabled list should be empty
+    // enabled list should be empty
 	c3, _ := net.Dial("tcp", addr)
 	defer c3.Close()
 	_, _ = c3.Write(framePED("/ojn_api/plugins-enabled"))
 	n, _ = c3.Read(buf)
-	if bytes.Contains(buf[:n], []byte("<item>logger</item>")) { t.Fatalf("expected logger disabled, got: %s", string(buf[:n])) }
+	if bytes.Contains(buf[:n], []byte("<item>ears</item>")) { t.Fatalf("expected ears disabled, got: %s", string(buf[:n])) }
 
-	// enable
+    // enable
 	c4, _ := net.Dial("tcp", addr)
 	defer c4.Close()
-	_, _ = c4.Write(framePED("/ojn_api/plugin-enable/logger"))
+	_, _ = c4.Write(framePED("/ojn_api/plugin-enable/ears"))
 	n, _ = c4.Read(buf)
 	if !bytes.Contains(buf[:n], []byte("<ok/>")) { t.Fatalf("unexpected enable: %s", string(buf[:n])) }
 }
