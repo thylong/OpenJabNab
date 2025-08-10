@@ -103,11 +103,11 @@ func TestTTS_Speak_WritesFileAndSendsPacket(t *testing.T) {
 	defer conn.Close()
 	text := "hello"
 	_, _ = conn.Write(frameGETtts("/ojn_api/plugin/tts/speak?bunny=user&text=" + text))
-	hbuf := make([]byte, 4096)
-	_ = conn.SetReadDeadline(time.Now().Add(1 * time.Second))
-	n, err := conn.Read(hbuf)
-	if err != nil { t.Fatal(err) }
-	if !bytes.Contains(hbuf[:n], []byte("<ok/>")) { t.Fatalf("unexpected tts response: %s", string(hbuf[:n])) }
+    hbuf := make([]byte, 4096)
+    _ = conn.SetReadDeadline(time.Now().Add(1 * time.Second))
+    n, err := conn.Read(hbuf)
+    if err != nil { t.Fatal(err) }
+    if !bytes.Contains(hbuf[:n], []byte("<ok")) { t.Fatalf("unexpected tts response: %s", string(hbuf[:n])) }
 
 	// Expect MU broadcast/tts/... in XMPP packet
 	c.SetReadDeadline(time.Now().Add(2*time.Second))

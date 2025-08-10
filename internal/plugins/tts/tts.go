@@ -6,6 +6,7 @@ import (
     "encoding/hex"
     "os"
     "path/filepath"
+    // stdpath "path"
     "regexp"
     "strings"
     "sync"
@@ -31,12 +32,27 @@ type Plugin struct{
     rateInterval time.Duration
     rateBurst    int
     tokens       chan struct{}
+
+    // jobs and metrics
+    jobsMu   sync.Mutex
+    jobs     map[string]jobStatus
+    nextSeq  uint64
+    metricMu sync.Mutex
+    queued   uint64
+    running  uint64
+    completed uint64
+    errors   uint64
+    cacheHits uint64
+    cacheMiss uint64
+    synthNsTotal uint64
+    synthCount   uint64
 }
 
 type speakJob struct{
     bunnyID string
     text    string
     voiceID string
+    id      string
 }
 
 func New(cfg *cfgpkg.Config) *Plugin {
@@ -53,7 +69,7 @@ func New(cfg *cfgpkg.Config) *Plugin {
     if pname == "" { pname = "mock" }
     qsize := cfg.TTSQueueSize
     if qsize <= 0 { qsize = 128 }
-    pl := &Plugin{enabled: true, settings: st, queue: make(chan speakJob, qsize), provider: provider, providerName: pname, outputRoot: out}
+    pl := &Plugin{enabled: true, settings: st, queue: make(chan speakJob, qsize), provider: provider, providerName: pname, outputRoot: out, jobs: make(map[string]jobStatus)}
     // init rate limiter
     rps := cfg.TTSRateLimitRPS
     if rps <= 0 { rps = 5 }
@@ -136,17 +152,47 @@ func (pl *Plugin) ProcessPluginApi(function string, get map[string]string) (bool
         if !isValidBunnyID(id) || !isValidText(text) { return true, []byte(`<error>Invalid parameters</error>`), nil }
         if voice == "" { voice = pl.settings.Get("bunny_"+id, "voice", pl.settings.Get("plugin", "DefaultVoice", "en-US-Standard-A")) }
         // Enqueue with backpressure; if full return 429-like error
+        jid := pl.newJobID(id)
+        pl.jobsMu.Lock()
+        pl.jobs[jid] = jobStatus{ID: jid, Bunny: id, Voice: voice, TextHash: shortHash(normalizeText(text)), State: "queued", EnqueuedAt: time.Now()}
+        pl.jobsMu.Unlock()
         select {
-        case pl.queue <- speakJob{bunnyID: id, text: text, voiceID: voice}:
-            return true, []byte(`<ok/>`), nil
+        case pl.queue <- speakJob{bunnyID: id, text: text, voiceID: voice, id: jid}:
+            pl.metricMu.Lock(); pl.queued++; pl.metricMu.Unlock()
+            return true, []byte(`<ok id="`+jid+`"/>`), nil
         default:
+            // mark as dropped
+            pl.jobsMu.Lock(); st := pl.jobs[jid]; st.State = "dropped"; st.Error = "queue_full"; pl.jobs[jid] = st; pl.jobsMu.Unlock()
             return true, []byte(`<error>Too busy, try later</error>`), nil
         }
     case "queue":
-        // not implemented as persisted; return empty
-        return true, []byte(`<queue/>`), nil
+        // return queue size and capacity
+        size := len(pl.queue)
+        capc := cap(pl.queue)
+        return true, []byte(`<queue size="`+strconvItoa(size)+`" capacity="`+strconvItoa(capc)+`"/>`), nil
     case "clear":
         return true, []byte(`<ok/>`), nil
+    case "status":
+        jid := strings.TrimSpace(get["id"])
+        if jid == "" { return true, []byte(`<error>Missing id</error>`), nil }
+        pl.jobsMu.Lock(); st, ok := pl.jobs[jid]; pl.jobsMu.Unlock()
+        if !ok { return true, []byte(`<error>Unknown id</error>`), nil }
+        return true, []byte(st.toXML()), nil
+    case "stats":
+        pl.metricMu.Lock()
+        q, r, c, e, ch, cm, sn, sc := pl.queued, pl.running, pl.completed, pl.errors, pl.cacheHits, pl.cacheMiss, pl.synthNsTotal, pl.synthCount
+        pl.metricMu.Unlock()
+        avg := 0
+        if sc > 0 { avg = int(sn / sc) }
+        return true, []byte(`<stats>`+
+            `<queued>`+strconvIota(int(q))+`</queued>`+
+            `<running>`+strconvIota(int(r))+`</running>`+
+            `<completed>`+strconvIota(int(c))+`</completed>`+
+            `<errors>`+strconvIota(int(e))+`</errors>`+
+            `<cache_hits>`+strconvIota(int(ch))+`</cache_hits>`+
+            `<cache_miss>`+strconvIota(int(cm))+`</cache_miss>`+
+            `<avg_synth_ns>`+strconvIota(avg)+`</avg_synth_ns>`+
+        `</stats>`), nil
     case "health":
         // Lightweight health: attempt a quick ListVoices call with short timeout
         ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
@@ -181,6 +227,8 @@ func (pl *Plugin) worker() {
                 msg := []byte("MU " + path + "\nMW\n")
                 _ = pl.send(job.bunnyID, msg)
             }
+            pl.metricMu.Lock(); pl.cacheHits++; pl.completed++; pl.metricMu.Unlock()
+            pl.updateJobDone(job.id, filepath.ToSlash(filepath.Join("broadcast", rel)))
             slog.Default().Info("tts cache hit", slog.String("bunny", job.bunnyID), slog.String("voice", job.voiceID), slog.String("key", key))
             continue
         }
@@ -188,9 +236,14 @@ func (pl *Plugin) worker() {
         timeout := time.Duration(15000) * time.Millisecond
         if ms := pl.settings.Get("plugin", "TimeoutMs", ""); ms != "" { /* allow per-plugin override via ini */ }
         ctx, cancel := context.WithTimeout(context.Background(), timeout)
+        pl.metricMu.Lock(); pl.running++; pl.metricMu.Unlock()
+        start := time.Now()
         data, codec, err := pl.trySynthesize(ctx, job.text, job.voiceID)
         cancel()
-        if err != nil { continue }
+        dur := time.Since(start)
+        pl.metricMu.Lock(); pl.running--;
+        if err != nil { pl.errors++; pl.metricMu.Unlock(); pl.updateJobError(job.id, "synth_failed"); continue }
+        pl.synthNsTotal += uint64(dur.Nanoseconds()); pl.synthCount++; pl.metricMu.Unlock()
         // Compute path and write using stable key (no codec in key; only in extension)
         rel = filepath.Join("tts", sanitize(job.voiceID), key+"."+sanitize(codec))
         full := filepath.Join(pl.outputRoot, rel)
@@ -205,8 +258,63 @@ func (pl *Plugin) worker() {
             msg := []byte("MU " + path + "\nMW\n")
             _ = pl.send(job.bunnyID, msg)
         }
+        pl.metricMu.Lock(); pl.cacheMiss++; pl.completed++; pl.metricMu.Unlock()
+        pl.updateJobDone(job.id, filepath.ToSlash(filepath.Join("broadcast", rel)))
         slog.Default().Info("tts cache miss", slog.String("bunny", job.bunnyID), slog.String("voice", job.voiceID), slog.String("key", key), slog.String("codec", codec))
     }
+}
+
+type jobStatus struct{
+    ID string
+    Bunny string
+    Voice string
+    TextHash string
+    State string // queued|running|done|error|dropped
+    EnqueuedAt time.Time
+    StartedAt  time.Time
+    CompletedAt time.Time
+    URL string
+    Error string
+}
+
+func (s jobStatus) toXML() string {
+    b := strings.Builder{}
+    b.WriteString(`<job id="`+s.ID+`"><state>`+s.State+`</state>`)
+    if s.URL != "" { b.WriteString(`<url>`+s.URL+`</url>`) }
+    if s.Error != "" { b.WriteString(`<error>`+s.Error+`</error>`) }
+    b.WriteString(`</job>`)
+    return b.String()
+}
+
+func (pl *Plugin) newJobID(bunny string) string {
+    pl.jobsMu.Lock(); defer pl.jobsMu.Unlock()
+    pl.nextSeq++
+    return sanitize(bunny) + "-" + strconvIota(int(pl.nextSeq))
+}
+
+func (pl *Plugin) updateJobDone(id, urlPath string) {
+    pl.jobsMu.Lock(); defer pl.jobsMu.Unlock()
+    st, ok := pl.jobs[id]
+    if !ok { return }
+    st.State = "done"
+    st.CompletedAt = time.Now()
+    st.URL = urlPath
+    pl.jobs[id] = st
+}
+
+func (pl *Plugin) updateJobError(id, code string) {
+    pl.jobsMu.Lock(); defer pl.jobsMu.Unlock()
+    st, ok := pl.jobs[id]
+    if !ok { return }
+    st.State = "error"
+    st.Error = code
+    st.CompletedAt = time.Now()
+    pl.jobs[id] = st
+}
+
+func shortHash(s string) string {
+    sum := sha1.Sum([]byte(s))
+    return hex.EncodeToString(sum[:4])
 }
 
 func (pl *Plugin) trySynthesize(ctx context.Context, text, voice string) ([]byte, string, error) {
