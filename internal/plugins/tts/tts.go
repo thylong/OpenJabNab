@@ -86,8 +86,20 @@ func (pl *Plugin) ProcessPluginApi(function string, get map[string]string) (bool
     switch strings.ToLower(function) {
     case "voices":
         vs, _ := pl.provider.ListVoices(context.Background())
+        // Optional allowlist filter from config via settings key or env
+        allow := pl.settings.Get("plugin", "AllowedVoices", "")
+        if allow == "" { allow = pl.settings.Get("plugin", "allowedVoices", "") }
+        if allow == "" { allow = "" } // no filter
+        var filt map[string]struct{}
+        if allow != "" {
+            filt = map[string]struct{}{}
+            for _, v := range strings.Split(allow, ",") { filt[strings.TrimSpace(v)] = struct{}{} }
+        }
         inner := "<list>"
-        for _, v := range vs { inner += "<item id=\""+xmlEscape(v.ID)+"\" lang=\""+xmlEscape(v.Language)+"\" gender=\""+xmlEscape(v.Gender)+"\">"+xmlEscape(v.Name)+"</item>" }
+        for _, v := range vs {
+            if filt != nil { if _, ok := filt[v.ID]; !ok { continue } }
+            inner += "<item id=\""+xmlEscape(v.ID)+"\" lang=\""+xmlEscape(v.Language)+"\" gender=\""+xmlEscape(v.Gender)+"\">"+xmlEscape(v.Name)+"</item>"
+        }
         inner += "</list>"
         return true, []byte(inner), nil
     case "setvoice":
@@ -109,7 +121,7 @@ func (pl *Plugin) ProcessPluginApi(function string, get map[string]string) (bool
         voice := strings.TrimSpace(get["voice"]) // optional override
         if id == "" || text == "" { return true, []byte(`<error>Missing bunny or text</error>`), nil }
         if !isValidBunnyID(id) || !isValidText(text) { return true, []byte(`<error>Invalid parameters</error>`), nil }
-        if voice == "" { voice = pl.settings.Get("bunny_"+id, "voice", "en-US-Standard-A") }
+        if voice == "" { voice = pl.settings.Get("bunny_"+id, "voice", pl.settings.Get("plugin", "DefaultVoice", "en-US-Standard-A")) }
         // Basic enqueue
         select { case pl.queue <- speakJob{bunnyID: id, text: text, voiceID: voice}: default: }
         return true, []byte(`<ok/>`), nil

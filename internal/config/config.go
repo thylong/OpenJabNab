@@ -28,6 +28,7 @@ type Config struct {
     TTSMaxRetries          int
     TTSBackoffMs           int
     TTSRateLimitRPS        int
+    TTSAllowedVoices       string
 	MaxNumberOfBunnies     int
 	MaxBurstNumberOfBunnies int
 
@@ -173,5 +174,6 @@ func Load(path string) (*Config, error) {
     c.TTSMaxRetries = tts.Key("MaxRetries").MustInt(2)
     c.TTSBackoffMs = tts.Key("BackoffMs").MustInt(200)
     c.TTSRateLimitRPS = tts.Key("RateLimitRPS").MustInt(5)
+    c.TTSAllowedVoices = tts.Key("AllowedVoices").MustString("")
 	return c, nil
 }
