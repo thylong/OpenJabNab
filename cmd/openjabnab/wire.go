@@ -22,6 +22,7 @@ import (
     plugears "OpenJabNab/internal/plugins/ears"
     plugradio "OpenJabNab/internal/plugins/webradio"
     plugrecord "OpenJabNab/internal/plugins/record"
+    plugauth "OpenJabNab/internal/plugins/auth"
 )
 
 type servers struct {
@@ -65,6 +66,7 @@ func startServers(logger *slog.Logger, cfg *configpkg.Config) (*servers, error) 
     plugins.Register(plugears.New())
     plugins.Register(plugradio.New(cfg))
     plugins.Register(plugrecord.New(cfg))
+    plugins.Register(plugauth.New(cfg))
     // attach plugin manager to stats provider for plugin totals
     if lp, ok := interface{}(statProv).(interface{ SetPluginManager(*pman.Manager) }); ok {
         lp.SetPluginManager(plugins)
