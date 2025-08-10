@@ -34,9 +34,9 @@ func TestGoogle_Voices_And_Synth(t *testing.T) {
 	p := &googleProvider{httpClient: api.Client(), baseURL: api.URL}
 	vs, err := p.ListVoices(context.Background())
 	if err != nil || len(vs) == 0 { t.Fatalf("voices failed: %v %v", vs, err) }
-	data, codec, err := p.Synthesize(context.Background(), "hello", "en-US-Standard-A")
+    data, codec, err := p.Synthesize(context.Background(), "hello", SynthesisOptions{VoiceID: "en-US-Standard-A", Codec: "mp3"})
 	if err != nil { t.Fatal(err) }
 	if codec != "mp3" || len(data) == 0 { t.Fatalf("bad synth: codec=%s len=%d", codec, len(data)) }
 	// SSML path
-	if _, _, err := p.Synthesize(context.Background(), "<speak>hi</speak>", "en-US-Standard-A"); err != nil { t.Fatal(err) }
+    if _, _, err := p.Synthesize(context.Background(), "<speak>hi</speak>", SynthesisOptions{VoiceID: "en-US-Standard-A", Codec: "mp3"}); err != nil { t.Fatal(err) }
 }

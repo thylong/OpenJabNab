@@ -366,7 +366,7 @@ func (pl *Plugin) trySynthesize(ctx context.Context, text, voice string) ([]byte
     var codec string
     var err error
     for attempt := 0; attempt <= maxRetries; attempt++ {
-        data, codec, err = pl.provider.Synthesize(ctx, text, voice)
+        data, codec, err = pl.provider.Synthesize(ctx, text, prov.SynthesisOptions{VoiceID: voice, Codec: "mp3"})
         if err == nil { return data, codec, nil }
         select { case <-time.After(backoff): case <-ctx.Done(): return nil, "", ctx.Err() }
         backoff *= 2

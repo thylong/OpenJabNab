@@ -9,9 +9,16 @@ type Voice struct {
 	Gender   string
 }
 
+type SynthesisOptions struct {
+    VoiceID      string
+    Pitch        float64
+    SpeakingRate float64
+    Codec        string // mp3|wav|ogg
+}
+
 type Provider interface {
-	ListVoices(ctx context.Context) ([]Voice, error)
-	Synthesize(ctx context.Context, text string, voiceID string) (audio []byte, codec string, err error)
+    ListVoices(ctx context.Context) ([]Voice, error)
+    Synthesize(ctx context.Context, text string, opts SynthesisOptions) (audio []byte, codec string, err error)
 }
 
 var registry = map[string]Provider{}

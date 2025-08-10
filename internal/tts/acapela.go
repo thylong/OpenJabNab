@@ -62,15 +62,17 @@ func (a *acapelaProvider) ListVoices(ctx context.Context) ([]Voice, error) {
 	}, nil
 }
 
-func (a *acapelaProvider) Synthesize(ctx context.Context, text string, voiceID string) ([]byte, string, error) {
+func (a *acapelaProvider) Synthesize(ctx context.Context, text string, opts SynthesisOptions) ([]byte, string, error) {
 	if err := a.ensureConfig(); err != nil { return nil, "", err }
 	form := url.Values{}
 	form.Set("login", a.login)
 	form.Set("password", a.password)
 	form.Set("application", a.application)
-	form.Set("voice", voiceID)
+    form.Set("voice", opts.VoiceID)
 	form.Set("text", text)
-	form.Set("format", "mp3")
+    codec := opts.Codec
+    if codec == "" { codec = "mp3" }
+    form.Set("format", codec)
 	endpoint := a.baseURL + "/synthesize"
     var resp *http.Response
     var err error

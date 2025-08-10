@@ -33,7 +33,7 @@ func TestAcapela_Synthesize_JSON_URL(t *testing.T) {
 	_ = os.Setenv("ACAPELA_PASSWORD", "p")
 	_ = os.Setenv("ACAPELA_APPLICATION", "app")
 	p := &acapelaProvider{httpClient: api.Client()}
-	data, codec, err := p.Synthesize(context.Background(), "hello", "enu_william")
+    data, codec, err := p.Synthesize(context.Background(), "hello", SynthesisOptions{VoiceID: "enu_william", Codec: "mp3"})
 	if err != nil { t.Fatal(err) }
 	if codec != "mp3" { t.Fatalf("expected mp3, got %s", codec) }
 	if len(data) == 0 { t.Fatal("no data") }
@@ -49,5 +49,5 @@ func TestAcapela_InvalidCreds_Error(t *testing.T) {
 	_ = os.Setenv("ACAPELA_PASSWORD", "p")
 	_ = os.Setenv("ACAPELA_APPLICATION", "app")
 	p := &acapelaProvider{httpClient: api.Client()}
-	if _, _, err := p.Synthesize(context.Background(), "hello", "enu_william"); err == nil { t.Fatal("expected error") }
+    if _, _, err := p.Synthesize(context.Background(), "hello", SynthesisOptions{VoiceID: "enu_william", Codec: "mp3"}); err == nil { t.Fatal("expected error") }
 }

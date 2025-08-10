@@ -31,7 +31,7 @@ func TestAcapela_RetryTransient(t *testing.T) {
 	p := &acapelaProvider{httpClient: api.Client()}
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
-	data, _, err := p.Synthesize(ctx, "hello", "enu_william")
+    data, _, err := p.Synthesize(ctx, "hello", SynthesisOptions{VoiceID: "enu_william", Codec: "mp3"})
 	if err != nil { t.Fatal(err) }
 	if len(data) == 0 || tries < 2 { t.Fatalf("expected retry, tries=%d", tries) }
 }

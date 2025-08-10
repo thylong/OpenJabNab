@@ -132,18 +132,20 @@ func (g *googleProvider) ListVoices(ctx context.Context) ([]Voice, error) {
     return res, nil
 }
 
-func (g *googleProvider) Synthesize(ctx context.Context, text string, voiceID string) ([]byte, string, error) {
+func (g *googleProvider) Synthesize(ctx context.Context, text string, opts SynthesisOptions) ([]byte, string, error) {
     tok, err := g.getToken(ctx)
     if err != nil { return nil, "", err }
     if g.baseURL == "" { g.baseURL = os.Getenv("GOOGLE_TTS_ENDPOINT"); if g.baseURL == "" { g.baseURL = "https://texttospeech.googleapis.com" } }
     body := map[string]any{
         "input": map[string]string{"text": text},
-        "voice": map[string]string{"name": voiceID},
-        "audioConfig": map[string]string{"audioEncoding": "MP3"},
+        "voice": map[string]string{"name": opts.VoiceID},
+        "audioConfig": map[string]any{"audioEncoding": strings.ToUpper(opts.Codec)},
     }
     if strings.Contains(strings.ToLower(text), "<speak") {
         body["input"] = map[string]string{"ssml": text}
     }
+    if opts.Pitch != 0 { body["audioConfig"].(map[string]any)["pitch"] = opts.Pitch }
+    if opts.SpeakingRate != 0 { body["audioConfig"].(map[string]any)["speakingRate"] = opts.SpeakingRate }
     b, _ := json.Marshal(body)
     req, _ := http.NewRequestWithContext(ctx, http.MethodPost, g.baseURL+"/v1/text:synthesize", strings.NewReader(string(b)))
     req.Header.Set("Authorization", "Bearer "+tok)
@@ -156,5 +158,7 @@ func (g *googleProvider) Synthesize(ctx context.Context, text string, voiceID st
     if err := json.NewDecoder(resp.Body).Decode(&out); err != nil { return nil, "", err }
     data, err := base64.StdEncoding.DecodeString(out.AudioContent)
     if err != nil { return nil, "", err }
-    return data, "mp3", nil
+    codec := opts.Codec
+    if codec == "" { codec = "mp3" }
+    return data, strings.ToLower(codec), nil
 }
