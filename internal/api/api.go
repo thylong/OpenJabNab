@@ -4,6 +4,7 @@ import (
     "encoding/xml"
     "log/slog"
     "strings"
+    psettings "OpenJabNab/internal/plugin"
 )
 
 type Manager struct {
@@ -21,6 +22,9 @@ type Manager struct {
     EnabledPluginNames func() []string
     SetPluginEnabled func(name string, on bool) bool
     PluginProcess func(name, function string, get map[string]string) (bool, []byte, error)
+
+    // PluginsDir for settings files
+    PluginsDir string
 }
 
 type StatsProvider interface {
@@ -112,6 +116,24 @@ func (m *Manager) Process(rawURI string, uri string, get map[string]string) (con
             parts := strings.Split(strings.TrimPrefix(sub, "plugin/"), "/")
             if len(parts) != 2 { return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment("Malformed Plugin Api Call")) }
             name, function := parts[0], parts[1]
+            // Settings helpers
+            if function == "getsetting" {
+                key := get["key"]
+                if key == "" { return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment("Missing key")) }
+                st, err := pluginNewSettings(m.PluginsDir, name)
+                if err != nil { return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment(err.Error())) }
+                val := st.Get("plugin", key, "")
+                return "text/xml; charset=utf-8", m.wrapAPI([]byte(`<value>` + val + `</value>`))
+            }
+            if function == "setsetting" {
+                key := get["key"]
+                val := get["value"]
+                if key == "" { return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment("Missing key")) }
+                st, err := pluginNewSettings(m.PluginsDir, name)
+                if err != nil { return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment(err.Error())) }
+                if err := st.Set("plugin", key, val); err != nil { return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment(err.Error())) }
+                return "text/xml; charset=utf-8", m.wrapAPI([]byte(`<ok/>`))
+            }
             if m.PluginProcess == nil { return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment("Plugin API not implemented")) }
             if handled, frag, err := m.PluginProcess(name, function, get); handled {
                 if err != nil { return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment(err.Error())) }
@@ -212,3 +234,6 @@ func (m *Manager) errFragment(msg string) []byte {
     // Minimal sanitization; full CDATA handling can be added later
     return []byte(`<error>` + msg + `</error>`)
 }
+
+// thin wrapper to avoid importing Settings type in tests outside this package
+func pluginNewSettings(dir, name string) (*psettings.Settings, error) { return psettings.NewSettings(dir, name) }

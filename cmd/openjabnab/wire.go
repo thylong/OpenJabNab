@@ -37,6 +37,7 @@ func startServers(logger *slog.Logger, cfg *configpkg.Config) (*servers, error) 
     statProv := stats.NewLive(cfg, bunMgr, ztMgr)
 
     apiMgr := &api.Manager{Logger: logger, Stats: statProv}
+    apiMgr.PluginsDir = cfg.PluginsDir
     apiMgr.Plugins = api.DefaultPluginAPI{}
     apiMgr.Bunnies = api.DefaultBunnyAPI{B: bunMgr}
     apiMgr.Ztamps = api.DefaultZtampAPI{ZCount: ztMgr.Count, List: ztMgr.List, Add: ztMgr.Add, Remove: ztMgr.Remove, Assign: ztMgr.Assign, Unassign: ztMgr.Unassign, AssignedTo: ztMgr.AssignedTo}
