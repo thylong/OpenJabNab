@@ -32,3 +32,19 @@ func (m *Manager) HttpRequest(req *Request) bool {
 	}
 	return false
 }
+
+func (m *Manager) OnButton(id string, clicks int) {
+    m.mu.RLock(); defer m.mu.RUnlock()
+    for _, p := range m.list {
+        if !m.enabled[p.Name()] { continue }
+        if h, ok := p.(ButtonHandler); ok { h.OnButton(id, clicks) }
+    }
+}
+
+func (m *Manager) OnEars(id string, left, right int) {
+    m.mu.RLock(); defer m.mu.RUnlock()
+    for _, p := range m.list {
+        if !m.enabled[p.Name()] { continue }
+        if h, ok := p.(EarsHandler); ok { h.OnEars(id, left, right) }
+    }
+}

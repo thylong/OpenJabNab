@@ -16,6 +16,7 @@ import (
     "OpenJabNab/internal/netdump"
     pman "OpenJabNab/internal/plugin"
     locate "OpenJabNab/internal/plugins/locate"
+    pluglog "OpenJabNab/internal/plugins/logger"
 )
 
 type servers struct {
@@ -46,6 +47,7 @@ func startServers(logger *slog.Logger, cfg *configpkg.Config) (*servers, error) 
     // Plugins
     plugins := pman.NewManager()
     plugins.Register(locate.New(cfg))
+    plugins.Register(pluglog.New(logger))
 
     if cfg.HttpListener {
         addr := fmt.Sprintf("0.0.0.0:%d", cfg.OpenJabNabServers.ListeningHttpPort)
@@ -64,8 +66,14 @@ func startServers(logger *slog.Logger, cfg *configpkg.Config) (*servers, error) 
         xs := &xmpp.Server{Addr: xaddr, Domain: cfg.OpenJabNabServers.XmppServer, Logger: logger}
         xs.OnConnect = func(id string) { if id != "" { bunMgr.Connect(id); logger.Info("bunny connected", slog.String("id", id)) } }
         xs.OnDisconnect = func(id string) { if id != "" { bunMgr.Disconnect(id); logger.Info("bunny disconnected", slog.String("id", id)) } }
-        xs.OnButton = func(id string, clicks int) { logger.Info("button", slog.String("id", id), slog.Int("clicks", clicks)) }
-        xs.OnEars = func(id string, left, right int) { logger.Info("ears", slog.String("id", id), slog.Int("left", left), slog.Int("right", right)) }
+        xs.OnButton = func(id string, clicks int) {
+            plugins.OnButton(id, clicks)
+            logger.Info("button", slog.String("id", id), slog.Int("clicks", clicks))
+        }
+        xs.OnEars = func(id string, left, right int) {
+            plugins.OnEars(id, left, right)
+            logger.Info("ears", slog.String("id", id), slog.Int("left", left), slog.Int("right", right))
+        }
         xs.GetPassword = accMgr.GetPassword
         xs.BypassAuth = cfg.Auth.Bypass
         xs.Dump = dumper.Log

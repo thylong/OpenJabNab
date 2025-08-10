@@ -32,3 +32,12 @@ type Plugin interface {
     HttpRequestHandle(*Request) bool
     HttpRequestAfter(*Request)
 }
+
+// Optional XMPP event handlers
+type ButtonHandler interface {
+    OnButton(bunnyID string, clicks int)
+}
+
+type EarsHandler interface {
+    OnEars(bunnyID string, left, right int)
+}
