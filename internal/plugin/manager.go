@@ -33,6 +33,19 @@ func (m *Manager) HttpRequest(req *Request) bool {
 	return false
 }
 
+// ProcessPluginApi routes /ojn_api/plugin/<name>/<function>
+func (m *Manager) ProcessPluginApi(name, function string, get map[string]string) (bool, []byte, error) {
+    m.mu.RLock(); defer m.mu.RUnlock()
+    for _, p := range m.list {
+        if p.Name() != name || !m.enabled[p.Name()] { continue }
+        if ah, ok := p.(ApiHandler); ok {
+            handled, xml, err := ah.ProcessPluginApi(function, get)
+            if handled { return true, xml, err }
+        }
+    }
+    return false, nil, nil
+}
+
 func (m *Manager) OnButton(id string, clicks int) {
     m.mu.RLock(); defer m.mu.RUnlock()
     for _, p := range m.list {

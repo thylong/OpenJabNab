@@ -17,6 +17,7 @@ import (
     pman "OpenJabNab/internal/plugin"
     locate "OpenJabNab/internal/plugins/locate"
     pluglog "OpenJabNab/internal/plugins/logger"
+    plugstats "OpenJabNab/internal/plugins/stats"
 )
 
 type servers struct {
@@ -48,6 +49,7 @@ func startServers(logger *slog.Logger, cfg *configpkg.Config) (*servers, error) 
     plugins := pman.NewManager()
     plugins.Register(locate.New(cfg))
     plugins.Register(pluglog.New(logger))
+    plugins.Register(plugstats.New(statProv))
 
     if cfg.HttpListener {
         addr := fmt.Sprintf("0.0.0.0:%d", cfg.OpenJabNabServers.ListeningHttpPort)

@@ -41,3 +41,9 @@ type ButtonHandler interface {
 type EarsHandler interface {
     OnEars(bunnyID string, left, right int)
 }
+
+// Optional API handler for /ojn_api/plugin/<name>/<function>
+type ApiHandler interface {
+    // If function matches, return handled=true and XML fragment
+    ProcessPluginApi(function string, get map[string]string) (handled bool, xml []byte, err error)
+}

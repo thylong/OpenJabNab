@@ -74,12 +74,18 @@ func (m *Manager) Process(rawURI string, uri string, get map[string]string) (con
             if err != nil { return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment(err.Error())) }
             return "text/xml; charset=utf-8", m.wrapAPI(frag)
         case strings.HasPrefix(sub, "plugin/"):
-            if m.Plugins == nil {
-                return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment("Plugin API not implemented"))
+            // legacy: plugin/<name>/<function>
+            parts := strings.Split(strings.TrimPrefix(sub, "plugin/"), "/")
+            if len(parts) != 2 { return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment("Malformed Plugin Api Call")) }
+            name, function := parts[0], parts[1]
+            if m.Plugins == nil { return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment("Plugin API not implemented")) }
+            if handler, ok := any(m.Plugins).(interface{ ProcessPluginApi(name, function string, get map[string]string) (bool, []byte, error) }); ok {
+                if handled, frag, err := handler.ProcessPluginApi(name, function, get); handled {
+                    if err != nil { return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment(err.Error())) }
+                    return "text/xml; charset=utf-8", m.wrapAPI(frag)
+                }
             }
-            frag, err := m.Plugins.Process(token, strings.TrimPrefix(sub, "plugin/"), get)
-            if err != nil { return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment(err.Error())) }
-            return "text/xml; charset=utf-8", m.wrapAPI(frag)
+            return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment("Unknown Plugin or function"))
         case strings.HasPrefix(sub, "bunnies/"):
             if m.Bunnies == nil {
                 return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment("Bunnies API not implemented"))
