@@ -91,6 +91,21 @@ func (d DefaultAccountsAPI) Process(token string, request string, get map[string
         case "whoami":
             if token != "" { return []byte(`<token>` + token + `</token>`), nil }
             return []byte(`<token/>`), nil
+        case "login":
+            user := get["user"]
+            pass := get["pass"]
+            if user == "" || pass == "" { return []byte(`<error>Missing credentials</error>`), nil }
+            if t, ok := d.A.IssueToken(user, pass); ok {
+                return []byte(`<token>` + t + `</token>`), nil
+            }
+            return []byte(`<error>Invalid credentials</error>`), nil
+        case "validate":
+            if token == "" { return []byte(`<valid>false</valid>`), nil }
+            if d.A.ValidateToken(token) { return []byte(`<valid>true</valid>`), nil }
+            return []byte(`<valid>false</valid>`), nil
+        case "logout":
+            if token != "" { d.A.RevokeToken(token) }
+            return []byte(`<ok/>`), nil
         case "list":
             return []byte(`<list/>`), nil
         }
