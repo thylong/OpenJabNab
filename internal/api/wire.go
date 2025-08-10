@@ -10,7 +10,15 @@ type DefaultPluginAPI struct{}
 
 type DefaultBunnyAPI struct{ B *bunny.Manager }
 
-type DefaultZtampAPI struct{ ZCount func() int }
+type DefaultZtampAPI struct{
+    ZCount func() int
+    List func() []string
+    Add func(id string)
+    Remove func(id string)
+    Assign func(id, bunny string) bool
+    Unassign func(id string)
+    AssignedTo func(id string) (string, bool)
+}
 
 type DefaultAccountsAPI struct{ A *account.Manager }
 
@@ -73,11 +81,46 @@ func (d DefaultZtampAPI) Process(token string, request string, get map[string]st
             if d.ZCount != nil { c = d.ZCount() }
             return []byte(`<count>` + itoa(c) + `</count>`), nil
         case "list":
-            return []byte(`<list/>`), nil
+            items := []string{}
+            if d.List != nil { items = d.List() }
+            out := "<list>"
+            for _, id := range items { out += "<item>" + id + "</item>" }
+            out += "</list>"
+            return []byte(out), nil
+        case "add":
+            id := get["id"]
+            if id == "" || d.Add == nil { return []byte(`<error>Missing id</error>`), nil }
+            d.Add(id); return []byte(`<ok/>`), nil
+        case "remove":
+            id := get["id"]
+            if id == "" || d.Remove == nil { return []byte(`<error>Missing id</error>`), nil }
+            d.Remove(id); return []byte(`<ok/>`), nil
         }
     }
     if len(parts) == 2 {
-        if parts[1] == "stats" { return []byte(`<known>false</known>`), nil }
+        id, fn := parts[0], parts[1]
+        switch fn {
+        case "stats":
+            if d.List != nil {
+                known := false
+                for _, k := range d.List() { if k == id { known = true; break } }
+                if known { return []byte(`<known>true</known>`), nil }
+                return []byte(`<known>false</known>`), nil
+            }
+        case "assign":
+            bunny := get["bunny"]
+            if bunny == "" || d.Assign == nil { return []byte(`<error>Missing bunny</error>`), nil }
+            if d.Assign(id, bunny) { return []byte(`<ok/>`), nil }
+            return []byte(`<error>Unknown ztamp</error>`), nil
+        case "unassign":
+            if d.Unassign == nil { return []byte(`<error>Unsupported</error>`), nil }
+            d.Unassign(id); return []byte(`<ok/>`), nil
+        case "assigned":
+            if d.AssignedTo != nil {
+                if b, ok := d.AssignedTo(id); ok { return []byte(`<bunny>` + b + `</bunny>`), nil }
+                return []byte(`<bunny/>`), nil
+            }
+        }
     }
     return []byte(`<error>Unknown Ztamp Api Call</error>`), nil
 }

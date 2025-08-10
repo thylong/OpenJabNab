@@ -39,7 +39,7 @@ func startServers(logger *slog.Logger, cfg *configpkg.Config) (*servers, error) 
     apiMgr := &api.Manager{Logger: logger, Stats: statProv}
     apiMgr.Plugins = api.DefaultPluginAPI{}
     apiMgr.Bunnies = api.DefaultBunnyAPI{B: bunMgr}
-    apiMgr.Ztamps = api.DefaultZtampAPI{ZCount: ztMgr.Count}
+    apiMgr.Ztamps = api.DefaultZtampAPI{ZCount: ztMgr.Count, List: ztMgr.List, Add: ztMgr.Add, Remove: ztMgr.Remove, Assign: ztMgr.Assign, Unassign: ztMgr.Unassign, AssignedTo: ztMgr.AssignedTo}
     apiMgr.Accounts = api.DefaultAccountsAPI{A: accMgr}
     // Expose limited plugin manager functions to API (wired after 'plugins' is constructed)
     stop := make(chan struct{})
