@@ -1,6 +1,7 @@
 package record
 
 import (
+    "regexp"
     "strings"
     "time"
     "sync"
@@ -38,7 +39,9 @@ func (pl *Plugin) ProcessPluginApi(function string, get map[string]string) (bool
     case "start":
         id := get["bunny"]; if id == "" { id = get["id"] }
         if id == "" { return true, []byte(`<error>Missing bunny</error>`), nil }
+        if !isValidBunnyID(id) { return true, []byte(`<error>Invalid bunny</error>`), nil }
         secs := get["seconds"]; if secs == "" { secs = "30" }
+        if !isValidSeconds(secs) { return true, []byte(`<error>Invalid seconds</error>`), nil }
         sec := "bunny_" + id
         _ = pl.settings.Set(sec, "recording", "true")
         _ = pl.settings.Set(sec, "seconds", secs)
@@ -47,12 +50,14 @@ func (pl *Plugin) ProcessPluginApi(function string, get map[string]string) (bool
     case "stop":
         id := get["bunny"]; if id == "" { id = get["id"] }
         if id == "" { return true, []byte(`<error>Missing bunny</error>`), nil }
+        if !isValidBunnyID(id) { return true, []byte(`<error>Invalid bunny</error>`), nil }
         sec := "bunny_" + id
         _ = pl.settings.Set(sec, "recording", "false")
         return true, []byte(`<ok/>`), nil
     case "status":
         id := get["bunny"]; if id == "" { id = get["id"] }
         if id == "" { return true, []byte(`<error>Missing bunny</error>`), nil }
+        if !isValidBunnyID(id) { return true, []byte(`<error>Invalid bunny</error>`), nil }
         sec := "bunny_" + id
         rec := pl.settings.Get(sec, "recording", "false")
         secs := pl.settings.Get(sec, "seconds", "0")
@@ -75,3 +80,9 @@ func xmlEscape(s string) string {
     )
     return r.Replace(s)
 }
+
+var bunnyRe = regexp.MustCompile(`^[A-Za-z0-9_-]{1,64}$`)
+func isValidBunnyID(id string) bool { return bunnyRe.MatchString(id) }
+
+var secsRe = regexp.MustCompile(`^[0-9]{1,5}$`)
+func isValidSeconds(s string) bool { return secsRe.MatchString(s) }

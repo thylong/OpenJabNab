@@ -1,6 +1,7 @@
 package auth
 
 import (
+    "regexp"
     "strings"
 
     cfgpkg "OpenJabNab/internal/config"
@@ -36,6 +37,7 @@ func (pl *Plugin) ProcessPluginApi(function string, get map[string]string) (bool
         return true, []byte(inner), nil
     case "setauthmethod", "set":
         name := strings.ToUpper(strings.TrimSpace(get["name"]))
+        if !isValidMethod(name) { return true, []byte(`<error>Unknown method</error>`), nil }
         switch name {
         case "PLAIN", "DIGEST-MD5", "BOTH":
             _ = pl.settings.Set("auth", "method", name)
@@ -60,3 +62,6 @@ func xmlEscape(s string) string {
     )
     return r.Replace(s)
 }
+
+var methodRe = regexp.MustCompile(`^(PLAIN|DIGEST-MD5|BOTH)$`)
+func isValidMethod(m string) bool { return methodRe.MatchString(m) }

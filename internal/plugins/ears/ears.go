@@ -39,6 +39,7 @@ func (pl *Plugin) ProcessPluginApi(function string, get map[string]string) (bool
         id := get["bunny"]
         if id == "" { id = get["id"] }
         if id == "" { return true, []byte(`<error>Missing bunny</error>`), nil }
+        if !isValidBunnyID(id) { return true, []byte(`<error>Invalid bunny</error>`), nil }
         pl.mu.RLock(); v, ok := pl.pos[id]; pl.mu.RUnlock()
         if !ok { return true, []byte(`<left/><right/>`), nil }
         xml := []byte(`<left>` + itoa(v[0]) + `</left><right>` + itoa(v[1]) + `</right>`)
@@ -46,6 +47,7 @@ func (pl *Plugin) ProcessPluginApi(function string, get map[string]string) (bool
     case "set":
         id := get["bunny"]; if id == "" { id = get["id"] }
         if id == "" { return true, []byte(`<error>Missing bunny</error>`), nil }
+        if !isValidBunnyID(id) { return true, []byte(`<error>Invalid bunny</error>`), nil }
         // accept left/right in [0..15] similar to original behavior
         leftS, rightS := get["left"], get["right"]
         if leftS == "" || rightS == "" { return true, []byte(`<error>Missing left/right</error>`), nil }
@@ -77,3 +79,14 @@ func atoi(s string) int {
 
 // Implement PacketSenderAware
 func (pl *Plugin) SetPacketSender(fn func(bunnyID string, payload []byte) bool) { pl.send = fn }
+
+// basic validation helpers
+func isValidBunnyID(id string) bool {
+    if len(id) == 0 || len(id) > 64 { return false }
+    for i := 0; i < len(id); i++ {
+        c := id[i]
+        if (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c=='-' || c=='_' { continue }
+        return false
+    }
+    return true
+}

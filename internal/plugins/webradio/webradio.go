@@ -1,6 +1,8 @@
 package webradio
 
 import (
+    "net/url"
+    "regexp"
     "strings"
     "sync"
 
@@ -50,19 +52,24 @@ func (pl *Plugin) ProcessPluginApi(function string, get map[string]string) (bool
         return true, []byte(inner), nil
     case "add":
         name := strings.TrimSpace(get["name"]) 
-        url := strings.TrimSpace(get["url"]) 
-        if name == "" || url == "" { return true, []byte(`<error>Missing name or url</error>`), nil }
-        _ = pl.settings.Set("stations", name, url)
+        raw := strings.TrimSpace(get["url"]) 
+        if name == "" || raw == "" { return true, []byte(`<error>Missing name or url</error>`), nil }
+        if !isValidStationName(name) { return true, []byte(`<error>Invalid name</error>`), nil }
+        if !isValidURL(raw) { return true, []byte(`<error>Invalid url</error>`), nil }
+        _ = pl.settings.Set("stations", name, raw)
         return true, []byte(`<ok/>`), nil
     case "del":
         name := strings.TrimSpace(get["name"]) 
         if name == "" { return true, []byte(`<error>Missing name</error>`), nil }
+        if !isValidStationName(name) { return true, []byte(`<error>Invalid name</error>`), nil }
         _ = pl.settings.Delete("stations", name)
         return true, []byte(`<ok/>`), nil
     case "set":
         id := get["bunny"]; if id == "" { id = get["id"] }
         name := strings.TrimSpace(get["name"]) 
         if id == "" || name == "" { return true, []byte(`<error>Missing bunny or name</error>`), nil }
+        if !isValidBunnyID(id) { return true, []byte(`<error>Invalid bunny</error>`), nil }
+        if !isValidStationName(name) { return true, []byte(`<error>Invalid name</error>`), nil }
         // ensure station exists (optional)
         url := pl.settings.Get("stations", name, "")
         if url == "" { return true, []byte(`<error>Unknown station</error>`), nil }
@@ -72,6 +79,7 @@ func (pl *Plugin) ProcessPluginApi(function string, get map[string]string) (bool
     case "status":
         id := get["bunny"]; if id == "" { id = get["id"] }
         if id == "" { return true, []byte(`<error>Missing bunny</error>`), nil }
+        if !isValidBunnyID(id) { return true, []byte(`<error>Invalid bunny</error>`), nil }
         sec := "bunny_" + id
         station := pl.settings.Get(sec, "station", "")
         playing := pl.settings.Get(sec, "playing", "false")
@@ -80,12 +88,14 @@ func (pl *Plugin) ProcessPluginApi(function string, get map[string]string) (bool
     case "play":
         id := get["bunny"]; if id == "" { id = get["id"] }
         if id == "" { return true, []byte(`<error>Missing bunny</error>`), nil }
+        if !isValidBunnyID(id) { return true, []byte(`<error>Invalid bunny</error>`), nil }
         sec := "bunny_" + id
         _ = pl.settings.Set(sec, "playing", "true")
         return true, []byte(`<ok/>`), nil
     case "stop":
         id := get["bunny"]; if id == "" { id = get["id"] }
         if id == "" { return true, []byte(`<error>Missing bunny</error>`), nil }
+        if !isValidBunnyID(id) { return true, []byte(`<error>Invalid bunny</error>`), nil }
         sec := "bunny_" + id
         _ = pl.settings.Set(sec, "playing", "false")
         return true, []byte(`<ok/>`), nil
@@ -102,4 +112,20 @@ func xmlEscape(s string) string {
         "'", "&apos;",
     )
     return r.Replace(s)
+}
+
+var nameRe = regexp.MustCompile(`^[A-Za-z0-9 _.-]{1,64}$`)
+func isValidStationName(name string) bool {
+    return nameRe.MatchString(name)
+}
+
+var bunnyRe = regexp.MustCompile(`^[A-Za-z0-9_-]{1,64}$`)
+func isValidBunnyID(id string) bool { return bunnyRe.MatchString(id) }
+
+func isValidURL(raw string) bool {
+    u, err := url.Parse(raw)
+    if err != nil { return false }
+    if u.Scheme != "http" && u.Scheme != "https" { return false }
+    if u.Host == "" { return false }
+    return true
 }
