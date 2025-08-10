@@ -119,6 +119,17 @@ func (m *Manager) Process(rawURI string, uri string, get map[string]string) (con
         case strings.HasPrefix(sub, "plugin-disable/"):
             if m.SetPluginEnabled == nil { return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment("No plugin manager")) }
             name := strings.TrimPrefix(sub, "plugin-disable/")
+            // If metadata is available, prevent disabling required/system with a clear error
+            if m.PluginMetadata != nil {
+                for _, it := range m.PluginMetadata() {
+                    if it["name"] == name {
+                        if it["type"] == "Required" || it["type"] == "System" {
+                            return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment("Cannot disable "+strings.ToLower(it["type"]) + " plugin"))
+                        }
+                        break
+                    }
+                }
+            }
             if m.SetPluginEnabled(name, false) { return "text/xml; charset=utf-8", m.wrapAPI([]byte(`<ok/>`)) }
             return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment("Unknown plugin"))
         case strings.HasPrefix(sub, "plugin/"):
