@@ -11,6 +11,7 @@ services:
       - OJN_CONFIG=/config/openjabnab.ini
     volumes:
       - ./server/openjabnab.ini:/config/openjabnab.ini:ro
+      - ./plugins:/config/plugins
     # expose TCP bridge (custom protocol) and XMPP
     networks: [ojn]
 
