@@ -4,11 +4,12 @@ import (
     "strings"
     "OpenJabNab/internal/account"
     "OpenJabNab/internal/bunny"
+    "encoding/base64"
 )
 
 type DefaultPluginAPI struct{}
 
-type DefaultBunnyAPI struct{ B *bunny.Manager }
+type DefaultBunnyAPI struct{ B *bunny.Manager; Send func(id string, payload []byte) bool }
 
 type DefaultZtampAPI struct{
     ZCount func() int
@@ -64,11 +65,13 @@ func (d DefaultBunnyAPI) Process(token string, request string, get map[string]st
             }
             return []byte(`<name/>`), nil
         case "sendpacket":
-            // Stub: accept base64 packet or simple string payload for parity
-            if payload := get["data"]; payload != "" {
-                return []byte(`<ok/>`), nil
-            }
-            return []byte(`<error>Missing data</error>`), nil
+            data := get["data"]
+            if data == "" { return []byte(`<error>Missing data</error>`), nil }
+            // Expect base64 payload
+            raw, err := base64.StdEncoding.DecodeString(data)
+            if err != nil { return []byte(`<error>Invalid base64</error>`), nil }
+            if d.Send != nil && d.Send(id, raw) { return []byte(`<ok/>`), nil }
+            return []byte(`<error>Not connected</error>`), nil
         }
     }
     return []byte(`<error>Unknown Bunny Api Call</error>`), nil

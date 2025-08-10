@@ -40,7 +40,9 @@ func startServers(logger *slog.Logger, cfg *configpkg.Config) (*servers, error) 
     apiMgr := &api.Manager{Logger: logger, Stats: statProv}
     apiMgr.PluginsDir = cfg.PluginsDir
     apiMgr.Plugins = api.DefaultPluginAPI{}
-    apiMgr.Bunnies = api.DefaultBunnyAPI{B: bunMgr}
+    // Wire send packet through XMPP server once it's started; create a placeholder and update after xs constructed
+    var sendFunc func(id string, payload []byte) bool
+    apiMgr.Bunnies = api.DefaultBunnyAPI{B: bunMgr, Send: func(id string, p []byte) bool { if sendFunc != nil { return sendFunc(id, p) }; return false }}
     apiMgr.Ztamps = api.DefaultZtampAPI{ZCount: ztMgr.Count, List: ztMgr.List, Add: ztMgr.Add, Remove: ztMgr.Remove, Assign: ztMgr.Assign, Unassign: ztMgr.Unassign, AssignedTo: ztMgr.AssignedTo}
     apiMgr.Accounts = api.DefaultAccountsAPI{A: accMgr}
     // Expose limited plugin manager functions to API (wired after 'plugins' is constructed)
@@ -93,6 +95,8 @@ func startServers(logger *slog.Logger, cfg *configpkg.Config) (*servers, error) 
         xs.BypassAuth = cfg.Auth.Bypass
         xs.Dump = dumper.Log
         xs.OnRegistered = func(id, resource string) { logger.Info("bunny registered", slog.String("id", id), slog.String("resource", resource)) }
+        // Set send function now that xs exists
+        sendFunc = xs.SendPacket
         go func() { _ = xs.ListenAndServe(stop) }()
         logger.Info("xmpp listening", slog.String("addr", xaddr), slog.String("domain", cfg.OpenJabNabServers.XmppServer))
     } else {
