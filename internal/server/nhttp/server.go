@@ -1,12 +1,13 @@
 package nhttp
 
 import (
+    "io"
     "log/slog"
-	"net/http"
-	"strings"
+    "net/http"
+    "strings"
 
-	"OpenJabNab/internal/api"
-	plug "OpenJabNab/internal/plugin"
+    "OpenJabNab/internal/api"
+    plug "OpenJabNab/internal/plugin"
 )
 
 type Server struct {
@@ -25,18 +26,22 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
         http.ServeFile(w, r, "/app/http-wrapper/ojn_local/bootcode/bootcode.default")
 		return
 	}
-	// locate via plugin or API
-	if strings.HasPrefix(uri, "/vl/locate.jsp") {
-		if s.Plugins != nil {
-			req := &plug.Request{URI: uri, RawURI: r.URL.RequestURI(), Get: map[string]string{}}
-			for k, v := range q { if len(v)>0 { req.Get[k] = v[0] } }
-			if s.Plugins.HttpRequest(req) {
-				w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-				_, _ = w.Write(req.Reply)
-				return
-			}
-		}
-	}
+    // Run plugin HTTP pipeline for all URIs before API routing (parity with httpbridge)
+    if s.Plugins != nil {
+        preq := &plug.Request{URI: uri, RawURI: r.URL.RequestURI(), Get: map[string]string{}, Post: map[string]string{}}
+        for k, v := range q { if len(v)>0 { preq.Get[k] = v[0] } }
+        if r.Method == http.MethodPost {
+            // Read raw body for POST; best-effort parsing of form values
+            if b, err := io.ReadAll(r.Body); err == nil { preq.RawPost = b }
+            _ = r.ParseForm()
+            for k := range r.PostForm { if vals := r.PostForm[k]; len(vals)>0 { preq.Post[k] = vals[0] } }
+        }
+        if s.Plugins.HttpRequest(preq) {
+            w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+            _, _ = w.Write(preq.Reply)
+            return
+        }
+    }
 	// API routes
 	if strings.HasPrefix(uri, "/ojn_api/") || strings.HasPrefix(uri, "/ojn/FR/api") {
 		get := map[string]string{}
