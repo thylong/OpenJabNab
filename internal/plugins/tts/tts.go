@@ -51,6 +51,11 @@ type Plugin struct{
     stopCh chan struct{}
     wg     sync.WaitGroup
     jobHistoryMax int
+
+    // config for retries/timeouts
+    timeout    time.Duration
+    maxRetries int
+    backoff    time.Duration
 }
 
 type speakJob struct{
@@ -75,6 +80,13 @@ func New(cfg *cfgpkg.Config) *Plugin {
     qsize := cfg.TTSQueueSize
     if qsize <= 0 { qsize = 128 }
     pl := &Plugin{enabled: true, settings: st, queue: make(chan speakJob, qsize), provider: provider, providerName: pname, outputRoot: out, jobs: make(map[string]jobStatus), stopCh: make(chan struct{}), jobHistoryMax: cfg.TTSJobHistoryMax}
+    // retry/timeout config
+    if cfg.TTSTimeoutMs <= 0 { cfg.TTSTimeoutMs = 15000 }
+    pl.timeout = time.Duration(cfg.TTSTimeoutMs) * time.Millisecond
+    if cfg.TTSMaxRetries < 0 { cfg.TTSMaxRetries = 2 }
+    pl.maxRetries = cfg.TTSMaxRetries
+    if cfg.TTSBackoffMs <= 0 { cfg.TTSBackoffMs = 200 }
+    pl.backoff = time.Duration(cfg.TTSBackoffMs) * time.Millisecond
     // init rate limiter
     rps := cfg.TTSRateLimitRPS
     if rps <= 0 { rps = 5 }
@@ -245,9 +257,7 @@ func (pl *Plugin) worker() {
             continue
         }
         // Synthesize on miss
-        timeout := time.Duration(15000) * time.Millisecond
-        if ms := pl.settings.Get("plugin", "TimeoutMs", ""); ms != "" { /* allow per-plugin override via ini */ }
-        ctx, cancel := context.WithTimeout(context.Background(), timeout)
+        ctx, cancel := context.WithTimeout(context.Background(), pl.timeout)
         pl.metricMu.Lock(); pl.running++; pl.metricMu.Unlock()
         start := time.Now()
         data, codec, err := pl.trySynthesize(ctx, job.text, job.voiceID)
@@ -350,8 +360,8 @@ func (pl *Plugin) pruneJobsLocked() {
 
 func (pl *Plugin) trySynthesize(ctx context.Context, text, voice string) ([]byte, string, error) {
     // retries with backoff
-    maxRetries := 2
-    backoff := 200 * time.Millisecond
+    maxRetries := pl.maxRetries
+    backoff := pl.backoff
     var data []byte
     var codec string
     var err error
