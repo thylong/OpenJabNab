@@ -70,7 +70,8 @@ func startServers(logger *slog.Logger, cfg *configpkg.Config) (*servers, error) 
     wr := plugradio.New(cfg)
     plugins.Register(wr)
     plugins.Register(plugrecord.New(cfg))
-    plugins.Register(plugtts.New(cfg))
+    ttsPlugin := plugtts.New(cfg)
+    plugins.Register(ttsPlugin)
     plugins.Register(plugauth.New(cfg))
     // attach plugin manager to stats provider for plugin totals
     if lp, ok := interface{}(statProv).(interface{ SetPluginManager(*pman.Manager) }); ok {
@@ -140,6 +141,9 @@ func startServers(logger *slog.Logger, cfg *configpkg.Config) (*servers, error) 
             psa.SetPacketSender(sendFunc)
         }
         if psa, ok := interface{}(wr).(interface{ SetPacketSender(func(string, []byte) bool) }); ok {
+            psa.SetPacketSender(sendFunc)
+        }
+        if psa, ok := interface{}(ttsPlugin).(interface{ SetPacketSender(func(string, []byte) bool) }); ok {
             psa.SetPacketSender(sendFunc)
         }
         go func() { _ = xs.ListenAndServe(stop) }()
