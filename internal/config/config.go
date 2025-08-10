@@ -54,6 +54,10 @@ type Config struct {
 
     // Directory for per-plugin INI files (plugin_<name>.ini). Defaults to /config/plugins in containers.
     PluginsDir string
+
+    // Native HTTP server (to replace PHP wrapper)
+    HttpNativeListener bool
+    NativeHttpPort     int
 }
 
 func LoadDefault() (*Config, error) {
@@ -143,5 +147,9 @@ func Load(path string) (*Config, error) {
             c.PluginsDir = "plugins"
         }
     }
+
+    // Native HTTP defaults
+    c.HttpNativeListener = f.Section("Config").Key("HttpNativeListener").MustBool(false)
+    c.NativeHttpPort = f.Section("Config").Key("NativeHttpPort").MustInt(8081)
 	return c, nil
 }

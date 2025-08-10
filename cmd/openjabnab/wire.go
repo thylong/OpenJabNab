@@ -12,6 +12,7 @@ import (
     "OpenJabNab/internal/ztamp"
     "OpenJabNab/internal/server/httpbridge"
     "OpenJabNab/internal/server/xmpp"
+    nhttp "OpenJabNab/internal/server/nhttp"
     "OpenJabNab/internal/stats"
     "OpenJabNab/internal/netdump"
     pman "OpenJabNab/internal/plugin"
@@ -67,6 +68,12 @@ func startServers(logger *slog.Logger, cfg *configpkg.Config) (*servers, error) 
         logger.Info("httpbridge listening", slog.String("addr", addr))
     } else {
         logger.Warn("HTTP listener disabled by config")
+    }
+
+    if cfg.HttpNativeListener {
+        nh := &nhttp.Server{API: apiMgr, Logger: logger, Plugins: plugins, Addr: fmt.Sprintf(":%d", cfg.NativeHttpPort)}
+        go func(){ _ = nh.Start() }()
+        logger.Info("native http listening", slog.Int("port", cfg.NativeHttpPort))
     }
 
     if cfg.XmppListener {

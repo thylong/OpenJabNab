@@ -4,6 +4,9 @@ services:
     build: .
     ports:
       - "5222:5222"
+      - "80:80"
+    cap_add:
+      - NET_BIND_SERVICE
     image: openjabnab:latest
     container_name: ojn-server
     restart: unless-stopped
@@ -12,28 +15,7 @@ services:
     volumes:
       - ./server/openjabnab.ini:/config/openjabnab.ini:ro
       - ./plugins:/config/plugins
-    # expose TCP bridge (custom protocol) and XMPP
-    networks: [ojn]
-
-  php-fpm:
-    image: php:8.2-fpm
-    container_name: ojn-php-fpm
-    restart: unless-stopped
-    volumes:
-      - ./http-wrapper:/var/www/html:ro
-    networks: [ojn]
-
-  nginx:
-    image: nginx:stable
-    container_name: ojn-nginx
-    depends_on:
-      - php-fpm
-      - openjabnab
-    ports:
-      - "80:80"
-    volumes:
-      - ./http-wrapper:/var/www/html:ro
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./http-wrapper:/app/http-wrapper:ro
     networks: [ojn]
 
 networks:

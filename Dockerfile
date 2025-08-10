@@ -34,6 +34,8 @@ ENV OJN_CONFIG=/config/openjabnab.ini
 # Copy binary
 COPY --from=builder /out/openjabnab /openjabnab
 
+## Native HTTP serving: mount wrapper assets via volume (compose) at /app/http-wrapper
+
 # Non-root runtime
 USER nonroot:nonroot
 
