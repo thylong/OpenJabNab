@@ -23,6 +23,7 @@ type handler struct {
     authUser string
     onButton func(id string, clicks int)
     onEars   func(id string, left, right int)
+    onRFID   func(id string, tag string)
     bypassAuth bool
     onRegistered func(id, resource string)
 }
@@ -193,6 +194,16 @@ func (h *handler) Process(in []byte) (out []string) {
                     if id == "" { id = h.authUser }
                     if id != "" { h.onEars(id, li, ri) }
                 }
+            }
+        }
+        // RFID read: <rfid ...><tag>hexstring</tag></rfid> (simplified format)
+        if has(data, "<rfid") && h.onRFID != nil {
+            tag := capture(data, `<rfid[^>]*><tag>([0-9A-Fa-f]+)</tag>`) // hex-encoded
+            if tag == "" { tag = capture(data, `<tag>([0-9A-Fa-f]+)</tag>`) }
+            if tag != "" {
+                id := h.bunnyID
+                if id == "" { id = h.authUser }
+                if id != "" { h.onRFID(id, tag) }
             }
         }
     }

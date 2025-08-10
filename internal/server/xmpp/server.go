@@ -22,6 +22,7 @@ type Server struct {
     NonceFactory func() string
     OnButton func(id string, clicks int)
     OnEars   func(id string, left, right int)
+    OnRFID   func(id string, tag string)
     Dump func(cat string, data []byte)
     BypassAuth bool
     ReadTimeout time.Duration
@@ -61,6 +62,7 @@ func (s *Server) handleConn(c net.Conn) {
     if s.NonceFactory != nil { h.nonceFactory = s.NonceFactory }
     if s.OnButton != nil { h.onButton = s.OnButton }
     if s.OnEars != nil { h.onEars = s.OnEars }
+    if s.OnRFID != nil { h.onRFID = s.OnRFID }
     h.bypassAuth = s.BypassAuth
     h.onRegistered = func(id, resource string) {
         if s.OnRegistered != nil { s.OnRegistered(id, resource) }

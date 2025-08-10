@@ -121,6 +121,10 @@ func startServers(logger *slog.Logger, cfg *configpkg.Config) (*servers, error) 
             plugins.OnEars(id, left, right)
             logger.Info("ears", slog.String("id", id), slog.Int("left", left), slog.Int("right", right))
         }
+        xs.OnRFID = func(id string, tag string) {
+            plugins.OnRFID(id, tag)
+            logger.Info("rfid", slog.String("id", id), slog.String("tag", tag))
+        }
         xs.GetPassword = accMgr.GetPassword
         xs.BypassAuth = cfg.Auth.Bypass
         xs.Dump = dumper.Log
@@ -137,6 +141,19 @@ func startServers(logger *slog.Logger, cfg *configpkg.Config) (*servers, error) 
         logger.Warn("XMPP listener disabled by config")
     }
 
+    // Simple cron scheduler: call OnCron() every minute on enabled plugins
+    go func(){
+        ticker := time.NewTicker(1 * time.Minute)
+        defer ticker.Stop()
+        for {
+            select {
+            case <-stop:
+                return
+            case <-ticker.C:
+                plugins.OnCron()
+            }
+        }
+    }()
     return &servers{stop: stop}, nil
 }
 
