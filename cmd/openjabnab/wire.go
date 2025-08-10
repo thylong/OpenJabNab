@@ -57,6 +57,7 @@ func startServers(logger *slog.Logger, cfg *configpkg.Config) (*servers, error) 
         xs.OnButton = func(id string, clicks int) { logger.Info("button", slog.String("id", id), slog.Int("clicks", clicks)) }
         xs.OnEars = func(id string, left, right int) { logger.Info("ears", slog.String("id", id), slog.Int("left", left), slog.Int("right", right)) }
         xs.GetPassword = accMgr.GetPassword
+        xs.BypassAuth = cfg.Auth.Bypass
         xs.Dump = dumper.Log
         go func() { _ = xs.ListenAndServe(stop) }()
         logger.Info("xmpp listening", slog.String("addr", xaddr), slog.String("domain", cfg.OpenJabNabServers.XmppServer))

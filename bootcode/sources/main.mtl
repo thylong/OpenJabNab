@@ -6,9 +6,9 @@ proto setRunState 1;;
 proto getRunState 0;;
 
 // XMPP ECHO DEBUG
-fun Xw str = 
+fun Xw str =
 	Secholn str;;
-fun Xx i = 
+fun Xx i =
 	Iecholn i;;
 
 // ping echo debug
@@ -50,7 +50,7 @@ var gProcessingState = 0;; 	// processing a program
 var gProcessingWaitState = 0;;  // executing a "wait" command in a program. when checking this var, check gProcessingState first, as it is not always reseted to 0
 var gBusyState = 0;;		// busy (incoming message queue full)
 var gItApp = nil;;			// the name of the interactive application
-var gEarInited = 0;;		// si les oreilles ont été initialisées.
+var gEarInited = 0;;		// si les oreilles ont ï¿½tï¿½ initialisï¿½es.
 var gRegistrationError = 0;;// registration error during login
 var bottomColor = 0x010001;;	// Color of bottom led (Violet by default)
 var language = "fr";;
@@ -102,7 +102,7 @@ proto dnslistfromdhcp 1;;
 
 
 /**
-	Les différents états de la boucle principale.
+	Les diffï¿½rents ï¿½tats de la boucle principale.
 */
 type Run= configstartRun | configwaitRun _ | interactiveReqWaitRun _ |
 	rscLoadNextRun | rscLoadWaitRun _ | chorCmdRun _ |streamCmdRun _ | waitCmdRun _ | cmdEvalOne _ | idleRun | sleepRun |
@@ -160,7 +160,7 @@ fun GenXmppPassword =
 	let strsub (md5 strcatlist (itoa rand)::(fullwebmac netMac)::(itoa time_ms)::nil) 1 XMPP_PASSWORD_LENGTH -> NewPassword in
 		NewPassword
 ;;
-	
+
 // Set a new random password in the configuration of the nabaztag
 fun SetXmppPassword NewPassword=
 	let strcatlist "d"::NewPassword::nil -> PasswordAndDone in
@@ -231,19 +231,19 @@ const XmppBoshReOpenStream4 = "' xml:lang='en' xmpp:restart='true' xmlns='http:/
 
 // Variables diverses
 var SendTry = 0;;	// Permet de compter le nombre de tentative d'envoie d'une requete defectueuse
-	
+
 
 
 // ---------------------------------------------------------
 // XMPP SESSION
 // ---------------------------------------------------------
 
-const XmppSessionReadTimeout = 60;; // temps maximum toléré au bout duquel on n'entend plus parler du serveur.
+const XmppSessionReadTimeout = 60;; // temps maximum tolï¿½rï¿½ au bout duquel on n'entend plus parler du serveur.
 
 proto XmppSessionStart 2;;	// Open a session (call one time)
 proto XmppSessionStop 1;;
 proto XmppSessionIdle 0;;	// Always called
-proto XmppSessionRun 0;;	// Always called 
+proto XmppSessionRun 0;;	// Always called
 proto XmppSessionSend 2;;
 proto XmppSessionResponseSend 2;;
 proto XmppSessionResponseSendErrorFeatureNotImplemented 3;; // to answear some unhandled requests
@@ -261,27 +261,27 @@ proto XmppSessionUpdate 1;;			// When the status is changed
 
 type tXmppSessionStreamState = ssRegister1 | ssRegister2 | ssBind | ssUnBind | ssStartSession | ssGetSource | ssFree | ssLogging | ssPresence ;;
 // ss >> Stream State
-// Register1 > Première phase de l'enregistrement
+// Register1 > Premiï¿½re phase de l'enregistrement
 // Register2 > Seconde phase de l'enregistrement
 // Bind > Acquisition de la Ressource
 // UnBind > Rendre la Ressource
 // Session > Creation d'une session
-// Source > Recupération des sources
+// Source > Recupï¿½ration des sources
 // Free > Libre pour des actions
 // ssLogging > On est en train de se connecter
 // ssPresence > Juste apres un session idle sinon bloquant en tcp si on a nextressource != nil
 type tXmppSessionStanzaTypes = stanzaIQGet | stanzaIQSet | stanzaIQResult _ | stanzaMessage | stanzaPresence | stanzaIQError _;;
 type tXmmpSessionClient = [clINT clASR clPPT clRFID clITMODE clSOURCES];;
 // Etats de la session:
-// sOpening: état initial.
+// sOpening: ï¿½tat initial.
 // sLogging: on essaye de se connecter (on a bien un compte ou on pense qu'on a bien un compte)
-// sLoggedin: on a passé l'identification (succès sur le mot de passe)
-// sOpened: connecté (i.e., on a passé la phase identification & l'ouverture de session)
-// sClosed: la sessions est fermée (on ne passe jamais dans cet état)
-// sRegistrationError: état final, le lapin est en rouge (jusqu'au reboot)
+// sLoggedin: on a passï¿½ l'identification (succï¿½s sur le mot de passe)
+// sOpened: connectï¿½ (i.e., on a passï¿½ la phase identification & l'ouverture de session)
+// sClosed: la sessions est fermï¿½e (on ne passe jamais dans cet ï¿½tat)
+// sRegistrationError: ï¿½tat final, le lapin est en rouge (jusqu'au reboot)
 type tXmppSession_Status = sOpening | sLogging  | sLoggedin | sOpened | sClosed | sRegistrationError;;
 type tXmppSession = [/*GATE*/ sGate sStatus /*SASL*/ sNonce sCnonce sRealm sUsername sPassword sQop sAlgo sCharset sDomain /* Stream State */ sJID sPreviousResource sNextResource sNextResourceBinding sResource sState sInQueue sOutQueue sStanzaID /* Divers */ sClients sDisplayLeds sLastIOTime sLastReadTime sLastStreamState sNextRestart sPacketQueue sDataToSend sLastPingTime sLastPingIqId];;
-// NextResourceBinding sert que si on est en train de faire un bind et qu'on souhaite rechanger vers un autre après
+// NextResourceBinding sert que si on est en train de faire un bind et qu'on souhaite rechanger vers un autre aprï¿½s
 
 // ---------------------------------------------------------
 // XMPP GATE > CONNECT, SEND, IDLE in TCP or BOSH
@@ -291,7 +291,7 @@ proto XmppGateSend 2;;		// Try to send something to the server
 proto XmppGateRead 2;;		// Receive something from the server
 proto XmppGateIdle 1;;		// Observe Xmpp stream
 proto XmppGateOpenStream 1;;// Send the data to open stream with server
-proto XmppGateStreamOpened 1;;	// le stream a bien été ouvert
+proto XmppGateStreamOpened 1;;	// le stream a bien ï¿½tï¿½ ouvert
 proto XmppGateStreamClosed 2;; // if the stream has been closed
 
 type tXmppGate_Mode = pTcp | pBosh;;		// 2 Mode : BOSH (port 80) or Normal Tcp (port XmppServerPort)
@@ -345,7 +345,7 @@ proto xmppStateToStr 1 ;;
 
 
 
-// AFAIRE 
+// AFAIRE
 
 proto xmpps_createStanza 5;;
 
@@ -368,7 +368,7 @@ proto xmpps_createStanza 5;;
 // XMPP TCP
 // ---------------------------------------------------------
 
-/* 
+/*
  * Ouvre un port TCP pour une session particuliere
  */
 fun XmppTcpOpen ip port xSession =
@@ -398,7 +398,7 @@ fun XmppTcpOpen ip port xSession =
 
 
 /*
- * Rouvre un port TCP pour une session 
+ * Rouvre un port TCP pour une session
  */
 fun XmppTcpReOpen ip port xSession =
 	//Xw strcatlist "BACK FROM DNS SRV! "::ip::":"::(itoa port)::nil;
@@ -423,15 +423,15 @@ fun XmppTcpReOpen ip port xSession =
 
 
 /*
-	Effectue l'envoi effectif les données mises en attente sur la
+	Effectue l'envoi effectif les donnï¿½es mises en attente sur la
   connection tcp.
-	Regarde s'il y a des données en attente d'être envoyées, et
+	Regarde s'il y a des donnï¿½es en attente d'ï¿½tre envoyï¿½es, et
   si c'est le cas, essaie d'en envoyer le plus possible. La socket
-	est peut etre déja occupée, dans ce cas on pourra envoyer 0 donnée
+	est peut etre dï¿½ja occupï¿½e, dans ce cas on pourra envoyer 0 donnï¿½e
 	mais ce n'est pas (encore) une erreur.
 
-	retourne le nombde d'octets envoyés ce coup si, ou nil s'il y a un
-	vrai problème sur la socket.
+	retourne le nombde d'octets envoyï¿½s ce coup si, ou nil s'il y a un
+	vrai problï¿½me sur la socket.
 */
 fun XmppTcpActuallySendData xSession =
 	let xSession.sDataToSend -> [ data index nbTries ] in
@@ -443,15 +443,15 @@ fun XmppTcpActuallySendData xSession =
 			let writetcp socket data index -> newIndex in
 				if (nil != newIndex) then
 					(
-						set xSession.sLastIOTime = time;	// Mise à jour
-						set xSession.sLastReadTime = time;	// Succès de l'écriture.
+						set xSession.sLastIOTime = time;	// Mise ï¿½ jour
+						set xSession.sLastReadTime = time;	// Succï¿½s de l'ï¿½criture.
 
 						if (newIndex != index) then
 							(
 								set xSession.sDataToSend =
 										[
 											(if (newIndex < strlen data) then data else nil)
-											(if (newIndex < strlen data) then newIndex else 0)	
+											(if (newIndex < strlen data) then newIndex else 0)
 											0
 										];
 								(newIndex - index)
@@ -474,17 +474,17 @@ fun XmppTcpActuallySendData xSession =
 ;;
 
 
-/* 
-	Envoie un élément sur la connexion TCP de la session Xmpp.
-	Retourne le nombre de bytes écrit : nil problem, autre "OK"
-	Met à jour le xSession.sLastIOTime
+/*
+	Envoie un ï¿½lï¿½ment sur la connexion TCP de la session Xmpp.
+	Retourne le nombre de bytes ï¿½crit : nil problem, autre "OK"
+	Met ï¿½ jour le xSession.sLastIOTime
 
 	Les donnees ne sont pas forcement envoyees tout de suite, elles
 	peuvent etre mises en attente si la file d'envoi tcp n'est pas vide.
 	Si la file n'est pas vide, alors c'est qu'un envoi est en cours
-	(l'envoi des données actuellement dans la file), et pas terminé.
+	(l'envoi des donnï¿½es actuellement dans la file), et pas terminï¿½.
 	XmppTcpRead va donc recevoir des avertissements TCP_WRITE lorsque
-	la socket sera de nouveau disponible pour écrire la suite.
+	la socket sera de nouveau disponible pour ï¿½crire la suite.
  */
 fun XmppTcpSend xSession Data =
 	let xSession.sDataToSend -> [ oldData oldIndex nbTries ] in
@@ -506,32 +506,32 @@ fun XmppTcpSend xSession Data =
 		set xSession.sDataToSend = [ Data 0 0 ];
 		XmppTcpActuallySendData xSession
 		// on ne checke pas le retour. Dans tous les cas :
-		//  - soit la donnée est bien partie, pas de pb
-		//  - soit il y a de l'attente, elle sera envoyée au prochain passage dans XmppTcpRead
-		//  - soit il y a un pb définitif, de toutes manières on l'aura encore au prochain passage dans XmppTcpRead
+		//  - soit la donnï¿½e est bien partie, pas de pb
+		//  - soit il y a de l'attente, elle sera envoyï¿½e au prochain passage dans XmppTcpRead
+		//  - soit il y a un pb dï¿½finitif, de toutes maniï¿½res on l'aura encore au prochain passage dans XmppTcpRead
 	)
 ;;
 
 
 /*
  * Lecture par TCP
- * Met à jour le xSession.sLastIOTime et sLastReadTime
- * Si il y a des Stanzas à lire > 	XmppGateRead
+ * Met ï¿½ jour le xSession.sLastIOTime et sLastReadTime
+ * Si il y a des Stanzas ï¿½ lire > 	XmppGateRead
  * Si on ouvre la session > 		XmppGateStreamOpened
- * Si le flux est fermé > 			XmppGateStreamClosed
+ * Si le flux est fermï¿½ > 			XmppGateStreamClosed
  */
 fun XmppTcpRead t val msg xSession =
 	Secholn "XmppTcpRead";
 	if xSession.sGate.pTcpV != nil then if xSession.sGate.pTcpV.xSocket == t then // La requete n'est plus valable
 	(
-		if val == TCPWRITE then (					// succès de l'ouverture du socket
+		if val == TCPWRITE then (					// succï¿½s de l'ouverture du socket
 			Secholn "TCPWRITE";
 			match xSession.sGate.pStatus with
 			  ( pInStream -> Secholn "pInStream"; nil )
 			| (_ -> // Si on est pas deja dans le flux...
 				// Dans se cas on vient d'ouvrir le tcp!
 				set xSession.sGate.pStatus = pOpen;		// on change alors les status
-				set xSession.sLastIOTime = time;			// et sinon met à jour pour une action plus rapide
+				set xSession.sLastIOTime = time;			// et sinon met ï¿½ jour pour une action plus rapide
 				set xSession.sGate.pTry = 3;
 				nil
 			);
@@ -539,29 +539,29 @@ fun XmppTcpRead t val msg xSession =
 			if (nil == XmppTcpActuallySendData xSession) then
 				XmppSessionIsDisconnected xSession;
 			0
-		)else if val == TCPREAD then (		// Le serveur déclenche une action
+		)else if val == TCPREAD then (		// Le serveur dï¿½clenche une action
 
-			set xSession.sLastIOTime = time;	// Mise à jour
+			set xSession.sLastIOTime = time;	// Mise ï¿½ jour
 			set xSession.sLastReadTime = time;
-			
-			
+
+
 			/* DEUX MODE : - ON EST EN TRAIN D'Ouvrir >> on attend le <stream:stream
 			               - ON EST DANS <stream:stream> */
 			match xSession.sGate.pStatus with
 			(pInStream -> // Now we are in the stream so normal parsing
-				set xSession.sGate.pBuffer = strcatlist xSession.sGate.pBuffer::msg::nil;	// Mise à jour du buffer d'entrée
-				
+				set xSession.sGate.pBuffer = strcatlist xSession.sGate.pBuffer::msg::nil;	// Mise ï¿½ jour du buffer d'entrï¿½e
+
 				let strstr xSession.sGate.pBuffer "</stream:stream>" 0 -> stream_end in		// Si on a une fermeture du stream
 					if stream_end != nil then
 						XmppGateStreamClosed xSession pTcp;
 
 			0) | ( _ -> // Si on est dans un autre mode
-				
+
 				set xSession.sGate.pBuffer = strcatlist xSession.sGate.pBuffer::msg::nil;
-				
-				let strstr msg "<stream:stream" 0 -> stream_pos in	// on détecte la balise stream
+
+				let strstr msg "<stream:stream" 0 -> stream_pos in	// on dï¿½tecte la balise stream
 				if (stream_pos != nil) then (
-					let strstr msg ">" stream_pos -> stream_close_pos in		// on détecte la fermeture de cette balise
+					let strstr msg ">" stream_pos -> stream_close_pos in		// on dï¿½tecte la fermeture de cette balise
 					let (strstr msg "id='" stream_pos)+4 -> stream_id_pos in	// on cherche l'attribut id
 					let strstr msg "'" stream_id_pos -> stream_idend_pos in		// on cherche l'attribut id
 					if (stream_close_pos != nil) then (							// si on a bien la fermeture de la balise
@@ -569,7 +569,7 @@ fun XmppTcpRead t val msg xSession =
 							set xSession.sGate.pSId = strsub msg stream_id_pos (stream_idend_pos-stream_id_pos);
 						set xSession.sGate.pBuffer = strsub msg (stream_close_pos + 1) nil;
 						XmppGateStreamOpened xSession	// le flux est ouvert
-					)						
+					)
 				);
 			0);
 
@@ -579,7 +579,7 @@ fun XmppTcpRead t val msg xSession =
 					(
 						set xSession.sGate.pBuffer = xmlStanza.EndStrS;			// On met le reste qui n'a pas ete traite dans le buffer
 						if xmlStanza.inXml != nil then (
-							XmppGateRead xSession xmlStanza.inXml;					// On déclenche l'action
+							XmppGateRead xSession xmlStanza.inXml;					// On dï¿½clenche l'action
 							1
 						) else 0
 					)
@@ -587,7 +587,7 @@ fun XmppTcpRead t val msg xSession =
 			) do nil;
 
 			0
-		)else if val == TCPCLOSE then ( 	// Le Socket est fermé, on est déconnecté
+		)else if val == TCPCLOSE then ( 	// Le Socket est fermï¿½, on est dï¿½connectï¿½
 			XmppGateStreamClosed xSession pTcp;
 			0
 		)else if val == TCPSTART then 0		// JAMAIS UTILISE
@@ -640,11 +640,11 @@ fun XmppTcpOpenStream xSession =
 fun XmppBoshSend xSession xData =
 	if xSession.sGate.pBoshV.yServerIp != nil then
 	(
-		set xSession.sLastIOTime = time;					// Mise à jour
-		let xSession.sGate.pBoshV.yServerIp -> ip in	// récupère l'ip
-		let xSession.sGate.pBoshV.yMsgId -> id in		// récupère l'id du message
+		set xSession.sLastIOTime = time;					// Mise ï¿½ jour
+		let xSession.sGate.pBoshV.yServerIp -> ip in	// rï¿½cupï¿½re l'ip
+		let xSession.sGate.pBoshV.yMsgId -> id in		// rï¿½cupï¿½re l'id du message
 		let httprequest "POST" (boshurl ip) (strcatlist XmppBoshEncapsulation1::(itoa id)::XmppBoshEncapsulation2::xSession.sGate.pSId::XmppBoshEncapsulation3::xData::XmppBoshEncapsulation4::nil) fixarg3 #XmppBoshRead xSession HTTP_NORMAL -> lasthttp in
-			set xSession.sGate.pBoshV.yHttpList = [lasthttp time xData id]::xSession.sGate.pBoshV.yHttpList; // On ajoute la requete à la liste de requete
+			set xSession.sGate.pBoshV.yHttpList = [lasthttp time xData id]::xSession.sGate.pBoshV.yHttpList; // On ajoute la requete ï¿½ la liste de requete
 		set xSession.sGate.pBoshV.yMsgId = xSession.sGate.pBoshV.yMsgId + 1			// On incremente l'id du message
 	);
 0;;
@@ -665,7 +665,7 @@ fun XmppBoshRead httpreq res xSession =
 	let "" -> DataSent in
 	let nil -> UpdatedList in
 	(
-		while hdhttp != nil do (							// Mise à jour de la liste de requete
+		while hdhttp != nil do (							// Mise ï¿½ jour de la liste de requete
 			let hdhttp -> [Req Time xData Id] in
 			(
 				if Req != httpreq then (
@@ -678,11 +678,11 @@ fun XmppBoshRead httpreq res xSession =
 			set hdhttp = hd tlhttp;
 			set tlhttp = tl tlhttp
 		);
-		
+
 		set xSession.sGate.pBoshV.yHttpList = UpdatedList;
-		
+
 		set xSession.sLastReadTime = time;
-		if Process == 1 then (	// Si on a bien reçu les données
+		if Process == 1 then (	// Si on a bien reï¿½u les donnï¿½es
 
 			if (strlen httpgetcontent res) <= 0 then (
 				// Ici on a un resultat vide... pas normal!
@@ -695,34 +695,34 @@ fun XmppBoshRead httpreq res xSession =
 						Xw "Nothing sent... nothing in return?"
 					else (
 						Xw strcatlist "This request ("::DataSent::") return a empty string, send again..."::nil;
-					
+
 						set SendTry = SendTry + 1;
 						if SendTry > 15 then
-							XmppSessionIsDisconnected xSession	// On a un probleme, on a tenté trop souvent
+							XmppSessionIsDisconnected xSession	// On a un probleme, on a tentï¿½ trop souvent
 						else
 							XmppGateSend xSession DataSent;
 						Xw "_sent"
 					)
 				) else
 					Xw "Nothing sent before...";
-				
+
 			0)else (
-				
-				set SendTry = 0;	// On a pas de probleme, on met à jour le sendTry
-				
-				set xSession.sLastIOTime = time;	// Mise à jour
-				
+
+				set SendTry = 0;	// On a pas de probleme, on met ï¿½ jour le sendTry
+
+				set xSession.sLastIOTime = time;	// Mise ï¿½ jour
+
 				let strstr httpgetcontent res "</stream:stream>" 0 -> stream_end in		// Si on a une fermeture du stream
 					if stream_end != nil then
 						XmppGateStreamClosed xSession pBosh;
-	
+
 				let ParseXMLPacket httpgetcontent res -> xmlStanza in // On a le paquet dans le <body
 					if (xmlStanza.inXml == nil) then (
 						nil;
 					0) else (
 						match xmlStanza.inXml with	// On recupere le contenu de la balise body
 						(ContentElement Balise ->
-							
+
 							if !strcmp Balise.nameS "body" then // Si on est bien dans une balise body
 							(
 								let hd Balise.attribute -> tete in				// premier attribut
@@ -745,9 +745,9 @@ fun XmppBoshRead httpreq res xSession =
 										set tete = hd queu;
 										set queu = tl queu )
 								);
-								
+
 								let 0 -> i in
-								let hd Balise.content -> tete in			// On parcourt tous les éléments
+								let hd Balise.content -> tete in			// On parcourt tous les ï¿½lï¿½ments
 								let tl Balise.content -> queu in
 								(
 									while tete != nil do (
@@ -765,7 +765,7 @@ fun XmppBoshRead httpreq res xSession =
 								Xw "Not in a balise body";
 								XmppSessionIsDisconnected xSession	// Se n'est pas une balise body, on redemarre
 							)
-						
+
 						)|(ContentText Texte -> 0) | ( _ -> 0 );
 					0)
 			)
@@ -784,7 +784,7 @@ fun XmppBoshRead httpreq res xSession =
 				//XmppSessionIsDisconnected xSession;
 			);
 			0
-		)	// On a un problème, on a tenté trop souvent) // On a des données d'une socket qui ne nous appartient pas (ou le socket a été supprimé)
+		)	// On a un problï¿½me, on a tentï¿½ trop souvent) // On a des donnï¿½es d'une socket qui ne nous appartient pas (ou le socket a ï¿½tï¿½ supprimï¿½)
 	);
 	if (xSession.sGate.pBoshV.yHttpList == nil) then (
 		set xSession.sNextRestart = -1
@@ -798,11 +798,11 @@ fun XmppBoshOpenStream xSession =
 		//Xw "Open Xmpp Stream (BOSH)";
 		set xSession.sGate.pActualMode = 2; //BOSH
 		set xSession.sGate.pStatus = pOpening;
-		set xSession.sLastIOTime = time;		// Mise à jour
+		set xSession.sLastIOTime = time;		// Mise ï¿½ jour
 		let xSession.sGate.pBoshV.yServerIp -> ip in
 		let xSession.sGate.pBoshV.yMsgId -> id in
 		let httprequest "POST" (boshurl ip) (strcatlist XmppBoshOpenStream1::(itoa id)::XmppBoshOpenStream2::(xSession.sDomain)::XmppBoshOpenStream3::(boshurl ip)::XmppBoshOpenStream4::nil) fixarg3 #XmppBoshRead xSession HTTP_NORMAL -> lasthttp in
-			set xSession.sGate.pBoshV.yHttpList = [lasthttp time nil id]::xSession.sGate.pBoshV.yHttpList; // On ajoute la requete à la liste de requete
+			set xSession.sGate.pBoshV.yHttpList = [lasthttp time nil id]::xSession.sGate.pBoshV.yHttpList; // On ajoute la requete ï¿½ la liste de requete
 		set xSession.sGate.pBoshV.yMsgId = xSession.sGate.pBoshV.yMsgId + 1
 	);
 0;;
@@ -813,18 +813,18 @@ fun XmppBoshReOpenStream xSession =
 	(
 		//Xw "ReOpen Xmpp Stream (BOSH)";
 		set xSession.sGate.pActualMode = 2; //BOSH
-		set xSession.sLastIOTime = time;		// Mise à jour
+		set xSession.sLastIOTime = time;		// Mise ï¿½ jour
 		set xSession.sGate.pStatus = pOpening;
 		let xSession.sGate.pBoshV.yServerIp -> ip in
 		let xSession.sGate.pBoshV.yMsgId -> id in
 		let httprequest "POST" (boshurl ip) (strcatlist XmppBoshReOpenStream1::(itoa id)::XmppBoshReOpenStream2::(xSession.sGate.pSId)::XmppBoshReOpenStream3::xSession.sDomain::XmppBoshReOpenStream4::nil) fixarg3 #XmppBoshRead xSession HTTP_NORMAL -> lasthttp in
-			set xSession.sGate.pBoshV.yHttpList = [lasthttp time nil id]::xSession.sGate.pBoshV.yHttpList; // On ajoute la requete à la liste de requete
+			set xSession.sGate.pBoshV.yHttpList = [lasthttp time nil id]::xSession.sGate.pBoshV.yHttpList; // On ajoute la requete ï¿½ la liste de requete
 		set xSession.sGate.pBoshV.yMsgId = xSession.sGate.pBoshV.yMsgId + 1
 	);
 0;;
 
 
-fun XmppBoshSetUp ip xSession = 
+fun XmppBoshSetUp ip xSession =
 	if ip != nil then (
 		set xSession.sLastIOTime = time - TcpServerNoResponseTimeOut;
 		set xSession.sGate.pBoshV.yServerIp = ip;
@@ -840,7 +840,7 @@ fun XmppBoshIdle xSession =
 	let tl xSession.sGate.pBoshV.yHttpList -> tlhttp in
 	let nil -> UpdatedList in
 	(
-		while hdhttp != nil do (							// Mise à jour de la liste de requete
+		while hdhttp != nil do (							// Mise ï¿½ jour de la liste de requete
 			let hdhttp -> [Req Time xData Id] in
 			(
 				if time - Time > XmppBoshHttpTimeOut then // Requete trop longue, on a supprime
@@ -908,7 +908,7 @@ fun XmppGateInfo xSession =
 			set tlM = tl tlM
 		)
 	);
-	
+
 	// DEBUG AFFICHAGE DE LA QUEUE
 	Xw "OUTQUEUE : ";
 	let hd xSession.sOutQueue -> hdM in
@@ -938,7 +938,7 @@ fun XmppGateInfo xSession =
 ;;
 
 
-//## fonction appellée quand on a été déconnecté du serveur xmpp et qu'on veut se reconnecter.
+//## fonction appellï¿½e quand on a ï¿½tï¿½ dï¿½connectï¿½ du serveur xmpp et qu'on veut se reconnecter.
 fun XmppGateReconnect xSession displayLeds =
 	Xw "XmppGateReconnect";
 	// On reinitialise la session.
@@ -949,28 +949,28 @@ fun XmppGateReconnect xSession displayLeds =
 	set xSession.sLastIOTime = time;
 	set xSession.sNextRestart = -1;
 	set xSession.sAlgo = nil;
-	if xSession.sGate.pActualMode == nil then 	
+	if xSession.sGate.pActualMode == nil then
 	(
 		if xSession.sGate.pTcpV != nil then (
 			set xSession.sGate.pBoshV = nil;
 			set xSession.sGate.pMode = pTcp;
-			set xSession.sGate.pTry = 3; 
-			set xSession.sGate.pActualMode = 1 // Mode TCP  
+			set xSession.sGate.pTry = 3;
+			set xSession.sGate.pActualMode = 1 // Mode TCP
 		)else (
 			set xSession.sGate.pTcpV = nil;
 			set xSession.sGate.pMode = pBosh;
-			set xSession.sGate.pTry = 1; 
-			set xSession.sGate.pActualMode = 2 // Mode BOSH 
+			set xSession.sGate.pTry = 1;
+			set xSession.sGate.pActualMode = 2 // Mode BOSH
 		)
-	); 
+	);
 	//Xw strcatlist "TRY TOO LONG... TRY("::(itoa xSession.sGate.pTry)::") ON NEXT SERVER"::nil;
-	set xSession.sGate.pTry = xSession.sGate.pTry - 1;		// on met à jour le nombre d'essais
-	set xSession.sLastIOTime = time;					// on met à jour la derniere action
+	set xSession.sGate.pTry = xSession.sGate.pTry - 1;		// on met ï¿½ jour le nombre d'essais
+	set xSession.sLastIOTime = time;					// on met ï¿½ jour la derniere action
 	if xSession.sGate.pTry >= 0 then					// on continue de tester sur en tcp sur le 5222
 	(
-		if xSession.sGate.pActualMode == 1 then (	
+		if xSession.sGate.pActualMode == 1 then (
 			set xSession.sGate.pStatus = pOpening;
-			DnsSrvCb nil fixarg3 #XmppTcpReOpen xSession	// on appel le callback DNS qui contient les autres serveurs à tester
+			DnsSrvCb nil fixarg3 #XmppTcpReOpen xSession	// on appel le callback DNS qui contient les autres serveurs ï¿½ tester
 		)
 		else (
 			set xSession.sGate.pStatus = pOpening;
@@ -978,7 +978,7 @@ fun XmppGateReconnect xSession displayLeds =
 		);
 		0
 	)else(	// on passe en BOSH ou en TCP suivant le mode duquel en vient!
-		if xSession.sGate.pActualMode == 1 then (	
+		if xSession.sGate.pActualMode == 1 then (
 			//Xw "Now we try in BOSH";
 			set xSession.sGate.pActualMode = 2;
 			set xSession.sGate.pTry = 1;
@@ -986,23 +986,23 @@ fun XmppGateReconnect xSession displayLeds =
 			set xSession.sGate.pMode = pBosh;	// On passe en Bosh
 			set xSession.sGate.pStatus = pOpen;
 			let [yParent:xSession yHttpList:nil yMsgId:((time_ms*time)%1000) yServerIp:nil] -> newBosh in
-	 			set xSession.sGate.pBoshV = newBosh;	// On déclare la nouvelle structure bosh
+	 			set xSession.sGate.pBoshV = newBosh;	// On dï¿½clare la nouvelle structure bosh
 		dnsreq xSession.sDomain fixarg2 #XmppBoshSetUp xSession;		// On cherche l'ip du port 80
-			set xSession.sLastIOTime = time;          // Mise à jour
+			set xSession.sLastIOTime = time;          // Mise ï¿½ jour
 			0
 		)else(
 			//Xw "Now we try in TCP";
-			set xSession.sGate.pActualMode = 1;	
-			set xSession.sGate.pTry = 3; // on remet le nombre d'essais à faire en TCP à 3	
+			set xSession.sGate.pActualMode = 1;
+			set xSession.sGate.pTry = 3; // on remet le nombre d'essais ï¿½ faire en TCP ï¿½ 3
 			set xSession.sGate.pMode = pTcp;
 			set xSession.sGate.pBoshV = nil;
 			set xSession.sGate.pStatus = pOpening;
-			DnsSrvCb nil fixarg3 #XmppTcpReOpen xSession;	// on appel le callback DNS qui contient les autres serveurs à tester
-			0	
+			DnsSrvCb nil fixarg3 #XmppTcpReOpen xSession;	// on appel le callback DNS qui contient les autres serveurs ï¿½ tester
+			0
 		);
 		0
 	);
-	0	
+	0
 ;;
 
 // Is executed while we don't reach the stream
@@ -1011,7 +1011,7 @@ fun XmppGateConnect xSession =
 	if xSession.sGate == nil then // New Session, Create the Gate
 	(
 		Xw strcatlist "gate nil. DNS SRV REQUEST ON : "::xSession.sDomain::nil;
-		let [pParent:xSession pMode:pTcp pStatus:pOpening pTry:3 pTcpV:nil pBoshV:nil pActualMode:nil] -> newGate in		// On crée la structure XmppGate
+		let [pParent:xSession pMode:pTcp pStatus:pOpening pTry:3 pTcpV:nil pBoshV:nil pActualMode:nil] -> newGate in		// On crï¿½e la structure XmppGate
 		(
 			set xSession.sGate = newGate;										// on la sauvegarde
 			let strstr xSession.sDomain ":" 0 -> indexOfColon in
@@ -1030,26 +1030,26 @@ fun XmppGateConnect xSession =
 						else
 						(
 							// Mauvais port, on lance la requete SRV
-							DnsSrv strcatlist "_xmpp-client._tcp."::xSession.sDomain::nil fixarg3 #XmppTcpOpen xSession		// et on lance la première requête
+							DnsSrv strcatlist "_xmpp-client._tcp."::xSession.sDomain::nil fixarg3 #XmppTcpOpen xSession		// et on lance la premiï¿½re requï¿½te
 						)
 					)
 				)
 				else
 				(
-					DnsSrv strcatlist "_xmpp-client._tcp."::xSession.sDomain::nil fixarg3 #XmppTcpOpen xSession		// et on lance la première requête
+					DnsSrv strcatlist "_xmpp-client._tcp."::xSession.sDomain::nil fixarg3 #XmppTcpOpen xSession		// et on lance la premiï¿½re requï¿½te
 				);
 				0
 			);
 			0
 		);
-		set xSession.sLastIOTime = time;											// on met à jour la derniere action
+		set xSession.sLastIOTime = time;											// on met ï¿½ jour la derniere action
 		0
 	)else
 	(
 		match xSession.sGate.pStatus with
 		(pOpening -> // On essai d'atteindre le serveur
 			Xw "pOpening";
-			if (time - xSession.sLastIOTime) > TcpServerNoResponseTimeOut then	// Si on dépasse le temps d'attente
+			if (time - xSession.sLastIOTime) > TcpServerNoResponseTimeOut then	// Si on dï¿½passe le temps d'attente
 			(
 				Xw "timeout";
 				// On se reconnecte
@@ -1058,9 +1058,9 @@ fun XmppGateConnect xSession =
 				XmppGateReconnect xSession xSession.sDisplayLeds
 			);
 		0)|(pOpen -> // On envoie le stream
-			if (time - xSession.sLastIOTime) > TcpServerNoResponseTimeOut then	// Si on a bien envoyé le stream, on ne fait rien
+			if (time - xSession.sLastIOTime) > TcpServerNoResponseTimeOut then	// Si on a bien envoyï¿½ le stream, on ne fait rien
 			(
-				set xSession.sLastIOTime = time;		// Mise à jour
+				set xSession.sLastIOTime = time;		// Mise ï¿½ jour
 				XmppGateOpenStream xSession		// Ouverture de stream
 			);
 		0)|(pInStream -> // On est dans le stream
@@ -1085,7 +1085,7 @@ fun XmppGateReOpenStream xSession =
 	)
 	else (
 		XmppTcpOpenStream xSession
-	);	
+	);
 0;;
 
 // Is called when a the stream is opened
@@ -1102,7 +1102,7 @@ fun XmppGateStreamOpened xSession =
 0;;
 
 fun XmppGateStreamClosed xSession Mode =
-	// la connection a déconné. On pourrait essayer de gentiment relancer la connection, mais le plus efficace est de simplement rebooter le bunny.
+	// la connection a dï¿½connï¿½. On pourrait essayer de gentiment relancer la connection, mais le plus efficace est de simplement rebooter le bunny.
 	Xw "gate stream closed, rebooting";
 	reboot 0x0407FE58 0x13fb6754
 ;;
@@ -1115,7 +1115,7 @@ fun XmppGateSend xSession xData =
 	//		XmppGateStreamClosed xSession xSession.sGate.pMode;	// Stream Closed, problem!
 	match xSession.sGate.pMode with
 	(pTcp ->
-		if ( (XmppTcpSend xSession xData) == nil ) then 
+		if ( (XmppTcpSend xSession xData) == nil ) then
 			XmppGateStreamClosed xSession xSession.sGate.pMode;     // Stream Closed, problem!
 		nil
 	) | (pBosh ->
@@ -1184,7 +1184,7 @@ fun XmppGateHandlePingPackets xSession xData =
 						( Pingw "PING and YEAH"; set xSession.sLastPingTime = time; set xSession.sLastPingIqId = nil )
 					else
 					  // not sure it should be this type of error sent, but I can't find anywhere in the xmpp spec
-					  ( Pingw "PING and booooo...";  
+					  ( Pingw "PING and booooo...";
 						  XmppSessionResponseSendErrorFeatureNotImplemented xSession
                                                                 (Xml_GetElementAttribute xmlStanza "from")
 																																(Xml_GetElementAttribute xmlStanza "id")
@@ -1320,8 +1320,8 @@ fun Sasl_challengeStr2List str=
 fun SechoListWithSlash stringlist=
 	Secho "/";
 	for l=stringlist;l!=nil;tl l do ( Secho (hd l); Secho "/");;
-		
-// Creation d'une chaine aléatoire
+
+// Creation d'une chaine alï¿½atoire
 const gSasl_RandomStringChars = "0123456789528460";; // 16 chars
 fun Sasl_randomString nbChars=
 	let strnew (nbChars+1) -> res in (
@@ -1338,7 +1338,7 @@ fun Sasl_response_value xSession authstring=
 	let strcatlist A11::A12::nil -> A1 in
 	(
 		//Secho "HEX(A11)="; Secho md5tohex A11;
-		//Secho "HEX(A1)="; Secho md5tohex A1 ;						
+		//Secho "HEX(A1)="; Secho md5tohex A1 ;
 		let strcatlist authstring::":"::digest_uri::nil -> A2 in
 		let strcatlist (md5tohex (md5bytes A1))::":"
 						::xSession.sNonce::":"
@@ -1351,14 +1351,14 @@ fun Sasl_response_value xSession authstring=
 	);;
 
 // Protocole challenge_response DIGEST_MD5
-// challengeText est la chaine codée
+// challengeText est la chaine codï¿½e
 fun Sasl_processChallenge xSession challengeText=
 	let nil -> xmlpacket in (
 	if challengeText != nil then
 	let B64toS challengeText -> decoded in if decoded != nil then // realm="somerealm",nonce="OA6MG9tEQGm2hh",qop="auth",charset=utf-8,algorithm=md5-sess
 	let Sasl_challengeStr2List decoded -> decodedList in if decodedList != nil then (
 		// Step One of http://www.ietf.org/rfc/rfc2831.txt
-		
+
 		let 0 -> phase in
 		let 0 -> error in (
 			let decodedList -> ll in
@@ -1395,7 +1395,7 @@ fun Sasl_processChallenge xSession challengeText=
 						0
 					)
 				);
-				
+
 				// next doublon
 				set ll = tl tl ll
 			); // while
@@ -1404,14 +1404,14 @@ fun Sasl_processChallenge xSession challengeText=
 			if (phase == 1) then (
 				if (!strcmp xSession.sAlgo "md5-sess") then // check algorithm = md5-sess
 				if (!strcmp xSession.sQop "auth") then // check qop = auth
-				if (!strcmp xSession.sCharset "utf-8") then // check charset = utf-8 
+				if (!strcmp xSession.sCharset "utf-8") then // check charset = utf-8
 				(
 					Xw "rcv challenge:";
-					
+
 					// compute a new sCnonce
 					set xSession.sCnonce = Sasl_randomString 13;
 					//Secholn "cnonce='"; Secho gXmpps_cur.sCnonce; Secho "'";
-					
+
 					// compute the response_value
 					let Sasl_response_value xSession "AUTHENTICATE" -> response_value in
 					let strcatlist "xmpp/"::xSession.sDomain::nil -> digest_uri in
@@ -1423,9 +1423,9 @@ fun Sasl_processChallenge xSession challengeText=
 						"nc=00000001"::",":: // ?? only one answer
 						"qop="::xSession.sQop::","::
 						"digest-uri=\""::digest_uri::"\","::
-						"response="::response_value::",":: // 
+						"response="::response_value::",":: //
 						"charset="::xSession.sCharset::
-						nil			
+						nil
 						-> response in
 					(
 						Xw "snd response"; // ='"; Secho response; Secho "'";
@@ -1468,7 +1468,7 @@ fun Sasl_processChallenge xSession challengeText=
 fun xmpps_JIDNode jid=
 	let strstr jid "@" 0 -> arobPos in
 	if (arobPos != nil) then strsub jid 0 arobPos;;
-	
+
 fun xmpps_JIDResource jid=
 	let strstr jid "/" 0 -> slashPos in
 	if (slashPos != nil) then strsub jid slashPos+1 nil;;
@@ -1487,26 +1487,26 @@ fun xmpps_JIDPlatform jid=
 ;;
 
 /**
- * Retourne le JID de la plateforme, pour une resource donnée.
- */	
+ * Retourne le JID de la plateforme, pour une resource donnï¿½e.
+ */
 fun xmpps_PlatformJID xSession resource =
 	strcatlist resource ::"@"::XmppVioletObjectsComponent::"/"::resource::nil;;
 
 /**
  * Retourne le JID du serveur
- */	
+ */
 fun xmpps_ServerJID xSession =
 	xSession.sDomain;;
 
 /**
  * Retourne notre JID courant.
- */	
+ */
 fun xmpps_OurJID xSession =
 	xSession.sJID;;
 
 /**
  * Retourne un JID pour le bind.
- */	
+ */
 fun xmpps_BindJID xSession resource =
 	strcatlist xSession.sUsername::"@"::xSession.sDomain::"/"::resource::nil;;
 
@@ -1533,23 +1533,23 @@ fun xmpps_BindJID xSession resource =
 // -----------------------------------
 // requetes Stanza (IQ / MESSAGE / PRESENCE)
 
-/* 
- * Récupère l'id en cours
- * Incrémente l'ID courant
+/*
+ * Rï¿½cupï¿½re l'id en cours
+ * Incrï¿½mente l'ID courant
  */
 fun xmpps_getNextStanzaId xSession =
 	set xSession.sStanzaID = xSession.sStanzaID + 1;	// update stanza id
 	itoa xSession.sStanzaID
 ;;
 
-/* 
- * Création de la chaine à envoyer pour un IQ / Message / Presence
+/*
+ * Crï¿½ation de la chaine ï¿½ envoyer pour un IQ / Message / Presence
  *
  * xSession	session courante
  * From		from (jid complet) ou nil (pas d'attribut from)
  * To		jid complet ou nil (pas d'attribut to)
  * Type		type du stanza: stanzaIQGet, stanzaIQSet, stanzaMessage, stanzaPresence
- * Content	contenu de la stanza ou nil (pas de sous-élément)
+ * Content	contenu de la stanza ou nil (pas de sous-ï¿½lï¿½ment)
  */
 fun xmpps_createStanza xSession From To Type Content =
 	let (match Type with							// Si on a un iq (set, get), presence ou message
@@ -1573,7 +1573,7 @@ fun xmpps_createStanza xSession From To Type Content =
 ;;
 
 /**
- * Crée un paquet IQ pour faire un bind vers une nouvelle ressource.
+ * Crï¿½e un paquet IQ pour faire un bind vers une nouvelle ressource.
  * Retourne la chaine.
  */
 fun XmppCreateBindIQ xSession newRes =
@@ -1596,13 +1596,13 @@ fun XmppCreateXmlPacket xSession from to type content resource =
 			set xmlPacket = strcatlist "<iq "::
 					"from=\""::strFrom::"\" "::
 					"to=\""::(xmpps_ServerJID xSession)::"\" "::
-					"type='set' id='"::(xmpps_getNextStanzaId xSession)::"'><bind xmlns='urn:ietf:params:xml:ns:xmpp-bind'><resource>"::resource::"</resource></bind></iq>"::nil 
+					"type='set' id='"::(xmpps_getNextStanzaId xSession)::"'><bind xmlns='urn:ietf:params:xml:ns:xmpp-bind'><resource>"::resource::"</resource></bind></iq>"::nil
 		)
 		else set xmlPacket = nil
 	)
 	else (
-		if (from == nil ) && (to == nil) && (type == nil) && (content == nil) then set xmlPacket = " "	
-		else 
+		if (from == nil ) && (to == nil) && (type == nil) && (content == nil) then set xmlPacket = " "
+		else
 		let (match type with                                            // Si on a un iq (set, get), presence ou message
 		(stanzaIQGet -> ["iq" " type='get'"])
 		|(stanzaIQSet -> ["iq" " type='set'"])
@@ -1630,7 +1630,7 @@ fun XmppCreateXmlPacket xSession from to type content resource =
  * Permet d'envoyer ou de mettre en liste d'attente un iq
  */
 fun xmpps_sendStanza xSession NextState To Type Content =
-	// On recupere le dernier xSession de la liste si celui donné en parametre est nul
+	// On recupere le dernier xSession de la liste si celui donnï¿½ en parametre est nul
 	if xSession != nil then (
 		if (	// condition pour l'ajout en queue de l'iq
 			match xSession.sState with
@@ -1646,7 +1646,7 @@ fun xmpps_sendStanza xSession NextState To Type Content =
 					);
 				0 )else 1	// 1 pour ajout en queue
 			)|(_ -> 1 )
-			
+
 		) == 1 then ( // Si on doit faire un ajout en queue -- cas ou il y a le verrou, ou que la queue n'est pas vide
 			let [NextState To Type Content] -> tlQueue in
 				set xSession.sOutQueue = conc xSession.sOutQueue tlQueue::nil
@@ -1709,16 +1709,16 @@ fun XmppSessionStop XmppSession=
 
 // Send Something
 fun XmppSessionSend xSession data=
-	if (xSession.sPacketQueue == nil) then	
-		set xSession.sPacketQueue = [xSession.sState data]::nil 
+	if (xSession.sPacketQueue == nil) then
+		set xSession.sPacketQueue = [xSession.sState data]::nil
 	else
 		let [xSession.sState data] -> newPacket in
 			set xSession.sPacketQueue = newPacket::xSession.sPacketQueue;
 0;;
 
-// Envoie un message immédiatement
+// Envoie un message immï¿½diatement
 fun XmppSessionResponseSend xSession data=
-	if (data!=nil) then 
+	if (data!=nil) then
 		XmppGateSend xSession data;
 0;;
 
@@ -1746,7 +1746,7 @@ fun XmppSessionResponseSendErrorFeatureNotImplemented xSession to id =
 fun XmppSessionSendButtonMsg btn withEvent eventValue=
 	Xw strcatlist "XmppSessionSendButtonMsg btn="::(itoa btn)::nil;
 	if (withEvent) then (Xw strcatlist " eventValue="::(itoa eventValue)::nil);
-	
+
 	/*
 	let "" -> message in
 	let "" -> packet in
@@ -1761,14 +1761,14 @@ fun XmppSessionSendButtonMsg btn withEvent eventValue=
 		Xw message;
 		set packet = XmppCreateXmlPacket XmppGlobalSession from to stanzaMessage message nil;
 		Xw packet;
-		XmppGateSend XmppGlobalSession packet 
+		XmppGateSend XmppGlobalSession packet
 	);
 	Xw "End of XmppSessionSendButtonMsg";
 	*/
-	
+
 	xmpps_sendStanza
 		XmppGlobalSession
-		nil // Next State 
+		nil // Next State
 		xmpps_PlatformJID XmppGlobalSession XmppGlobalSession.sClients.clINT
 		stanzaMessage /* Type */
 		strcatlist "<button xmlns=\"violet:nabaztag:button\"><clic>"::(itoa btn)::"</clic>"::
@@ -1778,9 +1778,9 @@ fun XmppSessionSendButtonMsg btn withEvent eventValue=
 0;;
 
 // Send the message when a ears is moved
-fun XmppSessionSendEarMsg leftValue rightValue=	
+fun XmppSessionSendEarMsg leftValue rightValue=
 	Xw strcatlist "XmppSessionSendEarMsg l="::(itoa leftValue)::" r="::(itoa rightValue)::nil;
-	
+
 	/* SEND THE EAR POSITION NOW */
 	xmpps_sendStanza
 		XmppGlobalSession
@@ -1804,15 +1804,15 @@ fun XmppSessionRequestResource newRes =
 					set xSession.sPreviousResource = xSession.sResource;
 					set xSession.sNextResource = newRes;
 					set xSession.sState = ssBind;
-					XmppSessionSend xSession [xSession nil nil nil nil newRes]; 
+					XmppSessionSend xSession [xSession nil nil nil nil newRes];
 					0
 				)|(_ -> set xSession.sNextResource = newRes; 0)
 			) // Sinon il ne se passe rien (parce qu'on a deja la ressource)
 		) else (
 			match xSession.sState with
-			(ssBind -> // On est en train de faire un bind, mettre le prochain bind dans NextRessource serai écrasé lors du retour du success
+			(ssBind -> // On est en train de faire un bind, mettre le prochain bind dans NextRessource serai ï¿½crasï¿½ lors du retour du success
 				set xSession.sNextResourceBinding = newRes
-			)|(_ -> set xSession.sNextResource = newRes);	// Sinon, on peut mettre la ressource, elle sera traité au prochain ssFree
+			)|(_ -> set xSession.sNextResource = newRes);	// Sinon, on peut mettre la ressource, elle sera traitï¿½ au prochain ssFree
 			0
 		);
 0;;
@@ -1820,8 +1820,8 @@ fun XmppSessionRequestResource newRes =
 // Manage xmpp packet queue
 fun XmppSessionRunR xSession xPacketQueue =
 	if (xPacketQueue!=nil) then (
-		let XmppSessionRunR xSession tl xPacketQueue -> s in 
-		let hd xPacketQueue -> [xState xData] in 
+		let XmppSessionRunR xSession tl xPacketQueue -> s in
+		let hd xPacketQueue -> [xState xData] in
 		let xData -> [theSession theFrom theTo theType theContent theResource] in
 			if (xState==xSession.sState) then strcatlist s::(XmppCreateXmlPacket theSession theFrom theTo theType theContent theResource)::nil
 			else nil
@@ -1835,13 +1835,13 @@ fun sendPkts pktList state =
 		let hd pktList -> pkt in
 		let pkt -> [pktState pktData] in
 			if pktState==state then
-				let sendPkts tl pktList state -> [ newList data2send ] in 
+				let sendPkts tl pktList state -> [ newList data2send ] in
 				let pktData -> [theSession theFrom theTo theType theContent theResource] in
 					[ newList strcatlist (XmppCreateXmlPacket theSession theFrom theTo theType theContent theResource)::data2send::nil ]
 			else (
 				set XmppGlobalSession.sState = pktState; // On change de statu
 				[ pktList nil ]
-			) 
+			)
 ;;
 
 
@@ -1851,9 +1851,9 @@ fun XmppSessionRun=
 		(
 			set XmppGlobalSession.sPacketQueue = newList;
 			XmppGateSend XmppGlobalSession data2send
-		)	
+		)
 	)
-;;	
+;;
 
 
 
@@ -1867,15 +1867,15 @@ fun XmppSessionIdle=
 		if (Checking < 0 || Checking > 100) then // ON TEST TOUTES LES 100ms
 		(
 			set lastIdle = time_ms;
-			let XmppGlobalSession -> xSession in 
+			let XmppGlobalSession -> xSession in
 			let nil -> UpdateXmppSession in
 			(
-					match xSession.sStatus with 
+					match xSession.sStatus with
 					(sOpening -> // We are trying to open a connexion (jabber is not reached yet)
 					// on ne renvoie rien.
 						XmppGateConnect xSession;	// Try to connect (TCP or BOSH)
 						if (xSession.sDisplayLeds == 1) then
-							leds_set_state (if (xSession.sGate != nil) then (match xSession.sGate.pMode with (pTcp -> LEDS_STATE_XMPP_OPENING_XMPP_TCP) | (pBosh -> LEDS_STATE_XMPP_OPENING_XMPP_BOSH)) else LEDS_STATE_XMPP_OPENING_XMPP);				
+							leds_set_state (if (xSession.sGate != nil) then (match xSession.sGate.pMode with (pTcp -> LEDS_STATE_XMPP_OPENING_XMPP_TCP) | (pBosh -> LEDS_STATE_XMPP_OPENING_XMPP_BOSH)) else LEDS_STATE_XMPP_OPENING_XMPP);
 					0)|(sLogging ->
 						Xw "TRY TO LOGGIN";
 						if xSession.sNextRestart < time then
@@ -1888,7 +1888,7 @@ fun XmppSessionIdle=
 					0)|(sOpened -> /*Debug if (time%5 == 0) then (if tmpi == 1 then (XmppGateInfo xSession; set tmpi = 0)) else set tmpi = 1; */
 						XmppGateIdle xSession ;
 						if xSession.sLastReadTime + XmppSessionReadTimeout < time then (
-							// On n'a pas eu de nouvelle du serveur depuis XmppSessionReadTimeout 
+							// On n'a pas eu de nouvelle du serveur depuis XmppSessionReadTimeout
 							XmppSessionIsDisconnected xSession
 						) else (
 							if xSession.sNextRestart > 0 then (
@@ -1915,27 +1915,27 @@ fun XmppSessionSetStatus xSession xStatus =
 0;;
 
 
-// définie tout à la fin
+// dï¿½finie tout ï¿½ la fin
 proto stopEverythingAndResetToIdle 0;;
 
 // le nombre de secondes maximum qu'on peut attendre avant d'essayer de se reconnecter
-// au serveur xmpp si on a été déconnecté
+// au serveur xmpp si on a ï¿½tï¿½ dï¿½connectï¿½
 const XMPP_MAX_NB_SECS_BEFORE_TRYING_TO_RECONNECT = 30;;
 
 fun XmppSessionIsDisconnected xSession=
 
-	// on arrête tout ce qu'on est en train de faire, afin de ne pas
-  // avoir un problème avec l'état du lapin : on gère mal de ne pas
-	// être en idle à la reconnection...
+	// on arrï¿½te tout ce qu'on est en train de faire, afin de ne pas
+  // avoir un problï¿½me avec l'ï¿½tat du lapin : on gï¿½re mal de ne pas
+	// ï¿½tre en idle ï¿½ la reconnection...
 	stopEverythingAndResetToIdle;
 
 	match getRunState with
 	(xmppReconnectRun _ -> 0)
 	|(
 		_ ->
-			// on attend au moins 5 secondes, plus un temps aléatoire entre 0 et 30 secondes, avant de se
-			// reconnecter, ceci afin d'éviter, en cas de crash du serveur, que tous les lapins se reconnectent
-			// en même temps
+			// on attend au moins 5 secondes, plus un temps alï¿½atoire entre 0 et 30 secondes, avant de se
+			// reconnecter, ceci afin d'ï¿½viter, en cas de crash du serveur, que tous les lapins se reconnectent
+			// en mï¿½me temps
 			let random XMPP_MAX_NB_SECS_BEFORE_TRYING_TO_RECONNECT -> randomWaitTimeInSecs in
 				setRunState (xmppReconnectRun [(time_ms + 5000 + 1000 * randomWaitTimeInSecs) xSession getRunState]);
 	0);
@@ -1945,7 +1945,7 @@ fun XmppSessionIsDisconnected xSession=
 
 
 fun XmppSessionUpdate xSession =
-	
+
 	match xSession.sStatus with		// XmppSessionUpdate should be called when we want to change the status of the connexion
 	(sOpening ->	set xSession.sNextRestart = time + 12;	// Update for the next restart
 	0)|(sLogging ->	set xSession.sNextRestart = time + 12;	// Update for the next restart
@@ -1954,7 +1954,7 @@ fun XmppSessionUpdate xSession =
 			set gEarInited = 1;
 			earInit						// we init the ears
 		);
-		setRunState idleRun;		// On s'est connecté.
+		setRunState idleRun;		// On s'est connectï¿½.
 	0)|(sOpened -> set xSession.sNextRestart = -1;	// Update for the next restart
 	0)|(sClosed ->
 		/* TODO!! */
@@ -1969,7 +1969,7 @@ fun XmppSessionUpdate xSession =
 			//XmppSessionStop;
 			// just to be sure that all is clean
 			//set gRegistrationError = 1;
-			//Secho "Xmpp Session error : waiting 5mn and restart"; Secho "domain="; Secholn xdomain; 
+			//Secho "Xmpp Session error : waiting 5mn and restart"; Secho "domain="; Secholn xdomain;
 			//if (xdomain != nil) then
 			//	set run = waitAndRestartSessionRun [time+(5*60) xdomain]
 		//);
@@ -1999,7 +1999,7 @@ fun XmppSessionUpdate xSession =
 fun XmppSessionRead xSession PaquetXml =
 
 	set xSession.sInQueue = conc xSession.sInQueue PaquetXml::nil; // Ajout en queue du dernier element
-	
+
 	/*
 	// DEBUG AFFICHAGE DE LA QUEUE
 	Xw "INQUEUE : ";
@@ -2013,7 +2013,7 @@ fun XmppSessionRead xSession PaquetXml =
 			set tlM = tl tlM
 		)
 	);
-	
+
 	// DEBUG AFFICHAGE DE LA QUEUE
 	Xw "OUTQUEUE : ";
 	let hd xSession.sOutQueue -> hdM in
@@ -2031,7 +2031,7 @@ fun XmppSessionRead xSession PaquetXml =
 			set tlM = tl tlM
 		)
 	);*/
-	
+
 	// Traitement des retours du serveur
 	let 0 -> dowhile in
 	while match xSession.sState with (ssFree -> 1)|(_-> set dowhile = dowhile + 1; if dowhile == 1 then 1 else 0 ) && xSession.sInQueue != nil  do (
@@ -2050,20 +2050,20 @@ fun XmppSessionRead xSession PaquetXml =
 			)
 		)
 	);
-	
+
 	match xSession.sState with
-	(ssFree -> // On est prêt a executer les commandes souhaitées
-		
+	(ssFree -> // On est prï¿½t a executer les commandes souhaitï¿½es
+
 		if xSession.sNextResource != nil then (	// Si on doit changer de ressource
 			if (!strcmp xSession.sNextResource xSession.sResource) then ( // Si les ressouces sont identiques il ne se passe rien
 				set xSession.sNextResource = nil;	// UPDATE
 			0)else (
 				set xSession.sPreviousResource = xSession.sResource;	// On sauvegarde notre ressource actuelle qui va etre liberee
 				set xSession.sState = ssBind;
-				XmppGateSend xSession (XmppCreateBindIQ xSession xSession.sNextResource); 
+				XmppGateSend xSession (XmppCreateBindIQ xSession xSession.sNextResource);
 			0)
 		);
-		
+
 		if xSession.sNextResource == nil then ( // sinon (finalement, il n'y a pas de NexResource
 			let hd xSession.sOutQueue -> hdOutQueue in
 			let tl xSession.sOutQueue -> tlOutQueue in
@@ -2074,16 +2074,16 @@ fun XmppSessionRead xSession PaquetXml =
 						if NextState != nil then
 							set xSession.sState = NextState;
 						if Type != nil then
-							XmppGateSend xSession (xmpps_createStanza xSession (xSession.sJID) To Type Content) 
+							XmppGateSend xSession (xmpps_createStanza xSession (xSession.sJID) To Type Content)
 					);
 					set hdOutQueue = hd tlOutQueue;
 					set tlOutQueue = tl tlOutQueue
 				);
-				set xSession.sOutQueue = tlOutQueue // Mise à jour de la queue
+				set xSession.sOutQueue = tlOutQueue // Mise ï¿½ jour de la queue
 			);
 			0
 		);
-		
+
 	1)|(_ -> 0)
 ;;
 
@@ -2098,18 +2098,18 @@ fun XmppSessionProcessR xSession Liste Acc =
 	let tl Liste -> tlListe in
 	let XmppSessionProcess xSession PaquetXml -> R in
 	(
-		if R != nil then (	// Si on a quelque chose a executer avant de faire le reste de la liste des elements reçus
+		if R != nil then (	// Si on a quelque chose a executer avant de faire le reste de la liste des elements reï¿½us
 			set xSession.sInQueue = conc Acc tlListe;	// Ceux qui sont arrivee en premier et non traitee :: reste de la liste
 			R
 		) else	// R = nil > le paquet traitee n'est pas le bon, on le laisse dans la pile et on passe au suivant
 		(
-			if (hd tlListe) == nil then ( // il n'y a plus d'actions à faire
+			if (hd tlListe) == nil then ( // il n'y a plus d'actions ï¿½ faire
 				if (hd Acc) != nil then
 					set xSession.sInQueue = conc Acc PaquetXml::nil // On met a jour la liste des actions encore a traiter
 				else
 					set xSession.sInQueue = PaquetXml::nil; // On met a jour la liste des actions encore a traiter
-				[nil nil] // On a traiter tous éléments de la liste de retour, on reste dans le même état et on passe à la suite
-			)else ( // il nous reste encore des actions à faire
+				[nil nil] // On a traiter tous ï¿½lï¿½ments de la liste de retour, on reste dans le mï¿½me ï¿½tat et on passe ï¿½ la suite
+			)else ( // il nous reste encore des actions ï¿½ faire
 				if (hd Acc) != nil then
 					set Acc = conc Acc PaquetXml::nil
 				else
@@ -2129,7 +2129,7 @@ proto XmppSessionProcessHandleStanzaIq 2;;
  */
 fun XmppSessionProcess xSession PaquetXml =
 	if PaquetXml == nil then (
-		
+
 		if (match xSession.sStatus with (sLoggedin ->1)|(_->0)) then (
 			// In logging phase, try to reopen while negociating (base XMPP protocol)
 			Secholn "ReOpenStreamXmpp";
@@ -2141,47 +2141,47 @@ fun XmppSessionProcess xSession PaquetXml =
 			/* ETAT SUIVANT */
 			[nil nil] // on ne renvoie rien.
 		)
-		
+
 	) else (
 		match PaquetXml with
 		(ContentElement xmlStanza ->
-			
-			// On a vraiment reçu quelque chose
+
+			// On a vraiment reï¿½u quelque chose
 			match xSession.sStatus with (sOpened -> set xSession.sNextRestart = -1) | (_ -> 0);
-			
+
 			//type tXmppSessionStreamState = ssRegister1 | ssRegister2 | ssBind | ssUnBind | ssStartSession | ssGetSource | ssFree | ssLogging;;
 			// ss pour Stream State
-			// Register1 > Première phase de l'enregistrement
+			// Register1 > Premiï¿½re phase de l'enregistrement
 			// Register2 > Seconde phase de l'enregistrement
 			// Bind > Acquisition de la Ressource
 			// UnBind > Rendre la Ressource
 			// Session > Creation d'une session
-			// Source > Recupération des sources
+			// Source > Recupï¿½ration des sources
 			// Free > Connected, pret a faire les action
 			// Logging > Process de loggin (auth, challenge, ...)
 			match xSession.sState with
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			(ssRegister1 -> // Première phase d'enregistrement
-			  Xw "State : Register // Step 1";			  	
+
+
+
+
+
+
+
+
+
+
+			(ssRegister1 -> // Premiï¿½re phase d'enregistrement
+			  Xw "State : Register // Step 1";
 			  	if !strcmp xmlStanza.nameS "iq" then (	// On a bien un iq
-			  	
+
 			  		let Xml_GetElementAttribute xmlStanza "id" 		-> id in	// On recupere l'ID
 					let Xml_GetElementAttribute xmlStanza "type" 	-> type in	// et le type
 					(
 						if (!strcmp type "result") then ( // Si on a un resultat, on continue
-							
+
 							Xw "Go to state : Register // Step 2 -- start register";
 							set xSession.sPassword = GenXmppPassword;	// On genere le mot de passe
-							
+
 							// RETOURNE [ETATSUIVANT XML]
 							[ssRegister2 /* ETAT SUIVANT */
 								(xmpps_createStanza xSession
@@ -2190,10 +2190,10 @@ fun XmppSessionProcess xSession PaquetXml =
 								stanzaIQSet /* Type dy stanza Envoyee */
 								(strcatlist "<query xmlns=\"violet:iq:register\"><username>"::xSession.sUsername::"</username><password>"::(XorHexStr xSession.sPassword xSession.sUsername)::"</password></query>"::nil))]
 						)else if (!strcmp type "error") then (
-							
+
 							Xw "Error registering phase1";
 							httprequest "GET" (sendmailxmppurl xSession.sDomain "FailureRegister1") nil nil HTTP_NORMAL;
-							
+
 							// TODO : Gestion de l'erreur
 							XmppSessionSetStatus xSession sRegistrationError;
 							[	ssFree /* Pas d'etat suivant */
@@ -2204,83 +2204,83 @@ fun XmppSessionProcess xSession PaquetXml =
 							nil	// On retourne rien, donc on met dans la queue
 						)
 					)
-			  	)else nil	// stanza non souhaité, mise en attente
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
+			  	)else nil	// stanza non souhaitï¿½, mise en attente
+
+
+
+
+
+
+
+
+
+
 			)|(ssRegister2 -> // Seconde phase d'enregistrement
-				
+
 				Xw "State : Register // Step 2";
-				
+
 				if !strcmp xmlStanza.nameS "iq" then (	// On a bien un iq
-			  	
+
 			  		let Xml_GetElementAttribute xmlStanza "id" 		-> id in	// On recupere l'ID
 					let Xml_GetElementAttribute xmlStanza "type" 	-> type in	// et le type
 					(
 						if (!strcmp type "result") then ( // Si on a un resultat, on continue
 							Xw "Register succeeded";
 							SetXmppPassword xSession.sPassword;
-									
+
 							// NOT DISPLAYED! Xw strcatlist "snd start login, user='"::xSession.sUsername::"', pwd='"::xSession.sPassword::"'"::nil;
 							Xw "snd start login";
-									
+
 							XmppSessionSetStatus xSession sLogging; // Change the status
-							
+
 							/* ETAT SUIVANT */
 							[ssLogging "<auth xmlns='urn:ietf:params:xml:ns:xmpp-sasl' mechanism='DIGEST-MD5'/>"]
 						) else if (!strcmp type "error") then (
-							
+
 							Xw "XML in=["; XMLPrintContent PaquetXml 0; Xw "]";
 							Xw "error registering phase2";
-							
+
 							httprequest "GET" (sendmailxmppurl xSession.sDomain "FailureRegister2") nil nil HTTP_NORMAL;
-							
+
 							XmppSessionSetStatus xSession sRegistrationError;
 							/* ERREUR, ON LIBERE */
 							[ssFree nil]
-						) else nil // stanza non souhaité, mise en attente
+						) else nil // stanza non souhaitï¿½, mise en attente
 					)
-				)else nil	// stanza non souhaité, mise en attente
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			)|(ssBind -> // On a lancé une demande de ressource
+				)else nil	// stanza non souhaitï¿½, mise en attente
+
+
+
+
+
+
+
+
+
+
+
+			)|(ssBind -> // On a lancï¿½ une demande de ressource
 				Xw strcatlist "State : Binding From : ":: xSession.sResource::" To : ":: xSession.sNextResource::" -- "::xSession.sPreviousResource::nil;
-				
+
 				if !strcmp xmlStanza.nameS "iq" then (	// On a bien un iq
-			  	
+
 			  		let Xml_GetElementAttribute xmlStanza "id" 		-> id in	// On recupere l'ID
 					let Xml_GetElementAttribute xmlStanza "type" 	-> type in	// et le type
 					(
 						if (!strcmp type "result") then (
-							let (Xml_FindFirstElementNamed xmlStanza "bind") -> bind in if (bind != nil) then 
+							let (Xml_FindFirstElementNamed xmlStanza "bind") -> bind in if (bind != nil) then
 							let Xml_GetElementAttribute bind "xmlns" -> xmlns in if (!strcmp xmlns "urn:ietf:params:xml:ns:xmpp-bind") then
 							let (Xml_FindFirstElementNamed bind "jid") -> jid in if (jid != nil) then
-							let (Xmp_GetTextContent jid) -> jidstr in if (jidstr != nil) then (		// Nouveau JID reçu par le BIND
+							let (Xmp_GetTextContent jid) -> jidstr in if (jidstr != nil) then (		// Nouveau JID reï¿½u par le BIND
 
-								set xSession.sNextResource = nil; // on a reussit à arriver dans cette état
+								set xSession.sNextResource = nil; // on a reussit ï¿½ arriver dans cette ï¿½tat
 								set xSession.sJID = jidstr;	// Sauvegarde les JID et ressources
 								set xSession.sResource = xmpps_JIDResource xSession.sJID;
-							
+
 								Xw "Bind Done!";
 								Xw strcatlist "JID="::xSession.sJID::nil;
 								Xw strcatlist "Resource="::xSession.sResource::nil;
-								
+
 								// Attention, si il y a eu un request ressource pendant l'etat bind, cette nouvelle ressource est dans sNextResourceBinding
 								// on la met donc dans sNextResource si cette variable n'est pas vide (cela permettra de passer dans la ressource requise au
 								// bon moment
@@ -2296,71 +2296,71 @@ fun XmppSessionProcess xSession PaquetXml =
 							Xw "XML in=["; XMLPrintContent PaquetXml 0; Xw "]";
 							Xw "error binding";
 							[ssFree nil]	// on n'envoie rien.
-						) else nil // stanza non souhaité, mise en attente
+						) else nil // stanza non souhaitï¿½, mise en attente
 					)
-				)else nil // stanza non souhaité, mise en attente
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
+				)else nil // stanza non souhaitï¿½, mise en attente
+
+
+
+
+
+
+
+
+
+
 			)|(ssUnBind -> // On est en train de rendre une ressource
-			
+
 				Xw "State : UnBinding";
-				
+
 				if !strcmp xmlStanza.nameS "iq" then (	// On a bien un iq
-			  	
+
 			  		let Xml_GetElementAttribute xmlStanza "id" 		-> id in	// On recupere l'ID
 					let Xml_GetElementAttribute xmlStanza "type" 	-> type in	// et le type
 					(
 						if (!strcmp type "result") then (
 							Xw "Unbind done!";
 							set xSession.sPreviousResource = nil;	// Reussite, on supprime alors l'ancienne ressource
-							
+
 							Xw strcatlist xSession.sJID::" : New Session"::nil;
-					
+
 							/* ETAT SUIVANT */
 							[ssFree nil]
 
 						) else if (!strcmp type "error") then (
 							Xw "XML in=["; XMLPrintContent PaquetXml 0; Xw "]";
 							Xw "error unbinding";
-							
+
 							/* ETAT SUIVANT */
 							[ssFree nil]
-						) else nil // stanza non souhaité, mise en attente
+						) else nil // stanza non souhaitï¿½, mise en attente
 					)
-				)else nil	// stanza non souhaité, mise en attente
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
+				)else nil	// stanza non souhaitï¿½, mise en attente
+
+
+
+
+
+
+
+
+
+
 			)|(ssStartSession -> // On est en train d'ouvrir une session
-				
+
 				Xw "State : Opening a session";
-				
+
 				if !strcmp xmlStanza.nameS "iq" then (	// On a bien un iq
-			  	
+
 			  		let Xml_GetElementAttribute xmlStanza "id" 		-> id in	// On recupere l'ID
 					let Xml_GetElementAttribute xmlStanza "type" 	-> type in	// et le type
 					(
 						if (!strcmp type "result") then (
-							
+
 							set xSession.sNextRestart = -1;
 							XmppSessionSetStatus xSession sOpened;
 							leds_set_state LEDS_STATE_XMPP_CONNECTED ;
-							
+
 							Xw "Session opened!";
 
 							if (!strcmp xSession.sResource "boot") then (
@@ -2389,24 +2389,24 @@ fun XmppSessionProcess xSession PaquetXml =
 						)else if (!strcmp type "error") then (
 							Xw "XML in=["; XMLPrintContent PaquetXml 0; Xw "]";
 							Xw "error opening session";
-							
+
 							/* ETAT SUIVANT */
 							[ssFree nil]
-						) else nil // stanza non souhaité, mise en attente
+						) else nil // stanza non souhaitï¿½, mise en attente
 					)
-				)else nil	// stanza non souhaité, mise en attente
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
+				)else nil	// stanza non souhaitï¿½, mise en attente
+
+
+
+
+
+
+
+
+
+
 			)|(ssPresence ->
-				if (!strcmp xmlStanza.nameS "presence") then (		// Si on reçoit une présence
+				if (!strcmp xmlStanza.nameS "presence") then (		// Si on reï¿½oit une prï¿½sence
 					let Xml_GetElementAttribute xmlStanza "from" -> from in
 						Xw strcatlist "Free now!  "::from::nil;
 					/* ETAT SUIVANT */
@@ -2419,41 +2419,41 @@ fun XmppSessionProcess xSession PaquetXml =
                                                  )
 				)else
 					nil // on empile si on a pas un presence
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			)|(ssGetSource -> // On est en train de récupérer les sources
-			
+
+
+
+
+
+
+
+
+
+
+			)|(ssGetSource -> // On est en train de rï¿½cupï¿½rer les sources
+
 				Xw "State : Getting Sources";
-				
+
 				if !strcmp xmlStanza.nameS "iq" then (	// On a bien un iq
-			  	
+
 			  		let Xml_GetElementAttribute xmlStanza "id" 		-> id in	// On recupere l'ID
 					let Xml_GetElementAttribute xmlStanza "type" 	-> type in	// et le type
 					(
 						// verifier from plateforme xmpp.objects.violet.net
 						let Xml_GetElementAttribute xmlStanza "from" -> from in
 						if ( (strcmp (xmpps_JIDPlatform from) XmppVioletObjectsComponent) && (strcmp (xmpps_JIDNode from) XmppVioletPlatformClient) ) then (	// Si ce n'est pas la plateforme... Hacker?
-							
+
 							Xw "XML in=["; XMLPrintContent PaquetXml 0; Xw "]";
 							Xw strcatlist "Error : received msg from ":: from ::" dropped (" :: (xmpps_JIDPlatform from) :: ")" :: nil;
-							
+
 							/* ETAT SUIVANT */
 							[xSession.sState nil]
-							
+
 						) else if (!strcmp type "result") then ( // Si on a un result
-						
+
 							// EXECUTION DE LA TRAME DE RETOUR
 							let (Xml_GetElementAttribute xmlStanza "to") -> to in if (to != nil) then
 							let xmpps_JIDResource to -> resourceName in
-							let (Xml_FindFirstElementNamed xmlStanza "query") -> query in if (query != nil) then 
+							let (Xml_FindFirstElementNamed xmlStanza "query") -> query in if (query != nil) then
 							let Xml_GetElementAttribute query "xmlns" -> xmlns in if (!strcmp xmlns "violet:iq:sources") then
 							let (Xml_FindFirstElementNamed query "packet") -> packet in if (packet != nil) then
 							let Xml_GetElementAttribute packet "xmlns" -> xmlns_packet in if (!strcmp xmlns_packet "violet:packet") then
@@ -2465,49 +2465,49 @@ fun XmppSessionProcess xSession PaquetXml =
 								//Xw "ping_trame_64="; Xw data_64;
 								processIncomingTrame ping_trame resourceName ttl
 							);
-							
+
 							Xw "We have the sources!";
-							
+
 							/* ETAT SUIVANT */
 							[ssFree nil] // On repasse en libre
 						) else if (!strcmp type "error") then (
 							Xw "Error getting sources";
 							Xw "XML in= ";
 							XMLPrintContent PaquetXml 0;
-							
-							// Pas de resource donc on relance le process de connexion 
-							XmppSessionIsDisconnected xSession;	
-	
+
+							// Pas de resource donc on relance le process de connexion
+							XmppSessionIsDisconnected xSession;
+
 							// TODO : RELANCER 10 SECONDES APRES
 							//xmpps_scheduleIQ xSession (time + 10) iqSources xSession.sClients.clSOURCES "get" "<query xmlns=\"violet:iq:sources\"><packet xmlns=\"violet:packet\" format=\"1.0\"/></query>";
-							// Pour le moment on libère
+							// Pour le moment on libï¿½re
 							[ssFree nil]
-						) else nil	// stanza non souhaité, mise en attente
+						) else nil	// stanza non souhaitï¿½, mise en attente
 					)
-				)else nil	// stanza non souhaité, mise en attente
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			)|(ssLogging ->	// On n'est pas encore connecté
-				
+				)else nil	// stanza non souhaitï¿½, mise en attente
+
+
+
+
+
+
+
+
+
+
+
+			)|(ssLogging ->	// On n'est pas encore connectï¿½
+
 				Xw "State Logging";
-				
-				if (!strcmp xmlStanza.nameS "stream:features") then (	// Si on a du détail sur le flux				
+
+				if (!strcmp xmlStanza.nameS "stream:features") then (	// Si on a du dï¿½tail sur le flux
 					// stream:features
 					// teste si on a un element 'mechanisms'. Si non, on stoppe tout de suite
 					Xw "Receive stream:features";
-					
+
 					// Ici, on exploite le fait que stream:features est ouvert avant authentification et
-					// après (une fois que ça a marché).
-					
+					// aprï¿½s (une fois que ï¿½a a marchï¿½).
+
 					// mechanisms
 					let (Xml_FindFirstElementNamed xmlStanza "mechanisms") -> mechanisms in
 					if (mechanisms != nil) then (
@@ -2515,11 +2515,11 @@ fun XmppSessionProcess xSession PaquetXml =
 						if (!strcmp xmlns "urn:ietf:params:xml:ns:xmpp-sasl") then (
 							// On devrait tester register / login ?
 							Xw "Receive mechanisms";
-							
+
 							// Register ou login ?
 							if (NOWREGISTER == 1 || xSession.sPassword == nil) then (
 								Xw "No password (or not good) : start register";
-								
+
 								/* ETAT SUIVANT */
 								[ssRegister1
 								xmpps_createStanza xSession xSession.sJID nil stanzaIQGet "<query xmlns='violet:iq:register'/>"]
@@ -2527,12 +2527,12 @@ fun XmppSessionProcess xSession PaquetXml =
 								//Xw strcatlist "Start login, user ='"::xSession.sUsername::"', pass='"::xSession.sPassword::"'"::nil;
 								Xw "Start login";
 								XmppSessionSetStatus xSession sLogging;
-								
+
 								/* ETAT SUIVANT */
 								[ssLogging
 								"<auth xmlns='urn:ietf:params:xml:ns:xmpp-sasl' mechanism='DIGEST-MD5'/>"]
 							)
-						
+
 						) else (
 							Xw "No SASL!";
 							/* ETAT SUIVANT */
@@ -2541,35 +2541,35 @@ fun XmppSessionProcess xSession PaquetXml =
 					) else (
 						// bind: seconde ouverture de stream:features.
 						let (Xml_FindFirstElementNamed xmlStanza "bind") -> bind in
-						if (bind != nil) then (	// Si on reçoit bien un bind
+						if (bind != nil) then (	// Si on reï¿½oit bien un bind
 							let Xml_GetElementAttribute bind "xmlns" -> xmlns in
 							if (!strcmp xmlns "urn:ietf:params:xml:ns:xmpp-bind") then (
 								Xw "Receive Bind (in Logging)";
-								
+
 								set NOWREGISTER = 0;
-								
-								set xSession.sPreviousResource = nil;	// Pas de ressource précédente
+
+								set xSession.sPreviousResource = nil;	// Pas de ressource prï¿½cï¿½dente
 								/* ETAT SUIVANT */
 								[ssBind
 								XmppCreateBindIQ xSession "boot"]
-								
+
 							) else
 								[ssFree nil] // xmlns incorrect. TODO: envoyer une erreur.
 						) else
 							[ssFree nil] // ni mechanism ni sasl. TODO: envoyer une erreur.
 					)
-				
-				
+
+
 				) else if (!strcmp xmlStanza.nameS "challenge") then (
 					let (Xmp_GetTextContent xmlStanza) -> Text in
 						/* ETAT SUIVANT */
 						[ssLogging Sasl_processChallenge xSession Text]
-								
-				
+
+
 				) else if (!strcmp xmlStanza.nameS "failure") then (
 					let Xml_GetElementAttribute xmlStanza "xmlns" -> xmlns in
 					if (!strcmp xmlns "urn:ietf:params:xml:ns:xmpp-sasl") then (
-						
+
 						Xw "Failure to login. Warn server and re-register";
 						httprequest "GET" (sendmailxmppurl xSession.sDomain "FailureLogin") nil nil HTTP_NORMAL;
 						// first reset all values set by login
@@ -2579,11 +2579,11 @@ fun XmppSessionProcess xSession PaquetXml =
 						set xSession.sQop = "auth";
 						set xSession.sAlgo = nil;
 						set xSession.sCharset = nil;
-						
+
 						set NOWREGISTER = 1;
-						
+
 						XmppSessionIsDisconnected xSession;
-						
+
 						// On s'enregistre a nouveau
 						/* ETAT SUIVANT */
 						[ssLogging nil /*xmpps_createStanza xSession xSession.sJID nil stanzaIQGet "<query xmlns='violet:iq:register'/>"*/]
@@ -2591,38 +2591,38 @@ fun XmppSessionProcess xSession PaquetXml =
 						/* ETAT SUIVANT */
 						[ssLogging nil]
 					)
-				
-				
+
+
 				) else if (!strcmp xmlStanza.nameS "success") then (
 					let Xml_GetElementAttribute xmlStanza "xmlns" -> xmlns in
 						if (!strcmp xmlns "urn:ietf:params:xml:ns:xmpp-sasl") then (
 							Xw "rcv success, snd reopen stream";
-							// On doit réouvrir le stream
+							// On doit rï¿½ouvrir le stream
 							// TODO REVOIR
 							XmppSessionSetStatus xSession sLoggedin;
 							XmppGateReOpenStream xSession
 						);
 					[ssLogging nil]
 				) else	nil // stanza non souhaitee, on empile
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
+
+
+
+
+
+
+
+
+
+
+
 			)|(ssFree -> // On est libre de faire les actions venant de la plateforme
 				Xw "State : we are free and ready";
 
 				if !strcmp xmlStanza.nameS "iq" then (	// SI ON A UN IQ
-					XmppSessionProcessHandleStanzaIq xSession xmlStanza 
+					XmppSessionProcessHandleStanzaIq xSession xmlStanza
 				) else if	(!strcmp xmlStanza.nameS "message") then ( 			// Si on a un message
 					Xw "We got a message";
-					
+
 					let  Xml_GetElementAttribute xmlStanza "id" -> id in
 					let (Xml_FindFirstElementNamed xmlStanza "packet") -> packet in
 					if (packet != nil) then (
@@ -2632,15 +2632,15 @@ fun XmppSessionProcess xSession PaquetXml =
 						let Xml_GetElementAttribute packet "format" -> format in if (!strcmp format "1.0") then
 						let Xml_GetElementAttribute packet "ttl" -> ttl in
 						let (Xmp_GetTextContent packet) -> data_64 in if (data_64 != nil) then
-						let B64toS data_64 -> ping_trame in 
+						let B64toS data_64 -> ping_trame in
 							processIncomingTrame ping_trame resourceName ttl	// EXECUTION DE LA TRAME
 					);
-					
+
 					/* ETAT SUIVANT */
 					[nil nil] //on ne change pas d'etat car si cela est fait dans processIncomingTrame (par exemple ssBind, on se fait avoir en l'enlevant)
-				
-				
-				) else if (!strcmp xmlStanza.nameS "presence") then (		// Si on reçoit une présence
+
+
+				) else if (!strcmp xmlStanza.nameS "presence") then (		// Si on reï¿½oit une prï¿½sence
 					let Xml_GetElementAttribute xmlStanza "from" -> from in
 						Xw strcatlist "rcv presence from "::from::nil;
 					/* ETAT SUIVANT */
@@ -2649,16 +2649,16 @@ fun XmppSessionProcess xSession PaquetXml =
 					Xw "Erreur dans le flux!";
 					[nil nil]
 				) else /* ETAT SUIVANT */ [nil nil] /* Si il s'agit d'autre chose, on ne le prend pas en compte */
-			
-			
-			
-			
-			)|(_ -> // On est dans un état inconnu ici, pas normal
-			
+
+
+
+
+			)|(_ -> // On est dans un ï¿½tat inconnu ici, pas normal
+
 				Xw "State : starting?";
 				Xw "State : UNKNOWN!!";
 				[nil nil]
-			
+
 			)
 
 		) | ( ContentText Texte ->
@@ -2676,9 +2676,9 @@ proto XmppSessionProcessHandleStanzaIqError 1;;
 
 
 /**
-	Utilisé pour le getrunningstate, convertit un etat du lapin sous forme textuelle
+	Utilisï¿½ pour le getrunningstate, convertit un etat du lapin sous forme textuelle
 */
-fun xmppStateToStr state = 
+fun xmppStateToStr state =
 //			match xSession.sStatus with (sOpened -> set xSession.sNextRestart = -1) | (_ -> 0);
 	match state with
 			( ssRegister1 -> "ssRegister1" )
@@ -2694,12 +2694,12 @@ fun xmppStateToStr state =
 
 
 /**
- Gère la réponse à apporter à un IQ
+ Gï¿½re la rï¿½ponse ï¿½ apporter ï¿½ un IQ
 
   xSession: les infos de session xmpp
-  xmlStanza: l'iq reçu
+  xmlStanza: l'iq reï¿½u
 
-  --> le couple [ action nouvel_etat ] pour savoir où aller dans la machine à état fini
+  --> le couple [ action nouvel_etat ] pour savoir oï¿½ aller dans la machine ï¿½ ï¿½tat fini
 */
 fun XmppSessionProcessHandleStanzaIq xSession xmlStanza =
 	// check that message from xmpp.objects.violet.net or xmpp.platform.violet.net
@@ -2712,7 +2712,7 @@ fun XmppSessionProcessHandleStanzaIq xSession xmlStanza =
 	(
 		let Xml_GetElementAttribute xmlStanza "id" 		-> id in	// On recupere l'ID
 		let Xml_GetElementAttribute xmlStanza "type" 	-> type in	// et le type
-		let ( 
+		let (
 			if (!strcmp type "set") then
 				XmppSessionProcessHandleStanzaIqSet xSession xmlStanza
 			else if (!strcmp type "get") then
@@ -2733,16 +2733,16 @@ fun XmppSessionProcessHandleStanzaIq xSession xmlStanza =
 
 
 /**
-	Gère un IQ de type "set"
+	Gï¿½re un IQ de type "set"
 
   xSession: les infos de session xmpp
-  xmlStanza: l'iq reçu
+  xmlStanza: l'iq reï¿½u
 
 	--> [ contenu_de_la_reponse [ action nouvel_etat ]]
 */
-fun XmppSessionProcessHandleStanzaIqSet xSession xmlStanza = 
+fun XmppSessionProcessHandleStanzaIqSet xSession xmlStanza =
 	let (
-	// Si on reçoit un paquet "addresses", on met à jour les clients
+	// Si on reï¿½oit un paquet "addresses", on met ï¿½ jour les clients
 	let (Xml_FindFirstElementNamed xmlStanza "addresses") -> addresses in
 	let (Xml_FindFirstElementNamed xmlStanza "command") -> command in
 	if (addresses != nil) then (
@@ -2840,9 +2840,9 @@ fun XmppSessionProcessHandleStanzaIqSet xSession xmlStanza =
 	)
 	else
 	(
-		// si on reçoit un paquet "packet", on execute la trame reçue
+		// si on reï¿½oit un paquet "packet", on execute la trame reï¿½ue
 		let (Xml_FindFirstElementNamed xmlStanza "packet") -> packet in
-		if (packet != nil) then ( 
+		if (packet != nil) then (
 			let (Xml_GetElementAttribute xmlStanza "to") -> to in
 			if (to != nil) then (
 				let xmpps_JIDResource to -> resourceName in
@@ -2867,10 +2867,10 @@ fun XmppSessionProcessHandleStanzaIqSet xSession xmlStanza =
 
 
 /**
-	Gère un IQ de type "get"
+	Gï¿½re un IQ de type "get"
 
   xSession: les infos de session xmpp
-  xmlStanza: l'iq reçu
+  xmlStanza: l'iq reï¿½u
 
 	--> [ contenu_de_la_reponse [ action nouvel_etat ]]
 */
@@ -2892,7 +2892,7 @@ fun XmppSessionProcessHandleStanzaIqGet xSession xmlStanza =
 				]
 			)
 			// XEP-0030: Service Discovery (http://www.xmpp.org/extensions/xep-0030.html)
-			// (support très très très partiel)
+			// (support trï¿½s trï¿½s trï¿½s partiel)
 			else if (!strcmp xmlns "http://jabber.org/protocol/disco#info") then
 			(
 				if nil==node then
@@ -2969,7 +2969,7 @@ fun XmppSessionProcessHandleStanzaIqGet xSession xmlStanza =
 					// TODO en premier lieu il faudrait (SHOULD)  mettre le xml qu'on a recu
 					"<error type='cancel'>"
 					:: "<feature-not-implemented xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>"
-					:: "</error>" :: nil) 
+					:: "</error>" :: nil)
 			]
 		) -> [ error answear ]
 	in [ error answear [ nil nil ] ]
@@ -2977,9 +2977,9 @@ fun XmppSessionProcessHandleStanzaIqGet xSession xmlStanza =
 
 
 /**
-	Gère un IQ de type inconnu (non géré)
+	Gï¿½re un IQ de type inconnu (non gï¿½rï¿½)
 */
-fun XmppSessionProcessHandleStanzaIqError type = 
+fun XmppSessionProcessHandleStanzaIqError type =
 	// ON A UN IQ quelque chose, mais on ne devrait pas en avoir ici!
 	Xw strcatlist "!!! Get a iq "::type::"! Not allowed here"::nil;
 	[ 1 nil [ nil nil ] ]
@@ -3015,15 +3015,15 @@ fun infoUpdate data=
 		// /14/80/0/0/0/0/0/0/0/0/0/0/0/0/0/0/14/13/0/
 		Secho "len="; Iecho len; Secho ":";
 		for i=0;i<len do (Iecho strget data i; Secho "/");
-		
+
 		// sources
 		for i=0;i<(min 16 len) do set infosrc.i=strget data i;
-		
+
 		// messages
 		set infomessages = 0;
 		if (len > 16+3) && (strget data (16+3)) then set infomessages = 2
 		else if (len > 16+2) && (strget data (16+2)) then set infomessages = 1;
-		
+
 		// taichi
 		let 0 -> found in
 		for i=0;(i<(min 16 len) && !found);i+2 do
@@ -3031,7 +3031,7 @@ fun infoUpdate data=
 			set infotaichi = strget data i+1;
 			set found = 1
 		);
-		
+
 		// process ears
 		if len > 17 then
 		let strget data 16 -> newleft in
@@ -3047,7 +3047,7 @@ fun infoUpdate data=
 
 	);
 	dumpinfo;
-	
+
 	0;;
 
 
@@ -3061,9 +3061,9 @@ fun infoUpdate data=
 #ifdef NOMINAL
 
 const tab_osc={
-	0 0 0 0 0 0 1 1 2 3 3 4 5 6 7 8 
-	9 10 12 13 15 16 18 19 21 23 25 27 29 31 33 35 
-	37 39 42 44 46 49 51 54 56 59 62 64 67 70 73 76 
+	0 0 0 0 0 0 1 1 2 3 3 4 5 6 7 8
+	9 10 12 13 15 16 18 19 21 23 25 27 29 31 33 35
+	37 39 42 44 46 49 51 54 56 59 62 64 67 70 73 76
 	79 81 84 87 90 93 96 99 103 106 109 112 115 118 121 124
 };;
 
@@ -3169,10 +3169,10 @@ fun recordurl mode=strcatlist pingsrv::"/vl/record.jsp?sn="::(webmac netMac)::"&
 fun rfidurl tag=strcatlist pingsrv::"/vl/rfid.jsp?sn="::(webmac netMac)::"&v="::(getBytecodeRevision)::"&h="::(itoa HARDWARE)::"&t="::(webmac tag)::nil;;
 fun interactifurl application = strcatlist pingsrv::"/vl/itmode.jsp?sn="::(webmac netMac)::"&v="::(getBytecodeRevision)::"&h="::(itoa HARDWARE)::"&a="::application::nil;;
 fun sendmailxmppurl xmppdomain data = strcatlist pingsrv::"/vl/sendMailXMPP.jsp?m="::(webmac netMac)::"&d="::xmppdomain::"&r="::data::"&v="::(getBytecodeRevision)::nil;;
-fun boshurl ip = strcatlist ip::"/http-bind"::nil;; 
+fun boshurl ip = strcatlist ip::"/http-bind"::nil;;
 //fun boshurl ip = strcatlist ip::":5281/http-bind"::nil;;  // DEBUG
 
-// Construction des urls d'interactivité
+// Construction des urls d'interactivitï¿½
 fun interactifurl_start application= strcatlist (interactifurl application)::"&st=start"::g_cookie::nil;;
 fun interactifurl_btn application position cmdindex btn= strcatlist (interactifurl application)::"&st=btn&pos="::(itoa position)::"&idx="::(itoa cmdindex)::"&btn="::(itoa btn)::g_cookie::nil;;
 fun interactifurl_done application = strcatlist (interactifurl application)::"&st=done"::g_cookie::nil;;
@@ -3207,7 +3207,7 @@ fun dump_prgm l=
 	Secholn "---";
 	l;;
 
-		
+
 fun _configcbhttp http res=
 	if (nil != res) then
 	(
@@ -3227,20 +3227,20 @@ fun _configcbhttp http res=
 				)
 				else
 				(
-					// l'appel à locate.jsp a échoué -> ... rebooter tout ?
+					// l'appel ï¿½ locate.jsp a ï¿½chouï¿½ -> ... rebooter tout ?
 					Secholn "call to locate.jsp failed, rebooting";
 					reboot 0x0407FE58 0x13fb6754;
 					0
 				);
 
 			set run = xmppLoginRun;
-		
+
 			0
 		)
 	)
 	else
 	(
-		// l'appel à locate.jsp a échoué -> ... rebooter tout ?
+		// l'appel ï¿½ locate.jsp a ï¿½chouï¿½ -> ... rebooter tout ?
 		Secholn "call to locate.jsp failed, rebooting";
 		reboot 0x0407FE58 0x13fb6754;
 		0
@@ -3294,14 +3294,14 @@ fun rscFromProgram l=
 	if (!strcmp key "MU") || (!strcmp key "CH") then [val /*nil*/300000]::rscFromProgram tl l
 	else if (!strcmp key "MC") then [val SIGNCUTSIZE]::rscFromProgram tl l
 	else rscFromProgram tl l;;
-	
+
 
 
 var paletteselected = 0;;
 // v17 (add romain)
 // Fonction permettant d'activer la palette pour le programme en cours
 // au jour du 31 mai 2007, on recoit le PL apres le son a jouer, la palette associee au son est donc affichee juste apres la fin du programme
-// Cette fonction passe prealablement sur le programme reçu pour mettre la bonne palette
+// Cette fonction passe prealablement sur le programme reï¿½u pour mettre la bonne palette
 // A noter, si il y a plusieurs palettes dans la trame de retour, seule la premiere est prise en compte
 fun CheckForPaletteBefore l=
 	for l=l;l!=nil;tl l do let hd l->[key val] in
@@ -3316,11 +3316,11 @@ fun CheckForPaletteBefore l=
 fun prgmStart=
 	// Starts playing the program
 	// setleds RGB_RED;
-	
+
 	// Si la palette est definie pour ce programme, alors on ne met pas l'aleatoire
 	if(paletteselected==0) then (
-		set current_palette=tabnew 0 8; // v17 : c'était inversé
-		set_current_palette_mode 8 // random palette par défaut
+		set current_palette=tabnew 0 8; // v17 : c'ï¿½tait inversï¿½
+		set_current_palette_mode 8 // random palette par dï¿½faut
 	);
 	// start evaluating first command
 	set gCurAudioCmdIndex = -1;
@@ -3340,7 +3340,7 @@ fun _rscLoadCBhttp http res maxsize=
 	else if res!=nil then
 	(
 		// received a result, store it in rsctmp
-		// Je ne comprends pas la logique ici (AS sept07) : a quoi sert rsctmp et maxsize, et comment passe-t-il à la suite ?
+		// Je ne comprends pas la logique ici (AS sept07) : a quoi sert rsctmp et maxsize, et comment passe-t-il ï¿½ la suite ?
 //		Secholn res;
 		set rsctmp=res::rsctmp;
 		if maxsize!=nil && (slistlen rsctmp)>maxsize then
@@ -3356,7 +3356,7 @@ fun _rscLoadCBhttp http res maxsize=
 		let hd rsctoget ->[url _] in
 		// remember rsc loaded
 		set rscloaded=[url tl rev rsctmp nil]::rscloaded;
-		
+
 		// load next rsc
 		set rsctoget=tl rsctoget;
 		set run=rscLoadNextRun;
@@ -3541,7 +3541,7 @@ var chor_paused_since;;
 fun msgchorstart chor cb i0=
 	set chorendcb = cb;
 	set chordata=strcatlist chor;
-	set chorindex=4+1;	// on saute le header et la première attente
+	set chorindex=4+1;	// on saute le header et la premiï¿½re attente
 	set chortimescale=0;
 	set chornexttime=time_ms;
 	set chor_paused_dur = 0;
@@ -3560,7 +3560,7 @@ fun msgendchor i0=
 fun runChorCmd i0=
 	//	Secho "runChorCmd i:";Iecho chorindex; Secho " t:";Iecholn chornexttime;
 	// Manage buffering and pauses
-	
+
 	if (!chor_paused && wav_buffering) then (
 		// start pause
 		set chor_paused_since = time_ms;
@@ -3571,7 +3571,7 @@ fun runChorCmd i0=
 		// increment paused_dur
 		set chor_paused_dur = chor_paused_dur + (time_ms - chor_paused_since)
 	);
-	
+
 	if (!chor_paused) then
 	if time_ms-chor_paused_dur >= chornexttime then
 	(
@@ -3581,7 +3581,7 @@ fun runChorCmd i0=
 		if code==CH_frame_duration then
 		(
 			set chortimescale=10*strget chordata chorindex+1;
-			1	//nb de paramètres
+			1	//nb de paramï¿½tres
 		)
 		else if code==CH_set_motor then
 		(
@@ -3622,7 +3622,7 @@ fun runChorCmd i0=
 			2
 		)
 		// v17
-		else if code== CH_set_led_off then 
+		else if code== CH_set_led_off then
 		(
 			//Secholn "CH_set_led_off ";
 			led 4-strget chordata chorindex+1 0;
@@ -3690,10 +3690,10 @@ fun _cbtaichiend unused=
 	set run=idleRun;
 	0
 	;;
-	
+
 fun taichistart=
 	Secho "taichistart ";
-	
+
 	set chorrandom=((Iecholn rand&255)*30)>>8;
 	Secho "chorrandom="; Iecholn chorrandom;
 	set chortaichimotordir={0 0};
@@ -3714,7 +3714,7 @@ type gInteractiveChorType = intchorDefaultStart | intchorDefaultStop | intchorSt
 var gInteractiveSounds;;
 var gInteractiveChors;;
 
-// quand on a reçu une commande "WT", on stocke ici la date jusqu'à laquelle on doit attendre
+// quand on a reï¿½u une commande "WT", on stocke ici la date jusqu'ï¿½ laquelle on doit attendre
 var interactiveWaitEndTime_ms = 0;;
 
 proto _cbContinueStartInteractive 1;;
@@ -3752,14 +3752,14 @@ fun interactiveStart application=
 	if !gBusyState then XmppSessionRequestResource "itmode";
 
 	reset_IC;
-		
+
 	// oreilles vers l'avant
 	(earGo 0 3 0; earGo 1 3 0);
-	
+
 	// jingle
 	let gInteractiveSounds -> [gSoundStart gSoundStop] in
 		gIntControlSound gSoundStart;
-	
+
 	// chor de debut
 	let gInteractiveChors -> [gChorStart gChorStop] in
 		gIntControlChor gChorStart;
@@ -3767,10 +3767,10 @@ fun interactiveStart application=
 	0;;
 
 fun _cbContinueStartInteractive unused=
-	
+
 	// ask for instructions
 	set run=interactiveReqWaitRun (httprequest "GET" (interactifurl_start gItApp) nil #_interactiveReqCBhttp HTTP_NORMAL);
-		
+
 	0;;
 
 fun interactiveError=
@@ -3782,20 +3782,20 @@ fun interactiveError=
 fun _cbContinueErrorInteractive unused=
 	interactiveStop;
 	0;;
-	
+
 fun interactiveStop=
 	Secholn "interactiveStop";
-	
+
 	// jingle de fin
 	let gInteractiveSounds -> [gSoundStart gSoundStop] in
 		gIntControlSound gSoundStop;
 	set gInteractiveSounds = [intDefaultStart intDefaultStop]; // on remet le son par default a la fin
-	
+
 	// chor de fin
 	let gInteractiveChors -> [gChorStart gChorStop] in
 		gIntControlChor gChorStop;
 	set gInteractiveChors = [intchorDefaultStart intchorDefaultStop]; // on remet le chor par default a la fin
-	
+
 	// oreilles
 	earsGoToRefPos;
 
@@ -3808,7 +3808,7 @@ fun _cbContinueStopInteractive unused=
 	set gItApp = nil;
 	set gItState = 0;
 	set gProcessingState = 0; // skips all remaining commands anyway, so : not processing
-	//if !gBusyState then XmppSessionRequestResource "idle"; // can only be idle now 
+	//if !gBusyState then XmppSessionRequestResource "idle"; // can only be idle now
 	// DEBUG
 	XmppSessionRequestResource "idle"; // Obligation de revenir en IDLE
 	set gStreamingState = 0; // On ne stream plus rien!
@@ -3875,7 +3875,7 @@ fun earDeltaPosNormalized deltaPos=
 	if (deltaPos > EARS_HOLES>>1) then deltaPos - EARS_HOLES
 	else if (deltaPos < -EARS_HOLES>>1) then deltaPos + EARS_HOLES
 	else deltaPos;;
-	
+
 fun itNoteEarTouched eari curPos deltaPos=
 	// right = 0, left = 1
 	if (eari == 0 && (g_int_mask & MASK_EAR_RIGHT == 0)) || (eari == 1 && (g_int_mask & MASK_EAR_LEFT == 0)) then // active
@@ -3887,12 +3887,12 @@ fun itNoteEarTouched eari curPos deltaPos=
 			set et.refPos_ET = curPos;
 			if ((earDeltaPosNormalized deltaPos) > 0) then set et.moveDir_ET = 0 else set et.moveDir_ET = 1;
 			set et.lastDV_ET = 0
-			
+
 		) else if !et.turned_ET then
 		// was already moving and not turned yet : test turned
 		let (earDeltaPosNormalized (curPos - et.refPos_ET)) -> normalizedDV in (
 			Secho "NDV="; Iecho normalizedDV; Secho ",";
-			
+
 			// Test 1 tour or stopped
 			if (et.moveDir_ET == 0 && normalizedDV >= 0 && et.lastDV_ET < 0) then
 				// if more than one tour forward : ok
@@ -3900,9 +3900,9 @@ fun itNoteEarTouched eari curPos deltaPos=
 			else if (et.moveDir_ET == 1 && normalizedDV <= 0 && et.lastDV_ET > 0) then
 				// if more than one tour backward : ok
 				set et.turned_ET = 1;
-	
+
 			Secho "TOUCH="; Iecho et.turned_ET; Secho ",";
-				
+
 			set et.lastDV_ET = normalizedDV
 		)
 	);;
@@ -3918,7 +3918,7 @@ fun interactiveSendEarTouched lefttouch righttouch=
 	let wav_curplayedbytes -> readBytes in  // controlsound resets wav_curplayedbytes so we cache it
 	(
 		if (lefttouch) then controlsound midi_precedent;
-		if (righttouch) then controlsound midi_suivant;		
+		if (righttouch) then controlsound midi_suivant;
 		set run=interactiveReqWaitRun (httprequest "GET" (interactifurl_ear gItApp readBytes gCurAudioCmdIndex righttouch lefttouch) nil #_interactiveReqCBhttp HTTP_NORMAL)
 	);
 	0;;
@@ -3970,7 +3970,7 @@ fun runInteractiveReqWait http=
 	(
 		Secholn "##timeout on runInteractiveReqWait";
 		httpabort http;
-		
+
 		// error
 		interactiveError
 	);
@@ -4024,18 +4024,18 @@ fun eval_IC_msg val=
 				else set g_record_enabled = 0;
 				0
 			) else if !strcmp ickey "streaming.chor.enabled" then (
-				// streaming.chor.enabled   -> chorégraphie de streaming (oreilles)
+				// streaming.chor.enabled   -> chorï¿½graphie de streaming (oreilles)
 				if (!strcmp icval "true") then set g_streaming_chor_enabled = 1
 				else set g_streaming_chor_enabled = 0;
 				0
-			
+
 			) else if !strcmp ickey "int.mask" then (
 				// int.mask -> masque d'interruption pour le mode interactif
 				set g_int_mask = (atoi icval);
 				0
-			
+
 			) else if !strcmp ickey "cookie" then (
-				// cookie -> cookie envoyé au serveur
+				// cookie -> cookie envoyï¿½ au serveur
 				set g_cookie = strcatlist "&c="::icval::nil;
 				0
 			) else (
@@ -4045,23 +4045,23 @@ fun eval_IC_msg val=
 
 
 // ****************************************
-// Exécution des chorégraphies de streaming
+// Exï¿½cution des chorï¿½graphies de streaming
 // v17 - AS 25may07
 
 // - 4 pas de danse fournis (dans chorstream_chorslist)
-// - une séquence :
+// - une sï¿½quence :
 // 	- une fois sur chorst_oreille_chance, bouger les oreilles :
-// 		- pour chaque oreille, choisir une position au hasard entre les 4 possibles (0, 4, 8, 12 dents) et, si elle est différente de la position courante, y aller, dans le sens 'vers l'avant'.
+// 		- pour chaque oreille, choisir une position au hasard entre les 4 possibles (0, 4, 8, 12 dents) et, si elle est diffï¿½rente de la position courante, y aller, dans le sens 'vers l'avant'.
 // 	- tirer un pas de danse au hasard (parmi les 4 fournis)
 // 	- tirer un nombre de boucles N au hasard entre 3 et 20 (inclus)
 // 	- tirer un frame_duration au hasard entre 16 et 25 (soit entre 160 ms et 250 ms par frame)
-// or les pas durent de 44 à 71 frames, donc le pas dure de 7 à 17 secs,
-// donc la séquence dure de 21s à 5m40s
-// 	-> jouer le pas de danse N fois à ce tempo, puis nouvelle séquence
+// or les pas durent de 44 ï¿½ 71 frames, donc le pas dure de 7 ï¿½ 17 secs,
+// donc la sï¿½quence dure de 21s ï¿½ 5m40s
+// 	-> jouer le pas de danse N fois ï¿½ ce tempo, puis nouvelle sï¿½quence
 // A chaque pas de danse : tirer 3 couleurs au hazard dans la palette courante : tete, ventre, pied
-// Si palette aléatoire : la changer à toutes les séquences
-// sinon, fixée par le serveur.
-// 
+// Si palette alï¿½atoire : la changer ï¿½ toutes les sï¿½quences
+// sinon, fixï¿½e par le serveur.
+//
 var chorst_pasdedanse;;
 var chorst_index;;
 var chorst_tempo;;
@@ -4069,48 +4069,48 @@ var chorst_loops;;
 var chorst_nexttime;;
 var chorst_palettecolors = {0 0 0};;
 
-// v17 AS 25may07 : ratio entre changt de séquence et mvt d'oreille. Plus c'est grand moins souvent les moteurs joueront.
-// = 0 : à chaque chgt de seq (en myenne toutes les 2,5 minutes)
+// v17 AS 25may07 : ratio entre changt de sï¿½quence et mvt d'oreille. Plus c'est grand moins souvent les moteurs joueront.
+// = 0 : ï¿½ chaque chgt de seq (en myenne toutes les 2,5 minutes)
 // = 1 : une fois sur 2 (soit en moyenne ttes les 5 minutes)
 // = 2 : une fois sur 3 (soit en moyenne ttes les 7,5 minutes), etc...
-var chorst_oreille_chance;; 
+var chorst_oreille_chance;;
 
 // mouvement des leds et oreilles
 fun dochorstream=
 	if chorst_pasdedanse==nil || ((chorst_index>=strlen chorst_pasdedanse)&&(chorst_loops<1)) then
 	(
-		// nouvelle séquence
+		// nouvelle sï¿½quence
 		// Secho "Sequence suivante ";
 
 		// ears enabled ?
-		if (g_streaming_chor_enabled) then 
+		if (g_streaming_chor_enabled) then
 		(
 		// movements moteur
 		// toutes les chorst_oreille_chance fois en moyenne
-		// et aussi la première fois forcément histoire de montrer qu'on commence
+		// et aussi la premiï¿½re fois forcï¿½ment histoire de montrer qu'on commence
 		if (chorst_pasdedanse == nil) then
 		(
 			// une des oreilles en haut, une autre en bas : radio...
 			if ((random 2) == 1) then (earGo 0 0 0; earGo 1 10 0) else (earGo 0 10 0; earGo 1 0 0);
-			
+
 			// initialisation chorst_oreille_chance
 			set chorst_oreille_chance = 0
 
 		) else if ((random chorst_oreille_chance) == 0) then
 		(
-			// pour chaque oreille, choisir une position au hasard entre les 4 possibles (0, 5, 10, 14 dents) et, si elle est différente de la position courante, y aller, dans le sens 'vers l'avant'.
+			// pour chaque oreille, choisir une position au hasard entre les 4 possibles (0, 5, 10, 14 dents) et, si elle est diffï¿½rente de la position courante, y aller, dans le sens 'vers l'avant'.
 			let 0::5::10::14::nil -> ear4Positions in
 			(
 				let listnth ear4Positions rand&3 -> p in earGo 0 p 0;
 				let listnth ear4Positions rand&3 -> p in earGo 1 p 0
 			);
-			
+
 			// de moins en moins souvent, puis de nouveau souvent, etc..
 			if ((set chorst_oreille_chance = chorst_oreille_chance + 1) > 4) then set chorst_oreille_chance = 0
 		)
 		);
-		
-		// choix d'une séquence = pas de danse (chorst_pasdedanse), tempo et nb de boucles
+
+		// choix d'une sï¿½quence = pas de danse (chorst_pasdedanse), tempo et nb de boucles
 		set chorst_pasdedanse = listnth chorstream_chorslist Iecholn rand&3;
 
 		set chorst_index=4+1; // on saute le header (4 bytes)
@@ -4118,24 +4118,24 @@ fun dochorstream=
 		//Secho "tempo "; Iecholn chorst_tempo;
 		set chorst_loops=3+random 18; // entre 3 et 20 (inclus)
 		//Secho "loops "; Iecholn chorst_loops;
-		
+
 		if (current_palette_is_random) then
 			// changer palette courante
 			set_current_palette random 7;
-		
+
 		// choisir 3 couleurs au hasard dans la palette
 		set chorst_palettecolors={(random 7) (random 7) (random 7)};
-		
+
 		set chorst_nexttime=time_ms
-		
+
 	);
-	
-	// continuer à jouer
+
+	// continuer ï¿½ jouer
 	while (chorst_index < strlen chorst_pasdedanse) && time_ms >= chorst_nexttime do
 	(
-		// interprète la choragraphie. Uniquement des set_led_palette et des set_led_off et des set_led_color
-		
-		let strget chorst_pasdedanse chorst_index -> cmd in		
+		// interprï¿½te la choragraphie. Uniquement des set_led_palette et des set_led_off et des set_led_color
+
+		let strget chorst_pasdedanse chorst_index -> cmd in
 			// avance l'index de...
 			set chorst_index=chorst_index+2+
 				if (cmd == CH_set_led_palette) then
@@ -4144,7 +4144,7 @@ fun dochorstream=
 					let strget chorst_pasdedanse chorst_index+1 -> iled in
 					let strget chorst_pasdedanse chorst_index+2 -> icol in
 					let chorst_palettecolors.(3&icol) -> palcol in
-						// jouer la LED						
+						// jouer la LED
 						led iled current_palette.palcol;
 
 					// 2 bytes : led, color
@@ -4155,37 +4155,37 @@ fun dochorstream=
 					// off
 					let strget chorst_pasdedanse chorst_index+1 -> iled in
 						led iled 0;
-						
+
 					// 1 byte : led
 					1
 				)
 				else if (cmd == CH_set_led_color) then
 				(
 					led strget chorst_pasdedanse chorst_index+1
-						((strget chorst_pasdedanse chorst_index+2)<<16) + 
-						((strget chorst_pasdedanse chorst_index+3)<<8) + 
+						((strget chorst_pasdedanse chorst_index+2)<<16) +
+						((strget chorst_pasdedanse chorst_index+3)<<8) +
 						((strget chorst_pasdedanse chorst_index+4));
-						
-						// 6 bytes : 2 qui ne servent à rien
+
+						// 6 bytes : 2 qui ne servent ï¿½ rien
 						6
 				)
 				else if (cmd==CH_frame_duration) then
 				(
-					// on ne le prend pas en compte : c'est chorst_tempo qui gère le tempo
+					// on ne le prend pas en compte : c'est chorst_tempo qui gï¿½re le tempo
 					// 1 byte : duree
 					1
 				)
 
 				else (
-					// problème : commande inconnue : forcer à recommencer au début en incrémentant beaucoup trop
+					// problï¿½me : commande inconnue : forcer ï¿½ recommencer au dï¿½but en incrï¿½mentant beaucoup trop
 					Streamw strcatlist "dochorstream : unknown command, restarting dance" :: (itoa cmd) :: nil;
 					strlen chorst_pasdedanse
-				);			
-		
+				);
+
 		// pas de danse fini ?
 		if (chorst_index>=strlen chorst_pasdedanse) then
 		(
-			// on est arrivés au bout du pas de danse
+			// on est arrivï¿½s au bout du pas de danse
 			// next repeat
 			set chorst_loops=chorst_loops-1;
 			//Secho "loops "; Iecholn chorst_loops;
@@ -4194,24 +4194,24 @@ fun dochorstream=
 				// recommencer pas de danse
 				set chorst_index=4+1;  // on saute le header (4 bytes)
 				// tout de suite
-				set chorst_nexttime=time_ms;				
-				
-				0 // pour avoir le même type de return value que les autres branches du if...
+				set chorst_nexttime=time_ms;
 
-			) // sinon on laisse chorst_loops = 0 et chorst_index trop loin, ce qui force un passage à la séq suivante
-			
-		) else 
+				0 // pour avoir le mï¿½me type de return value que les autres branches du if...
+
+			) // sinon on laisse chorst_loops = 0 et chorst_index trop loin, ce qui force un passage ï¿½ la sï¿½q suivante
+
+		) else
 			// date de la prochaine commande
-			// note : on repart de time_ms, histoire de se caler sur le temps présent et non pas sur le temps de
-			// la chorégraphie, sinon, on a des coups de speed car cette fonction n'est pas toujours appelée de manière régulière.
+			// note : on repart de time_ms, histoire de se caler sur le temps prï¿½sent et non pas sur le temps de
+			// la chorï¿½graphie, sinon, on a des coups de speed car cette fonction n'est pas toujours appelï¿½e de maniï¿½re rï¿½guliï¿½re.
 			let strget chorst_pasdedanse chorst_index-1 -> delay in
 				set chorst_nexttime = time_ms+delay*chorst_tempo
-		
+
 	);
-	
+
 	0;;
 
-// boucle principale de la chorégraphie de streaming
+// boucle principale de la chorï¿½graphie de streaming
 fun stopStream=
   Streamw "stopStream";
 	// oreilles
@@ -4224,7 +4224,7 @@ fun stopStream=
 		if (gItState) then XmppSessionRequestResource "itmode"
 		else XmppSessionRequestResource "idle"
 	)
-	
+
 	;;
 
 fun runStreamingCmd i0=
@@ -4233,7 +4233,7 @@ fun runStreamingCmd i0=
 		stopStream;
 		// next command
 		set run=cmdEvalOne i0+1;
-			
+
 		nil
 	) else (
 		// execute streaming choreography
@@ -4272,11 +4272,11 @@ fun runWaitCmd i0 =
 fun runEvalOneCommand i0=
 //	Secho "runEvalOneCommand ";Iecholn i0;
 	interactiveResetEarsTouched;
-		
+
 	let listnth gCurrentProgram i0 -> [key val] in
 	if (/* Secho "eval cmd:";Secholn */ key)==nil then
 	(
-		// toutes commandes jouées : demander la suite
+		// toutes commandes jouï¿½es : demander la suite
 		endOfProgram 0;
 		0
 	)
@@ -4372,10 +4372,10 @@ fun runEvalOneCommand i0=
 	else if !strcmp key "SE" then
 	(
 		Secho "exec SE : "; Secholn val;
-		// stoppe le stream courant s'il est nommé comme ca
+		// stoppe le stream courant s'il est nommï¿½ comme ca
 		if gStreamingState && (!strcmp gCurStreamName val) then (
 			wavstop;
-			earStop 0;		
+			earStop 0;
 			stopStream
 		);
 		// play next
@@ -4440,24 +4440,24 @@ fun runEvalOneCommand i0=
 				0)
 		else if !strcmp key "IC" then (eval_IC_msg val;0)
 		else (Secholn "unknown, dropping";0);
-		
+
 		// and skip command
 		set run=cmdEvalOne i0+1;
 		runEvalOneCommand i0+1
 	);;
 
-// R=60*((rand&127)+64)) => 64 à 196 mn
-// donc si x=30, (x*R)>>7 => 15 à 45 mn
-// donc si x=40, (x*R)>>7 => 20 à 61 mn
-// donc si x=80, (x*R)>>7 => 40 à 122 mn
-// donc si x=216, (x*R)>>7 => 108 à 330 mn
-// donc si x=255, (x*R)>>7 => 127 à 390 mn, soit 2 à 6,5h
+// R=60*((rand&127)+64)) => 64 ï¿½ 196 mn
+// donc si x=30, (x*R)>>7 => 15 ï¿½ 45 mn
+// donc si x=40, (x*R)>>7 => 20 ï¿½ 61 mn
+// donc si x=80, (x*R)>>7 => 40 ï¿½ 122 mn
+// donc si x=216, (x*R)>>7 => 108 ï¿½ 330 mn
+// donc si x=255, (x*R)>>7 => 127 ï¿½ 390 mn, soit 2 ï¿½ 6,5h
 var nexttaichi;;
 fun dotaichinow=
 	//Secho "checktaichi ";
 	if infotaichi && (infotaichi != nil) && (!gSleepState) then let (if nexttaichi!=nil then (time>nexttaichi) else 0) -> now in (
 		if now || nexttaichi==nil then // compute nexttaichi
-		let if (infotaichi == 40) then 255 else if (infotaichi == 255) then 40 else 80 -> correctedTaichi in // etait inversé
+		let if (infotaichi == 40) then 255 else if (infotaichi == 255) then 40 else 80 -> correctedTaichi in // etait inversï¿½
 		let ((correctedTaichi*60*((rand&127)+64))>>7) -> delaye in (
 			Secho "taichi in "; Iecho delaye; Secholn "s";
 			set nexttaichi=time+delaye
@@ -4474,20 +4474,20 @@ fun runEarReset cb=
 	;;
 
 fun _goSleepNow=
-	// oreilles arrivées en haut : eteindre tout + oreille basses
+	// oreilles arrivï¿½es en haut : eteindre tout + oreille basses
 	setleds RGB_BLACK;
 	earGo 0 10 0; // sur le v2 c'est la position 10 qui est en bas
 	earGo 1 10 0;
 	set run=sleepRun
 	;;
-	
+
 fun _wakeupNow=
 	//Secholn "_wakeupNow";
 	earsGoToRefPos;
 	earSetWaitAndDetectMode;
 	set run=idleRun
 	;;
-	
+
 fun startSleep=
 	Secholn "startSleep";
 	let gSleepState -> sleeping in (
@@ -4649,7 +4649,7 @@ var gTramesQueue = nil;;
 const TRAME_QUEUE_MAXLEN = 10;;
 
 fun _isResourceValid rsrcName=
-	// les règles d'adéquation entre resource et etats
+	// les rï¿½gles d'adï¿½quation entre resource et etats
 	if (!strcmp rsrcName "urgent") then 1 // tjrs
 	else if (!strcmp rsrcName "sources") then 1 // tjrs
 	else if (!strcmp rsrcName "boot") then 1 // tjrs
@@ -4660,9 +4660,9 @@ fun _isResourceValid rsrcName=
 	else 1;;
 
 fun _queueTrameRemoveEntry binome=
-	// dépile
+	// dï¿½pile
 	set gTramesQueue = remfromlist gTramesQueue binome;
-	
+
 	// was full ?
 	let listlen gTramesQueue -> queueLen in
 	if queueLen == TRAME_QUEUE_MAXLEN-1 then (
@@ -4685,14 +4685,14 @@ fun getNextValidPendingTrame=
 			if ((expiration_time != nil) && (time >= expiration_time)) then (
 				Secholn "trame expired, removing";
 				_queueTrameRemoveEntry binome
-				
+
 			) else if (_isResourceValid rsrc) then (
 				// ok
 				set theTrame = ping_trame;
-			
+
 				_queueTrameRemoveEntry binome
 			);
-			
+
 			// next
 			set ptr = tl ptr
 		);
@@ -4710,7 +4710,7 @@ fun processIncomingTrame ping_trame rsrc ttl=
 		Secholn "enqueueing trame";
 		let if (ttl == nil) then nil else (time + (atoi ttl)) -> expiration_time in
 			set gTramesQueue = conc gTramesQueue [rsrc expiration_time ping_trame]::nil;
-		
+
 		// full ?
 		let listlen gTramesQueue -> queueLen in
 		if queueLen >= TRAME_QUEUE_MAXLEN then (
@@ -4726,13 +4726,13 @@ fun processIncomingTrame ping_trame rsrc ttl=
 
 fun runLogin=
 	// if trame waiting, execute it
-	let getNextValidPendingTrame -> trame in 
+	let getNextValidPendingTrame -> trame in
 	if trame != nil then
 		evalTrame trame;;
 
 fun runIdle=
 	// if trame waiting, execute it
-	let getNextValidPendingTrame -> trame in 
+	let getNextValidPendingTrame -> trame in
 	if trame != nil then (
 		evalTrame trame;
 		0
@@ -4750,7 +4750,7 @@ fun runIdle=
 var gWasNetActivity = 0;;
 fun noseled=
 	if !earDetecting then
-	// led tete clignote if netactivity or wav_buffering // 
+	// led tete clignote if netactivity or wav_buffering //
 	let uploading || (match run with (rscLoadWaitRun _-> 1)|(interactiveReqWaitRun _->1)|(_->0)) -> netactivity in
 	if (netactivity || wav_buffering) then (
 		let if netactivity then 256 else if wav_buffering then 128 else 0 -> speed in
@@ -4764,15 +4764,15 @@ fun noseled=
 	0;;
 
 fun bottomled=
-	if gSleepState == 0 then 
+	if gSleepState == 0 then
 	if !earDetecting then
 		(let osc time_ms>>4 -> v in led LED_BASE v*bottomColor); // pulse bottom led
 	0;;
-	
+
 
 // ********** RFID **********************
-// v19 Amélioration de la lecteure RFID
-// v19 Les fonction ParseRfid servent à tester les caractères de l'identifiant RFID
+// v19 Amï¿½lioration de la lecteure RFID
+// v19 Les fonction ParseRfid servent ï¿½ tester les caractï¿½res de l'identifiant RFID
 var lastrfid;;
 var RFIDchar = 2;; // v19
 var RFIDint = 6;; // v19
@@ -4780,7 +4780,7 @@ var RFIDchek = 0;; // v19
 var RFIDlast = 0;; // v19
 
 var tmptps = 0;;
-	
+
 fun _cbrfidhttp http res=
 	Secholn "Recv rfid:"; Secho res;
 	set gProcessingState = 0;
@@ -4829,7 +4829,7 @@ fun checkRfidPresence=
 	if (strcmp rfid lastrfid) && (RFIDchek == 0) && (time_ms - RFIDlast > 750) then
 		rfid
 	else
-		nil	
+		nil
 ;;
 
 fun controlrfid=
@@ -4853,7 +4853,7 @@ fun controlrfid=
 
 			// lancer l'animation (v19)
 			msgchorstart chor_RFIDok::nil #_cbrfidendchor nil;
-			set chortimescale=10; // recopié d'avant, mas pourquoi ? Nécessaire ? [AS 24oct07]				
+			set chortimescale=10; // recopiï¿½ d'avant, mas pourquoi ? Nï¿½cessaire ? [AS 24oct07]
 
 			set gProcessingState = 1;
 			if (gItState) then
@@ -4873,7 +4873,7 @@ fun controlplay=
 		wavstop;
 		earStop 0;
 		let atoi listswitchstr gCurrentProgram "ID" -> id in
-			if ev==BUTTON_CLIC then	(controlsound midi_abort; if (gStreamingState) then stopStream; endOfProgram 0; XmppSessionSendButtonMsg ev 1 id) //pause  
+			if ev==BUTTON_CLIC then	(controlsound midi_abort; if (gStreamingState) then stopStream; endOfProgram 0; XmppSessionSendButtonMsg ev 1 id) //pause
 			else if ev==BUTTON_DCLIC then (controlsound midi_ack;if (gStreamingState) then stopStream; endOfProgram 0; XmppSessionSendButtonMsg ev 1 id) //ackall
 			else if ev==BUTTON_LCLIC then nil //pause ou record ? callPingRequest 5
 	)
@@ -4884,7 +4884,7 @@ fun controlwait=
 	let if ev==nil then eargetevent else ev -> ev in
 	if ev!=nil then
 	(
-		Secho "controlwait ev="; Iecholn ev; 
+		Secho "controlwait ev="; Iecholn ev;
 		wavstop;
 		earStop 0;
 		if ev==BUTTON_CLIC then ( XmppSessionSendButtonMsg ev 0 nil) // debug
@@ -4902,7 +4902,7 @@ fun controlwait=
 				XmppSessionSendEarMsg leftpos rightPos
 			);
 			0
-		) 
+		)
 	);
 	controlrfid
 	;;
@@ -4922,7 +4922,7 @@ fun controlinteractif=
 			) else (
 				// like BUTTON_CLIC
 				set ev = BUTTON_CLIC;
-				if (g_int_mask&MASK_BUTTON == 0) then interactiveSendBtn ev	
+				if (g_int_mask&MASK_BUTTON == 0) then interactiveSendBtn ev
 			)
 		)
 	);
@@ -5014,12 +5014,12 @@ fun loop=
 			// Affichage des sources.
 			infoRun;
 			// On fige la base en violet
-			led LED_BASE RGB_VIOLET	
+			led LED_BASE RGB_VIOLET
 		);
-		let params -> [waitTime xSession oldRun] in 
+		let params -> [waitTime xSession oldRun] in
 			match xSession.sStatus with
 				(sOpened -> set run = oldRun; 0)
-				|(sClosed -> 
+				|(sClosed ->
 					if time_ms > waitTime then (
 						XmppGateReconnect xSession 0
 					);
@@ -5029,7 +5029,7 @@ fun loop=
 
 	( idleRun -> earRun;infoRun;bottomled;noseled;runIdle;CONTROL_WAIT) |
 	( sleepRun -> earRun;runIdle;0) |
-	
+
 	( rscLoadNextRun -> earRun;infoRun;bottomled;noseled;runRscLoadNext; CONTROL_WAIT)|
 	( rscLoadWaitRun http-> earRun;infoRun;bottomled;noseled;runRscLoadWait http;CONTROL_WAIT)|
 	( cmdEvalOne i-> earRun;runEvalOneCommand i;CONTROL_PLAY)|
@@ -5054,7 +5054,7 @@ fun loop=
 		buttongetevent
 	;
 
-	XmppSessionRun; // On envois éventuellement les packets en attente	
+	XmppSessionRun; // On envois ï¿½ventuellement les packets en attente
 	XmppSessionIdle;
 	uploadtimeout;
 

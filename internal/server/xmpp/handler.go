@@ -23,6 +23,7 @@ type handler struct {
     authUser string
     onButton func(id string, clicks int)
     onEars   func(id string, left, right int)
+    bypassAuth bool
 }
 
 func newHandler(domain string, logger *slog.Logger) *handler {
@@ -56,6 +57,11 @@ func (h *handler) Process(in []byte) (out []string) {
 		}
     case 1:
         if has(data, `<auth xmlns='urn:ietf:params:xml:ns:xmpp-sasl' mechanism='DIGEST-MD5'/>`) {
+            if h.bypassAuth {
+                out = append(out, `<success xmlns='urn:ietf:params:xml:ns:xmpp-sasl'/>`)
+                h.step = 4
+                return
+            }
             // issue a random nonce per connection
             if h.nonce == "" {
                 if h.nonceFactory != nil { h.nonce = h.nonceFactory() } else { h.nonce = genNonce() }
@@ -67,6 +73,11 @@ func (h *handler) Process(in []byte) (out []string) {
         }
         // SASL PLAIN fallback
         if reAuthPlain.MatchString(data) {
+            if h.bypassAuth {
+                out = append(out, `<success xmlns='urn:ietf:params:xml:ns:xmpp-sasl'/>`)
+                h.step = 4
+                return
+            }
             m := reAuthPlain.FindStringSubmatch(data)
             if len(m) >= 2 {
                 payload, _ := base64.StdEncoding.DecodeString(m[1])
@@ -89,6 +100,11 @@ func (h *handler) Process(in []byte) (out []string) {
         }
     case 2:
         if has(data, `<response xmlns='urn:ietf:params:xml:ns:xmpp-sasl'>`) {
+            if h.bypassAuth {
+                out = append(out, `<success xmlns='urn:ietf:params:xml:ns:xmpp-sasl'/>`)
+                h.step = 4
+                return
+            }
             // Decode and validate DIGEST-MD5
             m := reResponse.FindStringSubmatch(data)
             if len(m) >= 2 {

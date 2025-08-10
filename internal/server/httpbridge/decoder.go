@@ -37,12 +37,19 @@ func Decode(frame []byte) (*Request, error) {
 	}
 	rawHeaders := string(payload[:i])
 	payload = payload[i+1:]
-	j := bytes.IndexByte(payload, 0)
-	if j < 0 {
-		return nil, errMalformed
-	}
-	rawURI := string(payload[:j])
-	post := payload[j+1:]
+    var rawURI string
+    var post []byte
+    if typ == 1 { // GET: remainder is raw URI, no second NUL
+        rawURI = string(payload)
+        post = nil
+    } else {
+        j := bytes.IndexByte(payload, 0)
+        if j < 0 {
+            return nil, errMalformed
+        }
+        rawURI = string(payload[:j])
+        post = payload[j+1:]
+    }
 
 	req := &Request{Headers: map[string]string{}, Get: map[string]string{}, Post: map[string]string{}}
 	switch typ {

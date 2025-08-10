@@ -2,6 +2,8 @@ version: "3.9"
 services:
   openjabnab:
     build: .
+    ports:
+      - "5222:5222"
     image: openjabnab:latest
     container_name: ojn-server
     restart: unless-stopped

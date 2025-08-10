@@ -21,6 +21,7 @@ type Server struct {
     OnButton func(id string, clicks int)
     OnEars   func(id string, left, right int)
     Dump func(cat string, data []byte)
+    BypassAuth bool
 }
 
 func (s *Server) ListenAndServe(stop <-chan struct{}) error {
@@ -51,6 +52,7 @@ func (s *Server) handleConn(c net.Conn) {
     if s.NonceFactory != nil { h.nonceFactory = s.NonceFactory }
     if s.OnButton != nil { h.onButton = s.OnButton }
     if s.OnEars != nil { h.onEars = s.OnEars }
+    h.bypassAuth = s.BypassAuth
 	buf := make([]byte, 4096)
 	for {
 		n, err := br.Read(buf)

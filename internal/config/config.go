@@ -47,6 +47,10 @@ type Config struct {
         Username string
         Password string
     }
+
+    Auth struct {
+        Bypass bool
+    }
 }
 
 func LoadDefault() (*Config, error) {
@@ -122,5 +126,9 @@ func Load(path string) (*Config, error) {
     acc := f.Section("Accounts")
     c.Accounts.Username = acc.Key("Username").MustString("")
     c.Accounts.Password = acc.Key("Password").MustString("")
+
+    // [Auth]
+    auth := f.Section("Auth")
+    c.Auth.Bypass = auth.Key("Bypass").MustBool(false)
 	return c, nil
 }
