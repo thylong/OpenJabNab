@@ -122,3 +122,132 @@ AllowedVoices = en-US-Standard-A,en-US-Standard-B
 - RealHttpRoot/broadcast mapping:
   - Ensure `RealHttpRoot` points to the http-wrapper root (e.g., `/app/http-wrapper/ojn_local/`)
   - Generated audio will be under `<RealHttpRoot>/broadcast/tts/...` and served by the wrapper or native HTTP.
+
+## Deployment (Ops) examples
+
+### Kubernetes (Google provider)
+
+```
+apiVersion: v1
+kind: Secret
+metadata:
+  name: gcp-tts-sa
+type: Opaque
+stringData:
+  gcp-sa.json: |
+    { ... service account json ... }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openjabnab
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: openjabnab }
+  template:
+    metadata:
+      labels: { app: openjabnab }
+    spec:
+      containers:
+      - name: ojn
+        image: yourrepo/openjabnab:latest
+        env:
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /secrets/gcp-sa.json
+        - name: OJN_PLUGIN_DIR
+          value: /config/plugins
+        - name: OJN_STATE_DIR
+          value: /config/state
+        volumeMounts:
+        - name: gcp-sa
+          mountPath: /secrets
+          readOnly: true
+        - name: config
+          mountPath: /config
+      volumes:
+      - name: gcp-sa
+        secret:
+          secretName: gcp-tts-sa
+          items:
+          - key: gcp-sa.json
+            path: gcp-sa.json
+      - name: config
+        persistentVolumeClaim:
+          claimName: ojn-config-pvc
+```
+
+### Kubernetes (Acapela provider)
+
+```
+apiVersion: v1
+kind: Secret
+metadata:
+  name: acapela-secrets
+type: Opaque
+stringData:
+  ACAPELA_LOGIN: your_login
+  ACAPELA_PASSWORD: your_password
+  ACAPELA_APPLICATION: your_app
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openjabnab
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: openjabnab }
+  template:
+    metadata:
+      labels: { app: openjabnab }
+    spec:
+      containers:
+      - name: ojn
+        image: yourrepo/openjabnab:latest
+        envFrom:
+        - secretRef: { name: acapela-secrets }
+        env:
+        - name: OJN_PLUGIN_DIR
+          value: /config/plugins
+        - name: OJN_STATE_DIR
+          value: /config/state
+        volumeMounts:
+        - name: config
+          mountPath: /config
+      volumes:
+      - name: config
+        persistentVolumeClaim:
+          claimName: ojn-config-pvc
+```
+
+### Docker Compose
+
+```
+services:
+  openjabnab:
+    image: yourrepo/openjabnab:latest
+    ports:
+      - "8080:8080"   # http bridge if exposed
+      - "8081:8081"   # native http
+      - "5222:5222"   # xmpp
+    environment:
+      OJN_PLUGIN_DIR: /config/plugins
+      OJN_STATE_DIR: /config/state
+      # Google
+      GOOGLE_APPLICATION_CREDENTIALS: /secrets/gcp-sa.json
+      # Acapela (alternative)
+      # ACAPELA_LOGIN: your_login
+      # ACAPELA_PASSWORD: your_password
+      # ACAPELA_APPLICATION: your_app
+    volumes:
+      - ./config:/config
+      - ./secrets:/secrets:ro
+```
+
+### Quotas and rate limits
+
+- Google Cloud TTS: enforce quotas per project. Recommended initial `[TTS]` settings:
+  - `RateLimitRPS = 5`, `Workers = 2`, `TimeoutMs = 15000`, `MaxRetries = 2`, `BackoffMs = 200`
+- Acapela: respect service terms and throughput limits. Start with the same rate/worker defaults and adjust per observed latency.
+
