@@ -94,7 +94,11 @@ func (pl *Plugin) HttpRequestHandle(r *p.Request) bool { return false }
 func (pl *Plugin) ProcessPluginApi(function string, get map[string]string) (bool, []byte, error) {
     switch strings.ToLower(function) {
     case "voices":
-        vs, _ := pl.provider.ListVoices(context.Background())
+        // Mask provider errors; short timeout
+        ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+        defer cancel()
+        vs, err := pl.provider.ListVoices(ctx)
+        if err != nil { return true, []byte(`<error>Unavailable</error>`), nil }
         // Optional allowlist filter from config via settings key or env
         allow := pl.settings.Get("plugin", "AllowedVoices", "")
         if allow == "" { allow = pl.settings.Get("plugin", "allowedVoices", "") }
@@ -143,6 +147,14 @@ func (pl *Plugin) ProcessPluginApi(function string, get map[string]string) (bool
         return true, []byte(`<queue/>`), nil
     case "clear":
         return true, []byte(`<ok/>`), nil
+    case "health":
+        // Lightweight health: attempt a quick ListVoices call with short timeout
+        ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+        defer cancel()
+        if _, err := pl.provider.ListVoices(ctx); err != nil {
+            return true, []byte(`<status>degraded</status>`), nil
+        }
+        return true, []byte(`<status>ok</status>`), nil
     }
     return false, nil, nil
 }
