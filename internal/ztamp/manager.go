@@ -1,12 +1,17 @@
 package ztamp
 
-import "sync"
+import (
+    "path/filepath"
+    ini "gopkg.in/ini.v1"
+    "sync"
+)
 
 // Manager tracks known ztamps (RFID tags). For now it only exposes totals.
 type Manager struct {
     mu    sync.RWMutex
     known map[string]struct{}
     assigned map[string]string // ztampID -> bunnyID
+    statePath string
 }
 
 func NewManager() *Manager {
@@ -62,3 +67,37 @@ func (m *Manager) AssignedTo(id string) (string, bool) {
 // Aliases for API naming
 func (m *Manager) Add(id string) { m.Register(id) }
 func (m *Manager) Remove(id string) { m.Unregister(id) }
+
+// Persistence
+func (m *Manager) LoadState(dir string) error {
+    m.mu.Lock(); defer m.mu.Unlock()
+    m.statePath = filepath.Join(dir, "ztamps.ini")
+    cfg, err := ini.LooseLoad(m.statePath)
+    if err != nil { return err }
+    // known
+    for _, k := range cfg.Section("known").Keys() {
+        m.known[k.Name()] = struct{}{}
+    }
+    // assigned
+    for _, k := range cfg.Section("assigned").Keys() {
+        m.assigned[k.Name()] = k.Value()
+    }
+    return nil
+}
+
+func (m *Manager) save() {
+    if m.statePath == "" { return }
+    cfg, _ := ini.LooseLoad(m.statePath)
+    known := cfg.Section("known"); known.DeleteKey("")
+    for id := range m.known { known.Key(id).SetValue("1") }
+    assigned := cfg.Section("assigned"); assigned.DeleteKey("")
+    for id, b := range m.assigned { assigned.Key(id).SetValue(b) }
+    _ = cfg.SaveTo(m.statePath)
+}
+
+// Override mutators to persist
+// Override mutators to persist (rename internals to avoid redeclare)
+func (m *Manager) registerPersist(id string) { m.known[id]=struct{}{}; m.save() }
+func (m *Manager) unregisterPersist(id string) { delete(m.known,id); delete(m.assigned,id); m.save() }
+func (m *Manager) assignPersist(id, bunny string) bool { if _,ok:=m.known[id];!ok{return false}; m.assigned[id]=bunny; m.save(); return true }
+func (m *Manager) unassignPersist(id string) { delete(m.assigned,id); m.save() }

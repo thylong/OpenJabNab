@@ -58,6 +58,8 @@ type Config struct {
     // Native HTTP server (to replace PHP wrapper)
     HttpNativeListener bool
     NativeHttpPort     int
+    // Directory for state persistence (bunny names, ztamp assignments)
+    StateDir string
 }
 
 func LoadDefault() (*Config, error) {
@@ -151,5 +153,15 @@ func Load(path string) (*Config, error) {
     // Native HTTP defaults
     c.HttpNativeListener = f.Section("Config").Key("HttpNativeListener").MustBool(false)
     c.NativeHttpPort = f.Section("Config").Key("NativeHttpPort").MustInt(8081)
+
+    // StateDir: env var takes precedence; default to /config/state, fallback to ./state
+    if v := os.Getenv("OJN_STATE_DIR"); v != "" {
+        c.StateDir = v
+    } else {
+        c.StateDir = "/config/state"
+        if _, err := os.Stat(c.StateDir); err != nil {
+            c.StateDir = "state"
+        }
+    }
 	return c, nil
 }

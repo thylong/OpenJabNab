@@ -28,6 +28,7 @@ type servers struct {
 func startServers(logger *slog.Logger, cfg *configpkg.Config) (*servers, error) {
     // Managers
     bunMgr := bunny.NewManager(cfg.MaxNumberOfBunnies)
+    _ = bunMgr.LoadState(cfg.StateDir)
     accMgr := account.NewManager()
     if cfg.Accounts.Username != "" {
         accMgr.AddUser(cfg.Accounts.Username, cfg.Accounts.Password)
@@ -35,6 +36,7 @@ func startServers(logger *slog.Logger, cfg *configpkg.Config) (*servers, error) 
     }
     // Live stats from managers
     ztMgr := ztamp.NewManager()
+    _ = ztMgr.LoadState(cfg.StateDir)
     statProv := stats.NewLive(cfg, bunMgr, ztMgr)
 
     apiMgr := &api.Manager{Logger: logger, Stats: statProv}
