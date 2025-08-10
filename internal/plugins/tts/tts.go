@@ -9,6 +9,7 @@ import (
     "regexp"
     "strings"
     "sync"
+    "time"
 
     cfgpkg "OpenJabNab/internal/config"
     p "OpenJabNab/internal/plugin"
@@ -24,6 +25,10 @@ type Plugin struct{
     outputRoot string // filesystem root where broadcast files are written
     // path under broadcast for tts files: broadcast/tts/<voice>/<hash>.mp3
     send       func(bunnyID string, payload []byte) bool
+    // rate limiting
+    rateInterval time.Duration
+    rateBurst    int
+    tokens       chan struct{}
 }
 
 type speakJob struct{
@@ -43,6 +48,19 @@ func New(cfg *cfgpkg.Config) *Plugin {
         out = filepath.Join(cfg.RealHttpRoot, "broadcast")
     }
     pl := &Plugin{enabled: true, settings: st, queue: make(chan speakJob, 64), provider: provider, outputRoot: out}
+    // init rate limiter
+    rps := cfg.TTSRateLimitRPS
+    if rps <= 0 { rps = 5 }
+    pl.rateInterval = time.Second / time.Duration(rps)
+    pl.rateBurst = rps
+    pl.tokens = make(chan struct{}, pl.rateBurst)
+    go func(){
+        ticker := time.NewTicker(pl.rateInterval)
+        defer ticker.Stop()
+        for range ticker.C {
+            select { case pl.tokens <- struct{}{}: default: }
+        }
+    }()
     go pl.worker()
     return pl
 }
@@ -106,8 +124,14 @@ func (pl *Plugin) ProcessPluginApi(function string, get map[string]string) (bool
 
 func (pl *Plugin) worker() {
     for job := range pl.queue {
+        // rate limit
+        select { case <-pl.tokens: default: time.Sleep(pl.rateInterval) }
         // Synthesize
-        data, codec, err := pl.provider.Synthesize(context.Background(), job.text, job.voiceID)
+        timeout := time.Duration(15000) * time.Millisecond
+        if ms := pl.settings.Get("plugin", "TimeoutMs", ""); ms != "" { /* allow per-plugin override via ini */ }
+        ctx, cancel := context.WithTimeout(context.Background(), timeout)
+        data, codec, err := pl.trySynthesize(ctx, job.text, job.voiceID)
+        cancel()
         if err != nil { continue }
         // Compute path and write
         h := sha1.Sum([]byte("mock:" + job.voiceID + ":" + codec + ":" + job.text))
@@ -126,6 +150,22 @@ func (pl *Plugin) worker() {
             _ = pl.send(job.bunnyID, msg)
         }
     }
+}
+
+func (pl *Plugin) trySynthesize(ctx context.Context, text, voice string) ([]byte, string, error) {
+    // retries with backoff
+    maxRetries := 2
+    backoff := 200 * time.Millisecond
+    var data []byte
+    var codec string
+    var err error
+    for attempt := 0; attempt <= maxRetries; attempt++ {
+        data, codec, err = pl.provider.Synthesize(ctx, text, voice)
+        if err == nil { return data, codec, nil }
+        select { case <-time.After(backoff): case <-ctx.Done(): return nil, "", ctx.Err() }
+        backoff *= 2
+    }
+    return nil, "", err
 }
 
 // Implement PacketSenderAware

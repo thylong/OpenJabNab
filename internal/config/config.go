@@ -23,7 +23,11 @@ type Config struct {
 	AllowUserManageBunny   bool
 	AllowUserManageZtamp   bool
 	SessionTimeout         int
-	TTS                    string
+    TTS                    string
+    TTSTimeoutMs           int
+    TTSMaxRetries          int
+    TTSBackoffMs           int
+    TTSRateLimitRPS        int
 	MaxNumberOfBunnies     int
 	MaxBurstNumberOfBunnies int
 
@@ -111,7 +115,7 @@ func Load(path string) (*Config, error) {
 	c.AllowUserManageBunny = sec.Key("AllowUserManageBunny").MustBool(false)
 	c.AllowUserManageZtamp = sec.Key("AllowUserManageZtamp").MustBool(false)
 	c.SessionTimeout = sec.Key("SessionTimeout").MustInt(300)
-	c.TTS = sec.Key("TTS").MustString("acapela")
+    c.TTS = sec.Key("TTS").MustString("acapela")
 	c.MaxNumberOfBunnies = sec.Key("MaxNumberOfBunnies").MustInt(64)
 	c.MaxBurstNumberOfBunnies = sec.Key("MaxBurstNumberOfBunnies").MustInt(72)
 
@@ -163,5 +167,11 @@ func Load(path string) (*Config, error) {
             c.StateDir = "state"
         }
     }
+    // [TTS] provider options
+    tts := f.Section("TTS")
+    c.TTSTimeoutMs = tts.Key("TimeoutMs").MustInt(15000)
+    c.TTSMaxRetries = tts.Key("MaxRetries").MustInt(2)
+    c.TTSBackoffMs = tts.Key("BackoffMs").MustInt(200)
+    c.TTSRateLimitRPS = tts.Key("RateLimitRPS").MustInt(5)
 	return c, nil
 }
