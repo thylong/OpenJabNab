@@ -29,6 +29,8 @@ type Config struct {
     TTSBackoffMs           int
     TTSRateLimitRPS        int
     TTSAllowedVoices       string
+    TTSWorkers             int
+    TTSQueueSize           int
 	MaxNumberOfBunnies     int
 	MaxBurstNumberOfBunnies int
 
@@ -175,5 +177,7 @@ func Load(path string) (*Config, error) {
     c.TTSBackoffMs = tts.Key("BackoffMs").MustInt(200)
     c.TTSRateLimitRPS = tts.Key("RateLimitRPS").MustInt(5)
     c.TTSAllowedVoices = tts.Key("AllowedVoices").MustString("")
+    c.TTSWorkers = tts.Key("Workers").MustInt(2)
+    c.TTSQueueSize = tts.Key("QueueSize").MustInt(128)
 	return c, nil
 }

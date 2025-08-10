@@ -51,7 +51,9 @@ func New(cfg *cfgpkg.Config) *Plugin {
     }
     pname := cfg.TTS
     if pname == "" { pname = "mock" }
-    pl := &Plugin{enabled: true, settings: st, queue: make(chan speakJob, 64), provider: provider, providerName: pname, outputRoot: out}
+    qsize := cfg.TTSQueueSize
+    if qsize <= 0 { qsize = 128 }
+    pl := &Plugin{enabled: true, settings: st, queue: make(chan speakJob, qsize), provider: provider, providerName: pname, outputRoot: out}
     // init rate limiter
     rps := cfg.TTSRateLimitRPS
     if rps <= 0 { rps = 5 }
@@ -65,7 +67,10 @@ func New(cfg *cfgpkg.Config) *Plugin {
             select { case pl.tokens <- struct{}{}: default: }
         }
     }()
-    go pl.worker()
+    // start workers
+    workers := cfg.TTSWorkers
+    if workers <= 0 { workers = 2 }
+    for i := 0; i < workers; i++ { go pl.worker() }
     return pl
 }
 
@@ -126,9 +131,13 @@ func (pl *Plugin) ProcessPluginApi(function string, get map[string]string) (bool
         if id == "" || text == "" { return true, []byte(`<error>Missing bunny or text</error>`), nil }
         if !isValidBunnyID(id) || !isValidText(text) { return true, []byte(`<error>Invalid parameters</error>`), nil }
         if voice == "" { voice = pl.settings.Get("bunny_"+id, "voice", pl.settings.Get("plugin", "DefaultVoice", "en-US-Standard-A")) }
-        // Basic enqueue
-        select { case pl.queue <- speakJob{bunnyID: id, text: text, voiceID: voice}: default: }
-        return true, []byte(`<ok/>`), nil
+        // Enqueue with backpressure; if full return 429-like error
+        select {
+        case pl.queue <- speakJob{bunnyID: id, text: text, voiceID: voice}:
+            return true, []byte(`<ok/>`), nil
+        default:
+            return true, []byte(`<error>Too busy, try later</error>`), nil
+        }
     case "queue":
         // not implemented as persisted; return empty
         return true, []byte(`<queue/>`), nil
