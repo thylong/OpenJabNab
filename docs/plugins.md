@@ -251,3 +251,9 @@ services:
   - `RateLimitRPS = 5`, `Workers = 2`, `TimeoutMs = 15000`, `MaxRetries = 2`, `BackoffMs = 200`
 - Acapela: respect service terms and throughput limits. Start with the same rate/worker defaults and adjust per observed latency.
 
+### Secrets rotation and readiness
+
+- Rotate provider secrets by updating the Kubernetes Secret (or Compose env) and rolling the Deployment.
+- Prefer workload identity (e.g., GKE) for Google Cloud to avoid long‑lived keys.
+- Add a readiness probe on `/ojn_api/plugin/tts/health` to ensure providers are reachable before routing traffic.
+

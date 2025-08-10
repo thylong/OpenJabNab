@@ -5,6 +5,8 @@ import (
     "log/slog"
     "net/http"
     "strings"
+    "path/filepath"
+    "os"
 
     "OpenJabNab/internal/api"
     plug "OpenJabNab/internal/plugin"
@@ -30,7 +32,15 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
     // Serve broadcast under static root if configured
     if s.StaticRoot != "" && strings.HasPrefix(uri, "/broadcast/") {
-        http.ServeFile(w, r, s.StaticRoot+uri)
+        clean := filepath.Clean(uri)
+        full := filepath.Join(s.StaticRoot, filepath.FromSlash(clean))
+        root := filepath.Clean(s.StaticRoot)
+        if !strings.HasPrefix(full, root+string(os.PathSeparator)) {
+            w.WriteHeader(http.StatusForbidden)
+            _, _ = w.Write([]byte("Forbidden"))
+            return
+        }
+        http.ServeFile(w, r, full)
         return
     }
     // Run plugin HTTP pipeline for all URIs before API routing (parity with httpbridge)
