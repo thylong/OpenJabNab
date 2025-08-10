@@ -4,10 +4,12 @@ import (
     "context"
     "crypto/sha1"
     "encoding/hex"
+    "encoding/json"
     "os"
     "path/filepath"
     // stdpath "path"
     "regexp"
+    "strconv"
     "strings"
     "sync"
     "time"
@@ -56,6 +58,8 @@ type Plugin struct{
     timeout    time.Duration
     maxRetries int
     backoff    time.Duration
+    // persistence
+    statePath string
 }
 
 type speakJob struct{
@@ -100,6 +104,11 @@ func New(cfg *cfgpkg.Config) *Plugin {
             select { case pl.tokens <- struct{}{}: default: }
         }
     }()
+    // persistence path and load
+    if cfg.StateDir != "" {
+        pl.statePath = filepath.Join(cfg.StateDir, "tts_jobs.json")
+        pl.loadJobs()
+    }
     // start workers
     workers := cfg.TTSWorkers
     if workers <= 0 { workers = 2 }
@@ -171,7 +180,7 @@ func (pl *Plugin) ProcessPluginApi(function string, get map[string]string) (bool
         // Enqueue with backpressure; if full return 429-like error
         jid := pl.newJobID(id)
         pl.jobsMu.Lock()
-        pl.jobs[jid] = jobStatus{ID: jid, Bunny: id, Voice: voice, TextHash: shortHash(normalizeText(text)), State: "queued", EnqueuedAt: time.Now()}
+        pl.jobs[jid] = jobStatus{ID: jid, Bunny: id, Voice: voice, TextHash: shortHash(normalizeText(text)), Text: text, State: "queued", EnqueuedAt: time.Now()}
         pl.jobsMu.Unlock()
         select {
         case pl.queue <- speakJob{bunnyID: id, text: text, voiceID: voice, id: jid}:
@@ -188,6 +197,7 @@ func (pl *Plugin) ProcessPluginApi(function string, get map[string]string) (bool
         capc := cap(pl.queue)
         return true, []byte(`<queue size="`+strconvItoa(size)+`" capacity="`+strconvItoa(capc)+`"/>`), nil
     case "clear":
+        pl.jobsMu.Lock(); pl.jobs = make(map[string]jobStatus); pl.jobsMu.Unlock()
         return true, []byte(`<ok/>`), nil
     case "status":
         jid := strings.TrimSpace(get["id"])
@@ -291,6 +301,7 @@ type jobStatus struct{
     Bunny string
     Voice string
     TextHash string
+    Text string `json:"text,omitempty"`
     State string // queued|running|done|error|dropped
     EnqueuedAt time.Time
     StartedAt  time.Time
@@ -345,6 +356,7 @@ func shortHash(s string) string {
 func (pl *Plugin) Shutdown() {
     close(pl.stopCh)
     pl.wg.Wait()
+    pl.jobsMu.Lock(); pl.saveJobsLocked(); pl.jobsMu.Unlock()
 }
 
 func (pl *Plugin) pruneJobsLocked() {
@@ -356,6 +368,36 @@ func (pl *Plugin) pruneJobsLocked() {
     oldestTime := time.Now()
     for id, st := range pl.jobs { if !st.CompletedAt.IsZero() && st.CompletedAt.Before(oldestTime) { oldestTime = st.CompletedAt; oldestID = id } }
     if oldestID != "" { delete(pl.jobs, oldestID) }
+}
+
+// persistence helpers
+func (pl *Plugin) saveJobsLocked() {
+    if pl.statePath == "" { return }
+    items := make([]jobStatus, 0, len(pl.jobs))
+    for _, st := range pl.jobs { items = append(items, st) }
+    tmp := pl.statePath + ".tmp"
+    b, _ := json.Marshal(items)
+    _ = os.MkdirAll(filepath.Dir(pl.statePath), 0o755)
+    if err := os.WriteFile(tmp, b, 0o644); err == nil { _ = os.Rename(tmp, pl.statePath) }
+}
+
+func (pl *Plugin) loadJobs() {
+    if pl.statePath == "" { return }
+    b, err := os.ReadFile(pl.statePath)
+    if err != nil || len(b) == 0 { return }
+    var items []jobStatus
+    if json.Unmarshal(b, &items) != nil { return }
+    for _, st := range items {
+        pl.jobs[st.ID] = st
+        if (st.State == "queued" || st.State == "running") && st.Text != "" {
+            select { case pl.queue <- speakJob{bunnyID: st.Bunny, text: st.Text, voiceID: st.Voice, id: st.ID}: default: }
+        }
+        // best-effort: update nextSeq from id suffix if numeric
+        parts := strings.Split(st.ID, "-")
+        if len(parts) > 1 {
+            if n, err := strconv.Atoi(parts[len(parts)-1]); err == nil && uint64(n) > pl.nextSeq { pl.nextSeq = uint64(n) }
+        }
+    }
 }
 
 func (pl *Plugin) trySynthesize(ctx context.Context, text, voice string) ([]byte, string, error) {
