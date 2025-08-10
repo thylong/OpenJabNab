@@ -24,6 +24,7 @@ type handler struct {
     onButton func(id string, clicks int)
     onEars   func(id string, left, right int)
     bypassAuth bool
+    onRegistered func(id, resource string)
 }
 
 func newHandler(domain string, logger *slog.Logger) *handler {
@@ -146,6 +147,7 @@ func (h *handler) Process(in []byte) (out []string) {
             if user == "" { user = "bunny" }
             jid := user+"@"+h.domain+"/"+h.resource
 			out = append(out, iqReply(data, `<bind xmlns='urn:ietf:params:xml:ns:xmpp-bind'><jid>`+jid+`</jid></bind>`))
+            if h.onRegistered != nil && h.authUser != "" { h.onRegistered(h.authUser, h.resource) }
 			return
 		}
 		if has(data, `<session xmlns='urn:ietf:params:xml:ns:xmpp-session'/>`) {

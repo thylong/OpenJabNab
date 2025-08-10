@@ -2,10 +2,12 @@ package xmpp
 
 import (
 	"bufio"
+    "encoding/base64"
 	"io"
 	"log/slog"
 	"net"
 	"time"
+    "sync"
 )
 
 type Server struct {
@@ -23,9 +25,15 @@ type Server struct {
     Dump func(cat string, data []byte)
     BypassAuth bool
     ReadTimeout time.Duration
+    OnRegistered func(id, resource string)
+
+    mu    sync.RWMutex
+    conns map[string]net.Conn      // bunnyID -> conn
+    res   map[string]string        // bunnyID -> resource
 }
 
 func (s *Server) ListenAndServe(stop <-chan struct{}) error {
+    if s.conns == nil { s.conns = make(map[string]net.Conn); s.res = make(map[string]string) }
 	ln, err := net.Listen("tcp", s.Addr)
     if err != nil { return err }
     if s.OnListen != nil { s.OnListen(ln.Addr().String()) }
@@ -54,6 +62,10 @@ func (s *Server) handleConn(c net.Conn) {
     if s.OnButton != nil { h.onButton = s.OnButton }
     if s.OnEars != nil { h.onEars = s.OnEars }
     h.bypassAuth = s.BypassAuth
+    h.onRegistered = func(id, resource string) {
+        if s.OnRegistered != nil { s.OnRegistered(id, resource) }
+        s.mu.Lock(); s.conns[id] = c; s.res[id] = resource; s.mu.Unlock()
+    }
     buf := make([]byte, 4096)
 	for {
         // Refresh read deadline before each blocking read
@@ -77,4 +89,19 @@ func (s *Server) handleConn(c net.Conn) {
 		}
 	}
     if s.OnDisconnect != nil { s.OnDisconnect(h.getID()) }
+    // Clean mapping
+    s.mu.Lock(); delete(s.conns, h.getID()); delete(s.res, h.getID()); s.mu.Unlock()
+}
+
+// SendPacket composes and sends a message stanza with base64 payload to the bunny if connected.
+func (s *Server) SendPacket(bunnyID string, payload []byte) bool {
+    s.mu.RLock(); c, ok := s.conns[bunnyID]; resource := s.res[bunnyID]; s.mu.RUnlock()
+    if !ok || resource == "" { return false }
+    // Compose message similar to C++ handler
+    dom := s.Domain
+    b64 := base64.StdEncoding.EncodeToString(payload)
+    msg := "<message from='net.openjabnab.platform@" + dom + "/services' to='" + bunnyID + "@" + dom + "/" + resource + "' id='OJaNa-1'>" +
+        "<packet xmlns='violet:packet' format='1.0' ttl='604800'>" + b64 + "</packet></message>"
+    if _, err := c.Write([]byte(msg)); err != nil { s.Logger.Warn("xmpp send error", slog.String("err", err.Error())) ; return false }
+    return true
 }

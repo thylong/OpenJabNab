@@ -92,6 +92,7 @@ func startServers(logger *slog.Logger, cfg *configpkg.Config) (*servers, error) 
         xs.GetPassword = accMgr.GetPassword
         xs.BypassAuth = cfg.Auth.Bypass
         xs.Dump = dumper.Log
+        xs.OnRegistered = func(id, resource string) { logger.Info("bunny registered", slog.String("id", id), slog.String("resource", resource)) }
         go func() { _ = xs.ListenAndServe(stop) }()
         logger.Info("xmpp listening", slog.String("addr", xaddr), slog.String("domain", cfg.OpenJabNabServers.XmppServer))
     } else {

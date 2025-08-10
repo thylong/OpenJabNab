@@ -57,3 +57,5 @@ func (m *Manager) GetName(id string) string {
     m.mu.Lock(); defer m.mu.Unlock()
     return m.names[id]
 }
+
+// Persistence (simple INI on disk)
