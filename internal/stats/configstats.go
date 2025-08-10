@@ -14,25 +14,28 @@ type Live struct{
     P *plug.Manager
 }
 
-func NewLive(cfg *configpkg.Config, b *bunny.Manager, z *ztamp.Manager) Live {
-    return Live{cfg: cfg, B: b, Z: z}
+func NewLive(cfg *configpkg.Config, b *bunny.Manager, z *ztamp.Manager) *Live {
+    return &Live{cfg: cfg, B: b, Z: z}
 }
 
-func (l Live) BunnyTotals() (int, int) {
+func (l *Live) BunnyTotals() (int, int) {
     total := l.cfg.MaxNumberOfBunnies
     connected := 0
     if l.B != nil { connected = l.B.ConnectedCount() }
     return total, connected
 }
 
-func (l Live) ZtampTotal() int {
+func (l *Live) ZtampTotal() int {
     if l.Z == nil { return 0 }
     return l.Z.Count()
 }
 
-func (l Live) PluginTotals() (int, int) {
+func (l *Live) PluginTotals() (int, int) {
     if l.P == nil { return 0, 0 }
     total := len(l.P.Names())
     enabled := len(l.P.EnabledNames())
     return total, enabled
 }
+
+// SetPluginManager attaches the plugin manager to compute plugin totals.
+func (l *Live) SetPluginManager(p *plug.Manager) { l.P = p }
