@@ -364,6 +364,45 @@ func (pl *Plugin) trySynthesize(ctx context.Context, text, voice string) ([]byte
     return nil, "", err
 }
 
+// Cleanup removes old or over-quota cache files under outputRoot/broadcast/tts
+func (pl *Plugin) Cleanup(retentionDays int, maxCacheMB int) {
+    root := filepath.Join(pl.outputRoot, "tts")
+    // Retention-based cleanup
+    if retentionDays > 0 {
+        cutoff := time.Now().Add(-time.Duration(retentionDays) * 24 * time.Hour)
+        filepath.Walk(root, func(p string, info os.FileInfo, err error) error {
+            if err != nil || info == nil || info.IsDir() { return nil }
+            if info.ModTime().Before(cutoff) { _ = os.Remove(p) }
+            return nil
+        })
+    }
+    // Size-based cleanup (best-effort): if maxCacheMB > 0, remove oldest until under limit
+    if maxCacheMB > 0 {
+        var files []os.FileInfo
+        var paths []string
+        var total int64
+        filepath.Walk(root, func(p string, info os.FileInfo, err error) error {
+            if err != nil || info == nil || info.IsDir() { return nil }
+            files = append(files, info); paths = append(paths, p); total += info.Size(); return nil
+        })
+        limit := int64(maxCacheMB) * 1024 * 1024
+        if total > limit {
+            // sort by ModTime asc (oldest first)
+            for i := 0; i < len(files)-1; i++ {
+                for j := i+1; j < len(files); j++ {
+                    if files[i].ModTime().After(files[j].ModTime()) {
+                        files[i], files[j] = files[j], files[i]
+                        paths[i], paths[j] = paths[j], paths[i]
+                    }
+                }
+            }
+            for i := 0; i < len(files) && total > limit; i++ {
+                _ = os.Remove(paths[i]); total -= files[i].Size()
+            }
+        }
+    }
+}
+
 // Implement PacketSenderAware
 func (pl *Plugin) SetPacketSender(fn func(bunnyID string, payload []byte) bool) { pl.send = fn }
 

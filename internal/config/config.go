@@ -32,6 +32,8 @@ type Config struct {
     TTSWorkers             int
     TTSQueueSize           int
     TTSJobHistoryMax       int
+    TTSRetentionDays       int
+    TTSMaxCacheMB          int
 	MaxNumberOfBunnies     int
 	MaxBurstNumberOfBunnies int
 
@@ -181,5 +183,7 @@ func Load(path string) (*Config, error) {
     c.TTSWorkers = tts.Key("Workers").MustInt(2)
     c.TTSQueueSize = tts.Key("QueueSize").MustInt(128)
     c.TTSJobHistoryMax = tts.Key("JobHistoryMax").MustInt(1000)
+    c.TTSRetentionDays = tts.Key("RetentionDays").MustInt(30)
+    c.TTSMaxCacheMB = tts.Key("MaxCacheMB").MustInt(0)
 	return c, nil
 }

@@ -162,6 +162,8 @@ func startServers(logger *slog.Logger, cfg *configpkg.Config) (*servers, error) 
                 return
             case <-ticker.C:
                 plugins.OnCron()
+                // TTS cache cleanup task (daily cadence approximated)
+                ttsPlugin.Cleanup(cfg.TTSRetentionDays, cfg.TTSMaxCacheMB)
             }
         }
     }()
