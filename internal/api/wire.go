@@ -63,6 +63,12 @@ func (d DefaultBunnyAPI) Process(token string, request string, get map[string]st
                 return []byte(`<name>` + d.B.GetName(id) + `</name>`), nil
             }
             return []byte(`<name/>`), nil
+        case "sendpacket":
+            // Stub: accept base64 packet or simple string payload for parity
+            if payload := get["data"]; payload != "" {
+                return []byte(`<ok/>`), nil
+            }
+            return []byte(`<error>Missing data</error>`), nil
         }
     }
     return []byte(`<error>Unknown Bunny Api Call</error>`), nil

@@ -39,3 +39,21 @@ func (s *Settings) Set(section, key, val string) error {
 	s.cfg.Section(section).Key(key).SetValue(val)
 	return s.cfg.SaveTo(s.path)
 }
+
+// Keys returns all keys in a section
+func (s *Settings) Keys(section string) []string {
+    s.mu.Lock(); defer s.mu.Unlock()
+    sec := s.cfg.Section(section)
+    ks := sec.Keys()
+    out := make([]string, 0, len(ks))
+    for _, k := range ks { out = append(out, k.Name()) }
+    return out
+}
+
+// Delete removes a key from a section and persists the file
+func (s *Settings) Delete(section, key string) error {
+    s.mu.Lock(); defer s.mu.Unlock()
+    sec := s.cfg.Section(section)
+    sec.DeleteKey(key)
+    return s.cfg.SaveTo(s.path)
+}

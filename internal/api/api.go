@@ -134,6 +134,23 @@ func (m *Manager) Process(rawURI string, uri string, get map[string]string) (con
                 if err := st.Set("plugin", key, val); err != nil { return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment(err.Error())) }
                 return "text/xml; charset=utf-8", m.wrapAPI([]byte(`<ok/>`))
             }
+            if function == "listsettings" {
+                st, err := pluginNewSettings(m.PluginsDir, name)
+                if err != nil { return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment(err.Error())) }
+                keys := st.Keys("plugin")
+                inner := "<list>"
+                for _, k := range keys { inner += "<item>" + k + "</item>" }
+                inner += "</list>"
+                return "text/xml; charset=utf-8", m.wrapAPI([]byte(inner))
+            }
+            if function == "delsetting" {
+                key := get["key"]
+                if key == "" { return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment("Missing key")) }
+                st, err := pluginNewSettings(m.PluginsDir, name)
+                if err != nil { return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment(err.Error())) }
+                if err := st.Delete("plugin", key); err != nil { return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment(err.Error())) }
+                return "text/xml; charset=utf-8", m.wrapAPI([]byte(`<ok/>`))
+            }
             if m.PluginProcess == nil { return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment("Plugin API not implemented")) }
             if handled, frag, err := m.PluginProcess(name, function, get); handled {
                 if err != nil { return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment(err.Error())) }
