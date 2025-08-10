@@ -87,9 +87,11 @@ This document summarizes the available plugin APIs, their minimal behaviors, and
   - Google Cloud TTS:
     - Set env `GOOGLE_APPLICATION_CREDENTIALS` to service account JSON
     - Quotas/limits apply per GCP project; configure timeouts and rate limits via `[TTS]`
+    - Kubernetes: mount a secret as a file and set `GOOGLE_APPLICATION_CREDENTIALS` to that path. Docker Compose: bind-mount the JSON into the container and set the env var.
   - Acapela:
     - Set env `ACAPELA_LOGIN`, `ACAPELA_PASSWORD`, `ACAPELA_APPLICATION`, optional `ACAPELA_BASE_URL`
     - Respect provider quotas; configure timeouts and rate limits via `[TTS]`
+    - Kubernetes: store credentials in a Secret and map to env vars. Docker Compose: provide env vars in the service definition.
 - Security:
   - Read secrets from env/volumes only; credentials are never logged.
 

@@ -107,7 +107,7 @@ func (a *acapelaProvider) Synthesize(ctx context.Context, text string, voiceID s
 	resp2, err := a.httpClient.Do(req2)
 	if err != nil { return nil, "", err }
 	defer resp2.Body.Close()
-	if resp2.StatusCode/100 != 2 { b, _ := io.ReadAll(resp2.Body); return nil, "", errors.New("download failed: "+string(b)) }
+    if resp2.StatusCode/100 != 2 { return nil, "", errors.New("download failed: "+resp2.Status) }
 	data, err := io.ReadAll(resp2.Body)
 	if err != nil { return nil, "", err }
 	ct2 := resp2.Header.Get("Content-Type")

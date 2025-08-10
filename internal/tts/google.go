@@ -120,7 +120,7 @@ func (g *googleProvider) ListVoices(ctx context.Context) ([]Voice, error) {
     resp, err := g.httpClient.Do(req)
     if err != nil { return nil, err }
     defer resp.Body.Close()
-    if resp.StatusCode/100 != 2 { b, _ := io.ReadAll(resp.Body); return nil, errors.New("google voices failed: "+resp.Status+": "+string(b)) }
+    if resp.StatusCode/100 != 2 { return nil, errors.New("google voices failed: "+resp.Status) }
     var out struct{ Voices []struct{ Name string `json:"name"`; LanguageCodes []string `json:"languageCodes"`; SsmlGender string `json:"ssmlGender"` } `json:"voices"` }
     if err := json.NewDecoder(resp.Body).Decode(&out); err != nil { return nil, err }
     res := make([]Voice, 0, len(out.Voices))
@@ -151,7 +151,7 @@ func (g *googleProvider) Synthesize(ctx context.Context, text string, voiceID st
     resp, err := g.httpClient.Do(req)
     if err != nil { return nil, "", err }
     defer resp.Body.Close()
-    if resp.StatusCode/100 != 2 { rb, _ := io.ReadAll(resp.Body); return nil, "", errors.New("google synth failed: "+resp.Status+": "+string(rb)) }
+    if resp.StatusCode/100 != 2 { return nil, "", errors.New("google synth failed: "+resp.Status) }
     var out struct{ AudioContent string `json:"audioContent"` }
     if err := json.NewDecoder(resp.Body).Decode(&out); err != nil { return nil, "", err }
     data, err := base64.StdEncoding.DecodeString(out.AudioContent)
