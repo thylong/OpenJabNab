@@ -66,7 +66,8 @@ func startServers(logger *slog.Logger, cfg *configpkg.Config) (*servers, error) 
     // Prepare packet sender injection; will be set after XMPP starts
     earsPlugin := plugears.New()
     plugins.Register(earsPlugin)
-    plugins.Register(plugradio.New(cfg))
+    wr := plugradio.New(cfg)
+    plugins.Register(wr)
     plugins.Register(plugrecord.New(cfg))
     plugins.Register(plugauth.New(cfg))
     // attach plugin manager to stats provider for plugin totals
@@ -133,6 +134,9 @@ func startServers(logger *slog.Logger, cfg *configpkg.Config) (*servers, error) 
         sendFunc = xs.SendPacket
         // Inject safe packet sender into interested plugins
         if psa, ok := interface{}(earsPlugin).(interface{ SetPacketSender(func(string, []byte) bool) }); ok {
+            psa.SetPacketSender(sendFunc)
+        }
+        if psa, ok := interface{}(wr).(interface{ SetPacketSender(func(string, []byte) bool) }); ok {
             psa.SetPacketSender(sendFunc)
         }
         go func() { _ = xs.ListenAndServe(stop) }()
