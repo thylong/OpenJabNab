@@ -31,6 +31,7 @@ type Config struct {
     TTSAllowedVoices       string
     TTSWorkers             int
     TTSQueueSize           int
+    TTSJobHistoryMax       int
 	MaxNumberOfBunnies     int
 	MaxBurstNumberOfBunnies int
 
@@ -179,5 +180,6 @@ func Load(path string) (*Config, error) {
     c.TTSAllowedVoices = tts.Key("AllowedVoices").MustString("")
     c.TTSWorkers = tts.Key("Workers").MustInt(2)
     c.TTSQueueSize = tts.Key("QueueSize").MustInt(128)
+    c.TTSJobHistoryMax = tts.Key("JobHistoryMax").MustInt(1000)
 	return c, nil
 }

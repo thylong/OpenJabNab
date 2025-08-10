@@ -46,6 +46,11 @@ type Plugin struct{
     cacheMiss uint64
     synthNsTotal uint64
     synthCount   uint64
+
+    // shutdown
+    stopCh chan struct{}
+    wg     sync.WaitGroup
+    jobHistoryMax int
 }
 
 type speakJob struct{
@@ -69,7 +74,7 @@ func New(cfg *cfgpkg.Config) *Plugin {
     if pname == "" { pname = "mock" }
     qsize := cfg.TTSQueueSize
     if qsize <= 0 { qsize = 128 }
-    pl := &Plugin{enabled: true, settings: st, queue: make(chan speakJob, qsize), provider: provider, providerName: pname, outputRoot: out, jobs: make(map[string]jobStatus)}
+    pl := &Plugin{enabled: true, settings: st, queue: make(chan speakJob, qsize), provider: provider, providerName: pname, outputRoot: out, jobs: make(map[string]jobStatus), stopCh: make(chan struct{}), jobHistoryMax: cfg.TTSJobHistoryMax}
     // init rate limiter
     rps := cfg.TTSRateLimitRPS
     if rps <= 0 { rps = 5 }
@@ -86,7 +91,7 @@ func New(cfg *cfgpkg.Config) *Plugin {
     // start workers
     workers := cfg.TTSWorkers
     if workers <= 0 { workers = 2 }
-    for i := 0; i < workers; i++ { go pl.worker() }
+    for i := 0; i < workers; i++ { pl.wg.Add(1); go pl.worker() }
     return pl
 }
 
@@ -206,7 +211,14 @@ func (pl *Plugin) ProcessPluginApi(function string, get map[string]string) (bool
 }
 
 func (pl *Plugin) worker() {
-    for job := range pl.queue {
+    defer pl.wg.Done()
+    for {
+        var job speakJob
+        select {
+        case <-pl.stopCh:
+            return
+        case job = <-pl.queue:
+        }
         // rate limit
         select { case <-pl.tokens: default: time.Sleep(pl.rateInterval) }
         // Compute cache key and potential target path(s)
@@ -300,6 +312,7 @@ func (pl *Plugin) updateJobDone(id, urlPath string) {
     st.CompletedAt = time.Now()
     st.URL = urlPath
     pl.jobs[id] = st
+    pl.pruneJobsLocked()
 }
 
 func (pl *Plugin) updateJobError(id, code string) {
@@ -310,11 +323,29 @@ func (pl *Plugin) updateJobError(id, code string) {
     st.Error = code
     st.CompletedAt = time.Now()
     pl.jobs[id] = st
+    pl.pruneJobsLocked()
 }
 
 func shortHash(s string) string {
     sum := sha1.Sum([]byte(s))
     return hex.EncodeToString(sum[:4])
+}
+
+// Shutdown signals workers to stop after draining the queue, and waits for them.
+func (pl *Plugin) Shutdown() {
+    close(pl.stopCh)
+    pl.wg.Wait()
+}
+
+func (pl *Plugin) pruneJobsLocked() {
+    max := pl.jobHistoryMax
+    if max <= 0 { max = 1000 }
+    if len(pl.jobs) <= max { return }
+    // naive prune: remove oldest by CompletedAt
+    oldestID := ""
+    oldestTime := time.Now()
+    for id, st := range pl.jobs { if !st.CompletedAt.IsZero() && st.CompletedAt.Before(oldestTime) { oldestTime = st.CompletedAt; oldestID = id } }
+    if oldestID != "" { delete(pl.jobs, oldestID) }
 }
 
 func (pl *Plugin) trySynthesize(ctx context.Context, text, voice string) ([]byte, string, error) {
