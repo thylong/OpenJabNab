@@ -74,7 +74,7 @@ func (h *handler) Process(in []byte) (out []string) {
             return
         }
         // SASL PLAIN fallback
-        if reAuthPlain.MatchString(data) {
+            if reAuthPlain.MatchString(data) {
             if h.bypassAuth {
                 out = append(out, `<success xmlns='urn:ietf:params:xml:ns:xmpp-sasl'/>`)
                 h.step = 4
@@ -91,6 +91,7 @@ func (h *handler) Process(in []byte) (out []string) {
                         if pw, ok := h.getPassword(user); ok && pw == pass {
                             out = append(out, `<success xmlns='urn:ietf:params:xml:ns:xmpp-sasl'/>`)
                             h.step = 4
+                            h.authUser = user
                             return
                         }
                     }
