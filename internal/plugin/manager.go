@@ -1,19 +1,43 @@
 package plugin
 
-import "sync"
+import (
+    "strconv"
+    "sync"
+)
 
 type Manager struct {
 	mu sync.RWMutex
 	list []Plugin
 	enabled map[string]bool
+    // settingsDir, when set, enables persistence of plugin enabled/disabled state
+    settingsDir string
 }
 
 func NewManager() *Manager { return &Manager{enabled: make(map[string]bool)} }
 
+// SetSettingsDir configures the directory used to persist plugin state (plugin_<name>.ini)
+func (m *Manager) SetSettingsDir(dir string) { m.mu.Lock(); m.settingsDir = dir; m.mu.Unlock() }
+
 func (m *Manager) Register(p Plugin) {
 	m.mu.Lock(); defer m.mu.Unlock()
 	m.list = append(m.list, p)
-	m.enabled[p.Name()] = p.Enabled()
+    // default to the plugin's internal enabled state
+    name := p.Name()
+    m.enabled[name] = p.Enabled()
+    // load persisted enabled flag if available, otherwise persist current state
+    if m.settingsDir != "" {
+        if st, err := NewSettings(m.settingsDir, name); err == nil {
+            if v := st.Get("plugin", "enabled", ""); v != "" {
+                if b, err := strconv.ParseBool(v); err == nil {
+                    p.SetEnabled(b)
+                    m.enabled[name] = b
+                }
+            } else {
+                // persist current state
+                _ = st.Set("plugin", "enabled", strconv.FormatBool(p.Enabled()))
+            }
+        }
+    }
 }
 
 func (m *Manager) Names() []string {
@@ -36,6 +60,12 @@ func (m *Manager) Enable(name string, on bool) bool {
         if p.Name() == name {
             p.SetEnabled(on)
             m.enabled[name] = on
+            // persist change if configured
+            if m.settingsDir != "" {
+                if st, err := NewSettings(m.settingsDir, name); err == nil {
+                    _ = st.Set("plugin", "enabled", strconv.FormatBool(on))
+                }
+            }
             return true
         }
     }

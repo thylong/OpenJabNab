@@ -54,9 +54,15 @@ func startServers(logger *slog.Logger, cfg *configpkg.Config) (*servers, error) 
 
     // Plugins
     plugins := pman.NewManager()
+    // Persist plugin enabled/disabled state in configured plugins dir
+    plugins.SetSettingsDir(cfg.PluginsDir)
     plugins.Register(locate.New(cfg))
     plugins.Register(pluglog.New(logger))
     plugins.Register(plugstats.New(statProv))
+    // attach plugin manager to stats provider for plugin totals
+    if lp, ok := interface{}(statProv).(interface{ SetPluginManager(*pman.Manager) }); ok {
+        lp.SetPluginManager(plugins)
+    }
     apiMgr.PluginNames = func() []string { return plugins.Names() }
     apiMgr.EnabledPluginNames = func() []string { return plugins.EnabledNames() }
     apiMgr.SetPluginEnabled = func(name string, on bool) bool { return plugins.Enable(name, on) }

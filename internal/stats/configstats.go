@@ -4,12 +4,14 @@ import (
     configpkg "OpenJabNab/internal/config"
     "OpenJabNab/internal/bunny"
     "OpenJabNab/internal/ztamp"
+    plug "OpenJabNab/internal/plugin"
 )
 
 type Live struct{
     cfg *configpkg.Config
     B *bunny.Manager
     Z *ztamp.Manager
+    P *plug.Manager
 }
 
 func NewLive(cfg *configpkg.Config, b *bunny.Manager, z *ztamp.Manager) Live {
@@ -28,4 +30,9 @@ func (l Live) ZtampTotal() int {
     return l.Z.Count()
 }
 
-func (l Live) PluginTotals() (int, int) { return 0, 0 }
+func (l Live) PluginTotals() (int, int) {
+    if l.P == nil { return 0, 0 }
+    total := len(l.P.Names())
+    enabled := len(l.P.EnabledNames())
+    return total, enabled
+}
