@@ -28,6 +28,7 @@ type googleProvider struct {
     tokenExp  time.Time
     creds     serviceAccount
     httpClient *http.Client
+    baseURL   string
 }
 
 type serviceAccount struct {
@@ -60,6 +61,10 @@ func (g *googleProvider) ensureCreds() error {
 func (g *googleProvider) getToken(ctx context.Context) (string, error) {
     g.mu.Lock(); defer g.mu.Unlock()
     if g.token != "" && time.Until(g.tokenExp) > 60*time.Second { return g.token, nil }
+    if v := os.Getenv("GOOGLE_TTS_TOKEN"); v != "" {
+        g.token = v; g.tokenExp = time.Now().Add(10 * time.Minute)
+        return g.token, nil
+    }
     if err := g.ensureCreds(); err != nil { return "", err }
     // Build JWT assertion
     header := base64.RawURLEncoding.EncodeToString([]byte(`{"alg":"RS256","typ":"JWT"}`))
@@ -109,12 +114,13 @@ func (g *googleProvider) getToken(ctx context.Context) (string, error) {
 func (g *googleProvider) ListVoices(ctx context.Context) ([]Voice, error) {
     tok, err := g.getToken(ctx)
     if err != nil { return nil, err }
-    req, _ := http.NewRequestWithContext(ctx, http.MethodGet, "https://texttospeech.googleapis.com/v1/voices", nil)
+    if g.baseURL == "" { g.baseURL = os.Getenv("GOOGLE_TTS_ENDPOINT"); if g.baseURL == "" { g.baseURL = "https://texttospeech.googleapis.com" } }
+    req, _ := http.NewRequestWithContext(ctx, http.MethodGet, g.baseURL+"/v1/voices", nil)
     req.Header.Set("Authorization", "Bearer "+tok)
     resp, err := g.httpClient.Do(req)
     if err != nil { return nil, err }
     defer resp.Body.Close()
-    if resp.StatusCode/100 != 2 { b, _ := io.ReadAll(resp.Body); return nil, errors.New("voices list failed: "+string(b)) }
+    if resp.StatusCode/100 != 2 { b, _ := io.ReadAll(resp.Body); return nil, errors.New("google voices failed: "+resp.Status+": "+string(b)) }
     var out struct{ Voices []struct{ Name string `json:"name"`; LanguageCodes []string `json:"languageCodes"`; SsmlGender string `json:"ssmlGender"` } `json:"voices"` }
     if err := json.NewDecoder(resp.Body).Decode(&out); err != nil { return nil, err }
     res := make([]Voice, 0, len(out.Voices))
@@ -129,19 +135,23 @@ func (g *googleProvider) ListVoices(ctx context.Context) ([]Voice, error) {
 func (g *googleProvider) Synthesize(ctx context.Context, text string, voiceID string) ([]byte, string, error) {
     tok, err := g.getToken(ctx)
     if err != nil { return nil, "", err }
+    if g.baseURL == "" { g.baseURL = os.Getenv("GOOGLE_TTS_ENDPOINT"); if g.baseURL == "" { g.baseURL = "https://texttospeech.googleapis.com" } }
     body := map[string]any{
         "input": map[string]string{"text": text},
         "voice": map[string]string{"name": voiceID},
         "audioConfig": map[string]string{"audioEncoding": "MP3"},
     }
+    if strings.Contains(strings.ToLower(text), "<speak") {
+        body["input"] = map[string]string{"ssml": text}
+    }
     b, _ := json.Marshal(body)
-    req, _ := http.NewRequestWithContext(ctx, http.MethodPost, "https://texttospeech.googleapis.com/v1/text:synthesize", strings.NewReader(string(b)))
+    req, _ := http.NewRequestWithContext(ctx, http.MethodPost, g.baseURL+"/v1/text:synthesize", strings.NewReader(string(b)))
     req.Header.Set("Authorization", "Bearer "+tok)
     req.Header.Set("Content-Type", "application/json")
     resp, err := g.httpClient.Do(req)
     if err != nil { return nil, "", err }
     defer resp.Body.Close()
-    if resp.StatusCode/100 != 2 { rb, _ := io.ReadAll(resp.Body); return nil, "", errors.New("synthesize failed: "+string(rb)) }
+    if resp.StatusCode/100 != 2 { rb, _ := io.ReadAll(resp.Body); return nil, "", errors.New("google synth failed: "+resp.Status+": "+string(rb)) }
     var out struct{ AudioContent string `json:"audioContent"` }
     if err := json.NewDecoder(resp.Body).Decode(&out); err != nil { return nil, "", err }
     data, err := base64.StdEncoding.DecodeString(out.AudioContent)

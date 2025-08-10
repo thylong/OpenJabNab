@@ -72,15 +72,24 @@ func (a *acapelaProvider) Synthesize(ctx context.Context, text string, voiceID s
 	form.Set("text", text)
 	form.Set("format", "mp3")
 	endpoint := a.baseURL + "/synthesize"
-	req, _ := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, strings.NewReader(form.Encode()))
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	resp, err := a.httpClient.Do(req)
-	if err != nil { return nil, "", err }
-	defer resp.Body.Close()
-	if resp.StatusCode/100 != 2 {
-		b, _ := io.ReadAll(resp.Body)
-		return nil, "", errors.New("acapela synth failed: "+string(b))
-	}
+    var resp *http.Response
+    var err error
+    backoff := 100 * time.Millisecond
+    for attempt := 0; attempt < 2; attempt++ {
+        req, _ := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, strings.NewReader(form.Encode()))
+        req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+        resp, err = a.httpClient.Do(req)
+        if err != nil { return nil, "", err }
+        if resp.StatusCode/100 == 2 { break }
+        if attempt == 1 { // last attempt
+            b, _ := io.ReadAll(resp.Body); resp.Body.Close()
+            return nil, "", errors.New("acapela synth failed: "+string(b))
+        }
+        resp.Body.Close()
+        select { case <-time.After(backoff): case <-ctx.Done(): return nil, "", ctx.Err() }
+        backoff *= 2
+    }
+    defer resp.Body.Close()
 	ct := resp.Header.Get("Content-Type")
 	mediatype, _, _ := mime.ParseMediaType(ct)
 	if strings.HasPrefix(mediatype, "audio/") {
