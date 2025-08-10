@@ -10,6 +10,7 @@ type Plugin struct {
     mu      sync.RWMutex
     // pos stores last-known ears positions per bunny id: [left,right]
     pos     map[string][2]int
+    send    func(bunnyID string, payload []byte) bool
 }
 
 func New() *Plugin { return &Plugin{enabled: true, pos: make(map[string][2]int)} }
@@ -42,9 +43,37 @@ func (pl *Plugin) ProcessPluginApi(function string, get map[string]string) (bool
         if !ok { return true, []byte(`<left/><right/>`), nil }
         xml := []byte(`<left>` + itoa(v[0]) + `</left><right>` + itoa(v[1]) + `</right>`)
         return true, xml, nil
+    case "set":
+        id := get["bunny"]; if id == "" { id = get["id"] }
+        if id == "" { return true, []byte(`<error>Missing bunny</error>`), nil }
+        // accept left/right in [0..15] similar to original behavior
+        leftS, rightS := get["left"], get["right"]
+        if leftS == "" || rightS == "" { return true, []byte(`<error>Missing left/right</error>`), nil }
+        // build ambient packet: 0x7F 0xFF 0xFF 0xFE, then pairs (service,value): 0x03 left, 0x04 right
+        // According to legacy, MoveLeftEar=3, MoveRightEar=4
+        pkt := []byte{0x7F, 0xFF, 0xFF, 0xFE}
+        // naive parse ints
+        li := atoi(leftS); if li < 0 { li = 0 }; if li > 15 { li = 15 }
+        ri := atoi(rightS); if ri < 0 { ri = 0 }; if ri > 15 { ri = 15 }
+        pkt = append(pkt, 0x03, byte(li), 0x04, byte(ri))
+        if pl.send != nil && pl.send(id, pkt) {
+            // update cached pos
+            pl.mu.Lock(); pl.pos[id] = [2]int{li, ri}; pl.mu.Unlock()
+            return true, []byte(`<ok/>`), nil
+        }
+        return true, []byte(`<error>Not connected</error>`), nil
     }
     return false, nil, nil
 }
 
 // local thin wrapper; implementation is in package-local itoa_compat files elsewhere
 func itoa(i int) string { return strconvItoa(i) }
+
+func atoi(s string) int {
+    n := 0
+    for i := 0; i < len(s); i++ { c := s[i]; if c < '0' || c > '9' { break }; n = n*10 + int(c-'0') }
+    return n
+}
+
+// Implement PacketSenderAware
+func (pl *Plugin) SetPacketSender(fn func(bunnyID string, payload []byte) bool) { pl.send = fn }

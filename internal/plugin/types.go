@@ -67,3 +67,8 @@ type RFIDHandler interface {
 type CronHandler interface {
     OnCron()
 }
+
+// PacketSenderAware allows the manager to inject a safe send-to-bunny function
+type PacketSenderAware interface {
+    SetPacketSender(func(bunnyID string, payload []byte) bool)
+}

@@ -63,7 +63,9 @@ func startServers(logger *slog.Logger, cfg *configpkg.Config) (*servers, error) 
     plugins.Register(locate.New(cfg))
     plugins.Register(pluglog.New(logger))
     plugins.Register(plugstats.New(statProv))
-    plugins.Register(plugears.New())
+    // Prepare packet sender injection; will be set after XMPP starts
+    earsPlugin := plugears.New()
+    plugins.Register(earsPlugin)
     plugins.Register(plugradio.New(cfg))
     plugins.Register(plugrecord.New(cfg))
     plugins.Register(plugauth.New(cfg))
@@ -125,6 +127,10 @@ func startServers(logger *slog.Logger, cfg *configpkg.Config) (*servers, error) 
         xs.OnRegistered = func(id, resource string) { logger.Info("bunny registered", slog.String("id", id), slog.String("resource", resource)) }
         // Set send function now that xs exists
         sendFunc = xs.SendPacket
+        // Inject safe packet sender into interested plugins
+        if psa, ok := interface{}(earsPlugin).(interface{ SetPacketSender(func(string, []byte) bool) }); ok {
+            psa.SetPacketSender(sendFunc)
+        }
         go func() { _ = xs.ListenAndServe(stop) }()
         logger.Info("xmpp listening", slog.String("addr", xaddr), slog.String("domain", cfg.OpenJabNabServers.XmppServer))
     } else {
