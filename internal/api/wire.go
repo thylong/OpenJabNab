@@ -38,11 +38,23 @@ func (d DefaultBunnyAPI) Process(token string, request string, get map[string]st
     }
     if len(parts) == 2 {
         id, fn := parts[0], parts[1]
-        if fn == "stats" {
+        switch fn {
+        case "stats":
             online := false
             if d.B != nil { for _, c := range d.B.ListConnected() { if c == id { online = true; break } } }
             if online { return []byte(`<online>true</online>`), nil }
             return []byte(`<online>false</online>`), nil
+        case "setname":
+            if name := get["name"]; name != "" && d.B != nil {
+                d.B.SetName(id, name)
+                return []byte(`<ok/>`), nil
+            }
+            return []byte(`<error>Missing name</error>`), nil
+        case "name":
+            if d.B != nil {
+                return []byte(`<name>` + d.B.GetName(id) + `</name>`), nil
+            }
+            return []byte(`<name/>`), nil
         }
     }
     return []byte(`<error>Unknown Bunny Api Call</error>`), nil
