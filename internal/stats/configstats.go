@@ -1,18 +1,31 @@
 package stats
 
-import configpkg "OpenJabNab/internal/config"
+import (
+    configpkg "OpenJabNab/internal/config"
+    "OpenJabNab/internal/bunny"
+    "OpenJabNab/internal/ztamp"
+)
 
-type ConfigStats struct{
-	cfg *configpkg.Config
+type Live struct{
+    cfg *configpkg.Config
+    B *bunny.Manager
+    Z *ztamp.Manager
 }
 
-func NewConfigStats(cfg *configpkg.Config) ConfigStats { return ConfigStats{cfg: cfg} }
-
-func (c ConfigStats) BunnyTotals() (int, int) {
-	// Total from config, connected unknown at this stage
-	return c.cfg.MaxNumberOfBunnies, 0
+func NewLive(cfg *configpkg.Config, b *bunny.Manager, z *ztamp.Manager) Live {
+    return Live{cfg: cfg, B: b, Z: z}
 }
 
-func (c ConfigStats) ZtampTotal() int { return 0 }
+func (l Live) BunnyTotals() (int, int) {
+    total := l.cfg.MaxNumberOfBunnies
+    connected := 0
+    if l.B != nil { connected = l.B.ConnectedCount() }
+    return total, connected
+}
 
-func (c ConfigStats) PluginTotals() (int, int) { return 0, 0 }
+func (l Live) ZtampTotal() int {
+    if l.Z == nil { return 0 }
+    return l.Z.Count()
+}
+
+func (l Live) PluginTotals() (int, int) { return 0, 0 }

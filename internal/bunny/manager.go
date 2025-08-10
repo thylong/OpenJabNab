@@ -30,3 +30,10 @@ func (m *Manager) ConnectedCount() int {
 }
 
 func (m *Manager) Capacity() int { return m.capacity }
+
+func (m *Manager) ListConnected() []string {
+    m.mu.Lock(); defer m.mu.Unlock()
+    out := make([]string, 0, len(m.connected))
+    for id := range m.connected { out = append(out, id) }
+    return out
+}

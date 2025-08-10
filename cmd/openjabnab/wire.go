@@ -9,10 +9,13 @@ import (
     configpkg "OpenJabNab/internal/config"
     "OpenJabNab/internal/account"
     "OpenJabNab/internal/bunny"
+    "OpenJabNab/internal/ztamp"
     "OpenJabNab/internal/server/httpbridge"
     "OpenJabNab/internal/server/xmpp"
     "OpenJabNab/internal/stats"
     "OpenJabNab/internal/netdump"
+    pman "OpenJabNab/internal/plugin"
+    locate "OpenJabNab/internal/plugins/locate"
 )
 
 type servers struct {
@@ -27,21 +30,28 @@ func startServers(logger *slog.Logger, cfg *configpkg.Config) (*servers, error) 
         accMgr.AddUser(cfg.Accounts.Username, cfg.Accounts.Password)
         logger.Info("loaded test account", slog.String("user", cfg.Accounts.Username))
     }
-    // Stats provider using config until live data is available
-    statProv := stats.NewConfigStats(cfg)
+    // Live stats from managers
+    ztMgr := ztamp.NewManager()
+    statProv := stats.NewLive(cfg, bunMgr, ztMgr)
 
     apiMgr := &api.Manager{Logger: logger, Stats: statProv}
     apiMgr.Plugins = api.DefaultPluginAPI{}
     apiMgr.Bunnies = api.DefaultBunnyAPI{B: bunMgr}
-    apiMgr.Ztamps = api.DefaultZtampAPI{}
+    apiMgr.Ztamps = api.DefaultZtampAPI{ZCount: ztMgr.Count}
     apiMgr.Accounts = api.DefaultAccountsAPI{A: accMgr}
     stop := make(chan struct{})
 
     dumper := netdump.New(logger, cfg.Log.NetworkDump)
 
+    // Plugins
+    plugins := pman.NewManager()
+    plugins.Register(locate.New(cfg))
+
     if cfg.HttpListener {
         addr := fmt.Sprintf("0.0.0.0:%d", cfg.OpenJabNabServers.ListeningHttpPort)
         hb := httpbridge.New(addr, logger, apiMgr)
+        // inject plugins into adapter
+        if adapter, ok := hb.API.(*httpbridge.Adapter); ok { adapter.Plugins = plugins }
         hb.Dump = dumper.Log
         go func() { _ = hb.ListenAndServe(stop) }()
         logger.Info("httpbridge listening", slog.String("addr", addr))
