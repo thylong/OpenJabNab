@@ -16,6 +16,32 @@ func (m *Manager) Register(p Plugin) {
 	m.enabled[p.Name()] = p.Enabled()
 }
 
+func (m *Manager) Names() []string {
+    m.mu.RLock(); defer m.mu.RUnlock()
+    out := make([]string, 0, len(m.list))
+    for _, p := range m.list { out = append(out, p.Name()) }
+    return out
+}
+
+func (m *Manager) EnabledNames() []string {
+    m.mu.RLock(); defer m.mu.RUnlock()
+    out := make([]string, 0, len(m.list))
+    for _, p := range m.list { if m.enabled[p.Name()] { out = append(out, p.Name()) } }
+    return out
+}
+
+func (m *Manager) Enable(name string, on bool) bool {
+    m.mu.Lock(); defer m.mu.Unlock()
+    for _, p := range m.list {
+        if p.Name() == name {
+            p.SetEnabled(on)
+            m.enabled[name] = on
+            return true
+        }
+    }
+    return false
+}
+
 func (m *Manager) HttpRequest(req *Request) bool {
 	m.mu.RLock(); defer m.mu.RUnlock()
 	for _, p := range m.list {

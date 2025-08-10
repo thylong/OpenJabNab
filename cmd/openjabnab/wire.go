@@ -41,6 +41,7 @@ func startServers(logger *slog.Logger, cfg *configpkg.Config) (*servers, error) 
     apiMgr.Bunnies = api.DefaultBunnyAPI{B: bunMgr}
     apiMgr.Ztamps = api.DefaultZtampAPI{ZCount: ztMgr.Count}
     apiMgr.Accounts = api.DefaultAccountsAPI{A: accMgr}
+    // Expose limited plugin manager functions to API (wired after 'plugins' is constructed)
     stop := make(chan struct{})
 
     dumper := netdump.New(logger, cfg.Log.NetworkDump)
@@ -50,6 +51,10 @@ func startServers(logger *slog.Logger, cfg *configpkg.Config) (*servers, error) 
     plugins.Register(locate.New(cfg))
     plugins.Register(pluglog.New(logger))
     plugins.Register(plugstats.New(statProv))
+    apiMgr.PluginNames = func() []string { return plugins.Names() }
+    apiMgr.EnabledPluginNames = func() []string { return plugins.EnabledNames() }
+    apiMgr.SetPluginEnabled = func(name string, on bool) bool { return plugins.Enable(name, on) }
+    apiMgr.PluginProcess = plugins.ProcessPluginApi
 
     if cfg.HttpListener {
         addr := fmt.Sprintf("0.0.0.0:%d", cfg.OpenJabNabServers.ListeningHttpPort)

@@ -1,7 +1,7 @@
 package stats
 
 import (
-	p "OpenJabNab/internal/plugin"
+    p "OpenJabNab/internal/plugin"
 )
 
 type Provider interface{

@@ -13,8 +13,9 @@ type DefaultZtampAPI struct{ ZCount func() int }
 
 type DefaultAccountsAPI struct{ A *account.Manager }
 
+// Deprecated path; prefer /ojn_api/plugin/<name>/<function> handled by Api.Manager
 func (d DefaultPluginAPI) Process(token string, request string, get map[string]string) ([]byte, error) {
-	return []byte(`<ok/>`), nil
+    return []byte(`<error>Plugin API not implemented</error>`), nil
 }
 
 func (d DefaultBunnyAPI) Process(token string, request string, get map[string]string) ([]byte, error) {

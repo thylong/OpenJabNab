@@ -15,6 +15,12 @@ type Manager struct {
     Bunnies  BunnyAPI
     Ztamps   ZtampAPI
     Accounts AccountsAPI
+
+    // Optional: direct access to plugin manager for parity endpoints
+    PluginNames func() []string
+    EnabledPluginNames func() []string
+    SetPluginEnabled func(name string, on bool) bool
+    PluginProcess func(name, function string, get map[string]string) (bool, []byte, error)
 }
 
 type StatsProvider interface {
@@ -73,17 +79,43 @@ func (m *Manager) Process(rawURI string, uri string, get map[string]string) (con
             frag, err := m.Plugins.Process(token, strings.TrimPrefix(sub, "plugins/"), get)
             if err != nil { return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment(err.Error())) }
             return "text/xml; charset=utf-8", m.wrapAPI(frag)
+        case strings.HasPrefix(sub, "plugins-list"):
+            if m.PluginNames != nil {
+                names := m.PluginNames()
+                inner := "<list>"
+                for _, n := range names { inner += "<item>" + n + "</item>" }
+                inner += "</list>"
+                return "text/xml; charset=utf-8", m.wrapAPI([]byte(inner))
+            }
+            return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment("No plugin manager"))
+        case strings.HasPrefix(sub, "plugins-enabled"):
+            if m.EnabledPluginNames != nil {
+                names := m.EnabledPluginNames()
+                inner := "<list>"
+                for _, n := range names { inner += "<item>" + n + "</item>" }
+                inner += "</list>"
+                return "text/xml; charset=utf-8", m.wrapAPI([]byte(inner))
+            }
+            return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment("No plugin manager"))
+        case strings.HasPrefix(sub, "plugin-enable/"):
+            if m.SetPluginEnabled == nil { return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment("No plugin manager")) }
+            name := strings.TrimPrefix(sub, "plugin-enable/")
+            if m.SetPluginEnabled(name, true) { return "text/xml; charset=utf-8", m.wrapAPI([]byte(`<ok/>`)) }
+            return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment("Unknown plugin"))
+        case strings.HasPrefix(sub, "plugin-disable/"):
+            if m.SetPluginEnabled == nil { return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment("No plugin manager")) }
+            name := strings.TrimPrefix(sub, "plugin-disable/")
+            if m.SetPluginEnabled(name, false) { return "text/xml; charset=utf-8", m.wrapAPI([]byte(`<ok/>`)) }
+            return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment("Unknown plugin"))
         case strings.HasPrefix(sub, "plugin/"):
             // legacy: plugin/<name>/<function>
             parts := strings.Split(strings.TrimPrefix(sub, "plugin/"), "/")
             if len(parts) != 2 { return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment("Malformed Plugin Api Call")) }
             name, function := parts[0], parts[1]
-            if m.Plugins == nil { return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment("Plugin API not implemented")) }
-            if handler, ok := any(m.Plugins).(interface{ ProcessPluginApi(name, function string, get map[string]string) (bool, []byte, error) }); ok {
-                if handled, frag, err := handler.ProcessPluginApi(name, function, get); handled {
-                    if err != nil { return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment(err.Error())) }
-                    return "text/xml; charset=utf-8", m.wrapAPI(frag)
-                }
+            if m.PluginProcess == nil { return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment("Plugin API not implemented")) }
+            if handled, frag, err := m.PluginProcess(name, function, get); handled {
+                if err != nil { return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment(err.Error())) }
+                return "text/xml; charset=utf-8", m.wrapAPI(frag)
             }
             return "text/xml; charset=utf-8", m.wrapAPI(m.errFragment("Unknown Plugin or function"))
         case strings.HasPrefix(sub, "bunnies/"):
