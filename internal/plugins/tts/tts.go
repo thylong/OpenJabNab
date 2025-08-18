@@ -271,9 +271,10 @@ func (pl *Plugin) worker() {
                 path := filepath.ToSlash(filepath.Join("broadcast", rel))
                 target := path
                 if pl.muBaseURL != "" { target = pl.muBaseURL + "/" + path }
-                // Send MU and MW as separate stanzas for legacy compatibility
-                _ = pl.send(job.bunnyID, []byte("MU "+target+"\n"))
-                _ = pl.send(job.bunnyID, []byte("MW\n"))
+                // Send MU and MW (and ST) as separate stanzas with CRLF line endings for legacy compatibility
+                _ = pl.send(job.bunnyID, []byte("MU "+target+"\r\n"))
+                _ = pl.send(job.bunnyID, []byte("MW\r\n"))
+                _ = pl.send(job.bunnyID, []byte("ST\r\n"))
             }
             pl.metricMu.Lock(); pl.cacheHits++; pl.completed++; pl.metricMu.Unlock()
             pl.updateJobDone(job.id, filepath.ToSlash(filepath.Join("broadcast", rel)))
@@ -303,8 +304,9 @@ func (pl *Plugin) worker() {
             path := filepath.ToSlash(filepath.Join("broadcast", rel))
             target := path
             if pl.muBaseURL != "" { target = pl.muBaseURL + "/" + path }
-            _ = pl.send(job.bunnyID, []byte("MU "+target+"\n"))
-            _ = pl.send(job.bunnyID, []byte("MW\n"))
+            _ = pl.send(job.bunnyID, []byte("MU "+target+"\r\n"))
+            _ = pl.send(job.bunnyID, []byte("MW\r\n"))
+            _ = pl.send(job.bunnyID, []byte("ST\r\n"))
         }
         pl.metricMu.Lock(); pl.cacheMiss++; pl.completed++; pl.metricMu.Unlock()
         pl.updateJobDone(job.id, filepath.ToSlash(filepath.Join("broadcast", rel)))
