@@ -150,6 +150,7 @@ func (h *handler) Process(in []byte) (out []string) {
         h.tryIdentify(data)
         if has(data, "<bind") {
             h.resource = capture(data, `<resource>([^<]*)</resource>`)
+            if h.bypassAuth && (h.resource == "" || h.resource == "boot") { h.resource = "streaming" }
             id := h.authUser
             if id == "" { id = h.bunnyID }
             if id == "" { id = "bunny" }
