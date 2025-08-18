@@ -273,7 +273,9 @@ func (pl *Plugin) worker() {
                 if pl.muBaseURL != "" { target = pl.muBaseURL + "/" + path }
                 // Send MU and MW (and ST) as separate stanzas with CRLF line endings for legacy compatibility
                 _ = pl.send(job.bunnyID, []byte("MU "+target+"\r\n"))
+                time.Sleep(150 * time.Millisecond)
                 _ = pl.send(job.bunnyID, []byte("MW\r\n"))
+                time.Sleep(150 * time.Millisecond)
                 _ = pl.send(job.bunnyID, []byte("ST\r\n"))
             }
             pl.metricMu.Lock(); pl.cacheHits++; pl.completed++; pl.metricMu.Unlock()
@@ -305,7 +307,9 @@ func (pl *Plugin) worker() {
             target := path
             if pl.muBaseURL != "" { target = pl.muBaseURL + "/" + path }
             _ = pl.send(job.bunnyID, []byte("MU "+target+"\r\n"))
+            time.Sleep(150 * time.Millisecond)
             _ = pl.send(job.bunnyID, []byte("MW\r\n"))
+            time.Sleep(150 * time.Millisecond)
             _ = pl.send(job.bunnyID, []byte("ST\r\n"))
         }
         pl.metricMu.Lock(); pl.cacheMiss++; pl.completed++; pl.metricMu.Unlock()
