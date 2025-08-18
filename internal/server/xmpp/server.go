@@ -106,5 +106,6 @@ func (s *Server) SendPacket(bunnyID string, payload []byte) bool {
     msg := "<message from='net.violet.platform@" + dom + "/services' to='" + bunnyID + "@" + dom + "/" + resource + "' id='OJaNa-1'>" +
         "<packet xmlns='violet:packet' format='1.0' ttl='604800'>" + b64 + "</packet></message>"
     if _, err := c.Write([]byte(msg)); err != nil { s.Logger.Warn("xmpp send error", slog.String("err", err.Error())) ; return false }
+    if s.Dump != nil { s.Dump("XMPP To Bunny", []byte(msg)) }
     return true
 }
