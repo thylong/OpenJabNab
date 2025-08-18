@@ -18,6 +18,7 @@ import (
     "strings"
     "sync"
     "time"
+    "log/slog"
 )
 
 // googleProvider implements Provider using Google Cloud Text-to-Speech REST API.
@@ -120,7 +121,14 @@ func (g *googleProvider) ListVoices(ctx context.Context) ([]Voice, error) {
     resp, err := g.httpClient.Do(req)
     if err != nil { return nil, err }
     defer resp.Body.Close()
-    if resp.StatusCode/100 != 2 { return nil, errors.New("google voices failed: "+resp.Status) }
+    if resp.StatusCode/100 != 2 {
+        // Read and log provider error body (redacted in returned error)
+        b, _ := io.ReadAll(resp.Body)
+        msg := string(b)
+        if len(msg) > 512 { msg = msg[:512] }
+        slog.Warn("google tts voices error", slog.String("status", resp.Status), slog.String("body", msg))
+        return nil, errors.New("google voices failed: "+resp.Status)
+    }
     var out struct{ Voices []struct{ Name string `json:"name"`; LanguageCodes []string `json:"languageCodes"`; SsmlGender string `json:"ssmlGender"` } `json:"voices"` }
     if err := json.NewDecoder(resp.Body).Decode(&out); err != nil { return nil, err }
     res := make([]Voice, 0, len(out.Voices))
@@ -136,10 +144,19 @@ func (g *googleProvider) Synthesize(ctx context.Context, text string, opts Synth
     tok, err := g.getToken(ctx)
     if err != nil { return nil, "", err }
     if g.baseURL == "" { g.baseURL = os.Getenv("GOOGLE_TTS_ENDPOINT"); if g.baseURL == "" { g.baseURL = "https://texttospeech.googleapis.com" } }
+    // Derive languageCode from voice name when possible to avoid provider-side
+    // "Empty language code" errors on some projects/endpoints.
+    lang := ""
+    if parts := strings.Split(opts.VoiceID, "-"); len(parts) >= 2 {
+        // Take first two segments like en-US, fr-FR, pt-BR, etc.
+        lang = parts[0] + "-" + parts[1]
+    }
+    enc := strings.ToUpper(opts.Codec)
+    if enc == "" { enc = "MP3" }
     body := map[string]any{
         "input": map[string]string{"text": text},
-        "voice": map[string]string{"name": opts.VoiceID},
-        "audioConfig": map[string]any{"audioEncoding": strings.ToUpper(opts.Codec)},
+        "voice": map[string]string{"name": opts.VoiceID, "languageCode": lang},
+        "audioConfig": map[string]any{"audioEncoding": enc},
     }
     if strings.Contains(strings.ToLower(text), "<speak") {
         body["input"] = map[string]string{"ssml": text}
@@ -153,7 +170,14 @@ func (g *googleProvider) Synthesize(ctx context.Context, text string, opts Synth
     resp, err := g.httpClient.Do(req)
     if err != nil { return nil, "", err }
     defer resp.Body.Close()
-    if resp.StatusCode/100 != 2 { return nil, "", errors.New("google synth failed: "+resp.Status) }
+    if resp.StatusCode/100 != 2 {
+        // Read and log provider error body (redacted in returned error)
+        b, _ := io.ReadAll(resp.Body)
+        msg := string(b)
+        if len(msg) > 512 { msg = msg[:512] }
+        slog.Warn("google tts synth error", slog.String("status", resp.Status), slog.String("body", msg))
+        return nil, "", errors.New("google synth failed: "+resp.Status)
+    }
     var out struct{ AudioContent string `json:"audioContent"` }
     if err := json.NewDecoder(resp.Body).Decode(&out); err != nil { return nil, "", err }
     data, err := base64.StdEncoding.DecodeString(out.AudioContent)
