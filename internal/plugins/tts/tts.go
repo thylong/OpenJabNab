@@ -30,6 +30,8 @@ type Plugin struct{
     outputRoot string // filesystem root where broadcast files are written
     // path under broadcast for tts files: broadcast/tts/<voice>/<hash>.mp3
     send       func(bunnyID string, payload []byte) bool
+    // Optional absolute URL base for MU command (e.g., http://r.nabaztag.com)
+    muBaseURL string
     // rate limiting
     rateInterval time.Duration
     rateBurst    int
@@ -84,6 +86,15 @@ func New(cfg *cfgpkg.Config) *Plugin {
     qsize := cfg.TTSQueueSize
     if qsize <= 0 { qsize = 128 }
     pl := &Plugin{enabled: true, settings: st, queue: make(chan speakJob, qsize), provider: provider, providerName: pname, outputRoot: out, jobs: make(map[string]jobStatus), stopCh: make(chan struct{}), jobHistoryMax: cfg.TTSJobHistoryMax}
+    // Build absolute MU base from BroadServer if provided
+    if host := strings.TrimSpace(cfg.OpenJabNabServers.BroadServer); host != "" {
+        // If host already contains scheme, keep it. Otherwise default to http://
+        if strings.HasPrefix(host, "http://") || strings.HasPrefix(host, "https://") {
+            pl.muBaseURL = strings.TrimRight(host, "/")
+        } else {
+            pl.muBaseURL = "http://" + strings.TrimRight(host, "/")
+        }
+    }
     // retry/timeout config
     if cfg.TTSTimeoutMs <= 0 { cfg.TTSTimeoutMs = 15000 }
     pl.timeout = time.Duration(cfg.TTSTimeoutMs) * time.Millisecond
@@ -258,7 +269,9 @@ func (pl *Plugin) worker() {
         if cacheHit {
             if pl.send != nil {
                 path := filepath.ToSlash(filepath.Join("broadcast", rel))
-                msg := []byte("MU " + path + "\nMW\n")
+                target := path
+                if pl.muBaseURL != "" { target = pl.muBaseURL + "/" + path }
+                msg := []byte("MU " + target + "\nMW\n")
                 _ = pl.send(job.bunnyID, msg)
             }
             pl.metricMu.Lock(); pl.cacheHits++; pl.completed++; pl.metricMu.Unlock()
@@ -287,7 +300,9 @@ func (pl *Plugin) worker() {
         // Send play packet if available
         if pl.send != nil {
             path := filepath.ToSlash(filepath.Join("broadcast", rel))
-            msg := []byte("MU " + path + "\nMW\n")
+            target := path
+            if pl.muBaseURL != "" { target = pl.muBaseURL + "/" + path }
+            msg := []byte("MU " + target + "\nMW\n")
             _ = pl.send(job.bunnyID, msg)
         }
         pl.metricMu.Lock(); pl.cacheMiss++; pl.completed++; pl.metricMu.Unlock()
