@@ -271,8 +271,9 @@ func (pl *Plugin) worker() {
                 path := filepath.ToSlash(filepath.Join("broadcast", rel))
                 target := path
                 if pl.muBaseURL != "" { target = pl.muBaseURL + "/" + path }
-                msg := []byte("MU " + target + "\nMW\nST\n")
-                _ = pl.send(job.bunnyID, msg)
+                // Send MU and MW as separate stanzas for legacy compatibility
+                _ = pl.send(job.bunnyID, []byte("MU "+target+"\n"))
+                _ = pl.send(job.bunnyID, []byte("MW\n"))
             }
             pl.metricMu.Lock(); pl.cacheHits++; pl.completed++; pl.metricMu.Unlock()
             pl.updateJobDone(job.id, filepath.ToSlash(filepath.Join("broadcast", rel)))
@@ -302,8 +303,8 @@ func (pl *Plugin) worker() {
             path := filepath.ToSlash(filepath.Join("broadcast", rel))
             target := path
             if pl.muBaseURL != "" { target = pl.muBaseURL + "/" + path }
-            msg := []byte("MU " + target + "\nMW\nST\n")
-            _ = pl.send(job.bunnyID, msg)
+            _ = pl.send(job.bunnyID, []byte("MU "+target+"\n"))
+            _ = pl.send(job.bunnyID, []byte("MW\n"))
         }
         pl.metricMu.Lock(); pl.cacheMiss++; pl.completed++; pl.metricMu.Unlock()
         pl.updateJobDone(job.id, filepath.ToSlash(filepath.Join("broadcast", rel)))
