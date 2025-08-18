@@ -43,6 +43,21 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
         http.ServeFile(w, r, full)
         return
     }
+    // Back-compat: also serve under /ojn_local/broadcast/ mapping to StaticRoot/broadcast
+    if s.StaticRoot != "" && strings.HasPrefix(uri, "/ojn_local/broadcast/") {
+        // Strip /ojn_local and reuse the broadcast handler
+        stripped := "/" + strings.TrimPrefix(uri, "/ojn_local/")
+        clean := filepath.Clean(stripped)
+        full := filepath.Join(s.StaticRoot, filepath.FromSlash(clean))
+        root := filepath.Clean(s.StaticRoot)
+        if !strings.HasPrefix(full, root+string(os.PathSeparator)) {
+            w.WriteHeader(http.StatusForbidden)
+            _, _ = w.Write([]byte("Forbidden"))
+            return
+        }
+        http.ServeFile(w, r, full)
+        return
+    }
     // Run plugin HTTP pipeline for all URIs before API routing (parity with httpbridge)
     if s.Plugins != nil {
         preq := &plug.Request{URI: uri, RawURI: r.URL.RequestURI(), Get: map[string]string{}, Post: map[string]string{}}

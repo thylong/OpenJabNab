@@ -3,6 +3,7 @@ package xmpp
 import (
 	"bufio"
     "encoding/base64"
+    "fmt"
 	"io"
 	"log/slog"
 	"net"
@@ -31,6 +32,7 @@ type Server struct {
     mu    sync.RWMutex
     conns map[string]net.Conn      // bunnyID -> conn
     res   map[string]string        // bunnyID -> resource
+    msgSeq uint64                  // message sequence for unique ids
 }
 
 func (s *Server) ListenAndServe(stop <-chan struct{}) error {
@@ -102,8 +104,9 @@ func (s *Server) SendPacket(bunnyID string, payload []byte) bool {
     // Compose message similar to C++ handler
     dom := s.Domain
     b64 := base64.StdEncoding.EncodeToString(payload)
-    // Match original server: no type attr; sender net.openjabnab.platform@<domain>/services
-    msg := "<message from='net.openjabnab.platform@" + dom + "/services' to='" + bunnyID + "@" + dom + "/" + resource + "' id='OJaNa-1'>" +
+    // Match original server: no type attr; sender net.openjabnab.platform@<domain>/services; unique id per message
+    s.mu.Lock(); s.msgSeq++; id := s.msgSeq; s.mu.Unlock()
+    msg := "<message from='net.openjabnab.platform@" + dom + "/services' to='" + bunnyID + "@" + dom + "/" + resource + "' id='OJaNa-" + fmt.Sprintf("%d", id) + "'>" +
         "<packet xmlns='violet:packet' format='1.0' ttl='604800'>" + b64 + "</packet></message>"
     if _, err := c.Write([]byte(msg)); err != nil { s.Logger.Warn("xmpp send error", slog.String("err", err.Error())) ; return false }
     if s.Dump != nil { s.Dump("XMPP To Bunny", []byte(msg)) }
