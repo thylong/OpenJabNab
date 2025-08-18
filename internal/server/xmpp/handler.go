@@ -60,6 +60,9 @@ func (h *handler) Process(in []byte) (out []string) {
     case 1:
         if has(data, `<auth xmlns='urn:ietf:params:xml:ns:xmpp-sasl' mechanism='DIGEST-MD5'/>`) {
             if h.bypassAuth {
+                // Allow unauthenticated success for legacy devices; defer user identification
+                // to later bind/presence frames. If we already know bunnyID, use it.
+                if h.authUser == "" && h.bunnyID != "" { h.authUser = h.bunnyID }
                 out = append(out, `<success xmlns='urn:ietf:params:xml:ns:xmpp-sasl'/>`)
                 h.step = 4
                 return
@@ -76,6 +79,8 @@ func (h *handler) Process(in []byte) (out []string) {
         // SASL PLAIN fallback
             if reAuthPlain.MatchString(data) {
             if h.bypassAuth {
+                // Allow unauthenticated success; attempt to use any known bunnyID as auth user
+                if h.authUser == "" && h.bunnyID != "" { h.authUser = h.bunnyID }
                 out = append(out, `<success xmlns='urn:ietf:params:xml:ns:xmpp-sasl'/>`)
                 h.step = 4
                 return
@@ -144,14 +149,15 @@ func (h *handler) Process(in []byte) (out []string) {
 	if reIQ.MatchString(data) {
         h.tryIdentify(data)
         if has(data, "<bind") {
-			h.resource = capture(data, `<resource>([^<]*)</resource>`)
-            user := h.authUser
-            if user == "" { user = "bunny" }
-            jid := user+"@"+h.domain+"/"+h.resource
-			out = append(out, iqReply(data, `<bind xmlns='urn:ietf:params:xml:ns:xmpp-bind'><jid>`+jid+`</jid></bind>`))
-            if h.onRegistered != nil && h.authUser != "" { h.onRegistered(h.authUser, h.resource) }
-			return
-		}
+            h.resource = capture(data, `<resource>([^<]*)</resource>`)
+            id := h.authUser
+            if id == "" { id = h.bunnyID }
+            if id == "" { id = "bunny" }
+            jid := id+"@"+h.domain+"/"+h.resource
+            out = append(out, iqReply(data, `<bind xmlns='urn:ietf:params:xml:ns:xmpp-bind'><jid>`+jid+`</jid></bind>`))
+            if h.onRegistered != nil && id != "" { h.onRegistered(id, h.resource) }
+            return
+        }
 		if has(data, `<session xmlns='urn:ietf:params:xml:ns:xmpp-session'/>`) {
 			out = append(out, iqReply(data, `<session xmlns='urn:ietf:params:xml:ns:xmpp-session'/>`))
 			return
