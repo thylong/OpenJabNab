@@ -102,8 +102,8 @@ func (s *Server) SendPacket(bunnyID string, payload []byte) bool {
     // Compose message similar to C++ handler
     dom := s.Domain
     b64 := base64.StdEncoding.EncodeToString(payload)
-    // Use legacy sender JID expected by devices
-    msg := "<message from='net.violet.platform@" + dom + "/services' to='" + bunnyID + "@" + dom + "/" + resource + "' id='OJaNa-1'>" +
+    // Use legacy sender JID and chat type expected by older devices
+    msg := "<message type='chat' from='net.violet.platform@" + dom + "/vl' to='" + bunnyID + "@" + dom + "/" + resource + "' id='OJaNa-1'>" +
         "<packet xmlns='violet:packet' format='1.0' ttl='604800'>" + b64 + "</packet></message>"
     if _, err := c.Write([]byte(msg)); err != nil { s.Logger.Warn("xmpp send error", slog.String("err", err.Error())) ; return false }
     if s.Dump != nil { s.Dump("XMPP To Bunny", []byte(msg)) }
