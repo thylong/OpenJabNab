@@ -9,6 +9,7 @@ services:
       - GOOGLE_APPLICATION_CREDENTIALS=/secrets/nabazgo-469413-3c3a2c9343b4.json
     volumes:
       - ./server/openjabnab.ini:/config/openjabnab.ini:ro
+      - ./http-root:/app/http-root
       - ./logs:/app/logs
       - ./secrets:/secrets:ro
     ports:

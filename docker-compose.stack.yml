@@ -18,6 +18,7 @@ services:
       - ./secrets:/secrets:ro
       - ./plugins:/config/plugins
       - ./http-wrapper:/app/http-wrapper:ro
+      - ./http-root:/app/http-root
     networks: [ojn]
 
 networks:
