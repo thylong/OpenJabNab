@@ -2,3 +2,7 @@ Makefile
 bin/
 tmp/
 ojn_local/
+
+.env
+.envrc
+secrets/*.json

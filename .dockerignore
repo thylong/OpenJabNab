@@ -8,3 +8,7 @@
 **/*.log
 **/logs
 **/http-wrapper
+
+.env
+.envrc
+secrets/*.json
