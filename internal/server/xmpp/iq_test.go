@@ -90,7 +90,7 @@ func TestIQBindSessionSources(t *testing.T) {
 	c.SetReadDeadline(time.Now().Add(1*time.Second))
 	n, err = br.Read(buf)
 	if err != nil { t.Fatal(err) }
-	if !strings.Contains(string(buf[:n]), "<query xmlns='violet:iq:sources'><packet xmlns='violet:packet' format='1.0' ttl='604800'></packet></query>") {
+    if !strings.Contains(string(buf[:n]), "<query xmlns='violet:iq:sources'><packet xmlns='violet:packet' format='1.0' ttl='604800'>") {
 		t.Fatalf("unexpected sources reply: %s", string(buf[:n]))
 	}
 }

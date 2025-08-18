@@ -163,11 +163,14 @@ func (h *handler) Process(in []byte) (out []string) {
 			out = append(out, iqReply(data, `<session xmlns='urn:ietf:params:xml:ns:xmpp-session'/>`))
 			return
 		}
-		if has(data, `<query xmlns="violet:iq:sources"><packet xmlns="violet:packet" format="1.0"/></query>`) {
-			// reply empty for now
-			out = append(out, iqReply(data, `<query xmlns='violet:iq:sources'><packet xmlns='violet:packet' format='1.0' ttl='604800'></packet></query>`))
-			return
-		}
+        if has(data, `<query xmlns="violet:iq:sources"><packet xmlns="violet:packet" format="1.0"/></query>`) {
+            // Reply with a small non-empty init packet (base64) to unblock legacy firmware expectations
+            // Payload here is a tiny marker; real servers send a structured init packet
+            payload := []byte("INIT\x00")
+            encoded := base64.StdEncoding.EncodeToString(payload)
+            out = append(out, iqReply(data, `<query xmlns='violet:iq:sources'><packet xmlns='violet:packet' format='1.0' ttl='604800'>`+encoded+`</packet></query>`))
+            return
+        }
 	}
 	// presence echo
 	if rePresence.MatchString(data) {
