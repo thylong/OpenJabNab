@@ -79,7 +79,7 @@ OpenJabNab::OpenJabNab(int argc, char ** argv)
 		// Create Listeners
 		httpListener = new QTcpServer(this);
 		httpListener->setMaxPendingConnections(GlobalSettings::GetInt("OpenJabNabServers/HTTPMaxPendingConnections", 30));
-		httpListener->listen(QHostAddress::LocalHost, GlobalSettings::GetInt("OpenJabNabServers/ListeningHttpPort", 8080));
+		httpListener->listen(QHostAddress::Any, GlobalSettings::GetInt("OpenJabNabServers/ListeningHttpPort", 8080));
 		QObject::connect(httpListener, &QTcpServer::newConnection, [&,httpApi,httpVioletApi](void)
 		{
 			auto* it = new HttpHandler(httpListener->nextPendingConnection(), httpApi, httpVioletApi);

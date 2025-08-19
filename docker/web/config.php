@@ -33,12 +33,12 @@ define('LOG_OJNAPI', false);
 define('LOGS_SITE', '/tmp/');
 
 // Map Configuration
-define('THUNDERFOREST_APIKEY', '');
+define('THUNDERFOREST_APIKEY', getenv('THUNDERFOREST_APIKEY') ?: '');
 
 // Server Configuration
 define('OJN_HTTP_HOST', getenv('OJN_HTTP_HOST') ?: 'localhost');
 define('OJN_HTTP_PORT', getenv('OJN_HTTP_PORT') ?: 8080);
-define('OJN_XMPP_HOST', getenv('OJN_XMPP_HOST') ?: 'localhost');  
+define('OJN_XMPP_HOST', getenv('OJN_XMPP_HOST') ?: 'localhost');
 define('OJN_XMPP_PORT', getenv('OJN_XMPP_PORT') ?: 5222);
 
 // Application Settings
@@ -51,7 +51,7 @@ define('OJN_ROOT_PATH', '/var/www/html/');
 define('OJN_LOCAL_PATH', '/var/www/html/ojn_local/');
 define('OJN_PLUGINS_PATH', '/var/www/html/plugins/');
 
-// Session Configuration  
+// Session Configuration
 ini_set('session.gc_maxlifetime', 1800); // 30 minutes
 
 // Error Reporting for Development

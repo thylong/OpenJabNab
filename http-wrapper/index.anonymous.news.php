@@ -28,9 +28,9 @@
       <div class="news-item-title">
         <?php if(time() - strtotime($new['date']) < 3600 * 24 * 2) { ?><span class="label label-info"><?php echo __tr("New") ?></span> <?php } ?>
         <?php if($new['status'] == 4) { ?><span class="label label-info"><?php echo __tr("Important") ?></span> <?php } ?>
-        <?php echo strlen($new['tr_title']) ? $new['tr_title'] : $new['title'] ?>
+        <?php echo ($new['tr_title'] && strlen($new['tr_title'])) ? $new['tr_title'] : $new['title'] ?>
       </div>
-      <p class="news-item-preview"><?php echo strlen($new['tr_content']) ? $new['tr_content'] : $new['content'] ?></p>
+      <p class="news-item-preview"><?php echo ($new['tr_content'] && strlen($new['tr_content'])) ? $new['tr_content'] : $new['content'] ?></p>
     </div>
     <div class="news-item-date">
       <span class="news-item-day"><?php echo str_pad(date("d", strtotime($new['date'])), 2, "0", STR_PAD_LEFT) ?></span>

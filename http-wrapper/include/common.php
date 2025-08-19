@@ -81,7 +81,7 @@ function correctTime($str)
 global $Infos;
 
 //session_start('openJabNab');
-session_start();
+if (session_status() === PHP_SESSION_NONE) { session_start(); }
 require_once(ROOT_SITE.'include/class/api.class.php');
 require_once(ROOT_SITE.'include/class/message.class.php');
 require_once(ROOT_SITE.'include/class/template.class.php');

@@ -62,7 +62,7 @@ protected:
       return;
     }
     QString funcName = rx.cap(1);
-    QStringList args = rx.cap(2).split(',', Qt::SkipEmptyParts);
+    QStringList args = rx.cap(2).split(',', QString::SkipEmptyParts);
     //std::cout << "  [ApiHandlerGeneric::registerAPICall] " << sig << " " << &fn << std::endl;
     //std::cout << "    Put into map... " << &_apicalls << std::endl;
     _apicalls.emplace(funcName, std::make_pair(args,[fn](C* o, Args... args) -> R {

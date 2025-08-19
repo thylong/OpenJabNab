@@ -210,7 +210,7 @@ QString TTSbluemix::CreateNewSound(QString text, QString voice, bool forceOverwr
     //LogDebug(QString("ContentData: %1").arg(QString(ContentData)));
     auto *rep = _http.post(req,ContentData);
     QObject::connect(rep, &QNetworkReply::finished, &loop, &QEventLoop::quit);
-    QObject::connect(rep, qOverload<QNetworkReply::NetworkError>(&QNetworkReply::errorOccurred), &loop, &QEventLoop::quit);
+    QObject::connect(rep, qOverload<QNetworkReply::NetworkError>(&QNetworkReply::error), &loop, &QEventLoop::quit);
     loop.exec();
     const auto answer = rep->readAll();
     delete rep;
@@ -246,7 +246,7 @@ QString TTSbluemix::CreateNewSound(QString text, QString voice, bool forceOverwr
     QNetworkRequest req(QUrl("https://www.ibm.com/demos/live/tts-demo/api/tts/newSynthesize?voice="+voice+"&id="+sUuid));
     auto* rep = _http.get(req);
     QObject::connect(rep, &QNetworkReply::finished, &loop, &QEventLoop::quit);
-    QObject::connect(rep, qOverload<QNetworkReply::NetworkError>(&QNetworkReply::errorOccurred), &loop, &QEventLoop::quit);
+    QObject::connect(rep, qOverload<QNetworkReply::NetworkError>(&QNetworkReply::error), &loop, &QEventLoop::quit);
     loop.exec();
 
     const auto answer = rep->readAll();

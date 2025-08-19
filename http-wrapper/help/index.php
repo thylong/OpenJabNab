@@ -191,7 +191,7 @@ if(count($_POST))
       <ul class="card-body">
         <?php foreach($faqs as $f):
         ?><li>
-          <a href="faq.php?question=<?php echo $f['slug'] ?>"><?php echo $f['question'] ?></a>
+          <a href="faq.php?question=<?php echo $f['id'] ?>"><?php echo $f['question'] ?></a>
         </li>
         <?php endforeach; ?>
       </ul>

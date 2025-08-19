@@ -137,7 +137,7 @@ QString TTSacapela::CreateNewSound(QString text, QString voice, bool forceOverwr
 
   auto* rep = _http.get(req);
   QObject::connect(rep, &QNetworkReply::finished, &loop, &QEventLoop::quit);
-  QObject::connect(rep, qOverload<QNetworkReply::NetworkError>(&QNetworkReply::errorOccurred), &loop, &QEventLoop::quit);
+  QObject::connect(rep, qOverload<QNetworkReply::NetworkError>(&QNetworkReply::error), &loop, &QEventLoop::quit);
   loop.exec();
 
   const auto& answer = rep->readAll();
@@ -194,7 +194,7 @@ QString TTSacapela::CreateNewSound(QString text, QString voice, bool forceOverwr
 
   auto* rep2 = _http.post(req2,ContentData.toLatin1());
   QObject::connect(rep2, &QNetworkReply::finished, &loop, &QEventLoop::quit);
-  QObject::connect(rep2, qOverload<QNetworkReply::NetworkError>(&QNetworkReply::errorOccurred), &loop, &QEventLoop::quit);
+  QObject::connect(rep2, qOverload<QNetworkReply::NetworkError>(&QNetworkReply::error), &loop, &QEventLoop::quit);
   loop.exec();
 
   const auto& answer2 = rep2->readAll();
@@ -226,7 +226,7 @@ QString TTSacapela::CreateNewSound(QString text, QString voice, bool forceOverwr
 
   QNetworkReply* rep3 = _http.get(req3);
   QObject::connect(rep3, &QNetworkReply::finished, &loop, &QEventLoop::quit);
-  QObject::connect(rep3, qOverload<QNetworkReply::NetworkError>(&QNetworkReply::errorOccurred), &loop, &QEventLoop::quit);
+  QObject::connect(rep3, qOverload<QNetworkReply::NetworkError>(&QNetworkReply::error), &loop, &QEventLoop::quit);
   loop.exec();
 
   const auto& answer3 = rep3->readAll();

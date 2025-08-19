@@ -44,7 +44,7 @@ $sql = "SELECT * FROM faq WHERE language='".$Infos['language']."' ORDER BY RAND(
 $res = mysqli_query($link, $sql);
 while($row = mysqli_fetch_assoc($res)) {
   $faqs[] = $row;
-  foreach(preg_split('/,/', $row['keyword']) as $word) {
+  foreach(preg_split('/,/', $row['keyword'] ?? '') as $word) {
     $word = trim($word);
     if($word != '') {
       if(!isset($tags[$word])) {
@@ -63,7 +63,7 @@ if(isset($_GET['search']) && strlen(trim($_GET['search']))) {
   foreach($words as $word) {
     $word = strtolower(trim($word));
     if(strlen($word) && !in_array($word, $exclude)) {
-      $sql = "SELECT * FROM faq WHERE language='".$Infos['language']."' AND (question LIKE '%".$word."%' OR answer LIKE '%".$word."%' OR keyword LIKE '%".$word."%') ORDER BY viewed DESC;";
+      $sql = "SELECT * FROM faq WHERE language='".$Infos['language']."' AND (question LIKE '%".$word."%' OR answer LIKE '%".$word."%') ORDER BY id DESC;";
       $res = mysqli_query($link, $sql);
       $c = 0;
       while($row = mysqli_fetch_assoc($res)) {
@@ -77,15 +77,16 @@ if(isset($_GET['search']) && strlen(trim($_GET['search']))) {
 } else {
   if(isset($_GET['question']) && trim($_GET['question']) != '') {
     //$sql = "SELECT * FROM faq WHERE language='".$Infos['language']."' AND slug='".$_GET['question']."' ORDER BY viewed DESC;";
-    $sql = "SELECT * FROM faq WHERE slug='".$_GET['question']."' ORDER BY viewed DESC;";
+    $sql = "SELECT * FROM faq WHERE id='".(int)$_GET['question']."';";
     $res = mysqli_query($link, $sql);
     if($res) {
       while($row = mysqli_fetch_assoc($res)) {
         $searchs[] = $row;
 
         if(!isset($_GET['debug'])) {
-          $sql = "UPDATE faq SET viewed=viewed+1 WHERE id='".$row['id']."';";
-          mysqli_query($link, $sql);
+          // View tracking disabled - viewed column doesn't exist
+          // $sql = "UPDATE faq SET viewed=viewed+1 WHERE id='".$row['id']."';";
+          // mysqli_query($link, $sql);
         }
       }
     }
@@ -106,7 +107,7 @@ require(ROOT_SITE.'include/message.php');
         <a href="faq.php"><?php echo __tr('&lt; Back to the list') ?></a><br />
         <?php $annotate = array(); ?>
         <?php foreach($searchs as $f):
-          $annotate[] = $f['annotation'];
+          $annotate[] = $f['annotation'] ?? '';
           $ojnTemplate->setTitle($f['question'] . ' - ' . __tr('FAQ'));
         ?>
         <h4 class="card-title">
@@ -148,7 +149,7 @@ require(ROOT_SITE.'include/message.php');
       </h5>
       <div class="card-body">
         <?php foreach($faqs as $f): ?>
-        <a href="/help/faq.php?question=<?php echo $f['slug'] ?><?php if($Infos['isAdmin']): ?><?php /*&debug=true<?php*/ endif; ?>"><?php echo $f['question'] ?></a><br />
+        <a href="/help/faq.php?question=<?php echo $f['id'] ?><?php if($Infos['isAdmin']): ?><?php /*&debug=true<?php*/ endif; ?>"><?php echo $f['question'] ?></a><br />
         <?php endforeach; ?>
       </div>
     </div>

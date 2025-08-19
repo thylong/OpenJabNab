@@ -4,3 +4,6 @@ tmp/
 ojn_local/
 build/
 *.swp
+
+.env
+.envrc

@@ -4,7 +4,7 @@ if(!file_exists("include/common.php"))
 require_once "include/common.php";
 $ojnTemplate->setTitle(__tr('Statistics'));
 
-if(!($online = apcu_fetch(APC_PREFIX.'ojn_stats_connected')) || !($sleep = apc_fetch(APC_PREFIX.'ojn_stats_sleep'))) {
+if(!($online = apcu_fetch(APC_PREFIX.'ojn_stats_connected')) || !($sleep = apcu_fetch(APC_PREFIX.'ojn_stats_sleep'))) {
   $link = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
   if (!$link) {
       die('Connexion impossible : ' . mysqli_error());
@@ -260,16 +260,23 @@ $(function () {
     $max_api = 0;
     foreach($actions as $time => $action)
     {
-      $js .= 'single.push(['.$time.', '.$action["single"].']); double.push(['.$time.', '.$action["double"].']);';
-      $js .= 'rfid.push(['.$time.', '.$action["rfid"].']); ears.push(['.$time.', '.$action["ears"].']);';
-      $js .= 'voice.push(['.$time.', '.$action["voice"].']);';
-      $js .= 'api.push(['.$time.', '.$action["api"].']);';
-      $max = max($max, $action["single"] + 0);
-      $max = max($max, $action["double"] + 0);
-      $max = max($max, $action["rfid"] + 0);
-      $max = max($max, $action["ears"] + 0);
-      $max = max($max, $action["voice"] + 0);
-      $max_api = max($max_api, $action["api"] + 0);
+      $single = $action["single"] ?? 0;
+      $double = $action["double"] ?? 0;
+      $rfid = $action["rfid"] ?? 0;
+      $ears = $action["ears"] ?? 0;
+      $voice = $action["voice"] ?? 0;
+      $api = $action["api"] ?? 0;
+      
+      $js .= 'single.push(['.$time.', '.$single.']); double.push(['.$time.', '.$double.']);';
+      $js .= 'rfid.push(['.$time.', '.$rfid.']); ears.push(['.$time.', '.$ears.']);';
+      $js .= 'voice.push(['.$time.', '.$voice.']);';
+      $js .= 'api.push(['.$time.', '.$api.']);';
+      $max = max($max, $single + 0);
+      $max = max($max, $double + 0);
+      $max = max($max, $rfid + 0);
+      $max = max($max, $ears + 0);
+      $max = max($max, $voice + 0);
+      $max_api = max($max_api, $api + 0);
     }
     $max_api += 10;
     $js .= 'var options4 = {
