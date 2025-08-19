@@ -51,6 +51,10 @@ RUN mkdir -p /app/bin/ojn_local/bootcode
 # Copy bootcode files
 COPY bootcode/ /app/bin/ojn_local/bootcode/
 
+# Copy and set up the setup script
+COPY docker/server/setup.sh /app/bin/setup.sh
+RUN chmod +x /app/bin/setup.sh
+
 # Set execute permissions
 RUN chmod +x /app/bin/* || true
 
@@ -61,6 +65,6 @@ EXPOSE 8080 5222
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD curl -f http://localhost:8080/ >/dev/null 2>&1 || exit 1
 
-# Start the OpenJabNab server with explicit config directory
+# Start the OpenJabNab server using setup script
 WORKDIR /app/bin
-CMD ["./openjabnab", "--config-dir", "/app/bin"]
+CMD ["./setup.sh"]

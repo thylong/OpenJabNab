@@ -20,5 +20,18 @@ chmod 644 /var/www/html/include/config.php
 mkdir -p /var/www/html/ojn_local
 chown -R www-data:www-data /var/www/html/ojn_local
 
+# Update Apache virtual host configuration with correct domain
+if [ ! -z "${OJN_DOMAIN}" ] && [ "${OJN_DOMAIN}" != "localhost" ]; then
+    echo "Updating Apache configuration for domain: ${OJN_DOMAIN}"
+    # Update ServerName in Apache configuration
+    sed -i "s/ServerName nabaztag\.yourdomain\.com/ServerName ${OJN_DOMAIN}/" /etc/apache2/sites-available/000-default.conf
+    # Update ServerAlias to include the domain
+    sed -i "s/ServerAlias localhost \*\.nabaztag\.yourdomain\.com/ServerAlias localhost *.${OJN_DOMAIN} ${OJN_DOMAIN}/" /etc/apache2/sites-available/000-default.conf
+    echo "Apache configured for domain: ${OJN_DOMAIN}"
+else
+    echo "Using default localhost configuration"
+fi
+
 echo "OpenJabNab web configuration setup complete"
 echo "Config file created with constants: ROOT_SITE, APC_PREFIX, DB settings"
+echo "Domain configured: ${OJN_DOMAIN:-localhost}"

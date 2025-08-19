@@ -10,9 +10,9 @@ define('DB_PORT', getenv('DB_PORT') ?: 3306);
 
 // Application Constants (from common-def.php)
 define('ROOT_SITE', '/var/www/html/');
-define('ROOT_WWW_ADMIN', 'http://localhost/ojn_admin/');
-define('ROOT_WWW_API', 'http://localhost/ojn_api/');
-define('ADMIN_EMAIL', 'admin@localhost');
+define('ROOT_WWW_ADMIN', 'http://' . (getenv('OJN_DOMAIN') ?: 'localhost') . '/ojn_admin/');
+define('ROOT_WWW_API', 'http://' . (getenv('OJN_DOMAIN') ?: 'localhost') . '/ojn_api/');
+define('ADMIN_EMAIL', 'admin@' . (getenv('OJN_DOMAIN') ?: 'localhost'));
 define('APC_PREFIX', 'ojn_docker_');
 
 // API Configuration
@@ -20,8 +20,8 @@ define('OJN_API_HOST', 'openjabnab');
 define('OJN_API_PORT', 8080);
 
 // Mail Configuration (disabled for Docker)
-define('MAIL_SENDER', 'admin@localhost');
-define('MAIL_SERVER', 'localhost');
+define('MAIL_SENDER', 'admin@' . (getenv('OJN_DOMAIN') ?: 'localhost'));
+define('MAIL_SERVER', getenv('OJN_DOMAIN') ?: 'localhost');
 define('MAIL_USER', '');
 define('MAIL_PASS', '');
 
