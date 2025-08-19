@@ -164,10 +164,23 @@ func (h *handler) Process(in []byte) (out []string) {
 			return
 		}
         if has(data, `<query xmlns="violet:iq:sources"><packet xmlns="violet:packet" format="1.0"/></query>`) {
-            // Reply with a small non-empty init packet (base64) to unblock legacy firmware expectations
-            // Payload here is a tiny marker; real servers send a structured init packet
-            payload := []byte("INIT\x00")
-            encoded := base64.StdEncoding.EncodeToString(payload)
+            // Build a minimal faithful init packet equivalent to AmbientPacket(nose=No, ears 0,0) + SleepPacket(Wake_Up)
+            // Packet framing: 0x7F [Ambient type=0x01 len=var data] [Sleep type=0x03 len=1 data] 0xFF
+            ambient := []byte{0x7F, 0xFF, 0xFF, 0xFE, 0x13, 0x00} // 7FFFFFFE then MoveLeft(0x13)=0, MoveRight(0x14)=0
+            ambient = append(ambient, 0x14, 0x00)
+            ambient = append(ambient, 0x09, 0x00) // Service_Nose(0x09)=Nose_No(0)
+            // ambient internal data is after the 4-byte 7FFFFFFE header; total len = 4 + 6 = 10
+            ambientLen := byte(len(ambient)) // 10
+            ambientFrame := []byte{0x01, 0x00, 0x00, ambientLen}
+            ambientFrame = append(ambientFrame, ambient...)
+            // Sleep packet: one byte 0x00 (Wake_Up)
+            sleepFrame := []byte{0x03, 0x00, 0x00, 0x01, 0x00}
+            // Combine with leading 0x7F and trailing 0xFF
+            buf := []byte{0x7F}
+            buf = append(buf, ambientFrame...)
+            buf = append(buf, sleepFrame...)
+            buf = append(buf, 0xFF)
+            encoded := base64.StdEncoding.EncodeToString(buf)
             out = append(out, iqReply(data, `<query xmlns='violet:iq:sources'><packet xmlns='violet:packet' format='1.0' ttl='604800'>`+encoded+`</packet></query>`))
             return
         }
