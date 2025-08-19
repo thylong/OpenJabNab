@@ -107,7 +107,7 @@ func (s *Server) SendPacket(bunnyID string, payload []byte) bool {
     // Match original server: no type attr; sender net.openjabnab.platform@<domain>/services; unique id per message
     s.mu.Lock(); s.msgSeq++; id := s.msgSeq; s.mu.Unlock()
     msg := "<message from='net.openjabnab.platform@" + dom + "/services' to='" + bunnyID + "@" + dom + "/" + resource + "' id='OJaNa-" + fmt.Sprintf("%d", id) + "'>" +
-        "<packet xmlns='violet:packet' format='1.0' ttl='604800'>" + b64 + "</packet></message>"
+        "<packet xmlns='violet:packet' format='0.9' ttl='604800'>" + b64 + "</packet></message>"
     if _, err := c.Write([]byte(msg)); err != nil { s.Logger.Warn("xmpp send error", slog.String("err", err.Error())) ; return false }
     if s.Dump != nil { s.Dump("XMPP To Bunny", []byte(msg)) }
     return true

@@ -151,19 +151,28 @@ func (h *handler) Process(in []byte) (out []string) {
         if has(data, "<bind") {
             h.resource = capture(data, `<resource>([^<]*)</resource>`)
             if h.bypassAuth && (h.resource == "" || h.resource == "boot") { h.resource = "streaming" }
-            id := h.authUser
-            if id == "" { id = h.bunnyID }
-            if id == "" { id = "bunny" }
-            jid := id+"@"+h.domain+"/"+h.resource
-            out = append(out, iqReply(data, `<bind xmlns='urn:ietf:params:xml:ns:xmpp-bind'><jid>`+jid+`</jid></bind>`))
-            if h.onRegistered != nil && id != "" { h.onRegistered(id, h.resource) }
+            bunnyId := h.authUser
+            if bunnyId == "" { bunnyId = h.bunnyID }
+            if bunnyId == "" { bunnyId = "bunny" }
+            jid := bunnyId+"@"+h.domain+"/"+h.resource
+            // Match C++ format: "%1 %4" = id + type (bind reply)
+            id := capture(data, ` id='([^']*)'`)
+            reply := `<iq id='`+id+`' type='result'><bind xmlns='urn:ietf:params:xml:ns:xmpp-bind'><jid>`+jid+`</jid></bind></iq>`
+            out = append(out, reply)
+            if h.onRegistered != nil && bunnyId != "" { h.onRegistered(bunnyId, h.resource) }
             return
         }
 		if has(data, `<session xmlns='urn:ietf:params:xml:ns:xmpp-session'/>`) {
-			out = append(out, iqReply(data, `<session xmlns='urn:ietf:params:xml:ns:xmpp-session'/>`))
+			// Match C++ format: "%4 %3 %2 %1" = type + to + from + id (session reply)  
+            id := capture(data, ` id='([^']*)'`)
+            from := capture(data, ` from='([^']*)'`)
+            to := capture(data, ` to='([^']*)'`)
+            if to == "" { to = from }
+            reply := `<iq type='result' to='`+from+`' from='`+to+`' id='`+id+`'><session xmlns='urn:ietf:params:xml:ns:xmpp-session'/></iq>`
+            out = append(out, reply)
 			return
 		}
-        if has(data, `<query xmlns="violet:iq:sources"><packet xmlns="violet:packet" format="1.0"/></query>`) {
+        if has(data, `<query xmlns="violet:iq:sources"><packet xmlns="violet:packet" format="0.9"/></query>`) {
             // Build a minimal faithful init packet equivalent to AmbientPacket(nose=No, ears 0,0) + SleepPacket(Wake_Up)
             // Packet framing: 0x7F [Ambient type=0x01 len=var data] [Sleep type=0x03 len=1 data] 0xFF
             ambient := []byte{0x7F, 0xFF, 0xFF, 0xFE, 0x13, 0x00} // 7FFFFFFE then MoveLeft(0x13)=0, MoveRight(0x14)=0
@@ -181,7 +190,13 @@ func (h *handler) Process(in []byte) (out []string) {
             buf = append(buf, sleepFrame...)
             buf = append(buf, 0xFF)
             encoded := base64.StdEncoding.EncodeToString(buf)
-            out = append(out, iqReply(data, `<query xmlns='violet:iq:sources'><packet xmlns='violet:packet' format='1.0' ttl='604800'>`+encoded+`</packet></query>`))
+            // Match C++ format: "%2 %3 %1 %4" = from + to + id + type (sources reply)
+            id := capture(data, ` id='([^']*)'`)
+            from := capture(data, ` from='([^']*)'`)
+            to := capture(data, ` to='([^']*)'`)
+            if to == "" { to = from }
+            reply := `<iq from='`+to+`' to='`+from+`' id='`+id+`' type='result'><query xmlns='violet:iq:sources'><packet xmlns='violet:packet' format='0.9' ttl='604800'>`+encoded+`</packet></query></iq>`
+            out = append(out, reply)
             return
         }
 	}

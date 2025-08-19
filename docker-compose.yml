@@ -1,17 +1,27 @@
 services:
   openjabnab:
     build: .
+    ports:
+      - "0.0.0.0:5222:5222" # IPv4
+      - "0.0.0.0:80:80"     # IPv4
+      - "0.0.0.0:8080:80" # IPv4
+    cap_add:
+      - NET_BIND_SERVICE
     image: openjabnab:latest
-    container_name: openjabnab
+    container_name: ojn-server
     restart: unless-stopped
     environment:
       - OJN_CONFIG=/config/openjabnab.ini
+      - OJN_STATE_DIR=/config/state
       - GOOGLE_APPLICATION_CREDENTIALS=/secrets/nabazgo-469413-3c3a2c9343b4.json
     volumes:
       - ./server/openjabnab.ini:/config/openjabnab.ini:ro
-      - ./http-root:/app/http-root
-      - ./logs:/app/logs
       - ./secrets:/secrets:ro
-    ports:
-      - "8080:8080"   # HTTP bridge TCP
-      - "5222:5222"   # XMPP TCP
+      - ./plugins:/config/plugins
+      - ./http-wrapper:/app/http-wrapper:ro
+      - ./http-root:/app/http-root
+    networks: [ojn]
+
+networks:
+  ojn:
+    driver: bridge

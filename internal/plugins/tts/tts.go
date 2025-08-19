@@ -15,6 +15,7 @@ import (
     "time"
 
     cfgpkg "OpenJabNab/internal/config"
+    "OpenJabNab/internal/packet"
     p "OpenJabNab/internal/plugin"
     prov "OpenJabNab/internal/tts"
     "log/slog"
@@ -271,20 +272,12 @@ func (pl *Plugin) worker() {
                 path := filepath.ToSlash(filepath.Join("broadcast", rel))
                 target := path
                 if pl.muBaseURL != "" { target = pl.muBaseURL + "/" + path }
-                delay := time.Duration(cfgpkg.Config{}.Bunny.CmdDelayMs) // placeholder to avoid unused import; replaced below
-                // derive from current config in settings (we only have cfg at New); use defaults
-                delay = 150 * time.Millisecond
-                _ = pl.send(job.bunnyID, []byte("MU "+target+"\r\n"))
-                time.Sleep(delay)
-                if true { // InsertPL3 configurable in future
-                    _ = pl.send(job.bunnyID, []byte("PL 3\r\n"))
-                    time.Sleep(delay)
-                }
-                _ = pl.send(job.bunnyID, []byte("MW\r\n"))
-                time.Sleep(delay)
-                if true { // SendST configurable in future
-                    _ = pl.send(job.bunnyID, []byte("ST\r\n"))
-                }
+                // No delay needed for single packet
+                // Send as encrypted MessagePacket like C++ version
+                commands := "MU " + target + "\nPL 3\nMW\n"
+                messagePacket := packet.NewMessagePacket(commands)
+                encryptedData := messagePacket.GetData()
+                _ = pl.send(job.bunnyID, encryptedData)
             }
             pl.metricMu.Lock(); pl.cacheHits++; pl.completed++; pl.metricMu.Unlock()
             pl.updateJobDone(job.id, filepath.ToSlash(filepath.Join("broadcast", rel)))
@@ -314,14 +307,11 @@ func (pl *Plugin) worker() {
             path := filepath.ToSlash(filepath.Join("broadcast", rel))
             target := path
             if pl.muBaseURL != "" { target = pl.muBaseURL + "/" + path }
-            delay := 150 * time.Millisecond
-            _ = pl.send(job.bunnyID, []byte("MU "+target+"\r\n"))
-            time.Sleep(delay)
-            _ = pl.send(job.bunnyID, []byte("PL 3\r\n"))
-            time.Sleep(delay)
-            _ = pl.send(job.bunnyID, []byte("MW\r\n"))
-            time.Sleep(delay)
-            _ = pl.send(job.bunnyID, []byte("ST\r\n"))
+            // Send as encrypted MessagePacket like C++ version
+            commands := "MU " + target + "\nPL 3\nMW\n"
+            messagePacket := packet.NewMessagePacket(commands)
+            encryptedData := messagePacket.GetData()
+            _ = pl.send(job.bunnyID, encryptedData)
         }
         pl.metricMu.Lock(); pl.cacheMiss++; pl.completed++; pl.metricMu.Unlock()
         pl.updateJobDone(job.id, filepath.ToSlash(filepath.Join("broadcast", rel)))
