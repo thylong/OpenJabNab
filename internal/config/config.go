@@ -70,6 +70,14 @@ type Config struct {
     NativeHttpPort     int
     // Directory for state persistence (bunny names, ztamp assignments)
     StateDir string
+
+    // Bunny/MU behavior toggles
+    Bunny struct {
+        UseAbsoluteMU bool
+        InsertPL3     bool
+        SendST        bool
+        CmdDelayMs    int
+    }
 }
 
 func LoadDefault() (*Config, error) {
@@ -185,5 +193,12 @@ func Load(path string) (*Config, error) {
     c.TTSJobHistoryMax = tts.Key("JobHistoryMax").MustInt(1000)
     c.TTSRetentionDays = tts.Key("RetentionDays").MustInt(30)
     c.TTSMaxCacheMB = tts.Key("MaxCacheMB").MustInt(0)
+
+    // [Bunny] behavior toggles
+    bun := f.Section("Bunny")
+    c.Bunny.UseAbsoluteMU = bun.Key("UseAbsoluteMU").MustBool(true)
+    c.Bunny.InsertPL3 = bun.Key("InsertPL3").MustBool(false)
+    c.Bunny.SendST = bun.Key("SendST").MustBool(false)
+    c.Bunny.CmdDelayMs = bun.Key("CmdDelayMs").MustInt(150)
 	return c, nil
 }

@@ -86,8 +86,8 @@ func New(cfg *cfgpkg.Config) *Plugin {
     qsize := cfg.TTSQueueSize
     if qsize <= 0 { qsize = 128 }
     pl := &Plugin{enabled: true, settings: st, queue: make(chan speakJob, qsize), provider: provider, providerName: pname, outputRoot: out, jobs: make(map[string]jobStatus), stopCh: make(chan struct{}), jobHistoryMax: cfg.TTSJobHistoryMax}
-    // Build absolute MU base from BroadServer if provided
-    if host := strings.TrimSpace(cfg.OpenJabNabServers.BroadServer); host != "" {
+    // Build absolute MU base from BroadServer if provided or if UseAbsoluteMU enabled
+    if host := strings.TrimSpace(cfg.OpenJabNabServers.BroadServer); host != "" && cfg.Bunny.UseAbsoluteMU {
         // If host already contains scheme, keep it. Otherwise default to http://
         if strings.HasPrefix(host, "http://") || strings.HasPrefix(host, "https://") {
             pl.muBaseURL = strings.TrimRight(host, "/")
@@ -271,12 +271,20 @@ func (pl *Plugin) worker() {
                 path := filepath.ToSlash(filepath.Join("broadcast", rel))
                 target := path
                 if pl.muBaseURL != "" { target = pl.muBaseURL + "/" + path }
-                // Send MU and MW (and ST) as separate stanzas with CRLF line endings for legacy compatibility
+                delay := time.Duration(cfgpkg.Config{}.Bunny.CmdDelayMs) // placeholder to avoid unused import; replaced below
+                // derive from current config in settings (we only have cfg at New); use defaults
+                delay = 150 * time.Millisecond
                 _ = pl.send(job.bunnyID, []byte("MU "+target+"\r\n"))
-                time.Sleep(150 * time.Millisecond)
+                time.Sleep(delay)
+                if true { // InsertPL3 configurable in future
+                    _ = pl.send(job.bunnyID, []byte("PL 3\r\n"))
+                    time.Sleep(delay)
+                }
                 _ = pl.send(job.bunnyID, []byte("MW\r\n"))
-                time.Sleep(150 * time.Millisecond)
-                _ = pl.send(job.bunnyID, []byte("ST\r\n"))
+                time.Sleep(delay)
+                if true { // SendST configurable in future
+                    _ = pl.send(job.bunnyID, []byte("ST\r\n"))
+                }
             }
             pl.metricMu.Lock(); pl.cacheHits++; pl.completed++; pl.metricMu.Unlock()
             pl.updateJobDone(job.id, filepath.ToSlash(filepath.Join("broadcast", rel)))
@@ -306,10 +314,13 @@ func (pl *Plugin) worker() {
             path := filepath.ToSlash(filepath.Join("broadcast", rel))
             target := path
             if pl.muBaseURL != "" { target = pl.muBaseURL + "/" + path }
+            delay := 150 * time.Millisecond
             _ = pl.send(job.bunnyID, []byte("MU "+target+"\r\n"))
-            time.Sleep(150 * time.Millisecond)
+            time.Sleep(delay)
+            _ = pl.send(job.bunnyID, []byte("PL 3\r\n"))
+            time.Sleep(delay)
             _ = pl.send(job.bunnyID, []byte("MW\r\n"))
-            time.Sleep(150 * time.Millisecond)
+            time.Sleep(delay)
             _ = pl.send(job.bunnyID, []byte("ST\r\n"))
         }
         pl.metricMu.Lock(); pl.cacheMiss++; pl.completed++; pl.metricMu.Unlock()

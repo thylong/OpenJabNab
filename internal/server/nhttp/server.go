@@ -25,11 +25,28 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	uri := r.URL.Path
 	q := r.URL.Query()
     s.Logger.Info("http", slog.String("method", r.Method), slog.String("uri", uri), slog.String("ua", r.Header.Get("User-Agent")), slog.String("remote", r.RemoteAddr))
-    // Bootcode mapping (serve from mounted http-wrapper volume)
+    // Bootcode mapping (serve from mounted http-wrapper volume, prefer StaticRoot)
     if uri == "/vl/bc.jsp" || uri == "/bc.jsp" {
-        http.ServeFile(w, r, "/app/http-wrapper/ojn_local/bootcode/bootcode.default")
-		return
-	}
+        // Try StaticRoot/bootcode/bootcode.default first
+        if s.StaticRoot != "" {
+            cand := filepath.Join(s.StaticRoot, "bootcode", "bootcode.default")
+            if _, err := os.Stat(cand); err == nil {
+                w.Header().Set("Content-Type", "application/octet-stream")
+                http.ServeFile(w, r, cand)
+                return
+            }
+        }
+        // Fallback to legacy path inside the container if mounted
+        fallback := "/app/http-wrapper/ojn_local/bootcode/bootcode.default"
+        if _, err := os.Stat(fallback); err == nil {
+            w.Header().Set("Content-Type", "application/octet-stream")
+            http.ServeFile(w, r, fallback)
+            return
+        }
+        w.WriteHeader(http.StatusNotFound)
+        _, _ = w.Write([]byte("bootcode not found"))
+        return
+    }
     // Serve broadcast under static root if configured
     if s.StaticRoot != "" && strings.HasPrefix(uri, "/broadcast/") {
         clean := filepath.Clean(uri)
