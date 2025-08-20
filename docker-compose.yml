@@ -79,22 +79,6 @@ services:
       - OJN_HTTP_PORT=${OJN_HTTP_PORT:-8080}
       - OJN_XMPP_PORT=${OJN_XMPP_PORT:-5222}
 
-  # phpMyAdmin for database management (optional)
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin
-    container_name: openjabnab_phpmyadmin
-    environment:
-      PMA_HOST: mysql
-      PMA_PORT: 3306
-      PMA_USER: ojn
-      PMA_PASSWORD: ojn
-    ports:
-      - "8081:80"
-    depends_on:
-      mysql:
-        condition: service_healthy
-    restart: unless-stopped
-
 volumes:
   mysql_data:
   tts_files:
