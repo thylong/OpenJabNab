@@ -32,6 +32,12 @@ else
     echo "Using default localhost configuration"
 fi
 
+# Configure Apache logging to stdout/stderr
+echo "Configuring Apache logging to stdout/stderr"
+sed -i 's|ErrorLog ${APACHE_LOG_DIR}/openjabnab_error.log|ErrorLog /proc/self/fd/2|' /etc/apache2/sites-available/000-default.conf
+sed -i 's|CustomLog ${APACHE_LOG_DIR}/openjabnab_access.log combined|CustomLog /proc/self/fd/1 combined|' /etc/apache2/sites-available/000-default.conf
+echo "Apache logging configured for Docker"
+
 echo "OpenJabNab web configuration setup complete"
 echo "Config file created with constants: ROOT_SITE, APC_PREFIX, DB settings"
 echo "Domain configured: ${OJN_DOMAIN:-localhost}"

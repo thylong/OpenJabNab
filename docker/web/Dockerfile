@@ -19,12 +19,17 @@ RUN apt-get update && apt-get install -y \
 RUN a2enmod rewrite
 RUN a2enmod headers
 
-# Create ojn_local directory
-RUN mkdir -p /var/www/html/ojn_local
+# Configure Apache to log to stdout/stderr instead of files
+RUN ln -sf /proc/self/fd/1 /var/log/apache2/access.log \
+    && ln -sf /proc/self/fd/2 /var/log/apache2/error.log
 
-# Copy configuration files and setup script
+# Create ojn_local directory and bootcode directory
+RUN mkdir -p /var/www/html/ojn_local/bootcode
+
+# Copy configuration files, setup script, and bootcode
 COPY docker/web/config.php /tmp/config.php
 COPY docker/web/setup.sh /usr/local/bin/setup.sh
+COPY bootcode/bootcode.default /var/www/html/ojn_local/bootcode/bootcode.default
 RUN chmod +x /usr/local/bin/setup.sh
 
 # Set proper permissions
