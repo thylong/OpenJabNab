@@ -53,8 +53,10 @@ define('OJN_ROOT_PATH', '/var/www/html/');
 define('OJN_LOCAL_PATH', '/var/www/html/ojn_local/');
 define('OJN_PLUGINS_PATH', '/var/www/html/plugins/');
 
-// Session Configuration (moved to avoid headers already sent)
-// ini_set('session.gc_maxlifetime', 1800); // 30 minutes - disabled to avoid header issues
+// Session Configuration
+ini_set('session.gc_maxlifetime', 1800); // 30 minutes
+ini_set('session.cookie_lifetime', 1800); // 30 minutes
+ini_set('session.cache_expire', 30); // 30 minutes
 
 // Error Reporting for Development
 if (OJN_DEBUG) {

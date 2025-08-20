@@ -129,7 +129,7 @@ if(isset($_SESSION['token']) && !strpos($_SERVER['REQUEST_URI'],"logout")) {
 
 	//	var_dump($Infos);
 		mysqli_close($link);
-		apcu_store(APC_PREFIX.'ojn_user_'.$_SESSION['login'], $Infos, 60);
+		apcu_store(APC_PREFIX.'ojn_user_'.$_SESSION['login'], $Infos, 1800);
 	}
 	else
 		$Infos = apcu_fetch(APC_PREFIX.'ojn_user_'.$_SESSION['login']);
