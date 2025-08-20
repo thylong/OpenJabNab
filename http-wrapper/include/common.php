@@ -119,6 +119,7 @@ if(isset($_SESSION['token']) && !strpos($_SERVER['REQUEST_URI'],"logout")) {
 		if (!$link) {
 		    die('Connexion impossible : ' . mysqli_error());
 		}
+		mysqli_set_charset($link, 'utf8mb4');
 
 		$sql = "SELECT status FROM account WHERE username=\"".addslashes($_SESSION['login'])."\";";
 		$res = mysqli_query($link, $sql);
@@ -199,6 +200,7 @@ function getTranslates($nom)
 			if (!$link) {
 			    die('Connexion impossible : ' . mysqli_error());
 			}
+			mysqli_set_charset($link, 'utf8mb4');
 
 			$sql = "SELECT language FROM translator WHERE login='".addslashes($nom)."'";
 			$res = mysqli_query($link, $sql);
@@ -223,6 +225,7 @@ function getBetas()
   $link = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
   if (!$link)
     die('Connexion impossible : ' . mysqli_error());
+  mysqli_set_charset($link, 'utf8mb4');
 
   $betas = array();
   $sql = 'SELECT  plugin_name as plugin, 
@@ -277,6 +280,7 @@ function getServerFeesFullfilment($TargetPerMonth = SERVER_MONTHLY_FEES)
 	$link = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
 	if (!$link)
 			die('Connexion impossible : ' . mysqli_error());
+	mysqli_set_charset($link, 'utf8mb4');
 
 	$sql = 'SELECT SUM(txn_gross-txn_fee) AS txn_sum,
 								DATE_FORMAT(date, \'%m/%Y\') as txn_month

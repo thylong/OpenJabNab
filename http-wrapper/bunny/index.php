@@ -32,6 +32,7 @@ if(!($plugins = apcu_fetch(APC_PREFIX.'ojn_plugins_infos_'.$Infos['language'])))
 	if (!$link) {
 	    die('Connexion impossible : ' . mysqli_error());
 	}
+	mysqli_set_charset($link, 'utf8mb4');
 
 	$sql = "SELECT * FROM plugins;";
 	$res = mysqli_query($link, $sql);
@@ -93,6 +94,7 @@ if(isset($_GET['b']) && isset($_GET['bSilent'])) {
 	if (!$link) {
 	    die('Connexion impossible : ' . mysqli_error());
 	}
+	mysqli_set_charset($link, 'utf8mb4');
 	$sql = "INSERT INTO silent SET active='".$silent."', mac='".$_GET['b']."' ON DUPLICATE KEY UPDATE active='".$silent."'";
 	$res = mysqli_query($link, $sql);
 	mysqli_close($link);
@@ -183,6 +185,7 @@ $link = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
 if (!$link) {
     die('Connexion impossible : ' . mysqli_error());
 }
+mysqli_set_charset($link, 'utf8mb4');
 $silent =2;
 $asks = array('config','shortconfig','running','silent');
 $StDbg = array();
@@ -532,6 +535,7 @@ $title = empty($_SESSION['bunny']) ?  __tr("Choose your bunny") :
                   if (!$link) {
                       die('Connexion impossible : ' . mysqli_error());
                   }
+                  mysqli_set_charset($link, 'utf8mb4');
 
                   $sql = "SELECT * FROM language";
                   if(!empty($Infos['isAdmin']))
