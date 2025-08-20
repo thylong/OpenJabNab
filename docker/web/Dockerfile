@@ -7,12 +7,35 @@ RUN apt-get update && apt-get install -y \
     zip \
     unzip \
     curl \
+    lame \
+    git \
+    build-essential \
+    autotools-dev \
+    automake \
+    libtool \
+    pkg-config \
     && docker-php-ext-install mysqli pdo_mysql \
     && pecl install apcu \
     && docker-php-ext-enable apcu \
     && pear channel-update pear.php.net \
     && pear install -f Mail \
     && pear install -f Mail_Mime \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install pico TTS - try multiple approaches
+RUN (echo "deb http://deb.debian.org/debian bullseye main" >> /etc/apt/sources.list \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends libttspico-utils) \
+    || (apt-get install -y libpopt-dev \
+        && cd /tmp \
+        && git clone https://github.com/naggety/picotts.git \
+        && cd picotts/pico \
+        && ./autogen.sh \
+        && ./configure \
+        && make \
+        && make install \
+        && ldconfig \
+        && cd / && rm -rf /tmp/picotts) \
     && rm -rf /var/lib/apt/lists/*
 
 # Enable Apache modules
@@ -29,7 +52,7 @@ RUN mkdir -p /var/www/html/ojn_local/bootcode
 # Copy configuration files, setup script, and bootcode
 COPY docker/web/config.php /tmp/config.php
 COPY docker/web/setup.sh /usr/local/bin/setup.sh
-COPY bootcode/bootcode.default /var/www/html/ojn_local/bootcode/bootcode.default
+COPY docker/web/ojn_local/bootcode/bootcode.default /var/www/html/ojn_local/bootcode/bootcode.default
 RUN chmod +x /usr/local/bin/setup.sh
 
 # Set proper permissions
