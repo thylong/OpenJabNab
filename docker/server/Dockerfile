@@ -20,6 +20,7 @@ RUN apt-get update && apt-get install -y \
     mysql-client \
     curl \
     libttspico-utils \
+    ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
