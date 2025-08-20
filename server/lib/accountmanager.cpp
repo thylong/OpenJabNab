@@ -188,6 +188,7 @@ Account const& AccountManager::Guest()
 
 Account const& AccountManager::GetAccount(QByteArray const& token)
 {
+	// First check in-memory tokens for performance
 	QHash<QByteArray, TokenData>::iterator it = listOfTokens.find(token);
 	if(it != listOfTokens.end())
 	{
@@ -195,16 +196,32 @@ Account const& AccountManager::GetAccount(QByteArray const& token)
 		if(now < it->expire_time)
 		{
 			it->expire_time = now + GlobalSettings::GetInt("Config/SessionTimeout", 300); // default : 5min
-
-			//listOfTokens.insert(token, t);
 			return *(it->account);
 		}
 		else
 		{
 			listOfTokens.erase(it);
-			return Guest();
 		}
 	}
+	
+	// Check database for persistent tokens (survives server restarts)
+	unsigned int now = QDateTime::currentDateTime().toTime_t();
+	QString username = GetUsernameFromDatabase(token, now);
+	if(!username.isEmpty())
+	{
+		// Token found in database, load account and cache in memory
+		Account* account = GetAccountByLogin(username.toLatin1());
+		if(account != NULL)
+		{
+			TokenData t;
+			t.account = account;
+			t.expire_time = now + GlobalSettings::GetInt("Config/SessionTimeout", 300);
+			account->SetToken(token);
+			listOfTokens.insert(token, t);
+			return *account;
+		}
+	}
+	
 	return Guest();
 }
 
@@ -221,11 +238,18 @@ QByteArray AccountManager::GetToken(QString const& login)
 	if(it != listOfAccountsByName.end())
 	{
 		QByteArray token = QCryptographicHash::hash(QUuid::createUuid().toString().toLatin1(), QCryptographicHash::Md5).toHex();
+		unsigned int expire_time = QDateTime::currentDateTime().toTime_t() + GlobalSettings::GetInt("Config/SessionTimeout", 300);
+		
+		// Store in memory for backwards compatibility
 		TokenData t;
 		t.account = *it;
-		t.expire_time = QDateTime::currentDateTime().toTime_t() + GlobalSettings::GetInt("Config/SessionTimeout", 300);
+		t.expire_time = expire_time;
 		(*it)->SetToken(token);
 		listOfTokens.insert(token, t);
+		
+		// Store in database for persistence
+		StoreTokenInDatabase(token, login, expire_time);
+		
 		return token;
 	}
 	LogError(QString("Bad login : user=%1").arg(QString(login)));
@@ -241,11 +265,18 @@ QByteArray AccountManager::GetToken(QString const& login, QByteArray const& hash
 		{
 			// Generate random token
 			QByteArray token = QCryptographicHash::hash(QUuid::createUuid().toString().toLatin1(), QCryptographicHash::Md5).toHex();
+			unsigned int expire_time = QDateTime::currentDateTime().toTime_t() + GlobalSettings::GetInt("Config/SessionTimeout", 300);
+			
+			// Store in memory for backwards compatibility
 			TokenData t;
 			t.account = *it;
-			t.expire_time = QDateTime::currentDateTime().toTime_t() + GlobalSettings::GetInt("Config/SessionTimeout", 300);
+			t.expire_time = expire_time;
 			(*it)->SetToken(token);
 			listOfTokens.insert(token, t);
+			
+			// Store in database for persistence
+			StoreTokenInDatabase(token, login, expire_time);
+			
 			return token;
 		}
 		LogError(QString("Bad login : user=%1, hash=%2, proposed hash=%3").arg(login,QString((*it)->GetPasswordHash().toHex()),QString(hash.toHex())));
@@ -253,6 +284,62 @@ QByteArray AccountManager::GetToken(QString const& login, QByteArray const& hash
 	}
 	LogError(QString("Bad login : user=%1").arg(QString(login)));
 	return QByteArray();
+}
+
+// Token persistence helper methods
+void AccountManager::StoreTokenInDatabase(QByteArray const& token, QString const& username, unsigned int expire_time)
+{
+	LogDebug(QString("StoreTokenInDatabase called: token=%1, user=%2, expire=%3").arg(QString(token), username, QString::number(expire_time)));
+	QSqlDatabase db = DbManager::getOpenDb();
+	QSqlQuery query(db);
+	
+	// Clean up expired tokens first
+	query.prepare("DELETE FROM session_tokens WHERE expire_time < ?");
+	query.bindValue(0, QDateTime::currentDateTime().toTime_t());
+	query.exec();
+	
+	// Store new token (replace if exists)
+	query.prepare("REPLACE INTO session_tokens (token, username, expire_time, created_time) VALUES (?, ?, ?, ?)");
+	query.bindValue(0, QString(token));
+	query.bindValue(1, username);
+	query.bindValue(2, expire_time);
+	query.bindValue(3, QDateTime::currentDateTime().toTime_t());
+	
+	if(!query.exec())
+	{
+		LogError(QString("Failed to store token in database: %1").arg(query.lastError().driverText()));
+	}
+	
+	DbManager::releaseDb();
+}
+
+QString AccountManager::GetUsernameFromDatabase(QByteArray const& token, unsigned int current_time)
+{
+	QSqlDatabase db = DbManager::getOpenDb();
+	QSqlQuery query(db);
+	
+	query.prepare("SELECT username FROM session_tokens WHERE token = ? AND expire_time > ?");
+	query.bindValue(0, QString(token));
+	query.bindValue(1, current_time);
+	
+	if(query.exec() && query.next())
+	{
+		QString username = query.value(0).toString();
+		
+		// Update expire time for token renewal
+		QSqlQuery updateQuery(db);
+		unsigned int new_expire_time = current_time + GlobalSettings::GetInt("Config/SessionTimeout", 300);
+		updateQuery.prepare("UPDATE session_tokens SET expire_time = ? WHERE token = ?");
+		updateQuery.bindValue(0, new_expire_time);
+		updateQuery.bindValue(1, QString(token));
+		updateQuery.exec();
+		
+		DbManager::releaseDb();
+		return username;
+	}
+	
+	DbManager::releaseDb();
+	return QString();
 }
 
 // Settings

@@ -2,7 +2,13 @@
 require_once 'include/config.php';
 
 $socket = @fsockopen(OJN_API_HOST, OJN_API_PORT, $errno, $errstr, 5);
+
+// Get the original URL and strip /openjabnab.php prefix if present
 $url = $_SERVER['REQUEST_URI'];
+if (strpos($url, '/openjabnab.php/') === 0) {
+    // Strip the /openjabnab.php prefix, keeping the leading slash
+    $url = substr($url, 15); // Remove '/openjabnab.php' (15 characters)
+}
 if(LOG_OJNAPI)
 {
 	$file = fopen(LOGS_SITE.'openjabnab.log', 'a+');

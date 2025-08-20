@@ -11,7 +11,7 @@ define('DB_PORT', getenv('DB_PORT') ?: 3306);
 // Application Constants (from common-def.php)
 define('ROOT_SITE', '/var/www/html/');
 define('ROOT_WWW_ADMIN', 'http://' . (getenv('OJN_DOMAIN') ?: 'localhost') . '/ojn_admin/');
-define('ROOT_WWW_API', 'http://' . (getenv('OJN_DOMAIN') ?: 'localhost') . '/ojn_api/');
+define('ROOT_WWW_API', 'http://openjabnab:8080/ojn/FR/api/');
 define('ADMIN_EMAIL', 'admin@' . (getenv('OJN_DOMAIN') ?: 'localhost'));
 define('APC_PREFIX', 'ojn_docker_');
 

@@ -29,10 +29,20 @@ class ojnApi {
 
 	public function getUptime() {
 		global $Infos;
+		
+		// For non-authenticated users, return default value
+		if(!isset($_SESSION['token']) || empty($_SESSION['token'])) {
+			return "Server online";
+		}
+		
+		// For authenticated users, try to get real uptime with fallback
 		if(!apcu_fetch(APC_PREFIX.'ojn_uptime_'.$Infos['language'])) {
 			$up = $this->getApiString("global/uptime?".$this->getToken());
-			if(!isset($up['value']))
-				return 0;
+			if(!isset($up['value'])) {
+				// If API call fails, return fallback value and cache it
+				apcu_store(APC_PREFIX.'ojn_uptime_'.$Infos['language'], "Server online", 60);
+				return "Server online";
+			}
 			$up = $up['value'];
 			$ret = "";
 			if($up >= 60)
@@ -325,11 +335,23 @@ class ojnApi {
 			$ips = preg_split('/,/', $ip);
 			$ip = trim($ips[0]);
 		}
-		$options  = array('http' => array('header' => 'X-Forwarded-For: '.$ip ,'user_agent' => 'OJN Admin'), /*'socket' => array('bindto' => '192.168.0.104:0')*/);
+		$options  = array('http' => array(
+			'header' => 'X-Forwarded-For: '.$ip,
+			'user_agent' => 'OJN Admin',
+			'timeout' => 30
+		));
 		$context  = stream_context_create($options);
 
 		$this->log[] = $url;
 		$content = file_get_contents(ROOT_WWW_API.$url, false, $context);
+		
+		// Handle file_get_contents failure with detailed error logging
+		if($content === false) {
+			$error = error_get_last();
+			error_log("OpenJabNab API call failed - URL: " . $full_url . " - Error: " . ($error ? $error['message'] : 'Unknown error'));
+			return NULL;
+		}
+		
 		if($content == "Problem with OpenJabNab !")
 			$content = NULL;
 		return $content;
@@ -341,6 +363,19 @@ class ojnApi {
 
 	private function getApi($url) {
 		$r = $this->get($url);
+		
+		// Check for access denied errors and clear invalid token
+		if ($r != NULL && strpos($r, '<error>Access denied</error>') !== false) {
+			// Token is invalid, clear it to force re-authentication
+			if (isset($_SESSION['token'])) {
+				unset($_SESSION['token']);
+				// Clear user cache to force fresh login
+				if (isset($_SESSION['login'])) {
+					apcu_delete(APC_PREFIX.'ojn_user_'.$_SESSION['login']);
+				}
+			}
+		}
+		
 		return $r != NULL ? $this->loadXmlString($r) : NULL;
 	}
 

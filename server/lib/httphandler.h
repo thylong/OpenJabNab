@@ -30,6 +30,7 @@ protected:
 
 private:
 	void HandleHTTPRequest(void);
+	QByteArray ConvertHttpToBinary(const QByteArray& httpData);
 
 	PluginManager & pluginManager;
 	QTcpSocket * incomingHttpSocket;

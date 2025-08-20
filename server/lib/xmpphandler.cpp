@@ -314,6 +314,11 @@ void XmppHandler::HandleBunnyXmppMessage()
 							QByteArray resource = rx.cap(1).toLatin1();
 							bunny->SetXmppResource(resource);
 						}
+						// Workaround: Auto-ready version 2 bunnies after version exchange
+						if(bunny->GetVersion() == 2 && !bunny->IsConnected())
+						{
+							bunny->Ready();
+						}
 						handled = true;
 						known = true;
 					}

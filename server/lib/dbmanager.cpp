@@ -1,4 +1,5 @@
 #include <QDebug>
+#include <QThread>
 #include "dbmanager.h"
 #include "settings.h"
 #include "log.h"
@@ -14,21 +15,37 @@ DbManager::DbManager()
         db.setPassword(GlobalSettings::GetString("Database/Pass", "ojn"));
         db.setPort(GlobalSettings::GetInt("Database/Port", 3306));
 
-        //db.setHostName("127.0.0.1");
-        //db.setDatabaseName("ojn");
-        //db.setUserName("ojn");
-        //db.setPassword("ojnpass");
-        bool ok = db.open();
+        // Retry database connection for Docker environments
+        int retries = 0;
+        const int maxRetries = 10;
+        bool ok = false;
+        
+        while(!ok && retries < maxRetries)
+        {
+                ok = db.open();
+                if(!ok)
+                {
+                        retries++;
+                        LogWarning(QString("Database connection attempt %1/%2 failed: %3").arg(retries).arg(maxRetries).arg(db.lastError().text()));
+                        if(retries < maxRetries)
+                        {
+                                LogInfo("Retrying database connection in 2 seconds...");
+                                QThread::sleep(2);
+                        }
+                }
+        }
+        
         if(!ok)
-	{
-		LogError("Unable to initialize database !\n");
-		exit(-1);
-	}
+        {
+                LogError("Unable to initialize database after " + QString::number(maxRetries) + " attempts! Server will continue without database functionality.");
+                // Don't exit - allow server to continue without database for basic functionality
+        }
         else
-	{
-		createTables();
-		db.close();
-	}
+        {
+                LogInfo("Database connection established successfully");
+                createTables();
+                db.close();
+        }
 }
 
 QSqlDatabase DbManager::getOpenDb()
@@ -78,7 +95,7 @@ void DbManager::createTables()
 		if(!ret)
 		{
 			LogError(QString("Impossible to create table 'server' in DB : %1").arg(query->lastError().driverText()));
-			exit(-1);
+			return; // Don't exit - allow server to continue
 		}
 		query->finish();
 	}
@@ -88,7 +105,7 @@ void DbManager::createTables()
 		if(!ret)
 		{
 			LogError(QString("Impossible to create table 'account' in DB : %1").arg(query->lastError().driverText()));
-			exit(-1);
+			return; // Don't exit - allow server to continue
 		}
 		query->finish();
 	}
@@ -98,7 +115,7 @@ void DbManager::createTables()
 		if(!ret)
 		{
 			LogError(QString("Impossible to create table 'bunny' in DB : %1").arg(query->lastError().driverText()));
-			exit(-1);
+			return; // Don't exit - allow server to continue
 		}
 		query->finish();
 	}
@@ -108,10 +125,32 @@ void DbManager::createTables()
 		if(!ret)
 		{
 			LogError(QString("Impossible to create table 'ztamp' in DB : %1").arg(query->lastError().driverText()));
-			exit(-1);
+			return; // Don't exit - allow server to continue
 		}
 		query->finish();
 	}
+	
+	// Create session_tokens table for persistent authentication tokens
+	if(!db.tables().contains("session_tokens"))
+	{
+		bool ret = query->exec("CREATE TABLE session_tokens ("
+			"id INT AUTO_INCREMENT PRIMARY KEY, "
+			"token VARCHAR(32) UNIQUE NOT NULL, "
+			"username VARCHAR(255) NOT NULL, "
+			"expire_time INT UNSIGNED NOT NULL, "
+			"created_time INT UNSIGNED NOT NULL, "
+			"INDEX idx_token (token), "
+			"INDEX idx_username (username), "
+			"INDEX idx_expire_time (expire_time)"
+			") DEFAULT CHARACTER SET utf8 COLLATE utf8_bin");
+		if(!ret)
+		{
+			LogError(QString("Impossible to create table 'session_tokens' in DB : %1").arg(query->lastError().driverText()));
+			return; // Don't exit - allow server to continue
+		}
+		query->finish();
+	}
+	
 	delete query;
 }
 

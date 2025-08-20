@@ -52,6 +52,10 @@ private:
 	QHash<QString, Account *> listOfAccountsByName;
 	QHash<QByteArray, TokenData> listOfTokens;
 
+	// Token persistence methods
+	void StoreTokenInDatabase(QByteArray const& token, QString const& username, unsigned int expire_time);
+	QString GetUsernameFromDatabase(QByteArray const& token, unsigned int current_time);
+
 	// Files settings
 	QVariant GetSettings(QString const& key, QVariant const& defaultValue = QVariant()) const;
 	void SetSettings(QString const& key, QVariant const& value);
