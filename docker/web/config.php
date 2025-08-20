@@ -45,14 +45,16 @@ define('OJN_XMPP_PORT', getenv('OJN_XMPP_PORT') ?: 5222);
 define('OJN_DOMAIN', getenv('OJN_DOMAIN') ?: 'localhost');
 define('OJN_ALLOW_REGISTRATION', getenv('OJN_ALLOW_REGISTRATION') ?: true);
 define('OJN_DEBUG', getenv('OJN_DEBUG') ?: true);
+define('ENABLE_DONATE', getenv('ENABLE_DONATE') ?: false);
 
-// Paths
+// Paths  
+define('ROOT_LOCAL', '/var/www/html/ojn_local');
 define('OJN_ROOT_PATH', '/var/www/html/');
 define('OJN_LOCAL_PATH', '/var/www/html/ojn_local/');
 define('OJN_PLUGINS_PATH', '/var/www/html/plugins/');
 
-// Session Configuration
-ini_set('session.gc_maxlifetime', 1800); // 30 minutes
+// Session Configuration (moved to avoid headers already sent)
+// ini_set('session.gc_maxlifetime', 1800); // 30 minutes - disabled to avoid header issues
 
 // Error Reporting for Development
 if (OJN_DEBUG) {

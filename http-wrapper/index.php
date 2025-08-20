@@ -1,6 +1,7 @@
 <?php
-if(!file_exists("include/common.php"))
+if(!file_exists("include/common.php")) {
   header('Location: install.php');
+}
 require_once "include/common.php";
 
 //apcu_clear_cache();
@@ -13,7 +14,7 @@ if(!$uptime && !Message::IsSet())
   exit();
 }
 
-if(isset($_GET['logid']) && isset($Infos['isAdmin'])) 
+if(isset($_GET['logid']) && isset($Infos['isAdmin']))
 {
   $link = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
   if (!$link) {
@@ -53,8 +54,7 @@ if(isset($_GET['logid']) && isset($Infos['isAdmin']))
   exit;
 }
 
-if(isset($_GET['logout']) && !empty($_SESSION['login']))
-{
+if(isset($_GET['logout']) && !empty($_SESSION['login'])) {
    // Log out user
   apcu_delete(APC_PREFIX.'ojn_user_'.$_SESSION['login']);
   $ojnAPI->SetToken('');
@@ -77,12 +77,12 @@ if(isset($_GET['logout']) && !empty($_SESSION['login']))
   exit();
 }
 
-if(!empty($_POST['login']) && !empty($_POST['password'])) 
+if(!empty($_POST['login']) && !empty($_POST['password']))
 {
   $login = /*strtolower(*/trim($_POST['login'])/*)*/;
   // TODO BMI 20200928: Fix OpenJabNab to force lowercase logins
   $pwd   = $_POST['password'];
-  if(!empty($login)) 
+  if(!empty($login))
   {
     $r = $ojnAPI->loginAccount($login, $pwd);
     if($r === NULL)
