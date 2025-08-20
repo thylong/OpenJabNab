@@ -31,6 +31,7 @@ services:
       - ./http-wrapper:/var/www/html
       - ./docker/web/apache-config.conf:/etc/apache2/sites-available/000-default.conf
       - ./docker/web/ojn_local:/var/www/html/ojn_local
+      - tts_files:/var/www/html/ojn_local/tts
     ports:
       - "80:80"
     depends_on:
@@ -58,6 +59,8 @@ services:
       - ./server/conf:/app/conf
       - ./docker/server/openjabnab.ini:/app/bin/openjabnab.ini
       - ./http-wrapper:/app/http-wrapper
+      - ./secrets:/app/secrets
+      - tts_files:/app/bin/tts
     ports:
       - "8080:8080"
       - "5222:5222"
@@ -94,6 +97,7 @@ services:
 
 volumes:
   mysql_data:
+  tts_files:
 
 networks:
   default:

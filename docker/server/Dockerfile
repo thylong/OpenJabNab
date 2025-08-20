@@ -19,6 +19,7 @@ RUN apt-get update && apt-get install -y \
     qt5-qmake \
     mysql-client \
     curl \
+    libttspico-utils \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
