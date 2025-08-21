@@ -526,7 +526,7 @@ $title = empty($_SESSION['bunny']) ?  __tr("Choose your bunny") :
           <div class="form-group row">
             <label class="col-sm-2 col-form-label" for="lng"><?php echo __tr("Language") ?></label>
             <div class="col-sm-2">
-              <select name="lng"  class="form-control" onchange="$('#voiceList').val('');">
+              <select name="lng"  class="form-control" onchange="updateVoiceList(this.value);">
                 <?php
                   $Lng = $ojnAPI->getApiString(BUNNY_API."/getlanguage?".$ojnAPI->getToken());
                   $Lng = isset($Lng['value']) ? $Lng['value'] : 'en';
@@ -610,6 +610,16 @@ $title = empty($_SESSION['bunny']) ?  __tr("Choose your bunny") :
                   {
                     $.get('testVoice.php?voice=' + $("#voiceList").val() + '&sentence=' + $("#testvoice").val(), function(data) {
                       $('#testvoice_results').html(data);
+                    });
+                  }
+                  
+                  function updateVoiceList(language)
+                  {
+                    $('#voiceList').empty().append('<option value="">Loading...</option>');
+                    $.get('getVoices.php?language=' + language, function(data) {
+                      $('#voiceList').html(data);
+                    }).fail(function() {
+                      $('#voiceList').html('<option value="">No voices available</option>');
                     });
                   }
                 </script>
