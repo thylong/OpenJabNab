@@ -50,7 +50,7 @@ bool PluginTTS::sayText(Bunny *b, const QString& str)
 
 PLUGIN_BUNNY_API_CALL(PluginTTS::Api_Say)
 {
-	if(sayText(bunny,hRequest.GetArg("text")))
+	if(!sayText(bunny,hRequest.GetArg("text")))
 		return new ApiAnswers::Error(Translator::tr("Bunny '%1' is not connected", account).arg(QString(bunny->GetID())));
 	return new ApiAnswers::Ok(Translator::tr("Sending '%1' to bunny '%2'", account).arg(hRequest.GetArg("text"), QString(bunny->GetID())));
 }
