@@ -15,10 +15,11 @@ class PluginChatGPT
 public:
   PluginChatGPT();
 
-  virtual const QString GetVersion(void) override { return "1.0.0"; }
+  virtual const QString GetVersion(void) override { return "1.1.0"; }
   virtual const QHash<QString, QString> GetChangelog(void) override
   {
     QHash<QString, QString> revisions;
+    revisions.insert("1.1.0", "Add voice interaction via head button press");
     revisions.insert("1.0.0", "Initial ChatGPT integration plugin");
     return revisions;
   }
@@ -29,23 +30,45 @@ public:
     return list;
   }
 
+  // Voice interaction support
+  virtual bool OnClick(Bunny *b, PluginInterface::ClickType type) override;
+
 public slots:
   QString OnApiAsk(Bunny *, QVariant);
 
 private slots:
   void onChatGPTResponse(QNetworkReply* reply);
+  void onSpeechRecognitionResponse(QNetworkReply* reply);
 
 private:
   virtual ~PluginChatGPT() = default;
 
+  // Text ChatGPT methods
   bool askChatGPT(Bunny *b, const QString& question);
-  QString buildJsonRequest(const QString& message);
+  bool askChatGPTFromVoice(Bunny *b, const QString& recognizedText);
+  QString buildJsonRequest(const QString& message, bool isVoiceResponse = false);
+  
+  // Voice processing methods
+  bool startVoiceRecording(Bunny *b);
+  bool processVoiceRecording(Bunny *b, const QString& filename);
+  QString convertToFlac(const QString& wavFile);
+  QString recognizeSpeech(const QString& flacFile, Bunny *b);
+  
+  // User feedback methods
+  void playRecordingPrompt(Bunny *b);
+  void playProcessingFeedback(Bunny *b);
+  void handleVoiceError(Bunny *b, const QString& error);
+  
+  // Utility methods
+  bool checkUserPermissions(Bunny *b);
+  QString generateRecordingFilename(Bunny *b);
   
   // API
   void InitApiCalls();
   PLUGIN_BUNNY_API_CALL(Api_Ask);
 
   QNetworkAccessManager *networkManager;
+  QNetworkAccessManager *speechNetworkManager;
 };
 
 #endif
