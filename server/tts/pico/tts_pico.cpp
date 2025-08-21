@@ -83,8 +83,8 @@ QString TTSPico::CreateNewSound(QString text, QString voice, bool forceOverwrite
 	}
 
 	// Compute fileName
-	QString fileName = QCryptographicHash::hash(text.toLatin1(), QCryptographicHash::Md5).toHex().append(".mp3");
-	QString fileWav = "/tmp/" + QCryptographicHash::hash(text.toLatin1(), QCryptographicHash::Md5).toHex().append(".wav");
+	QString fileName = QCryptographicHash::hash(text.toUtf8(), QCryptographicHash::Md5).toHex().append(".mp3");
+	QString fileWav = "/tmp/" + QCryptographicHash::hash(text.toUtf8(), QCryptographicHash::Md5).toHex().append(".wav");
 	QString filePath = outputFolder.absoluteFilePath(fileName);
 
 	//QString tempfileName = filename.append(".wav");

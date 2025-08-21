@@ -13,8 +13,8 @@ inline TTSInterface::TTSInterface(QString name, QString visualName):ttsName(name
 	settings = new QSettings(dir.absoluteFilePath("tts_"+ttsName+".ini"), QSettings::IniFormat);
 	ttsEnable = GetSettings("ttsStatus/Enable", QVariant(true)).toBool();
 
-	// Folder
-	QDir folder(GlobalSettings::GetString("Config/RealHttpRoot"));
+	// Folder - Use TTSRoot for TTS files, fallback to RealHttpRoot if not set
+	QDir folder(GlobalSettings::GetString("Config/TTSRoot", GlobalSettings::GetString("Config/RealHttpRoot")));
 	// Try to create tts subfolder
 	if (!folder.cd(TTS_FOLDER))
 	{
