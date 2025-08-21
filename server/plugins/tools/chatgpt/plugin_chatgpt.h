@@ -4,6 +4,7 @@
 #include "plugininterface.h"
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
+#include <QSet>
 
 class PluginChatGPT
   : public PluginInterface
@@ -32,6 +33,7 @@ public:
 
   // Voice interaction support
   virtual bool OnClick(Bunny *b, PluginInterface::ClickType type) override;
+  virtual bool OnRecord(Bunny *b, QString const& filename) override;
 
 public slots:
   QString OnApiAsk(Bunny *, QVariant);
@@ -62,6 +64,8 @@ private:
   // Utility methods
   bool checkUserPermissions(Bunny *b);
   QString generateRecordingFilename(Bunny *b);
+  QString makeLanguage(const QString& lng);
+  QString parseGoogleSpeechResponse(const QString& response);
   
   // API
   void InitApiCalls();
@@ -69,6 +73,9 @@ private:
 
   QNetworkAccessManager *networkManager;
   QNetworkAccessManager *speechNetworkManager;
+  
+  // Voice recording tracking
+  QSet<QByteArray> bunniesWaitingForVoice;
 };
 
 #endif

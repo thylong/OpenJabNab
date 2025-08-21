@@ -11,6 +11,7 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QDateTime>
+#include <QRegExp>
 
 #include "plugin_chatgpt.h"
 
@@ -18,6 +19,7 @@
 #include "bunnymanager.h"
 #include "account.h"
 #include "accountmanager.h"
+#include "log.h"
 #include "packets/messagepacket.h"
 #include "settings.h"
 #include "translator.h"
@@ -162,39 +164,87 @@ bool PluginChatGPT::OnClick(Bunny *b, PluginInterface::ClickType type)
 	return false;
 }
 
+bool PluginChatGPT::OnRecord(Bunny *b, QString const& filename)
+{
+	// Check if this bunny is waiting for voice input
+	if(!bunniesWaitingForVoice.contains(b->GetID()))
+	{
+		return false; // Not our recording, let other plugins handle it
+	}
+
+	// Remove from waiting list
+	bunniesWaitingForVoice.remove(b->GetID());
+
+	// Play processing feedback
+	playProcessingFeedback(b);
+
+	// Process the voice recording
+	return processVoiceRecording(b, filename);
+}
+
 bool PluginChatGPT::startVoiceRecording(Bunny *b)
 {
+	LogDebug("ChatGPT: Start voice recording for bunny " + QString(b->GetID()));
+	
 	if(!b->IsConnected())
-		return false;
-
-	// Check user permissions (VIP/Premium/Admin required for voice)
-	if(!checkUserPermissions(b))
 	{
-		handleVoiceError(b, "Voice commands require VIP, Premium, or Admin account");
+		LogDebug("ChatGPT: Bunny not connected");
+		handleVoiceError(b, "Bunny not connected");
 		return false;
 	}
+
+	// Check user permissions (registered user required)
+	if(!checkUserPermissions(b))
+	{
+		LogDebug("ChatGPT: Permission check failed");
+		handleVoiceError(b, "Voice commands require a registered user account");
+		return false;
+	}
+
+	LogDebug("ChatGPT: All checks passed, starting voice recording");
+	
+	// Add bunny to waiting list
+	bunniesWaitingForVoice.insert(b->GetID());
 
 	// Play recording prompt
 	playRecordingPrompt(b);
 
-	// TODO: Implement actual voice recording trigger
-	// For now, return true to indicate we handled the click
+	// The recording will be triggered automatically by the bunny
+	// and we'll receive it via OnRecord() callback
 	return true;
 }
 
 bool PluginChatGPT::checkUserPermissions(Bunny *b)
 {
-	// Reuse logic from voicecommand plugin
-	Account * a = AccountManager::GetAccountByLogin(b->GetGlobalSetting("OwnerAccount").toByteArray());
+	// More permissive than voicecommand - allow any registered user for ChatGPT
+	QByteArray ownerAccount = b->GetGlobalSetting("OwnerAccount").toByteArray();
+	LogDebug("ChatGPT: Checking permissions for bunny " + QString(b->GetID()) + " with owner: " + QString(ownerAccount));
+	
+	// If no owner account is set, deny access
+	if(ownerAccount.isEmpty())
+	{
+		LogDebug("ChatGPT: No owner account set, access denied");
+		return false;
+	}
+	
+	Account * a = AccountManager::GetAccountByLogin(ownerAccount);
 	if(a != NULL)
 	{
-		if(a->IsVip() || a->IsAdmin() || a->IsPremium())
+		LogDebug("ChatGPT: Found account, checking abuse status");
+		// Just check that user is not banned
+		if(!a->GetAbuse())
 		{
-			if(!a->GetAbuse())
-			{
-				return true;
-			}
+			LogDebug("ChatGPT: User permissions OK");
+			return true;
 		}
+		else
+		{
+			LogDebug("ChatGPT: User is banned/abused");
+		}
+	}
+	else
+	{
+		LogDebug("ChatGPT: No account found for owner: " + QString(ownerAccount));
 	}
 	return false;
 }
@@ -325,27 +375,193 @@ QString PluginChatGPT::buildJsonRequest(const QString& message, bool isVoiceResp
 	return QJsonDocument(json).toJson(QJsonDocument::Compact);
 }
 
-// Placeholder methods for Phase 2 implementation
 bool PluginChatGPT::processVoiceRecording(Bunny *b, const QString& filename)
 {
-	// TODO: Implement in Phase 2
-	return false;
+	if(!b->IsConnected())
+		return false;
+
+	// Get the record plugin folder path
+	std::unique_ptr<QDir> httpDir(GetLocalHTTPFolder());
+	if(!httpDir.get())
+	{
+		handleVoiceError(b, "Unable to access recording folder");
+		return false;
+	}
+
+	// Build path to the recorded file (it's in the record plugin's folder)
+	QString recordFolder = httpDir->absolutePath().replace("chatgpt", "record");
+	QString wavFilePath = QDir(recordFolder).absoluteFilePath(filename);
+
+	// Check if the file exists
+	if(!QFile::exists(wavFilePath))
+	{
+		handleVoiceError(b, "Recording file not found");
+		return false;
+	}
+
+	// Convert WAV to FLAC for Google Speech recognition
+	QString flacFile = convertToFlac(wavFilePath);
+	if(flacFile.isEmpty())
+	{
+		handleVoiceError(b, "Failed to convert audio format");
+		return false;
+	}
+
+	// Send to speech recognition (asynchronous)
+	// The recognizeSpeech method will trigger onSpeechRecognitionResponse
+	recognizeSpeech(flacFile, b);
+	
+	// Clean up the temporary FLAC file
+	QFile::remove(flacFile);
+
+	return true;
 }
 
 QString PluginChatGPT::convertToFlac(const QString& wavFile)
 {
-	// TODO: Implement in Phase 2
-	return QString();
+	// Get our HTTP folder for temporary files
+	std::unique_ptr<QDir> httpDir(GetLocalHTTPFolder());
+	if(!httpDir.get())
+	{
+		return QString();
+	}
+
+	// Generate FLAC filename
+	QFileInfo wavInfo(wavFile);
+	QString flacFile = httpDir->absoluteFilePath(wavInfo.baseName() + ".flac");
+
+	// Use sox to convert WAV to FLAC (same as voicecommand plugin)
+	QString program = "/usr/bin/sox";
+	QStringList arguments;
+	arguments << wavFile << flacFile << "rate" << "16k";
+
+	// Execute sox conversion
+	QProcess process;
+	process.start(program, arguments);
+	if(!process.waitForFinished(10000)) // 10 second timeout
+	{
+		return QString();
+	}
+
+	// Check if conversion was successful
+	if(process.exitCode() != 0 || !QFile::exists(flacFile))
+	{
+		return QString();
+	}
+
+	return flacFile;
 }
 
 QString PluginChatGPT::recognizeSpeech(const QString& flacFile, Bunny *b)
 {
-	// TODO: Implement in Phase 3
+	// Read FLAC file
+	QFile file(flacFile);
+	if(!file.open(QIODevice::ReadOnly))
+	{
+		return QString();
+	}
+
+	QByteArray flacData = file.readAll();
+	file.close();
+
+	if(flacData.size() == 0)
+	{
+		return QString();
+	}
+
+	// Get Google Speech API key from environment
+	QString apiKey = QString::fromLocal8Bit(qgetenv("GOOGLE_SPEECH_API_KEY"));
+	if(apiKey.isEmpty())
+	{
+		apiKey = "AIzaSyAWY47hzyclccmabVobulOyH48U4Xo4LnE"; // Fallback to default key
+	}
+
+	// Build Google Speech API URL
+	QString language = makeLanguage(b->GetLanguage());
+	QUrl url = QString("http://www.google.com/speech-api/v2/recognize?lang=%1&key=%2&output=json")
+			   .arg(language, apiKey);
+
+	// Create network request
+	QNetworkRequest request(url);
+	request.setAttribute(QNetworkRequest::User, b->GetID());
+	request.setRawHeader("Host", "www.google.com");
+	request.setRawHeader("Content-Type", "audio/x-flac; rate=16000");
+	request.setRawHeader("Keep-Alive", "300");
+	request.setRawHeader("Connection", "keep-alive");
+
+	// Send request using the speech network manager
+	QNetworkReply* reply = speechNetworkManager->post(request, flacData);
+	reply->setProperty("bunnyId", b->GetID());
+	reply->setProperty("isForChatGPT", true);
+
+	// The response will be handled by onSpeechRecognitionResponse
+	// For now, we return empty - this is asynchronous
 	return QString();
 }
 
 void PluginChatGPT::onSpeechRecognitionResponse(QNetworkReply* reply)
 {
-	// TODO: Implement in Phase 3
+	QByteArray bunnyId = reply->property("bunnyId").toByteArray();
+	bool isForChatGPT = reply->property("isForChatGPT").toBool();
+
+	Bunny* bunny = BunnyManager::GetBunny(bunnyId);
+	if(!bunny || !isForChatGPT)
+	{
+		reply->deleteLater();
+		return;
+	}
+
+	if(reply->error() == QNetworkReply::NoError)
+	{
+		QString result = reply->readAll();
+		QString recognizedText = parseGoogleSpeechResponse(result);
+
+		if(!recognizedText.isEmpty())
+		{
+			// Send recognized text to ChatGPT
+			if(!askChatGPTFromVoice(bunny, recognizedText))
+			{
+				handleVoiceError(bunny, "Failed to send question to ChatGPT");
+			}
+		}
+		else
+		{
+			handleVoiceError(bunny, "Could not understand your question");
+		}
+	}
+	else
+	{
+		handleVoiceError(bunny, "Speech recognition service unavailable");
+	}
+
 	reply->deleteLater();
+}
+
+QString PluginChatGPT::makeLanguage(const QString& lng)
+{
+	// Simple language mapping for Google Speech API
+	// Based on the voicecommand plugin pattern but simplified for ChatGPT
+	if(lng == "fr") return "fr-FR";
+	if(lng == "en") return "en-US";
+	if(lng == "de") return "de-DE";
+	if(lng == "es") return "es-ES";
+	if(lng == "it") return "it-IT";
+	
+	// Default fallback
+	return "en-US";
+}
+
+QString PluginChatGPT::parseGoogleSpeechResponse(const QString& response)
+{
+	// Parse Google Speech API JSON response
+	// Expected format: {"transcript":"text here","confidence":0.123}
+	QRegExp rx("\\{\"transcript\":\"(.*)\",\"confidence\":(\\d+\\.\\d+)\\}");
+	rx.setMinimal(true);
+	
+	if(rx.indexIn(response) != -1)
+	{
+		return rx.cap(1); // Return the transcript text
+	}
+	
+	return QString(); // No valid transcript found
 }
