@@ -34,3 +34,6 @@ LogFile=openjabnab.log
 LogFileLevel=Debug
 LogScreenLevel=Warning
 DisplayCronLog=false
+
+[TTS]
+order = pico, responsivevoice, acapela, bluemix
