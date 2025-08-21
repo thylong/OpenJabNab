@@ -48,6 +48,7 @@ services:
       - OJN_XMPP_HOST=${OJN_XMPP_HOST:-nabaztag.yourdomain.com}
       - OJN_HTTP_PORT=${OJN_HTTP_PORT:-8080}
       - OJN_XMPP_PORT=${OJN_XMPP_PORT:-5222}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
 
   # OpenJabNab C++ Server
   openjabnab:
@@ -78,6 +79,7 @@ services:
       - OJN_XMPP_HOST=${OJN_XMPP_HOST:-nabaztag.yourdomain.com}
       - OJN_HTTP_PORT=${OJN_HTTP_PORT:-8080}
       - OJN_XMPP_PORT=${OJN_XMPP_PORT:-5222}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
 
 volumes:
   mysql_data:
