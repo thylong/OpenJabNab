@@ -688,11 +688,11 @@ $title = empty($_SESSION['bunny']) ?  __tr("Choose your bunny") :
 
           $s1 = 8;
           $s2 = 8;
-          if($active1 == 1) $s1 = 5;
-          if($active2 == 1) $s2 = 5;
+          if($active1 == 1) $s1 = 1; // Enabled plugins first
+          if($active2 == 1) $s2 = 1;
 
-          if($active1 == 0 && $new1 == 1) $s1 = 2;
-          if($active2 == 0 && $new2 == 1) $s2 = 2;
+          if($active1 == 0 && $new1 == 1) $s1 = 5; // New inactive plugins second
+          if($active2 == 0 && $new2 == 1) $s2 = 5;
           $p1 = $s1 . '_' . $name1;
           $p2 = $s2 . '_' . $name2;
 
