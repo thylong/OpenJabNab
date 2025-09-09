@@ -52,7 +52,7 @@ RUN mkdir -p /var/www/html/ojn_local/bootcode
 # Copy configuration files, setup script, and bootcode
 COPY docker/web/config.php /tmp/config.php
 COPY docker/web/setup.sh /usr/local/bin/setup.sh
-COPY docker/web/ojn_local/bootcode/bootcode.default /var/www/html/ojn_local/bootcode/bootcode.default
+COPY http-root/bootcode/bootcode.default /var/www/html/ojn_local/bootcode/bootcode.default
 RUN chmod +x /usr/local/bin/setup.sh
 
 # Set proper permissions
