@@ -49,6 +49,11 @@ RUN ln -sf /proc/self/fd/1 /var/log/apache2/access.log \
 # Create ojn_local directory structure
 RUN mkdir -p /var/www/html/ojn_local/bootcode \
     && mkdir -p /var/www/html/ojn_local/tts/google \
+    && mkdir -p /var/www/html/ojn_local/tts/pico/enUS \
+    && mkdir -p /var/www/html/ojn_local/tts/pico/frFR \
+    && mkdir -p /var/www/html/ojn_local/tts/pico/deDE \
+    && mkdir -p /var/www/html/ojn_local/tts/pico/esES \
+    && mkdir -p /var/www/html/ojn_local/tts/pico/itIT \
     && mkdir -p /var/www/html/ojn_local/plugins/record
 
 # Copy configuration files, setup script, and bootcode

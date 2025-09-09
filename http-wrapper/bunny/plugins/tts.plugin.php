@@ -1,19 +1,197 @@
 <?php
-if(isset($_POST['text']) && trim($_POST['text']) != "")
-{
-	Message::AddFromApi($ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/tts/say?text=".urlencode($_POST['text'])."&".$ojnAPI->getToken()));
-	header("Location: bunny_plugin.php?p=tts");
-	exit();
+// Handle form submissions
+if(isset($_POST['text']) && trim($_POST['text']) != "") {
+    $text = trim($_POST['text']);
+    $voice = isset($_POST['voice']) ? $_POST['voice'] : '';
+    $language = isset($_POST['language']) ? $_POST['language'] : '';
+    
+    // Save language preference if changed
+    if (!empty($language)) {
+        $currentLang = $ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/getlanguage?".$ojnAPI->getToken());
+        $currentLang = isset($currentLang['value']) ? $currentLang['value'] : 'en';
+        if ($language != $currentLang) {
+            Message::AddFromApi($ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/setlanguage?lng=".$language."&".$ojnAPI->getToken()));
+        }
+    }
+    
+    // Save voice preference if changed
+    if (!empty($voice)) {
+        $currentVoice = $ojnAPI->getApiValue("bunny/".$_SESSION['bunny']."/voice?action=get&".$ojnAPI->getToken());
+        if ($voice != $currentVoice) {
+            Message::AddFromApi($ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/voice?action=set&voice=".$voice."&".$ojnAPI->getToken()));
+        }
+    }
+    
+    if (!empty($voice)) {
+        // Use specific voice for TTS
+        Message::AddFromApi($ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/tts/say?text=".urlencode($text)."&voice=".urlencode($voice)."&".$ojnAPI->getToken()));
+    } else {
+        // Use default voice
+        Message::AddFromApi($ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/tts/say?text=".urlencode($text)."&".$ojnAPI->getToken()));
+    }
+    
+    header("Location: bunny_plugin.php?p=tts");
+    exit();
 }
+
+// Get current bunny language and voice settings
+$currentLang = $ojnAPI->getApiString("bunny/".$_SESSION['bunny']."/getlanguage?".$ojnAPI->getToken());
+$currentLang = isset($currentLang['value']) ? $currentLang['value'] : 'en';
+
+$currentVoice = $ojnAPI->getApiValue("bunny/".$_SESSION['bunny']."/voice?action=get&".$ojnAPI->getToken());
+
+// Get available languages
+$link = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+if (!$link) {
+    die('Database connection failed: ' . mysqli_error());
+}
+mysqli_set_charset($link, 'utf8mb4');
+
+$sql = "SELECT * FROM language";
+if(empty($Infos['isAdmin'])) {
+    $sql .= " WHERE public=1";
+}
+
+// Add translations for development
+if(function_exists('getTranslates')) {
+    $tr = getTranslates(isset($_SESSION['login']) ? $_SESSION['login'] : '');
+    if(count($tr)) {
+        foreach($tr as $t) {
+            $sql .= " OR code='".$t."'";
+        }
+    }
+}
+
+$res = mysqli_query($link, $sql);
+$languages = array();
+while($res && $row = mysqli_fetch_assoc($res)) {
+    $languages[] = $row;
+}
+mysqli_close($link);
+
+// Get available voices for current language - we'll load these dynamically via JavaScript
+$voices = array();
 ?>
-<form method="post">
-  <div class="form-group row">
-    <label class="col-sm-2 col-form-label" for="text"><?php echo __tr("Text to send") ?></label>
-    <div class="col-sm-8">    
-      <input type="text" name="text"  class="form-control" />
+
+<div class="card">
+    <h5 class="card-header">
+        <i class="icon-volume-up"></i> <?php echo __tr('Text-to-Speech Configuration'); ?>
+    </h5>
+    <div class="card-body">
+        <form method="post">
+            <div class="form-group row">
+                <label class="col-sm-2 col-form-label" for="language"><?php echo __tr("Language") ?></label>
+                <div class="col-sm-3">
+                    <select name="language" id="language" class="form-control" onchange="updateVoiceList(this.value);">
+                        <?php foreach($languages as $lang): ?>
+                        <option value="<?php echo $lang['code'] ?>"<?php if($currentLang == $lang['code']) { ?> selected="selected"<?php } ?>>
+                            <?php echo $lang['language'] ?>
+                        </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="col-sm-7">
+                    <p class="help-block"><?php echo __tr("Select the language for text-to-speech synthesis") ?></p>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <label class="col-sm-2 col-form-label" for="voice"><?php echo __tr("Voice") ?></label>
+                <div class="col-sm-4">
+                    <select name="voice" id="voiceList" class="form-control">
+                        <option value="">Use default voice</option>
+                        <option value="pico/en-US">English (Pico)</option>
+                        <option value="pico/fr-FR">French (Pico)</option>
+                        <option value="pico/de-DE">German (Pico)</option>
+                        <option value="pico/es-ES">Spanish (Pico)</option>
+                        <option value="pico/it-IT">Italian (Pico)</option>
+                    </select>
+                </div>
+                <div class="col-sm-6">
+                    <div class="row">
+                        <div class="col-sm-8">
+                            <input type="text" id="testvoice" class="form-control" value="<?php echo __tr('Test sentence : hello world') ?>">
+                        </div>
+                        <div class="col-sm-4">
+                            <a onclick="testVoice()" class="btn btn-sm btn-light"><?php echo __tr('Test this voice') ?></a>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12 text-center mt-1" id="testvoice_results"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <label class="col-sm-2 col-form-label" for="text"><?php echo __tr("Text to send") ?></label>
+                <div class="col-sm-6">    
+                    <textarea name="text" class="form-control" rows="3" placeholder="<?php echo __tr('Enter the text you want your bunny to say...') ?>"></textarea>
+                </div>
+                <div class="col-sm-4">
+                    <button class="btn btn-primary btn-lg" type="submit">
+                        <i class="icon-volume-up"></i> <?php echo __tr("Say Text") ?>
+                    </button>
+                    <p class="help-block mt-2">
+                        <?php echo __tr("The bunny will speak the text using the selected voice") ?><br>
+                        <small class="text-muted"><?php echo __tr("Voice and language preferences are automatically saved") ?></small>
+                    </p>
+                </div>
+            </div>
+        </form>
     </div>
-    <div class="col-sm-2">
-      <button class="btn btn-primary" type="submit"><?php echo __tr("Submit") ?></button>
-    </div>
-  </div>
-</form>
+</div>
+
+<script>
+function testVoice() {
+    $.get('testVoice.php?voice=' + $("#voiceList").val() + '&sentence=' + $("#testvoice").val(), function(data) {
+        $('#testvoice_results').html(data);
+    });
+}
+
+function updateVoiceList(language) {
+    console.log('Loading voices for language:', language);
+    
+    // Store current selection
+    var currentValue = $('#voiceList').val();
+    
+    // Show loading state
+    $('#voiceList').empty().append('<option value="">Loading...</option>');
+    
+    $.get('getVoices.php?language=' + language, function(data) {
+        console.log('Voices loaded successfully:', data);
+        // Always include default option at the top
+        var html = '<option value="">Use default voice</option>' + data;
+        $('#voiceList').html(html);
+        
+        // Restore selection if possible
+        if (currentValue) {
+            $('#voiceList').val(currentValue);
+        }
+    }).fail(function(xhr, status, error) {
+        console.error('Failed to load voices:', status, error, xhr.responseText);
+        // Fallback to basic Pico voices
+        var fallbackOptions = [
+            '<option value="">Use default voice</option>',
+            '<option value="pico/en-US">English (Pico)</option>',
+            '<option value="pico/fr-FR">French (Pico)</option>',
+            '<option value="pico/de-DE">German (Pico)</option>',
+            '<option value="pico/es-ES">Spanish (Pico)</option>',
+            '<option value="pico/it-IT">Italian (Pico)</option>'
+        ];
+        $('#voiceList').html(fallbackOptions.join(''));
+        
+        // Try to select appropriate voice based on language
+        if (language && $('#voiceList option[value="pico/' + language.toLowerCase() + '-' + language.toUpperCase() + '"]').length) {
+            $('#voiceList').val('pico/' + language.toLowerCase() + '-' + language.toUpperCase());
+        }
+    });
+}
+
+// Load voices for the preselected language on page load
+$(document).ready(function() {
+    var preselectedLanguage = $('#language').val();
+    if (preselectedLanguage) {
+        updateVoiceList(preselectedLanguage);
+    }
+});
+</script>

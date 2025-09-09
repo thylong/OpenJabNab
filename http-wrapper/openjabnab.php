@@ -19,26 +19,64 @@ if(!$socket)
 		} elseif (strpos($url, 'global/about') !== false) {
 			$rep = '<?xml version="1.0" encoding="UTF-8"?><api><name>OpenJabNab</name><version>0.99</version></api>';
 		} elseif (strpos($url, '/tts/say') !== false) {
-			// TTS fallback - generate TTS file and return success
+			// TTS - generate TTS file and return success
 			if (isset($_GET['text']) && !empty($_GET['text'])) {
 				$text = urldecode($_GET['text']);
-				$tts_dir = '/var/www/html/ojn_local/tts/pico/frFR';
-				$hash = md5($text);
-				$wav_file = $tts_dir . '/' . $hash . '.wav';
-				$mp3_file = $tts_dir . '/' . $hash . '.mp3';
+				$voice = isset($_GET['voice']) ? $_GET['voice'] : '';
 				
-				// Create TTS directories if they don't exist
-				if (!file_exists($tts_dir)) {
-					mkdir($tts_dir, 0755, true);
+				// Parse voice parameter (format: "pico/en-US" or "google/en-US-Standard-A")
+				$engine = 'pico';
+				$voiceSpec = 'en-US';  // Default
+				
+				if (!empty($voice)) {
+					$parts = explode('/', $voice, 2);
+					if (count($parts) == 2) {
+						$engine = $parts[0];
+						$voiceSpec = $parts[1];
+					}
 				}
 				
-				// Generate TTS using pico
-				if (!file_exists($mp3_file)) {
-					$safe_text = escapeshellarg($text);
-					exec("pico2wave -l fr-FR -w $wav_file $safe_text 2>/dev/null");
-					if (file_exists($wav_file)) {
-						exec("lame -q 2 $wav_file $mp3_file 2>/dev/null");
-						unlink($wav_file); // Clean up wav file
+				// Handle different TTS engines
+				if ($engine === 'google') {
+					// Use Google TTS
+					require_once 'include/google-tts.php';
+					$cacheKey = md5($voice . '|' . $text);
+					$tts_dir = '/var/www/html/ojn_local/tts/google';
+					$mp3_file = $tts_dir . '/' . $cacheKey . '.mp3';
+					
+					// Create TTS directories if they don't exist
+					if (!file_exists($tts_dir)) {
+						mkdir($tts_dir, 0777, true);
+					}
+					
+					// Generate TTS using Google if not cached
+					if (!file_exists($mp3_file)) {
+						$result = generateTTS($text, $voice, $mp3_file);
+						if (!$result['success']) {
+							error_log('Google TTS failed: ' . $result['error']);
+						}
+					}
+				} else {
+					// Use Pico TTS (default)
+					$tts_dir = '/var/www/html/ojn_local/tts/pico/' . str_replace('-', '', $voiceSpec);
+					$hash = md5($text . $voiceSpec);
+					$wav_file = $tts_dir . '/' . $hash . '.wav';
+					$mp3_file = $tts_dir . '/' . $hash . '.mp3';
+					
+					// Create TTS directories if they don't exist
+					if (!file_exists($tts_dir)) {
+						mkdir($tts_dir, 0777, true);
+					}
+					
+					// Generate TTS using pico
+					if (!file_exists($mp3_file)) {
+						$safe_text = escapeshellarg($text);
+						$safe_voice = escapeshellarg($voiceSpec);
+						exec("pico2wave -l $safe_voice -w $wav_file $safe_text 2>/dev/null");
+						if (file_exists($wav_file)) {
+							exec("lame -q 2 $wav_file $mp3_file 2>/dev/null");
+							unlink($wav_file); // Clean up wav file
+						}
 					}
 				}
 				

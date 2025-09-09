@@ -34,6 +34,7 @@ private:
   virtual ~PluginTTS() = default;
 
   bool sayText(Bunny *b, const QString& str);
+  bool sayText(Bunny *b, const QString& str, const QString& voice, const QString& language);
 
   // API
   void InitApiCalls();
