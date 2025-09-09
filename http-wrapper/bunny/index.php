@@ -622,6 +622,14 @@ $title = empty($_SESSION['bunny']) ?  __tr("Choose your bunny") :
                       $('#voiceList').html('<option value="">No voices available</option>');
                     });
                   }
+
+                  // Load voices for the preselected language on page load
+                  $(document).ready(function() {
+                    var preselectedLanguage = $('select[name="lng"]').val();
+                    if (preselectedLanguage) {
+                      updateVoiceList(preselectedLanguage);
+                    }
+                  });
                 </script>
               </div>
             </div>
