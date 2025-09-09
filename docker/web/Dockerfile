@@ -46,8 +46,10 @@ RUN a2enmod headers
 RUN ln -sf /proc/self/fd/1 /var/log/apache2/access.log \
     && ln -sf /proc/self/fd/2 /var/log/apache2/error.log
 
-# Create ojn_local directory and bootcode directory
-RUN mkdir -p /var/www/html/ojn_local/bootcode
+# Create ojn_local directory structure
+RUN mkdir -p /var/www/html/ojn_local/bootcode \
+    && mkdir -p /var/www/html/ojn_local/tts/google \
+    && mkdir -p /var/www/html/ojn_local/plugins/record
 
 # Copy configuration files, setup script, and bootcode
 COPY docker/web/config.php /tmp/config.php
@@ -58,6 +60,7 @@ RUN chmod +x /usr/local/bin/setup.sh
 # Set proper permissions
 RUN chown -R www-data:www-data /var/www/html
 RUN chmod -R 755 /var/www/html
+RUN chmod -R 777 /var/www/html/ojn_local
 
 # Run setup script on container start
 RUN echo '#!/bin/bash\n/usr/local/bin/setup.sh\nexec apache2-foreground "$@"' > /usr/local/bin/entrypoint.sh

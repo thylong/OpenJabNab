@@ -1,5 +1,6 @@
 <?php
 require_once '../include/common.php';
+require_once '../include/google-tts.php';
 
 header('Content-Type: text/html; charset=utf-8');
 
@@ -9,6 +10,7 @@ if (!isset($_SESSION['bunny']) || !isset($_GET['language'])) {
 }
 
 $language = $_GET['language'];
+$voices = array();
 
 // Map language codes to language names that pico TTS supports
 $picoLanguages = array(
@@ -19,13 +21,46 @@ $picoLanguages = array(
     'it' => 'it-IT'
 );
 
-// Check if the language is supported by pico TTS
+// Add Pico voices if supported
 if (isset($picoLanguages[$language])) {
     $picoLang = $picoLanguages[$language];
-    echo '<option value="pico/' . $picoLang . '">' . $picoLang . ' (pico)</option>' . "\n";
-} else {
-    // For unsupported languages, try to get voices from the current API
-    // This might be empty but at least shows the language isn't supported
+    $voices[] = array(
+        'value' => 'pico/' . $picoLang,
+        'label' => $picoLang . ' (Pico)',
+        'type' => 'pico'
+    );
+}
+
+// Add Google voices if API key is available
+$googleApiKey = isset($_ENV['GOOGLE_SPEECH_API_KEY']) ? $_ENV['GOOGLE_SPEECH_API_KEY'] : 
+                (isset($_SERVER['GOOGLE_SPEECH_API_KEY']) ? $_SERVER['GOOGLE_SPEECH_API_KEY'] : '');
+
+if (!empty($googleApiKey)) {
+    $googleVoices = getGoogleVoices($language, $googleApiKey);
+    foreach ($googleVoices as $voice) {
+        $voices[] = array(
+            'value' => 'google/' . $voice['name'],
+            'label' => formatGoogleVoice($voice),
+            'type' => 'google'
+        );
+    }
+}
+
+// Sort voices: Pico first, then Google voices alphabetically
+usort($voices, function($a, $b) {
+    if ($a['type'] !== $b['type']) {
+        return $a['type'] === 'pico' ? -1 : 1;
+    }
+    return strcmp($a['label'], $b['label']);
+});
+
+// Output voices
+if (empty($voices)) {
     echo '<option value="">No voices available for ' . htmlspecialchars($language) . '</option>';
+} else {
+    foreach ($voices as $voice) {
+        echo '<option value="' . htmlspecialchars($voice['value']) . '">' . 
+             htmlspecialchars($voice['label']) . '</option>' . "\n";
+    }
 }
 ?>

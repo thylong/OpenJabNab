@@ -53,10 +53,10 @@ mysqli_close($link);
 <?php foreach(array_slice($sounds, max(0, count($sounds) - 10), 10) as $sound): ?>
 	<tr>
 		<td>
-			<object type="application/x-shockwave-flash" data="/media/player_mp3.swf" width="200" height="20">
-			     <param name="movie" value="/media/player_mp3.swf" />
-			     <param name="FlashVars" value="loadingcolor=0074CC&slidercolor1=0088CC&slidercolor2=0055CC&sliderovercolor=0074CC&buttonovercolor=0074CC&mp3=<?php echo $sound['file'] ?>" />
-			</object>
+			<audio controls style="width: 200px;">
+			     <source src="<?php echo htmlspecialchars($sound['file']); ?>" type="audio/mpeg">
+			     <?php echo __tr('Your browser does not support audio playback.'); ?>
+			</audio>
 		</td>
 		<td><?php echo $sound['date'] ?></td>
 		<td colspan="2">

@@ -163,10 +163,18 @@ $messages = $ojnAPI->getApiList("bunny/".$_SESSION['bunny']."/messages/message?a
 				<td><?php echo $date ?></td>
 				<td><?php echo $plugins[$plugin] ?></td>
 				<td>
-					<object type="application/x-shockwave-flash" data="/media/player_mp3_multi.swf" width="200" height="20">
-							<param name="movie" value="/media/player_mp3_multi.swf" />
-							<param name="FlashVars" value="loadingcolor=0074CC&slidercolor1=0088CC&slidercolor2=0055CC&sliderovercolor=0074CC&buttonovercolor=0074CC&showlist=0&mp3=<?php echo implode('|', $files) ?>" />
-					</object>
+					<?php 
+					// Create a playlist from multiple audio files
+					$audioFiles = explode('|', implode('|', $files));
+					?>
+					<div class="audio-playlist">
+						<?php foreach($audioFiles as $index => $audioFile): ?>
+						<audio controls style="width: 200px; display: block; margin-bottom: 5px;">
+							<source src="<?php echo htmlspecialchars(trim($audioFile)); ?>" type="audio/mpeg">
+							<?php echo __tr('Your browser does not support audio playback.'); ?>
+						</audio>
+						<?php endforeach; ?>
+					</div>
 					<a class="btn btn-sm btn-danger" href="bunny_plugin.php?p=messages&rmid=<?php echo $id ?>"><?php echo __tr('Remove') ?></a>
 				</td>
 			</tr>
