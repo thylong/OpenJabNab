@@ -97,7 +97,7 @@ $voices = array();
 
             <div class="form-group row">
                 <label class="col-sm-2 col-form-label" for="voice"><?php echo __tr("Voice") ?></label>
-                <div class="col-sm-4">
+                <div class="col-sm-6">
                     <select name="voice" id="voiceList" class="form-control">
                         <option value="">Use default voice</option>
                         <option value="pico/en-US">English (Pico)</option>
@@ -107,19 +107,25 @@ $voices = array();
                         <option value="pico/it-IT">Italian (Pico)</option>
                     </select>
                 </div>
-                <div class="col-sm-6">
-                    <div class="row">
-                        <div class="col-sm-8">
-                            <input type="text" id="testvoice" class="form-control" value="<?php echo __tr('Test sentence : hello world') ?>">
-                        </div>
-                        <div class="col-sm-4">
-                            <a onclick="testVoice()" class="btn btn-sm btn-light"><?php echo __tr('Test this voice') ?></a>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-12 text-center mt-1" id="testvoice_results"></div>
-                    </div>
+                <div class="col-sm-4">
+                    <p class="help-block"><?php echo __tr("Select the voice for text-to-speech synthesis") ?></p>
                 </div>
+            </div>
+
+            <div class="form-group row">
+                <label class="col-sm-2 col-form-label" for="testvoice"><?php echo __tr("Test Voice") ?></label>
+                <div class="col-sm-6">
+                    <input type="text" id="testvoice" class="form-control" value="<?php echo __tr('Test sentence : hello world') ?>">
+                </div>
+                <div class="col-sm-4">
+                    <button onclick="testVoice()" class="btn btn-primary" type="button">
+                        <i class="icon-play"></i> <?php echo __tr('Test Voice') ?>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="form-group row">
+                <div class="col-sm-12 text-center" id="testvoice_results"></div>
             </div>
 
             <div class="form-group row">
@@ -128,7 +134,7 @@ $voices = array();
                     <textarea name="text" class="form-control" rows="3" placeholder="<?php echo __tr('Enter the text you want your bunny to say...') ?>"></textarea>
                 </div>
                 <div class="col-sm-4">
-                    <button class="btn btn-primary btn-lg" type="submit">
+                    <button class="btn btn-primary" type="submit">
                         <i class="icon-volume-up"></i> <?php echo __tr("Say Text") ?>
                     </button>
                     <p class="help-block mt-2">
